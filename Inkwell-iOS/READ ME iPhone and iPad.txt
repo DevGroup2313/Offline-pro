@@ -30,7 +30,8 @@ C. INSTALL
         Settings, Privacy & Security, Developer Mode: switch it on and let
         the device restart (asked on iOS 16 and later).
    8. Inkwell is now on the Home Screen with the seal. iPhone and iPad
-      always draw app icons as rounded squares, so the seal sits on white.
+      always draw app icons as rounded squares, so the seal sits on a navy
+      square.
 
 D. EVERY 7 DAYS (FREE APPLE ID)
    With a free Apple ID, Apple stops the app from opening 7 days after it was

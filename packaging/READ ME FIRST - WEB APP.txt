@@ -1,0 +1,87 @@
+INKWELL 7.29: THE HOME SCREEN WEB APP
+=====================================
+THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
+any browser. It is the fallback to the iPhone and iPad app.
+THE FILE IT MAKES:   Inkwell-7.29-web-buildN.zip (a ready web site)
+It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
+only add a page to the Home Screen from a web address, not from a file.
+
+Once on the Home Screen it opens in its own window with the seal (on a navy
+square, as iOS shows every icon as a square) and works offline after the first
+visit.
+
+
+PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
+----------------------------------------------------
+1. Sign in at github.com. Top right: "+", then "New repository".
+   Name it, for example, inkwell-web. Private is fine for this part.
+   Press "Create repository".
+
+2. Unzip this package. Open the folder inside it. Make hidden files visible
+   (Windows: File Explorer, View, Show, Hidden items. Mac: in Finder,
+   Cmd + Shift + full stop).
+
+3. On the new repository's page, click "uploading an existing file". Drag in
+   EVERYTHING inside the package folder (.github, icons, web, and every file
+   beside them). Wait until every file is listed, then "Commit changes".
+
+4. If the repository does not show ".github": Add file, Create new file,
+   name it exactly  .github/workflows/build-web.yml  and paste ALL of the text
+   of "WORKFLOW build-web.yml (copy).txt". Commit.
+
+5. Actions tab: "Build the Inkwell web app" runs by itself (or press
+   "Run workflow"). When it is green, open Releases: the newest
+   "Inkwell 7.29 web app" release has the site as a .zip under Assets.
+
+
+PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)
+--------------------------------------------------
+GitHub Pages is free for PUBLIC repositories. As far as I know, Pages for a
+private repository needs a paid GitHub plan; check GitHub's current plans.
+Anyone who knows a published address can open it, and a public repository's
+files can be read by anyone. Decide whether that is acceptable for Inkwell.
+
+6.  Create another new repository, for example inkwell-site, PUBLIC.
+7.  Unzip the site .zip from step 5. Upload EVERYTHING inside it (index.html,
+    sw.js, manifest.webmanifest, .nojekyll, and the icons and vendor folders)
+    with "uploading an existing file". Commit.
+8.  In that repository: Settings, Pages. Under "Build and deployment",
+    Source: "Deploy from a branch"; Branch: main, folder / (root). Save.
+9.  After a minute or two the Pages screen shows the address, of the form
+    https://YOUR-NAME.github.io/inkwell-site/
+
+
+PART C. ON THE IPHONE OR IPAD
+-----------------------------
+10. Open the address in Safari.
+11. Tap Share, then "Add to Home Screen", then Add.
+12. Open Inkwell from the Home Screen icon. Open it once while online, so it
+    can keep its files for offline use.
+
+
+PART D. YOUR DOCUMENTS
+----------------------
+- The web app keeps its own library, separate from the app and from Safari
+  tabs. Use File, Export library and File, Import library to move documents.
+- Export regularly: a browser may clear a web app's storage, for example when
+  the device is short of space.
+
+
+PART E. UPDATING INKWELL LATER
+------------------------------
+- In the first repository: upload the new Inkwell.html into web/ (and new
+  vendor files into web/vendor/); change VERSION.txt if the version changed.
+- A new site .zip appears in Releases. Upload its contents to the Pages
+  repository (replacing the old files). Phones pick up the new version the
+  next time Inkwell is opened online, sometimes only on the second opening.
+
+
+PROBLEMS
+--------
+- No run appears in Actions: the workflow file is missing. Do step 4.
+- "No build_site.py" or "No Inkwell.html with a vendor folder beside it": a
+  file or folder was not uploaded. Compare with the package.
+- A red step called "Publish a release": Settings, Actions, General, Workflow
+  permissions: "Read and write permissions", Save, and run it again.
+- The Pages address shows 404: wait a few minutes; check that index.html is at
+  the top level of the Pages repository, not inside a folder.

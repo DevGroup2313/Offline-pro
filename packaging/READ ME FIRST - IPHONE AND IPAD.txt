@@ -1,0 +1,141 @@
+INKWELL 7.29 FOR IPHONE AND IPAD
+================================
+THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
+THE FILE IT MAKES:   Inkwell-7.29-ios-buildN.ipa
+NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
+
+IMPORTANT, PLEASE READ FIRST
+- An iPhone or iPad can NOT install an app by tapping a download in Safari.
+  Tapping the .ipa (or an .apk) on the device only shows a white page with the
+  file name. Apple requires every app to be signed with an Apple ID, so the
+  .ipa is installed from a COMPUTER over the USB cable, with Sideloadly.
+- GitHub builds the app on one of its own Macs, which has Xcode, so your Mac
+  does not need Xcode.
+- With a FREE Apple ID, Apple stops the app from opening 7 days after it was
+  installed; you then reinstall it the same way (Part D). A paid Apple
+  Developer account (approximately 99 US dollars per year; check Apple's
+  current price) makes each install last a year.
+- These steps were written without access to an iPhone, an iPad or
+  Sideloadly. The build itself has run successfully on GitHub; the install
+  steps follow Sideloadly's published method. Check Sideloadly's own current
+  instructions if a screen does not match.
+
+
+PART A. PUT THE PROJECT ON GITHUB (ONCE)
+----------------------------------------
+1. Sign in at github.com. Top right: "+", then "New repository".
+   Name it, for example, inkwell-ios. Private is fine. Leave every other
+   option as it is and press "Create repository".
+
+2. Unzip this package on your computer. Open the folder inside it.
+
+3. Make hidden files visible, so the folder ".github" can be seen:
+     Windows: File Explorer, View, Show, Hidden items.
+     Mac: in Finder press Cmd + Shift + full stop.
+
+4. On the new repository's page, click "uploading an existing file".
+   Select EVERYTHING inside the package folder (the folders .github, Sources,
+   Resources and web, and every file beside them) and drag it onto the page.
+   Drag the CONTENTS, not the package folder itself.
+   Wait until every file is listed (the largest file is about 21 MB), then
+   press "Commit changes".
+
+5. Check the repository's main page. It must show:
+     .github   Resources   Sources   web   project.yml
+   If ".github" is missing, the uploader skipped it. Then:
+     Add file, Create new file. As the name, type exactly:
+        .github/workflows/build-ios.yml
+     Open "WORKFLOW build-ios.yml (copy).txt" from this package, copy ALL of
+     its text, paste it into the big box, and press "Commit changes".
+
+
+PART B. BUILD THE .IPA
+----------------------
+6. Open the "Actions" tab. A run called "Build Inkwell for iPhone and iPad"
+   starts by itself after each commit. If none is running: click its name on
+   the left, "Run workflow", then the green "Run workflow" button.
+   If GitHub asks you to enable Actions, enable them.
+   Note: GitHub's Macs use your free Actions minutes about ten times faster
+   than its Linux machines on a private repository (approximately; check
+   GitHub's current billing page). One build takes only a few minutes.
+
+7. Wait for the green tick.
+
+8. On the main page, open "Releases" (right-hand side). The newest release,
+   "Inkwell 7.29 for iPhone and iPad (build N)", has the .ipa under "Assets".
+
+
+PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
+------------------------------------------------
+Once, on the computer:
+ 9. Install Sideloadly from its official site, sideloadly.io.
+10. Install Apple's iTunes and iCloud for Windows. Sideloadly's site says
+    which versions it needs (at the time of writing, the ones downloaded from
+    Apple's own website, not the Microsoft Store).
+
+Each install:
+11. Download the .ipa from the release (step 8) onto the computer.
+12. Connect the iPhone or iPad with its USB cable. Unlock it, and tap "Trust"
+    if it asks whether to trust this computer.
+13. Open Sideloadly. Drag the .ipa into its window. Choose the device in the
+    list, type your Apple ID (email), and press Start. Enter your Apple ID
+    password, and the code Apple sends, when Sideloadly asks for them.
+
+On the device, the first time only:
+14. Settings, General, VPN & Device Management: tap your Apple ID, then
+    "Trust".
+15. Settings, Privacy & Security, Developer Mode: switch it on, and let the
+    device restart (iOS 16 and later ask for this).
+
+16. Inkwell is now on the Home Screen. iPhone and iPad always show app icons
+    as rounded squares, so the seal sits on a navy square.
+
+
+PART D. EVERY 7 DAYS (FREE APPLE ID)
+------------------------------------
+Repeat steps 11 to 13 with the same .ipa, or a newer one, before 7 days have
+passed. Installing over the app should keep your documents, because its
+storage belongs to its identifier (studio.inkwell.app); until you have seen
+this work on your own device, use File, Export library before reinstalling.
+If the app has already stopped opening, reinstalling it the same way brings
+it back.
+
+
+PART E. YOUR DOCUMENTS
+----------------------
+- The app keeps its own library, separate from Safari and the web app.
+  To bring documents in: in the old place, File, Export library; in the app,
+  File, Import library.
+- Saving a file opens Apple's "Save to Files" dialog.
+- NEVER delete the app without File, Export library first: deleting the app
+  deletes its storage.
+- Scriba: the first time it records, iOS asks for the microphone; choose
+  Allow. On-device Whisper downloads its model the first time, so be online
+  for the first recording.
+
+
+PART F. UPDATING INKWELL LATER
+------------------------------
+- New Inkwell page: upload the new Inkwell.html into web/ (replace the old
+  one); new vendor files go into web/vendor/.
+- New version number: in project.yml, change MARKETING_VERSION: "7.29".
+- New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
+  with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
+  with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.
+- Every commit starts a new build; install its .ipa as in Part C.
+
+
+PROBLEMS
+--------
+- No run appears in Actions: the workflow file is missing. Do step 5 again.
+- "No project.yml in this repository" or "No Inkwell.html with a vendor
+  folder beside it": a folder was not uploaded. Compare the repository with
+  the package and upload what is missing.
+- A red step called "Publish a release": in the repository, Settings, Actions,
+  General, Workflow permissions: choose "Read and write permissions", Save,
+  and run the workflow again.
+- A red "Build the app" step: the full log is attached to the run as
+  "ios-build-log".
+- Sideloadly reports a limit: a free Apple ID can have only a small number of
+  sideloaded apps on a device at once (3, as far as I know), and a limited
+  number of new app identifiers per week.
