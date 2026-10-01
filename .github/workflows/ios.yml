@@ -3,17 +3,28 @@ name: Build Inkwell for iPhone and iPad
 # Builds the iPhone and iPad app on GitHub's Mac runner (it has Xcode, so your
 # own Mac does not need it) and publishes the .ipa as a release. The .ipa is
 # unsigned: Sideloadly signs it with your Apple ID as it installs it by USB.
-# Mac runners cost more of a private repository's Actions minutes, so this runs
-# only when the iOS project or the shared web files change, or when started
-# by hand from the Actions tab.
+#
+# The project is found wherever it sits: the folder holding project.yml is the
+# iOS project, and Inkwell.html is taken from the first folder that holds it
+# together with vendor/transformers.min.js (the project's own web/ folder, or
+# the Android app's assets).
+#
+# Mac runners use more of a private repository's Actions minutes, so changes
+# that only touch the Android app's code, the web app or the artwork do not
+# start this build. It can always be started by hand from the Actions tab.
 
 on:
   push:
     branches: [ main, 'claude/**' ]
-    paths:
-      - 'Inkwell-iOS/**'
-      - 'Inkwell-Android/app/src/main/assets/**'
-      - '.github/workflows/ios.yml'
+    paths-ignore:
+      - 'Inkwell-Android/app/src/main/java/**'
+      - 'Inkwell-Android/app/src/main/res/**'
+      - 'Inkwell-Android/*.gradle'
+      - 'Inkwell-Web/**'
+      - 'artwork/**'
+      - '.github/workflows/main.yml'
+      - '.github/workflows/web.yml'
+      - '**.txt'
   workflow_dispatch:
 
 permissions:
@@ -22,32 +33,57 @@ permissions:
 jobs:
   build:
     runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: Inkwell-iOS
     steps:
       - name: Check out the project
         uses: actions/checkout@v4
 
-      - name: Copy the shared web app into the iOS project
+      - name: Find the iOS project and the web app
         run: |
           set -euo pipefail
-          rm -rf web && mkdir web
-          cp -R ../Inkwell-Android/app/src/main/assets/. web/
-          version="$(sed -n "s/^[[:space:]]*versionName[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" ../Inkwell-Android/app/build.gradle | head -n 1)"
+          yml="$(find . -maxdepth 3 -name project.yml -not -path './.git/*' | sort | head -n 1)"
+          if [ -z "$yml" ]; then
+            echo "::error::No project.yml in this repository. Upload everything inside the iPhone and iPad package."
+            exit 1
+          fi
+          proj="$(dirname "$yml")"; proj="${proj#./}"
+          src=""
+          while IFS= read -r f; do
+            d="$(dirname "$f")"
+            if [ -f "$d/vendor/transformers.min.js" ]; then src="${d#./}"; break; fi
+          done < <(find . -maxdepth 6 -name Inkwell.html -not -path './.git/*' | sort)
+          if [ -z "$src" ]; then
+            echo "::error::No Inkwell.html with a vendor folder beside it. Upload the web folder from the package."
+            exit 1
+          fi
+          version="$(sed -n 's/^[[:space:]]*MARKETING_VERSION:[[:space:]]*"*\([0-9][0-9.]*\)"*.*/\1/p' "$yml" | head -n 1)"
           {
+            echo "PROJECT_DIR=$proj"
+            echo "WEB_SOURCE=$src"
             echo "INKWELL_VERSION=${version:-unknown}"
             echo "IPA_NAME=Inkwell-${version:-unknown}-ios-build${{ github.run_number }}.ipa"
           } >> "$GITHUB_ENV"
+          echo "iOS project: $proj; web app from: $src; version ${version:-unknown}"
+
+      - name: Put the web app inside the iOS project
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -euo pipefail
+          src="$GITHUB_WORKSPACE/$WEB_SOURCE"
+          if [ "$(cd "$src" && pwd)" != "$(pwd)/web" ]; then
+            rm -rf web && mkdir web
+            cp -R "$src/." web/
+          fi
           ls -la web web/vendor
 
       - name: Generate the Xcode project
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           set -euo pipefail
-          brew install xcodegen
+          command -v xcodegen >/dev/null || brew install xcodegen
           xcodegen generate
 
       - name: Build the app
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           set -o pipefail
           xcodebuild -version | tee build_log.txt
@@ -58,6 +94,7 @@ jobs:
             build 2>&1 | tee -a build_log.txt
 
       - name: Package the .ipa
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           set -euo pipefail
           app=build/Release-iphoneos/Inkwell.app
@@ -73,10 +110,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Inkwell-iOS
-          path: Inkwell-iOS/${{ env.IPA_NAME }}
+          path: ${{ env.PROJECT_DIR }}/${{ env.IPA_NAME }}
           if-no-files-found: error
 
       - name: Publish a release you can download
+        working-directory: ${{ env.PROJECT_DIR }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -96,5 +134,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-log
-          path: Inkwell-iOS/build_log.txt
+          path: ${{ env.PROJECT_DIR }}/build_log.txt
           if-no-files-found: ignore

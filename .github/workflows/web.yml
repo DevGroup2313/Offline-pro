@@ -3,15 +3,23 @@ name: Build the Inkwell web app
 # Builds the home-screen web app (for iPhone and iPad through Safari's
 # Add to Home Screen, or any browser) from the same Inkwell.html as the apps,
 # and publishes it as a zip. Publishing it at a web address is a separate
-# choice: see "Inkwell-Web/READ ME.txt".
+# choice: see the READ ME beside build_site.py.
+#
+# The files are found wherever they sit: build_site.py (with icons/ and
+# VERSION.txt beside it), and the first folder holding Inkwell.html together
+# with vendor/transformers.min.js.
 
 on:
   push:
     branches: [ main, 'claude/**' ]
-    paths:
-      - 'Inkwell-Web/**'
-      - 'Inkwell-Android/app/src/main/assets/**'
-      - '.github/workflows/web.yml'
+    paths-ignore:
+      - 'Inkwell-Android/app/src/main/java/**'
+      - 'Inkwell-Android/app/src/main/res/**'
+      - 'Inkwell-Android/*.gradle'
+      - 'Inkwell-iOS/**'
+      - 'artwork/**'
+      - '.github/workflows/main.yml'
+      - '.github/workflows/ios.yml'
   workflow_dispatch:
 
 permissions:
@@ -27,8 +35,23 @@ jobs:
       - name: Build the web app
         run: |
           set -euo pipefail
-          version="$(sed -n "s/^[[:space:]]*versionName[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" Inkwell-Android/app/build.gradle | head -n 1)"
-          python3 Inkwell-Web/build_site.py Inkwell-Android/app/src/main/assets site "${version:-unknown}"
+          script="$(find . -maxdepth 3 -name build_site.py -not -path './.git/*' | sort | head -n 1)"
+          if [ -z "$script" ]; then
+            echo "::error::No build_site.py in this repository. Upload everything inside the web app package."
+            exit 1
+          fi
+          src=""
+          while IFS= read -r f; do
+            d="$(dirname "$f")"
+            if [ -f "$d/vendor/transformers.min.js" ]; then src="$d"; break; fi
+          done < <(find . -maxdepth 6 -name Inkwell.html -not -path './.git/*' -not -path './site/*' | sort)
+          if [ -z "$src" ]; then
+            echo "::error::No Inkwell.html with a vendor folder beside it. Upload the web folder from the package."
+            exit 1
+          fi
+          version="$(tr -d '[:space:]' < "$(dirname "$script")/VERSION.txt" 2>/dev/null || true)"
+          echo "build script: $script; web app from: $src; version ${version:-unknown}"
+          python3 "$script" "$src" site "${version:-unknown}"
           zip_name="Inkwell-${version:-unknown}-web-build${{ github.run_number }}.zip"
           (cd site && zip -qr "../$zip_name" .)
           {
