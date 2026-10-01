@@ -832,15 +832,24 @@ capBtn.onclick = function () {
 };
 document.getElementById("copyBtn").onclick = function () {
   var t = pad.innerText || "";
+  /* 7.30: the clipboard answers later. Scriba used to say "Copied" at once, so a
+     refusal (the app windows can refuse) left nothing copied and no fallback. */
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t); say(L.copied); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(function () { say(L.copied); }, copyBySelection);
+      return;
+    }
   } catch (e) {}
+  copyBySelection();
+};
+function copyBySelection() {
   try {
     var r = document.createRange(); r.selectNodeContents(pad);
     var s = getSelection(); s.removeAllRanges(); s.addRange(r);
-    document.execCommand("copy"); s.removeAllRanges(); say(L.copied);
+    var ok = document.execCommand("copy"); s.removeAllRanges();
+    say(ok ? L.copied : (FR ? "La copie a \u00e9t\u00e9 refus\u00e9e ici : s\u00e9lectionnez le texte et copiez-le." : "Copying was refused here: select the text and copy it by hand."));
   } catch (e) {}
-};
+}
 document.getElementById("clearBtn").onclick = function () {
   pad.innerHTML = "";
   try { localStorage.setItem(KEY, ""); } catch (e) {}

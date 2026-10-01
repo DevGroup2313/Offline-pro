@@ -83,6 +83,38 @@ Versions: the Fire app is 7.30 (version code 73000 + build number, so it
 installs over every 7.29 build and keeps the documents); the iPhone/iPad app
 and the web app are 7.30.
 
+7.30, SECOND ROUND (after your report that every device still said 7.29)
+=======================================================================
+Why everything said 7.29: the visible version labels were never bumped. The
+page's BUILD label and the desktop launcher's LAUNCHER_BUILD still read 7.29,
+so 7.30 installs looked like 7.29. Both now say 7.30, and the masthead shows
+the version beside the date on every device:  I · OCTOBRIS · MMXXVI · v7.30
+If a device does not show v7.30 there, it is not running 7.30.
+
+Night mode in a floating Tabula window reverted to day within 1 to 4 s.
+  Tabula's own theme check read Carpe Diem's mark (data-theme="night" on the
+  body); Inkwell marks night on its root (data-theme="dark"). It now reads
+  both. Tested: Tabula, Scriba and Fontes, full-screen and floating, opened in
+  day and in night, toggled from the desk, the room's moon and the window's
+  moon, checked at 0.5 s and 6 s: 96 of 96 correct, run twice.
+
+Rewrite (all ten styles) and the Draft button did nothing (already in 7.29):
+  they called rewrite() and compose(), which no longer existed. Restored: the
+  offline rules engine answers at once (concise, professional, scholarly,
+  casual, confident, shorter); the server or the Pro model adds its version;
+  summary, expand, paraphrase and natural need a writing model and say so.
+  Draft asks what to write and inserts at the cursor. Nothing changes the
+  page until "Use this". Preset and custom rewrites of the whole page now
+  replace the page instead of inserting a copy at the cursor.
+
+Scriba's Copy said "Copied" before the clipboard answered; when the clipboard
+  refused (the app windows can), nothing was copied. It now waits, falls back
+  to a second copy method, and says so honestly if both are refused.
+
+Every control pressed in a test browser, with errors recorded:
+  desk 111 controls, Tabula 395, Scriba 10, Fontes 15: no errors left. (The
+  only control that closes a room is Tabula's New window, by design.)
+
 NOT VERIFIED (needs your devices)
 ---------------------------------
 - Nothing here ran on a real Fire tablet, iPad or iPhone. If the Mini model
