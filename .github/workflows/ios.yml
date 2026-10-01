@@ -1,0 +1,100 @@
+name: Build Inkwell for iPhone and iPad
+
+# Builds the iPhone and iPad app on GitHub's Mac runner (it has Xcode, so your
+# own Mac does not need it) and publishes the .ipa as a release. The .ipa is
+# unsigned: Sideloadly signs it with your Apple ID as it installs it by USB.
+# Mac runners cost more of a private repository's Actions minutes, so this runs
+# only when the iOS project or the shared web files change, or when started
+# by hand from the Actions tab.
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+    paths:
+      - 'Inkwell-iOS/**'
+      - 'Inkwell-Android/app/src/main/assets/**'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: Inkwell-iOS
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Copy the shared web app into the iOS project
+        run: |
+          set -euo pipefail
+          rm -rf web && mkdir web
+          cp -R ../Inkwell-Android/app/src/main/assets/. web/
+          version="$(sed -n "s/^[[:space:]]*versionName[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" ../Inkwell-Android/app/build.gradle | head -n 1)"
+          {
+            echo "INKWELL_VERSION=${version:-unknown}"
+            echo "IPA_NAME=Inkwell-${version:-unknown}-ios-build${{ github.run_number }}.ipa"
+          } >> "$GITHUB_ENV"
+          ls -la web web/vendor
+
+      - name: Generate the Xcode project
+        run: |
+          set -euo pipefail
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build the app
+        run: |
+          set -o pipefail
+          xcodebuild -version | tee build_log.txt
+          xcodebuild -project Inkwell.xcodeproj -target Inkwell -configuration Release \
+            -sdk iphoneos SYMROOT="$PWD/build" \
+            MARKETING_VERSION="$INKWELL_VERSION" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee -a build_log.txt
+
+      - name: Package the .ipa
+        run: |
+          set -euo pipefail
+          app=build/Release-iphoneos/Inkwell.app
+          test -f "$app/Info.plist"
+          test -f "$app/web/Inkwell.html"
+          plutil -p "$app/Info.plist"
+          rm -rf Payload && mkdir Payload
+          cp -R "$app" Payload/
+          zip -qry "$IPA_NAME" Payload
+          ls -la "$IPA_NAME"
+
+      - name: Keep the .ipa with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-iOS
+          path: Inkwell-iOS/${{ env.IPA_NAME }}
+          if-no-files-found: error
+
+      - name: Publish a release you can download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="ios-build-${{ github.run_number }}"
+          title="Inkwell ${INKWELL_VERSION} for iPhone and iPad (build ${{ github.run_number }})"
+          notes="To install by USB from a Windows computer: download the .ipa under Assets, open Sideloadly, connect the iPhone or iPad with its cable, drag the .ipa into Sideloadly, enter your Apple ID and press Start. With a free Apple ID the app must be reinstalled this way every 7 days. Built from commit ${{ github.sha }}."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$IPA_NAME" --clobber
+          else
+            gh release create "$tag" "$IPA_NAME" --target "${{ github.sha }}" --title "$title" --notes "$notes"
+          fi
+
+      - name: Keep the build log, pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: Inkwell-iOS/build_log.txt
+          if-no-files-found: ignore

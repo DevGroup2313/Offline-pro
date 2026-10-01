@@ -1,0 +1,60 @@
+name: Build the Inkwell web app
+
+# Builds the home-screen web app (for iPhone and iPad through Safari's
+# Add to Home Screen, or any browser) from the same Inkwell.html as the apps,
+# and publishes it as a zip. Publishing it at a web address is a separate
+# choice: see "Inkwell-Web/READ ME.txt".
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+    paths:
+      - 'Inkwell-Web/**'
+      - 'Inkwell-Android/app/src/main/assets/**'
+      - '.github/workflows/web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Build the web app
+        run: |
+          set -euo pipefail
+          version="$(sed -n "s/^[[:space:]]*versionName[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" Inkwell-Android/app/build.gradle | head -n 1)"
+          python3 Inkwell-Web/build_site.py Inkwell-Android/app/src/main/assets site "${version:-unknown}"
+          zip_name="Inkwell-${version:-unknown}-web-build${{ github.run_number }}.zip"
+          (cd site && zip -qr "../$zip_name" .)
+          {
+            echo "INKWELL_VERSION=${version:-unknown}"
+            echo "ZIP_NAME=$zip_name"
+          } >> "$GITHUB_ENV"
+          ls -la site "$zip_name"
+
+      - name: Keep the web app with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-Web
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
+
+      - name: Publish a release you can download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="web-build-${{ github.run_number }}"
+          title="Inkwell ${INKWELL_VERSION} web app (build ${{ github.run_number }})"
+          notes="The home-screen web app. Unzip it and publish the folder at a web address (see Inkwell-Web/READ ME.txt), then open that address in Safari and choose Share, Add to Home Screen. Built from commit ${{ github.sha }}."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$ZIP_NAME" --clobber
+          else
+            gh release create "$tag" "$ZIP_NAME" --target "${{ github.sha }}" --title "$title" --notes "$notes"
+          fi

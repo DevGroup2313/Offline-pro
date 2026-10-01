@@ -1,0 +1,8 @@
+# Filled or produced by the build; never edited by hand.
+web/
+build/
+Payload/
+Info.plist
+Inkwell.xcodeproj/
+*.ipa
+build_log.txt

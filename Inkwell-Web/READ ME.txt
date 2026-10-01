@@ -1,0 +1,30 @@
+INKWELL 7.29: THE HOME-SCREEN WEB APP (IPHONE, IPAD AND ANY BROWSER)
+===================================================================
+This is the fallback to the iPhone and iPad app: it needs no Apple ID, no
+cable and no reinstalling every 7 days. It is Inkwell.html with a manifest,
+home-screen icons and an offline cache (sw.js). Once added to the Home Screen
+it opens in its own window with the seal, and works offline after the first
+visit.
+
+HOW IT IS BUILT
+   GitHub builds it with build_site.py whenever Inkwell.html changes, and
+   publishes it on the Releases page as "Inkwell ... web app", a zip file.
+   To build it yourself: python3 build_site.py <assets folder> <output folder>
+
+WHAT IT STILL NEEDS: A WEB ADDRESS
+   Safari can only add a page to the Home Screen from a web address (https),
+   not from a file. The unzipped folder must therefore be published on a web
+   host. GitHub Pages is the simplest, but on a free GitHub plan it works only
+   for public repositories as far as I know; please check GitHub's current
+   plans. Note that a published address can be opened by anyone who knows it.
+
+ON THE IPHONE OR IPAD
+   1. Open the address in Safari.
+   2. Tap Share, then Add to Home Screen, then Add.
+   3. Open Inkwell from the Home Screen icon.
+
+YOUR DOCUMENTS
+   The web app keeps its own library, separate from the app and from Safari
+   tabs. Use File, Export library and File, Import library to move documents.
+   Export regularly: a browser may clear a web app's storage, for example if
+   the device runs short of space.

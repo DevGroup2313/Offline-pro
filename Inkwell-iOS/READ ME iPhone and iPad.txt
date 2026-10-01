@@ -1,0 +1,59 @@
+INKWELL 7.29 ON IPHONE AND IPAD (THE APP, INSTALLED BY USB)
+=========================================================
+This folder (Inkwell-iOS) is the iPhone and iPad app. GitHub builds it on one
+of its own Macs, which has Xcode, so your Mac does not need Xcode. Apple only
+lets an app run if it is signed with an Apple ID, so the build is signed on
+your Windows computer by Sideloadly as it installs the app over USB.
+
+Please check these steps against Sideloadly's own current instructions: they
+were written without access to an iPhone, an iPad or Sideloadly.
+
+A. GET THE APP FILE
+   1. On the repository's Releases page, open the newest
+      "Inkwell ... for iPhone and iPad" release.
+   2. Download the .ipa file under Assets.
+
+B. ONCE, ON THE WINDOWS COMPUTER
+   3. Install Sideloadly from its official site (sideloadly.io).
+   4. Sideloadly needs Apple's iTunes and iCloud for Windows. Its site says
+      which versions (at the time of writing, the ones from Apple's website
+      rather than the Microsoft Store).
+
+C. INSTALL
+   5. Connect the iPhone or iPad with its cable. Unlock it and tap Trust if
+      it asks whether to trust this computer.
+   6. Open Sideloadly. Drag the .ipa into it. Choose the device, enter your
+      Apple ID, and press Start.
+   7. On the device, the first time only:
+        Settings, General, VPN & Device Management: tap your Apple ID, then
+        Trust.
+        Settings, Privacy & Security, Developer Mode: switch it on and let
+        the device restart (asked on iOS 16 and later).
+   8. Inkwell is now on the Home Screen with the seal. iPhone and iPad
+      always draw app icons as rounded squares, so the seal sits on white.
+
+D. EVERY 7 DAYS (FREE APPLE ID)
+   With a free Apple ID, Apple stops the app from opening 7 days after it was
+   signed. Repeat step 6 with the same .ipa (or a newer one) before then.
+   Installing over the existing app should keep your documents, as the app's
+   storage belongs to its identifier (studio.inkwell.app), but export your
+   library first anyway until you have seen this work on your own device.
+   A paid Apple Developer account makes each install last a year instead.
+
+E. YOUR DOCUMENTS
+   The app keeps its own library, separate from Safari and from the web app.
+   To bring documents across: in the old place, File, Export library; in the
+   app, File, Import library. Saving a file opens Apple's "Save to Files"
+   dialog.
+   NEVER delete the app without File, Export library first: deleting the app
+   deletes its storage.
+
+F. SCRIBA
+   The first time Scriba records, iOS asks for the microphone: choose Allow.
+   On-device Whisper downloads its model the first time, so be online for
+   the first recording.
+
+G. IF THE BUILD FAILS
+   Open the failed run in Actions ("Build Inkwell for iPhone and iPad"), open
+   the red step, and copy its last lines. The build log is also attached to
+   the run as "ios-build-log".
