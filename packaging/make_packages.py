@@ -2,7 +2,9 @@
 # INKWELL  |  Copyright (c) 2026 Yannie D. Forest. All rights reserved.
 # No licence is granted. See LICENCE.txt.
 #
-# Makes the three self-contained download packages, one per kind of device:
+# Makes the download packages, one per kind of device. Mac and Windows are
+# install packages (run their installer); Fire tablet, iPhone/iPad and the web
+# app are build packages (put them on GitHub, which builds the app):
 #   python3 packaging/make_packages.py <output-folder>
 # Each zip holds one folder whose CONTENTS become a new GitHub repository: the
 # project, its workflow (in .github, plus a .txt copy for when the uploader
@@ -66,6 +68,30 @@ def web(pkg):
     shutil.copytree(ASSETS, os.path.join(pkg, "web"))
 
 
+def desktop_page(pkg):
+    """The page and the files the desktop installers copy, plus the standalone
+    Scriba and Fontes, the licence and the handoff notes."""
+    copy(os.path.join(ASSETS, "Inkwell.html"), os.path.join(pkg, "Inkwell.html"))
+    shutil.copytree(os.path.join(ASSETS, "vendor"), os.path.join(pkg, "vendor"))
+    for name in ("scriba_v729.html", "fontes_v729.html", "LICENCE.txt"):
+        copy(name, os.path.join(pkg, name))
+    for name in sorted(os.listdir(ROOT)):
+        if name.startswith("INKWELL_HANDOFF_") and name.endswith(".txt"):
+            copy(name, os.path.join(pkg, name))
+
+
+def mac(pkg):
+    """Install or update on a Mac: run "Install or Update Inkwell.command"."""
+    shutil.copytree(os.path.join(ROOT, "Inkwell-Mac"), pkg)
+    desktop_page(pkg)
+
+
+def windows(pkg):
+    """Install or update on Windows: run "Install or Update Inkwell.bat"."""
+    shutil.copytree(os.path.join(ROOT, "Inkwell-Windows"), pkg)
+    desktop_page(pkg)
+
+
 def zip_folder(folder, zip_path):
     base = os.path.dirname(folder)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
@@ -82,7 +108,8 @@ def main():
     out = os.path.abspath(sys.argv[1])
     os.makedirs(out, exist_ok=True)
     tag = "v" + version().replace(".", "p")
-    for label, build in (("Fire_Tablet", fire), ("iPhone_iPad", ios), ("Web_App", web)):
+    for label, build in (("Mac", mac), ("Windows", windows),
+                         ("Fire_Tablet", fire), ("iPhone_iPad", ios), ("Web_App", web)):
         name = "Inkwell_%s_%s" % (label, tag)
         folder = os.path.join(out, name)
         if os.path.exists(folder):

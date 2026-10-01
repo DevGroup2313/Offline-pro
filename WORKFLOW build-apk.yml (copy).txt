@@ -12,6 +12,9 @@ on:
       - 'Inkwell-iOS/**'
       - 'Inkwell-Web/**'
       - 'artwork/**'
+      - 'Inkwell-Mac/**'
+      - 'Inkwell-Windows/**'
+      - 'packaging/**'
       - '.github/workflows/ios.yml'
       - '.github/workflows/web.yml'
   workflow_dispatch:

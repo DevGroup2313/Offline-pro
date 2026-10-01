@@ -116,9 +116,13 @@ results on test sets, never as claims of parity.
 
 MAC AND WINDOWS PACKAGES
 ------------------------
-The Mac and Windows installers (Inkwell_Mac_v7p29.zip and
-Inkwell_Windows_v7p29.zip) are not in any of the repositories; Inkwell-Cloud
-holds the Mac files of 7.27 only. Building 7.30 installers from the 7.27
-launcher would undo the 7.28 and 7.29 launcher fixes that protect your
-documents, so it was not done. Upload the two 7.29 zips (unzipped) to a
-repository and they will be rebuilt with the 7.30 page.
+Inkwell_Mac_v7p30.zip and Inkwell_Windows_v7p30.zip are the 7.29 installers
+you supplied, with the 7.30 page. Compared file by file with your 7.29
+packages: nothing is missing; changed are Inkwell.html and scriba_v729.html
+(the 7.30 page and Scriba), the version labels in the installer, the READ ME
+and the Mac Info.plist; added is this file. The launcher (inkwell_app.py),
+server.py and the Mac native launcher are byte for byte the 7.29 ones, with
+every protection for your documents. Install as before: File, Export
+library first, then "Install or Update Inkwell" in the package.
+Their files now live in Inkwell-Mac/ and Inkwell-Windows/ in the repository,
+and packaging/make_packages.py builds all five packages.

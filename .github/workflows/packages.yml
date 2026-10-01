@@ -1,7 +1,7 @@
 name: Make the download packages
 
-# Builds the three self-contained packages (Fire tablet, iPhone and iPad, web
-# app) with packaging/make_packages.py and publishes them as one release.
+# Builds the download packages (Mac, Windows, Fire tablet, iPhone and iPad,
+# web app) with packaging/make_packages.py and publishes them as one release.
 # Each package rebuilds its app on a new GitHub repository with no other help.
 
 on:
@@ -9,6 +9,9 @@ on:
     branches: [ main, 'claude/**' ]
     paths:
       - 'packaging/**'
+      - 'Inkwell-Mac/**'
+      - 'Inkwell-Windows/**'
+      - 'src/**'
       - '.github/workflows/packages.yml'
   workflow_dispatch:
 
@@ -44,7 +47,7 @@ jobs:
           version="$(tr -d '[:space:]' < Inkwell-Web/VERSION.txt)"
           tag="packages-${{ github.run_number }}"
           title="Inkwell ${version} download packages (build ${{ github.run_number }})"
-          notes="Three packages, one per kind of device. Each holds a READ ME FIRST file that explains how to rebuild that app on a new GitHub repository. Fire tablet: makes an .apk. iPhone and iPad: makes an .ipa, installed by USB with Sideloadly. Web app: a home screen web site for Safari. Built from commit ${{ github.sha }}."
+          notes="One package per kind of device. Mac and Windows: unzip and run the installer inside (Install or Update Inkwell). Fire tablet, iPhone and iPad, web app: each holds a READ ME FIRST that explains how to rebuild that app on a new GitHub repository. Fire tablet: makes an .apk. iPhone and iPad: makes an .ipa, installed by USB with Sideloadly. Web app: a home screen web site for Safari. Built from commit ${{ github.sha }}."
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" out/*.zip --clobber
           else

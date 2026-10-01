@@ -1,0 +1,3 @@
+# Installer scripts are stored exactly as written (Windows line endings stay).
+Inkwell-Windows/** -text
+Inkwell-Mac/** -text

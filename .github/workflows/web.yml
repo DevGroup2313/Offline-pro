@@ -18,6 +18,9 @@ on:
       - 'Inkwell-Android/*.gradle'
       - 'Inkwell-iOS/**'
       - 'artwork/**'
+      - 'Inkwell-Mac/**'
+      - 'Inkwell-Windows/**'
+      - 'packaging/**'
       - '.github/workflows/main.yml'
       - '.github/workflows/ios.yml'
   workflow_dispatch:

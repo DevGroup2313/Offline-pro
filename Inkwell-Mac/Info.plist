@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Inkwell</string>
+    <key>CFBundleDisplayName</key>
+    <string>Inkwell</string>
+    <key>CFBundleIdentifier</key>
+    <string>studio.inkwell.desk</string>
+    <key>CFBundleVersion</key>
+    <string>7.30</string>
+    <key>CFBundleShortVersionString</key>
+    <string>7.30</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleExecutable</key>
+    <string>Inkwell</string>
+    <key>CFBundleIconFile</key>
+    <string>inkwell.icns</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Inkwell uses the microphone only when you press Record or Capture in Scriba, to turn your voice into text on this Mac.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Scriba can use the system's speech recognition when local Whisper is not installed.</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright (c) 2026 Yannie D. Forest. All rights reserved.</string>
+</dict>
+</plist>

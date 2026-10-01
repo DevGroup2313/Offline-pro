@@ -1,0 +1,20 @@
+INKWELL 7.30 FOR WINDOWS
+========================
+IMPORTANT: do not run the old "Build Windows App.bat" from v7.25 again. It
+deletes the folder that holds your documents. This version never deletes
+any folder.
+
+1. In your current Inkwell, choose File, Export library, and keep the file.
+2. Unzip this package. Keep all its files together.
+3. Double-click "Install or Update Inkwell.bat". If Windows SmartScreen
+   warns, choose More info, then Run anyway.
+4. Answer its questions. It works for a first install and for an update.
+5. Open Inkwell from the Desktop or Start menu. In Scriba, press Record.
+
+If Scriba says Windows refused the microphone: Settings, Privacy and
+security, Microphone. Switch on Microphone access and "Let desktop apps
+access your microphone".
+
+Python 3.8 or newer is required (python.org; tick "Add python.exe to PATH").
+Local transcription (Whisper) is optional; the installer offers it.
+Backups are made in %LOCALAPPDATA%\Inkwell\backups before anything changes.
