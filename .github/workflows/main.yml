@@ -1,8 +1,12 @@
 name: Build Inkwell for Android
 
+# Builds the Fire tablet app (an APK) and publishes it as a release.
+# The Android project may sit at the top of the repository or in a folder such
+# as Inkwell-Android/: the second step finds it by its settings.gradle.
+
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'claude/**' ]
   workflow_dispatch:
 
 permissions:
@@ -15,6 +19,25 @@ jobs:
       - name: Check out the project
         uses: actions/checkout@v4
 
+      - name: Find the Android project
+        run: |
+          set -euo pipefail
+          dir="$(find . -maxdepth 3 -name settings.gradle -not -path './.git/*' -printf '%h\n' | sort | head -n 1)"
+          if [ -z "$dir" ]; then
+            echo "::error::No settings.gradle in this repository. Upload the Inkwell-Android folder, or everything inside it."
+            exit 1
+          fi
+          dir="${dir#./}"
+          version="$(sed -n "s/^[[:space:]]*versionName[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" "$dir/app/build.gradle" | head -n 1)"
+          {
+            echo "PROJECT_DIR=$dir"
+            echo "INKWELL_VERSION=${version:-unknown}"
+            echo "APK_NAME=Inkwell-${version:-unknown}-build${{ github.run_number }}.apk"
+          } >> "$GITHUB_ENV"
+          echo "Android project found in: $dir (version ${version:-unknown})"
+
+      # The Android SDK comes preinstalled on GitHub's Ubuntu runners (ANDROID_HOME),
+      # and the Android Gradle plugin fetches any missing platform it needs.
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -27,21 +50,42 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build the APK
-        run: gradle --no-daemon assembleRelease
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace assembleRelease 2>&1 | tee build_log.txt
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/release/app-release.apk "Inkwell-7.29-build${{ github.run_number }}.apk"
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: cp app/build/outputs/apk/release/app-release.apk "$APK_NAME"
 
       - name: Keep the APK with this run
         uses: actions/upload-artifact@v4
         with:
           name: Inkwell-APK
-          path: Inkwell-*.apk
+          path: ${{ env.PROJECT_DIR }}/${{ env.APK_NAME }}
+          if-no-files-found: error
 
-      - name: Publish a release you can open on the tablet
+      - name: Publish a release you can download
+        working-directory: ${{ env.PROJECT_DIR }}
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release create "build-${{ github.run_number }}" Inkwell-*.apk \
-            --title "Inkwell 7.29 (build ${{ github.run_number }})" \
-            --notes "On the Fire tablet: open this page in Silk, tap the .apk file under Assets, then Install. Each build installs over the previous one and keeps your documents."
+          set -euo pipefail
+          tag="build-${{ github.run_number }}"
+          title="Inkwell ${INKWELL_VERSION} (build ${{ github.run_number }})"
+          notes="To install on the Fire tablet by USB: download the .apk under Assets on your computer, connect the tablet with its cable, and copy the file into the tablet's Download folder. On the tablet, open the Files app, tap the file, then Install. Each build installs over the previous one and keeps your documents. Built from commit ${{ github.sha }}."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$APK_NAME" --clobber
+          else
+            gh release create "$tag" "$APK_NAME" --target "${{ github.sha }}" --title "$title" --notes "$notes"
+          fi
+
+      - name: Keep the build log, pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: ${{ env.PROJECT_DIR }}/build_log.txt
+          if-no-files-found: ignore
