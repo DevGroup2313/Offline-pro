@@ -1353,7 +1353,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.29 · I · OCTOBRIS · MMXXVI';
+const BUILD='7.30 · I · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -3692,7 +3692,10 @@ document.querySelectorAll('#diaSeg button').forEach(b=>b.classList.toggle('activ
 (function(){const T=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
  const rom=n=>{let s='';for(const[v,r]of T){while(n>=v){s+=r;n-=v}}return s};
  const Mx=['IANVARII','FEBRVARII','MARTII','APRILIS','MAII','IVNII','IVLII','AVGVSTI','SEPTEMBRIS','OCTOBRIS','NOVEMBRIS','DECEMBRIS'];
- const d=new Date();const el=document.getElementById('brandDate');if(el)el.textContent=rom(d.getDate())+' · '+Mx[d.getMonth()]+' · '+rom(d.getFullYear());
+ const d=new Date();const el=document.getElementById('brandDate');if(el){el.textContent=rom(d.getDate())+' · '+Mx[d.getMonth()]+' · '+rom(d.getFullYear())+' · v'+String(BUILD).split(' ')[0];
+  /* 7.30: the version stands in the masthead, so every device shows which
+     Inkwell it runs without opening the About box */
+  el.title='Inkwell '+BUILD;}
 })();
 
 /* ================= THE AI LANE — one generation in flight, ever ================= */
@@ -7695,13 +7698,100 @@ function renderAlts(status){
  c.innerHTML=html;}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  pushUndo();
- ed.value=ed.value.slice(0,ALTSEL.s)+a.text+ed.value.slice(ALTSEL.e2);
- ed.setSelectionRange(ALTSEL.s,ALTSEL.s+a.text.length);afterChange();
+ let text=a.text;
+ if(ALTSEL.s===ALTSEL.e2){
+  /* 7.30: an insertion (a draft) keeps a proper gap from its neighbours: a new
+     paragraph at the end of a line or of the text, a space mid-sentence */
+  const before=ed.value.slice(0,ALTSEL.s),after=ed.value.slice(ALTSEL.e2);
+  const endOfLine=!after.length||after[0]==='\n';
+  if(before.length&&!/\s$/.test(before))text=(endOfLine?'\n\n':' ')+text;
+  else if(before.length&&endOfLine&&!/\n\n$/.test(before)&&/\n$/.test(before))text='\n'+text;
+  if(after.length&&!/^\s/.test(after))text+=' ';
+ }
+ ed.value=ed.value.slice(0,ALTSEL.s)+text+ed.value.slice(ALTSEL.e2);
+ ed.setSelectionRange(ALTSEL.s,ALTSEL.s+text.length);afterChange();
  closeAlts();toast('Applied ✔');}
+/* ===== 7.30: Rewrite ▾ and ✨ Draft =====
+   Both menus called rewrite() and compose(), which no longer existed, so every
+   Rewrite item and the Draft button stopped with an error. Restored here on
+   the same pattern as Alternatives: the offline rules engine answers at once
+   where it can, the local server or the Pro model adds its version, and the
+   writer chooses in the side panel. Nothing changes the page until "Use this". */
+const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',concise:'Concise',confident:'Confident',
+ shorten:'Shorter',summarize:'Summary',expand:'Expanded',paraphrase:'Paraphrase',humanize:'Natural'};
+function inkTargetText(){
+ /* the selection, or the whole page when nothing is selected; the range is
+    remembered so "Use this" replaces exactly what was rewritten */
+ const s=ed.selectionStart,e=ed.selectionEnd;
+ return (e>s)?{s:s,e2:e,t:ed.value.slice(s,e),whole:false}:{s:0,e2:ed.value.length,t:ed.value,whole:true};
+}
+function inkAltsOpen(sel,status){
+ ALTSEL={s:sel.s,e2:sel.e2,t:sel.t};ALTS=[];ALTMODE=true;
+ hideBubble();if(S.panelFold)foldPanel();
+ document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ renderAlts(status);
+}
+function rewrite(mode){
+ const label=RW_LABEL[mode]||mode;
+ const sel=inkTargetText();
+ if(!sel.t.trim()){toast('Type or select something to rewrite first.');return;}
+ inkAltsOpen(sel,'Rewriting'+(sel.whole?' the whole page':' the selection')+': '+label+'…');
+ let pending=0;
+ function done(){if(--pending<=0&&!ALTS.length){
+  renderAlts(S.connected||PRO?'The engine returned no change for this text.'
+   :(DEMORW[mode]?'This text is already tight for that style.':label+' needs a writing model: start the server (⚙ Engine) or install the Pro model.'));}}
+ try{const out=DEMORW[mode]?DEMORW[mode](sel.t):null;
+  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine'});}catch(e){}
+ renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
+ const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
+ if(S.connected){pending++;
+  api('rewrite',{text:sel.t,mode:mode,style:sysNote}).then(r=>{
+   if(r&&r.text&&r.text.trim()&&r.text.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')});
+    if(r.think)maybeShowThink(r.think);renderAlts('');}
+  }).catch(()=>{}).finally(done);
+ }else if(PRO&&SYS_RW[mode]){pending++;
+  proChat(SYS_RW[mode]+sysNote,sel.t,Math.min(1200,wordCt(sel.t)*(mode==='expand'?4:2)+150)).then(r=>{
+   if(r&&r.trim()&&r.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.trim(),why:'Written by the Pro model'});renderAlts('');}
+  }).catch(()=>{}).finally(done);
+ }
+ if(!pending){pending=1;done();}
+}
+function compose(){
+ const mb=document.getElementById('modalBody');if(!mb)return;
+ mb.innerHTML='<h3>✨ Draft</h3>'
+  +'<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Say what to write. The draft appears in the side panel; <b>Use this</b> puts it at your cursor. Nothing is inserted until you choose.</p>'
+  +'<textarea id="composeInput" style="width:100%;min-height:90px;font-family:inherit;font-size:14px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="e.g. A short paragraph introducing my research question on urban heat islands, for a general reader"></textarea>'
+  +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
+  +'<button class="primary" onclick="composeRun(document.getElementById(\'composeInput\').value)">Draft ▸</button>'
+  +'<button class="lkbtn" onclick="closeModal()">Cancel</button></div>'
+  +'<div style="margin-top:12px;font-size:11px;color:var(--mut);line-height:1.6">Drafting needs a writing model: the server (⚙ Engine) or the Pro model. It never invents citations, numbers or facts; check every claim it makes.</div>';
+ try{document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}catch(e){}
+ setTimeout(()=>{try{document.getElementById('composeInput').focus();}catch(e){}},60);
+}
+function composeRun(instr){
+ instr=String(instr||'').trim();
+ if(!instr){toast('Say what to draft first.');return;}
+ try{closeModal();}catch(e){}
+ const at=ed.selectionEnd;
+ inkAltsOpen({s:at,e2:at,t:''},'Drafting…');
+ const style=' Register: '+S.reg+'.'+voiceNotes();
+ if(S.connected){
+  api('compose',{instruction:instr,style:style}).then(r=>{
+   if(r&&r.text&&r.text.trim()){ALTS.push({kind:'Draft',text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')+'; check every claim'});
+    if(r.think)maybeShowThink(r.think);renderAlts('');}
+   else renderAlts('The engine returned no draft. Try a more specific request.');
+  }).catch(()=>renderAlts('Could not reach the engine. Is the server running?'));
+ }else if(PRO){
+  proChat('You are Inkwell. Write exactly what is asked, in clear, well-structured prose with precise diction and smooth transitions. Never invent citations, statistics or facts.'+style,instr,700).then(r=>{
+   if(r&&r.trim()){ALTS.push({kind:'Draft',text:r.trim(),why:'Written by the Pro model; check every claim'});renderAlts('');}
+   else renderAlts('The Pro model returned no draft.');});
+ }else{
+  renderAlts('Drafting needs a writing model: start the server (⚙ Engine) or install the Pro model. The rules engine corrects and tightens; it does not write new text.');
+ }
+}
 /* ===== Grammarly-style preset and custom rewriting (7.25) ===== */
 function rewritePreset(preset){
- const s=ed.selectionStart,e=ed.selectionEnd;
- const t=(e>s)?ed.value.slice(s,e):ed.value;
+ const sel=inkTargetText(),s=sel.s,e=sel.e2,t=sel.t;
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
  ALTSEL={s,e2:e,text:t};ALTS=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
@@ -7764,8 +7854,7 @@ function rewriteCustomPrompt(){
 }
 function rewriteCustom(instruction){
  if(!instruction||!instruction.trim()){toast('Enter an instruction first.');return;}
- const s=ed.selectionStart,e=ed.selectionEnd;
- const t=(e>s)?ed.value.slice(s,e):ed.value;
+ const sel=inkTargetText(),s=sel.s,e=sel.e2,t=sel.t;
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
  ALTSEL={s,e2:e,text:t};ALTS=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
