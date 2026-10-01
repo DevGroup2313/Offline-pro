@@ -1,0 +1,4 @@
+// Inkwell for Android: the Android Gradle plugin is the only build dependency.
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}

@@ -1,0 +1,61 @@
+INKWELL 7.29: THE FIRE TABLET APP
+=================================
+This folder (Inkwell-Android) is a complete Android project. GitHub turns it
+into an APK, the Android app file, without any software on your computer.
+
+A. PUT THE PROJECT ON GITHUB (once)
+   1. Sign in at github.com. Create a new repository named, for example,
+      "inkwell-android". Choose PRIVATE: the project contains the app's
+      signing key (folder "signing"), which should not be public.
+   2. Unzip this package. Open the folder "Inkwell-Android".
+   3. Show hidden files, so the folder ".github" is visible:
+        Mac: in Finder press Cmd+Shift+full stop.
+        Windows: File Explorer, View, Show, Hidden items.
+   4. In the new repository: "uploading an existing file" (or Add file,
+      Upload files). Drag in EVERYTHING inside "Inkwell-Android" (the folders
+      .github, app and signing, and the files beside them). Commit.
+   5. Check that the repository now shows a ".github" folder. If it does not,
+      the uploader skipped it. Then: Add file, Create new file; type the name
+         .github/workflows/build-apk.yml
+      paste the whole content of "WORKFLOW build-apk.yml (copy).txt" from this
+      package, and Commit.
+
+B. BUILD THE APK
+   6. Open the Actions tab. The build starts by itself after each commit
+      (or press "Run workflow"). Wait for a green tick; I estimate five to ten
+      minutes, but I have not been able to time it.
+   7. On the repository's main page, open Releases (right-hand side). The
+      newest release, "Inkwell 7.29 (build N)", has the APK under Assets.
+
+C. INSTALL ON THE FIRE MAX 11
+   8. On the tablet: Settings, Security & Privacy, Apps from Unknown Sources:
+      allow Silk Browser (or the Files app, if you install from a file).
+   9. Either open the release page in Silk (sign in to GitHub there; the
+      repository is private) and tap the .apk, or download the .apk on your
+      computer and copy it to the tablet by cable or on the SD card, then open
+      it with Files. Tap Install.
+  10. Open Inkwell. To bring your documents from the Silk version: there,
+      File, Export library; here, File, Import library.
+
+D. UPDATES
+   Replace changed files in the repository (for a new Inkwell, upload the new
+   Inkwell.html into app/src/main/assets/). A new build starts by itself;
+   install its APK over the old one. Your documents stay, because every build
+   is signed with the same key.
+   NEVER uninstall the app without File, Export library first: uninstalling
+   deletes its storage.
+   Keep a copy of the "signing" folder somewhere safe. Without it, a future
+   build cannot install over this one.
+
+E. SCRIBA ON THE FIRE
+   The first time you press Record or Capture, the tablet asks for the
+   microphone: choose Allow. Live dictation uses on-device Whisper: the first
+   Record downloads the model once (a few tens of megabytes; be online), and
+   after that it works offline. Whisper runs on the tablet itself, so each
+   phrase appears a moment after you pause.
+
+F. IF THE BUILD FAILS
+   Open the failed run in Actions, open the red step, copy its last lines,
+   and send them to me. I could not run this Gradle build in my sandbox
+   (Google's servers are not reachable from it), so a first build may need
+   one correction. The Java itself compiles cleanly against Android's API.

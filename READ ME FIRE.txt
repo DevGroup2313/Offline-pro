@@ -1,0 +1,17 @@
+INKWELL 7.29 ON THE FIRE TABLET
+===============================
+Three ways, best first:
+
+1. The Fire app (recommended): build it once on GitHub and install it; see
+   "READ ME ANDROID AND FIRE.txt" in Inkwell_Android_v7p29.zip. It asks for
+   the microphone, saves with Android's own dialog, and keeps your library.
+
+2. The web app: publish it as described in "READ ME iPad and iPhone.txt"
+   (Inkwell_Web_v7p29.zip), open the address in Silk, and add it to the Home
+   screen from Silk's menu.
+
+3. The local file: copy Inkwell.html to the tablet and open it in Silk.
+   Everything except the microphone works this way.
+
+Each way keeps its own storage. Before switching, use File, Export library
+in the old one and File, Import library in the new one.

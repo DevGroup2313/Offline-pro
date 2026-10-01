@@ -1,0 +1,377 @@
+INKWELL v7.29: HANDOFF NOTES
+============================
+Date: 1 October 2026. Recovery of documents after 7.27, hidden scrollbars in
+Scriba and Fontes, and on-device Whisper (the next Scriba stage).
+
+WHAT TO DO ON YOUR MAC (you saw only Welcome after 7.27)
+=======================================================
+1. Install 7.29 with "Install or Update Inkwell.command" (Terminal method in
+   the READ ME). Do NOT use File, Import library: it REPLACES the library,
+   and would lose what you have written since 7.27.
+2. Open Inkwell. After a few seconds it says how many documents from before
+   the update are not on your shelf, and names them. Choose OK.
+   Nothing on your shelf is changed or removed. A document with the same
+   name as one you have since edited comes back beside it, marked
+   "(recovered)".
+3. If you chose Cancel, or want to look again: File, Recover documents from
+   before an update. For a backup file: File, Add documents from a library
+   file (keeps everything).
+4. If nothing is offered, send me ~/Library/Application Support/Inkwell/
+   inkwell_crash.log: it lists every older store found and how many
+   documents each held.
+
+CHANGES IN 7.29
+===============
+Recovery that only adds (desktop and every view)
+  Sources, read and never written: the web storage of earlier window hosts
+  (Python's, before 7.26), the library files the installers saved in
+  backups/, and the copies the launcher kept before seeding or repairing.
+  The current store is left out, because it mirrors the shelf.
+  Rules: a document whose text is already on the shelf (under any id) is
+  skipped; a new id is added; a known id with different text is added beside
+  it as "(recovered)", unless the shelf copy is the untouched Welcome sample,
+  which it then replaces. Offered once; the menu item offers again.
+  Tested in this exact situation: 11 page checks and 6 launcher checks.
+
+Hidden scrollbars (Scriba and Fontes)
+  Hidden in the standalone pages, in Inkwell's rooms and in the floating
+  windows. Scrolling by wheel, trackpad, touch and keyboard is unchanged.
+  Measured with scrollbars switched on in the test browser: 15 px (Scriba)
+  and 12 px (Fontes) before, 0 px after in all six views; the wheel scrolled
+  the same distance before and after.
+
+On-device Whisper (Scriba)
+  Whisper now runs inside the page, in a background worker, wherever
+  Inkwell's local Whisper server is absent: the Fire app, iPad and iPhone,
+  Silk, and a desktop without the Python libraries (useful on the Intel Mac).
+  Order: the local server first, then on-device Whisper, then the browser's
+  own engine. The model (whisper-tiny; onnx-community first, Xenova as the
+  fallback) is fetched on the first Record press, once, and kept by the
+  browser for offline use. Live dictation and saved recordings both use it.
+  Tested: the real transformers.js 3.8.1 loads from vendor/ in the worker;
+  the whole path (capture, 16 kHz pieces, language, task, fallback model,
+  progress, saved recordings, inside the room) with a stand-in model.
+  NOT tested: real Whisper inference, because this sandbox cannot reach
+  Hugging Face. Speed on the Fire Max 11 is unknown; whisper-tiny is the
+  lightest choice.
+
+In-page models now load offline
+  The vendored transformers.js was the "web" build, which imports bare
+  package names that no browser can resolve without an import map, so the
+  local copy never loaded and every load went to the internet. It is now
+  the self-contained build of the same version (3.8.1), checked against npm.
+  The Mac page server now serves vendor/ (it served the page alone).
+
+CHANGES IN 7.28
+===============
+IMPORTANT: a fresh store could open on the sample, not your library
+  On a first launch with an empty web-view store, an early part of the page
+  wrote the Welcome sample before the main loader could read the on-disk copy
+  of your library. On a Mac, the first launch under the native launcher
+  (7.26 and 7.27) opens exactly such a store. The page then showed only
+  Welcome, and its save then copied that sample over the on-disk copy.
+  Your documents were never deleted: they stay in the older WebKit store and
+  in the installer's backup (the JSON file on your Desktop).
+  Fixed in two places:
+    The page uses the on-disk library before writing any sample, and an
+    untouched sample in the web view's store gives way to the real library.
+    An edited Welcome document is never replaced.
+    The launcher rebuilds an on-disk copy that holds only the untouched
+    sample from the older WebKit stores, ignoring any store that holds only
+    the sample, and keeps a copy of what it replaced
+    (inkwell_store.json.before-repair).
+  If, after installing 7.26 or 7.27 on the Mac, you saw only Welcome:
+  install 7.28; the repair runs on its first launch. If anything is still
+  missing, use File, Import library with the backup JSON on your Desktop.
+
+The Fire tablet app (Stage 2)
+  Inkwell_Android_v7p29.zip is an Android project. GitHub builds it into an
+  APK and publishes it as a release you can open in Silk on the tablet.
+  The app shows Inkwell from its own files at a fixed secure address, so the
+  microphone is allowed and the storage never moves. It asks for the
+  microphone the first time Scriba records. Saving uses Android's own save
+  dialog; opening files uses its file picker; the library is also kept on the
+  app's own disk, as on the desktop. Every build is signed with the same key,
+  so each new APK installs over the old one and keeps your documents.
+  Verified here: the Java compiles cleanly against the real Android 14 API;
+  its logic passes 20 tests; the page as the app serves it passes 14 tests in
+  a simulated Android web view (Fire Max 11 user agent, simulated
+  microphone). NOT verified: the Gradle build itself (Google's servers are not
+  reachable from my sandbox) and the app on a real Fire tablet.
+
+Scriba on tablets and phones
+  Android's built-in web view has no speech engine behind the browser's
+  dictation name, so Scriba no longer offers it there. On the Fire, Capture
+  records your voice; live dictation arrives with on-device Whisper, the
+  next Scriba stage. The message says so plainly.
+
+Device profile additions
+  iPad Pro (2022): Apple M2; 8 GB memory, or 16 GB on the 1 TB and 2 TB models.
+  iPad Pro (2020): Apple A12Z; 6 GB memory.
+
+CHANGES IN 7.27
+===============
+Scriba's interface
+  Dictate and Recordings are now two separate raised buttons with the same
+  shadow as Scriba's other buttons. They used to sit inside a clipped pill
+  that flattened them. The selected one carries Record's navy in light mode
+  and a steel blue in dark mode; before, in dark mode, the selected tab could
+  not be told apart.
+  The language selector now sits beside the tabs, in the template's own raised
+  style, font and corners, with a globe mark and proper dark colours. It used
+  to sit among the action buttons as a flat white box, and it vanished in the
+  Recordings view, where transcription needs it.
+  Record keeps a distinct primary colour in dark mode.
+  The search box in Recordings has proper dark colours.
+  Three strings were swapped between the English and French tables: English
+  users saw "Amplification : non" and would have heard the "too quiet"
+  warning in French. Fixed.
+  Measured: tabs, language control and Record are all 33 px tall and share
+  one top edge, at desktop and at phone width.
+
+Intel Mac transcription
+  Checked on the Python package index: PyTorch 2.2.2 is the last release
+  built for Intel Macs, and transformers 4.57.6 the last that accepts it
+  (every 5.x release needs PyTorch 2.5). On Intel Macs the installer now pins
+  torch 2.2.2, NumPy below 2 and transformers below 4.58, and it runs a real
+  check that PyTorch and NumPy work together; if they do not, it offers a
+  repair.
+
+DEVICE PROFILE (for Stage 3, model selection)
+=============================================
+  Mac: MacBook Pro 13-inch 2019, Intel Core i5 1.4 GHz quad-core, Intel Iris
+    Plus 645, 8 GB memory, macOS 15.8.1 (Sequoia).
+    Implications: Intel, so no MLX (Apple silicon only); models run on the
+    processor; 8 GB shared with the system. Small models only for responsive
+    use. Sequoia removed the right-click Open route for unsigned apps, so the
+    Terminal method in the READ ME is the reliable one.
+  Windows: HP, AMD Ryzen 5 8640HS with Radeon 760M graphics, 16 GB memory.
+    The "377 MB" figure is probably the memory reserved for the integrated
+    graphics, which borrows more from system memory as needed. The most
+    capable device for local models.
+  Second HP laptop: details to follow.
+  Fire Max 11 (13th generation), 55 GB storage plus a 128 GB SD card.
+    Memory not given; I believe this model has 4 GB, to be confirmed.
+  iPad Pro (2020), iPad Pro (2022); iPhone 14, 15, 16.
+  Per-device recommendations will be made in Stage 3 after checking current
+  small models; nothing above is a recommendation yet.
+
+PACKAGES
+--------
+Inkwell_Mac_v7p29.zip      Install or update on a Mac (one script).
+Inkwell_Windows_v7p29.zip  Install or update on Windows (one script).
+Inkwell_Web_v7p29.zip      The web app for iPad, iPhone and Fire (GitHub Pages).
+Inkwell_Fire_v7p29.zip     The single HTML file for the Fire tablet's browser.
+Inkwell_Android_v7p29.zip  The Fire tablet app: an Android project GitHub builds.
+Inkwell.html               The whole app as one file (standalone).
+INKWELL_HANDOFF_v7p29.txt  This file.
+
+BEFORE INSTALLING, ON EVERY DEVICE
+----------------------------------
+Open your current Inkwell and choose File, Export library. Keep that file.
+The installers make their own backup as well, but your own export is the
+surest copy.
+
+WARNING ABOUT THE v7.25 WINDOWS SCRIPT
+--------------------------------------
+"Build Windows App.bat" from v7.25 deletes the folder %LOCALAPPDATA%\Inkwell,
+which holds the Windows documents. Do not run it again. The v7.26 and later installers
+never delete any folder. If documents vanished after a v7.25 install, they
+cannot be recovered from the Recycle Bin; an exported library file, if one
+exists, can be read back with File, Import library.
+
+
+WHAT WAS WRONG
+==============
+
+1. Scriba never asked for the microphone (macOS)
+   The app's executable was a shell script that turned itself into Python.
+   macOS and WebKit judge microphone requests by the app that owns the process,
+   which was therefore Python, whose own description lacks the microphone
+   entry. WebKit refuses such requests without any prompt. This is why adding
+   the entry to Inkwell's Info.plist in v7.25 changed nothing. I am fairly
+   confident of this diagnosis; final confirmation can only come from your Mac.
+
+2. No microphone answer in the window component (macOS and Windows)
+   pywebview 6.2.1 (checked in its source) never answers the web view's
+   question "may this page use the microphone?" on either platform.
+
+3. Live dictation was not live
+   The recorder was started without a time slice, so no audio arrived until
+   Stop. The eight-second loop always found an empty buffer.
+
+4. Transcription needed ffmpeg
+   The server handed a WebM file to Whisper, which needs the separate ffmpeg
+   program to read it. Most computers do not have it.
+
+5. Scriba's status check was never answered
+   Scriba asked with a GET request; the server answered that address only for
+   POST.
+
+6. Long recordings depended on the transformers version
+   Behaviour beyond thirty seconds differs between versions.
+
+7. Data written inside the Mac app
+   The server kept models, settings and the sync copy beside itself, inside
+   Inkwell.app. Replacing the app deleted them.
+
+8. The on-disk copy of the library was stale, and could be emptied
+   The page wrote to the disk copy only when normal storage failed. Worse, the
+   launcher wrote its in-memory copy to disk whenever any process that had
+   imported it exited, including the companion server. A process that had
+   never loaded the copy therefore wrote an EMPTY one over it.
+
+9. Smaller faults
+   The room's "New window" listener was registered inside another listener.
+   Transcript headings showed a literal "\u00b7" instead of a middle dot.
+   Scriba requested the microphone as soon as it opened, without being asked.
+
+
+WHAT CHANGED
+============
+
+macOS
+  A native launcher (launcher/inkwell_launcher.c, about 250 lines of C) is
+  compiled on your Mac by the installer. It loads your own Python into the
+  Inkwell process, so macOS sees Inkwell as the owner and shows its normal
+  prompt. If it cannot be built, the installer says exactly why and builds the
+  old kind of launcher, so Inkwell always opens.
+  Every decision is logged in ~/Library/Application Support/Inkwell/launcher.log.
+
+  The launcher script (inkwell_app.py) adds the web view's missing answer:
+  the microphone is granted for Inkwell's own local pages only.
+
+  "Install or Update Inkwell.command" replaces Build, Install and Update.
+  Order of work: check files; ask you to quit Inkwell; find Python and
+  pywebview; offer local Whisper; build and sign the app; back up the library
+  (a JSON file in the backup folder and on your Desktop, plus raw copies of the
+  web storage); move models and settings out of the old app; swap the new app
+  in, keeping the old one until the swap succeeds; reset the microphone
+  decision for Inkwell only; open Inkwell.
+
+  First launch under the new launcher: the web view opens a new, empty store,
+  because macOS keys storage to the owning app. The launcher merges every older
+  copy of the library it can find (the disk copy and all WebKit stores, older
+  and newer layouts, UTF-16 and UTF-8), keeping the newest version of each
+  document, and the page boots from that. This happens once. A document you
+  deleted long ago may therefore reappear once; delete it again.
+
+Windows
+  The launcher answers WebView2's permission request (microphone, local
+  pages only).
+  "Install or Update Inkwell.bat" replaces Build and Update. It overwrites the
+  program files in place, in the same folder as before, so the web view keeps
+  the same storage. It never deletes a folder, stops the old companion server
+  (so the new transcription code runs), copies the storage folder to a dated
+  backup first, and makes Desktop and Start menu shortcuts that open Inkwell
+  without a console window. "Inkwell with console.bat" shows messages when
+  troubleshooting.
+
+Scriba (embedded in Inkwell.html; scriba.html is the standalone copy)
+  A new audio engine: raw capture, a cut at a natural pause every six to twelve
+  seconds, conversion to 16 kHz WAV, and pieces sent in order to local Whisper.
+  Saved recordings are decoded in the page, so no ffmpeg is needed.
+  Choice of engine: local Whisper when installed; otherwise the browser's own
+  dictation (Chrome, Edge, Safari); otherwise a clear explanation.
+  Errors now say what to do on each system (macOS, Windows, iPad and iPhone,
+  Android and Fire), and say when the Mac app was started without its native
+  launcher.
+  Whisper is warmed in the background when Scriba opens.
+
+Server (server.py v2.11, also embedded in inkwell_app.py)
+  WAV decoding with the standard library; long audio split at the quietest
+  points into pieces under 28 seconds; silent pieces skipped (Whisper invents
+  words when given silence); one transcription at a time; language passed in
+  the form every transformers version accepts; status endpoints answer GET and
+  POST; new /api/stt_warm.
+  Writable data now lives in the per-user data folder:
+    macOS    ~/Library/Application Support/Inkwell
+    Windows  %LOCALAPPDATA%\Inkwell
+  Older data beside the server is moved there once, never overwriting.
+
+Inkwell.html
+  Every library save is also written, a moment later, to the desktop app's
+  disk copy. The launcher refuses to write that copy unless it has loaded it,
+  and never replaces a copy holding documents with one holding none.
+  Build marker: 7.29 · I · OCTOBRIS · MMXXVI.
+
+iPad and iPhone (no Xcode needed)
+  An installable web app: Inkwell.html with a manifest, home-screen icons and
+  an offline cache. Publish the "site" folder once on GitHub Pages; then open
+  the address in Safari and choose Add to Home Screen. Steps are in the
+  package's READ ME.
+
+
+HOW THIS WAS VERIFIED
+=====================
+All tests ran in a Linux sandbox. Nothing here ran on a Mac, a Windows PC, an
+iPad, an iPhone or a Fire tablet.
+
+  Server: 36 checks. WAV at 8, 16, 24 and 32 bits, mono and stereo;
+    resampling; splitting at pauses with no sample lost; silence skipped; the
+    ffmpeg branch both ways; data folder and migration; every HTTP endpoint.
+    Whisper itself was replaced by a stand-in, because the model cannot be
+    downloaded in the sandbox.
+  Launcher: 56 checks. Reading real SQLite stores in both WebKit layouts and
+    both encodings, one open in WAL mode; merging; first-launch seeding without
+    resurrecting later deletions; the installer's export; origin checks; both
+    microphone handlers against stand-in pywebview objects; the empty-overwrite
+    regression.
+  Native launcher: compiled with every warning treated as an error; run in a
+    mock app bundle on Linux: loads Python in-process, starts the server child,
+    loads C extensions, ignores Finder's old argument, falls back cleanly,
+    passes the exit status through.
+  Mac installer: run end to end twice on Linux with stand-ins for xcrun,
+    codesign, ditto, plutil, tccutil and open: once on the fallback path, once
+    with the native launcher compiled and run.
+  Scriba: headless Chromium with a simulated microphone, against the real
+    server: live dictation in ordered pieces, saved-recording transcription,
+    the same inside Inkwell's Scriba room, the disk write-through, and the
+    refusal messages for every platform.
+  Web app: service worker, manifest, icons, and opening offline.
+
+  NOT verified: the Windows batch file was reviewed, not run. The macOS prompt,
+  WebKit's media callback through PyObjC, WebView2's event through pythonnet,
+  and real Whisper accuracy all need your machines.
+
+
+IF SOMETHING GOES WRONG
+=======================
+Mac, no prompt and no sound: System Settings, Privacy & Security, Microphone:
+  is Inkwell listed and on? Then read launcher.log. "fallback" lines mean the
+  native launcher did not start; rerun the installer and read step 5.
+Mac, prompt never appears again after a "Don't Allow": in Terminal,
+  tccutil reset Microphone studio.inkwell.desk
+Windows, refused: Settings, Privacy and security, Microphone: switch on
+  Microphone access and Let desktop apps access your microphone.
+Documents missing after an update: File, Import library, and choose the
+  backup JSON (Desktop on a Mac, or the backups folder in the data folder).
+
+
+NEXT STAGES (proposed order)
+============================
+  2. Fire tablet: an Android project that GitHub builds into an APK.
+  3. Writing models: one recommendation per device, after checking current
+     small models (Qwen, GLM, LFM, Ministral and others) against the tasks
+     Inkwell performs. olmOCR 2 reads scanned pages, so it belongs to Fontes,
+     not to writing. Training a custom model is not possible in this
+     environment; choosing, configuring and prompting existing ones is.
+  4. Grammarly-style features, with and without AI, measured against written
+     test sets rather than promised as parity.
+  5. Fontes toward Zotero: library, PDF import, metadata lookup, citation
+     styles, embedded in Inkwell.
+  6. Scriba online: larger Whisper models fetched on demand, and in-page
+     Whisper for the iPad, iPhone and Fire.
+
+
+HANDOFF PROMPT (paste into a new chat with the v7.29 files attached)
+====================================================================
+This is Inkwell v7.29, my writing app. Read INKWELL_HANDOFF_v7p29.txt first;
+my devices are in its Device profile. Done: Stage 1 (Scriba in the installed
+apps), the iPad and iPhone web app, Stage 2 (the Fire app), recovery after
+7.27, hidden scrollbars, and on-device Whisper. Continue with Stage 3: the
+writing models, one recommendation per device after checking current small
+models, wired into Inkwell's rewrite and correction features. Work in
+verifiable stages, test everything you can, keep my data safe, and deliver
+all packages, the standalone HTML and an updated handoff at the end of each
+stage.

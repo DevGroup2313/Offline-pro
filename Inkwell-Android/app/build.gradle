@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The signing key lives in this repository (signing/), so every build is signed
+// the same way and each new APK installs OVER the previous one, keeping your
+// documents. Keep the repository private, and keep a copy of signing/.
+def signingProps = new Properties()
+def signingFile = rootProject.file('signing/signing.properties')
+if (signingFile.exists()) {
+    signingFile.withInputStream { signingProps.load(it) }
+}
+// Each GitHub build gets a higher version code, so Android accepts it as an update.
+def runNumber = Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '0')
+
+android {
+    namespace 'studio.inkwell.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'studio.inkwell.app'
+        minSdk 24
+        targetSdk 34
+        versionCode 72900 + runNumber
+        versionName '7.29'
+    }
+
+    signingConfigs {
+        inkwell {
+            storeFile rootProject.file('signing/inkwell.jks')
+            storePassword signingProps.getProperty('storePassword')
+            keyAlias signingProps.getProperty('keyAlias')
+            keyPassword signingProps.getProperty('keyPassword')
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.inkwell
+        }
+        debug {
+            signingConfig signingConfigs.inkwell
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // This app is installed by hand, not through a store; store-policy lint
+    // checks must not stop the build.
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
