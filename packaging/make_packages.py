@@ -39,7 +39,9 @@ def common(pkg, readme, workflow, workflow_name):
     copy(workflow, os.path.join(pkg, ".github", "workflows", workflow_name))
     copy(workflow, os.path.join(pkg, "WORKFLOW %s (copy).txt" % workflow_name))
     copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
-    copy("INKWELL_HANDOFF_v7p29.txt", os.path.join(pkg, "INKWELL_HANDOFF_v7p29.txt"))
+    for name in sorted(os.listdir(ROOT)):
+        if name.startswith("INKWELL_HANDOFF_") and name.endswith(".txt"):
+            copy(name, os.path.join(pkg, name))
 
 
 def fire(pkg):

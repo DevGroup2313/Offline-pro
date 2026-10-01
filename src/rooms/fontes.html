@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="cd-cd3d">
+html.cd-dark body,html.cd-sdark body{background:#131720!important;color:#e4e9f1!important;}
+html.cd-dark .wrap,html.cd-sdark .wrap{background:transparent!important;}
+html.cd-dark .card,html.cd-sdark .card{background:#1b2130!important;border-color:#2b3446!important;}
+html.cd-dark input,html.cd-sdark input,html.cd-dark select,html.cd-sdark select,html.cd-dark textarea,html.cd-sdark textarea{background:#10151f!important;border-color:#2b3446!important;color:#e4e9f1!important;}
+html.cd-dark .sub,html.cd-sdark .sub,html.cd-dark .status,html.cd-sdark .status,html.cd-dark .mark,html.cd-sdark .mark{color:#aab4c4!important;}
+.wrap .card{box-shadow:0 1px 0 rgba(16,42,58,.14),0 2px 0 rgba(16,42,58,.10),0 6px 12px -4px rgba(16,42,58,.22),0 18px 30px -12px rgba(16,42,58,.22)!important;border-radius:12px!important;}
+html.cd-dark .wrap .card,html.cd-sdark .wrap .card{box-shadow:0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.05),0 16px 30px -12px rgba(0,0,0,.7)!important;}
+.wrap button{border-radius:10px!important;transition:transform .1s ease,box-shadow .15s ease!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(16,42,58,.22),0 2px 0 rgba(16,42,58,.17),0 3px 0 rgba(16,42,58,.12),0 6px 11px -3px rgba(16,42,58,.34)!important;}
+.wrap button:hover{transform:translateY(-1px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 rgba(16,42,58,.22),0 4px 0 rgba(16,42,58,.17),0 6px 0 rgba(16,42,58,.12),0 13px 20px -5px rgba(16,42,58,.4)!important;}
+.wrap button:active{transform:translateY(2px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 rgba(16,42,58,.22),0 2px 5px rgba(16,42,58,.34)!important;}
+html.cd-dark .wrap button,html.cd-sdark .wrap button{background:#2f3c52!important;border:1px solid rgba(255,255,255,.10)!important;color:#eef2f8!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.5),0 3px 0 #0c1017,0 6px 14px -2px rgba(0,0,0,.9)!important;}
+html.cd-dark .wrap button:hover,html.cd-sdark .wrap button:hover{transform:translateY(-1px)!important;background:#374763!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.26),inset 0 -2px 0 rgba(0,0,0,.5),0 5px 0 #0c1017,0 12px 20px -4px rgba(0,0,0,.92)!important;}
+html.cd-dark .wrap button:active,html.cd-sdark .wrap button:active{transform:translateY(3px)!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.5),0 1px 0 #0c1017,0 3px 8px rgba(0,0,0,.85)!important;}
+html.cd-dark header svg,html.cd-sdark header svg{filter:brightness(1.9) saturate(.75)!important;}
+</style>
+<script id="cd-sdark-follow">(function(){
+function L(c){var m=(c||'').match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);return m?(+m[1]*.299+ +m[2]*.587+ +m[3]*.114):null;}
+function darkNow(){try{
+/* measure a themed CONTENT element's text colour, one this dress never restyles.
+   Light text => the app is rendering dark. Robust to whatever trigger the frame uses. */
+var el=document.querySelector('.sheet td,.rib-tab,.tab,label,.sub,.hint,.status,p')||document.body;
+var lum=L(getComputedStyle(el).color);
+if(lum==null)return null; return lum>140;
+}catch(e){return null;}}
+function paint(list,ref){for(var j=0;j<list.length;j++){var e=document.querySelectorAll(list[j]);for(var i=0;i<e.length;i++){
+e[i].style.setProperty('background',ref,'important');
+e[i].style.setProperty('border-top','0','important');
+e[i].style.setProperty('box-shadow','none','important');}}}
+function foot(){try{
+/* Keep the footer BANDLESS, like Tabula: the status bar carries no strip of its own, so
+   whatever it shows sits on the page. Gated on the app's own elements so Tabula, which owns
+   the reference look, is never touched. The grid and the sheet keep their own colours; this
+   routine no longer repaints them. */
+var isAb=!!document.getElementById('abStatus');
+var isIm=!isAb && !!document.querySelector('.stage');
+if(!isAb && !isIm) return;
+var bar=document.getElementById('abStatus')||document.querySelector('.statusbar');
+if(!bar) return;
+bar.style.setProperty('background','transparent','important');
+bar.style.setProperty('border-top','0','important');
+bar.style.setProperty('box-shadow','none','important');
+}catch(e){}}
+function tick(){var d=darkNow();if(d!=null){var r=document.documentElement;if(d){if(!r.classList.contains('cd-sdark'))r.classList.add('cd-sdark');}else{if(r.classList.contains('cd-sdark'))r.classList.remove('cd-sdark');}}foot();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick);else tick();
+setInterval(tick,350);
+try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attributes:true,attributeFilter:['class','data-theme','style']});mo.observe(document.body,{attributes:true,attributeFilter:['class','data-theme','style']});}catch(e){}
+})();</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Fontes</title>
+<style>
+  :root{
+    --cream-1:#fbf5e9; --cream-2:#f1e7d3; --edge:#cbb8a0;
+    --ink:#145671; --text:#33404a; --text-2:#6e7b86; --line:#ddd2bd;
+    --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+    --ui:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream-2);color:var(--text);font-family:var(--ui);}
+  html.cd-dark body{background:#15130f;color:#e9e4d6;}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 16px 40px;}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .mark{width:32px;height:32px;flex-shrink:0;color:var(--ink);}
+  html.cd-dark .mark{color:#7fb4cc;}
+  h1{font-family:var(--serif);font-size:26px;font-weight:600;margin:0;}
+  .sub{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--text-2);margin:0 0 14px;}
+  .card{background:var(--cream-1);border:1px solid var(--edge);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 0 rgba(255,255,255,0.6) inset,0 2px 8px rgba(120,100,70,0.10);}
+  html.cd-dark .card{background:#1f1b14;border-color:#3a3428;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .grid .full{grid-column:1 / -1;}
+  label{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-2);display:block;margin:0 0 3px;}
+  input,select{width:100%;font-family:var(--ui);font-size:13.5px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;color:var(--text);outline:none;}
+  html.cd-dark input, html.cd-dark select{background:#1b1712;color:#e9e4d6;border-color:#3a3428;}
+  button{font-family:var(--ui);font-size:13px;font-weight:700;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--edge);background:linear-gradient(180deg,var(--cream-1) 0%,var(--cream-2) 100%);color:var(--ink);}
+  html.cd-dark button{background:#241f16;border-color:#4a4130;color:#cfe2ec;}
+  .rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+  .src{border-top:1px solid var(--line);padding:11px 2px;}
+  html.cd-dark .src{border-color:#3a3428;}
+  .ref{font-family:var(--serif);font-size:14px;line-height:1.6;}
+  .meta{font-size:11.5px;color:var(--text-2);margin-top:2px;}
+  .small{font-size:11.5px;padding:5px 10px;}
+  .status{font-size:12px;color:var(--text-2);min-height:16px;font-style:italic;font-family:var(--serif);margin:4px 2px;}
+  .empty{font-family:var(--serif);font-style:italic;color:var(--text-2);padding:8px 2px;}
+::-webkit-scrollbar{width:12px;height:12px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background-color:rgba(27,107,147,0.32);border:3px solid transparent;background-clip:padding-box;border-radius:8px;}</style>
+<style>html.cd-dark label,html.cd-dark .lbl,html.cd-dark .empty,html.cd-dark .muted,html.cd-dark .hint,html.cd-dark .sub,html.cd-dark [id^='l']{color:#c7cfda !important;}html.cd-dark input,html.cd-dark select,html.cd-dark textarea{color:#f2f5f8 !important;}</style><style>html:not(.cd-dark) label,html:not(.cd-dark) .lbl,html:not(.cd-dark) .empty,html:not(.cd-dark) .muted,html:not(.cd-dark) .hint,html:not(.cd-dark) .sub,html:not(.cd-dark) #footLine,html:not(.cd-dark) #subLine{color:#4f5a66 !important;}</style><style>
+/* 7.29: scrollbars hidden throughout this page, at your request; scrolling by
+   wheel, trackpad, touch and keyboard is unchanged. */
+*{scrollbar-width:none!important;-ms-overflow-style:none!important;}
+::-webkit-scrollbar,*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19h14"/><path d="M8.2 19c0-2.9 1.5-4.9 3.8-6.2 2.3 1.3 3.8 3.3 3.8 6.2"/><path d="M12 12.8V5"/><path d="M9.5 7.5C10.1 6.4 11 5.5 12 5c1 .5 1.9 1.4 2.5 2.5"/></svg>
+    <h1>Fontes</h1>
+  </header>
+  <p class="sub" id="subLine">One well of sources, drawn from anywhere.</p>
+
+  <div class="card" id="fmtPrompt" style="display:none">
+    <label id="lFmtPrompt">Choose your citation style for this session</label>
+    <div class="rowbtns" id="fmtBtns"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label id="lType">Type</label>
+        <select id="f_type">
+          <option value="book">Book</option>
+          <option value="article">Journal article</option>
+          <option value="chapter">Chapter in edited book</option>
+          <option value="thesis">Thesis or dissertation</option>
+          <option value="newspaper">Newspaper or magazine article</option>
+          <option value="conference">Conference paper</option>
+          <option value="website">Website or web page</option>
+        </select>
+      </div>
+      <div><label id="lAuthor">Author(s), Surname, First; Surname, First</label><input id="f_author"></div>
+      <div class="full"><label id="lTitle">Title</label><input id="f_title"></div>
+      <div><label id="lContainer">Journal, book, or container</label><input id="f_container"></div>
+      <div><label id="lEditor">Editor(s)</label><input id="f_editor"></div>
+      <div><label id="lCity">City</label><input id="f_city"></div>
+      <div><label id="lPub">Publisher</label><input id="f_pub"></div>
+      <div><label id="lVol">Volume</label><input id="f_vol"></div>
+      <div><label id="lIss">Issue</label><input id="f_iss"></div>
+      <div><label id="lYear">Year</label><input id="f_year"></div>
+      <div><label id="lPages">Pages</label><input id="f_pages"></div>
+      <div><label id="lUrl">URL</label><input id="f_url"></div>
+      <div><label id="lAcc">Accessed</label><input id="f_acc"></div>
+      <div class="full"><label id="lTags">Tags (comma-separated)</label><input id="f_tags" placeholder="e.g. theory, methodology, chapter 3"></div>
+      <div class="full"><label id="lNotes">Notes on this source</label><input id="f_notes" placeholder="Key argument; how you use it; page references"></div>
+    </div>
+    <div class="rowbtns">
+      <button id="addBtn" type="button">Add to the well</button>
+      <button id="doiBtn" type="button" class="small">Lookup DOI</button>
+      <input id="doiInput" placeholder="10.xxxx/xxxxx" style="width:160px;font-size:12px;padding:5px 8px">
+      <select id="citeStyle" style="width:auto">
+        <option>Chicago</option><option>MLA</option><option>APA</option><option>Harvard</option>
+        <option>Vancouver</option><option>Turabian</option><option>IEEE</option><option>BibTeX</option>
+      </select>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+
+  <div class="card" style="padding:10px 16px">
+    <div class="grid" style="grid-template-columns:1fr auto auto;gap:8px;align-items:center">
+      <input id="srcSearch" placeholder="Search sources by author, title, tag…" style="font-size:13px">
+      <select id="sortBy" style="width:auto;font-size:12px">
+        <option value="author">Author A-Z</option>
+        <option value="date">Newest first</option>
+        <option value="title">Title A-Z</option>
+        <option value="type">By type</option>
+      </select>
+      <select id="filterTag" style="width:auto;font-size:12px">
+        <option value="">All tags</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="list"></div>
+    <div class="rowbtns" id="bibBar" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;">
+      <button id="compileBtn" type="button"></button>
+      <button id="toTabulaBtn" type="button" class="small"></button>
+      <button id="copyAllBtn" type="button" class="small"></button>
+      <button id="wordBtn" type="button" class="small"></button>
+    </div>
+  </div>
+  <p class="sub" id="footLine">These sources are the same well Tabula draws from. Add here, cite there.</p>
+</div>
+<script>
+"use strict";
+var FR = (window.__APP_LANG__ === "fr");
+var L = FR ? {
+  sub:"Un seul puits de sources, o\u00F9 que l\u2019on soit.",
+  foot:"Ces sources sont le m\u00EAme puits que celui de Tabula. Ajoutez ici, citez l\u00E0-bas. Envoyer \u00E0 Tabula arrive m\u00EAme quand Tabula est ouvert, sous son propre titre.",
+  add:"Ajouter au puits", copied:"Copi\u00E9.", added:"Ajout\u00E9.", removed:"Retir\u00E9.",
+  empty:"Le puits attend sa premi\u00E8re source.",
+  copyRef:"Copier la r\u00E9f\u00E9rence", copyCite:"Copier la citation", del:"Retirer",
+  needTitle:"Un titre au moins, pour commencer.",
+  compile:"Compiler la bibliographie", bibTitle:"Bibliographie", printPdf:"Imprimer ou enregistrer en PDF",
+  toTabula:"Envoyer \u00E0 Tabula", copyAll:"Tout copier", sentTab:"Envoy\u00E9 \u00E0 Tabula.", noSources:"Ajoutez d\u2019abord une source.",
+  sortBy:"Class\u00E9 par ordre alphab\u00E9tique d\u2019auteur.",
+  word:"T\u00E9l\u00E9charger en .doc", wordName:"bibliographie", noDl:"Votre navigateur a bloqu\u00E9 le t\u00E9l\u00E9chargement. Essayez Tout copier.",
+  fmtPrompt:"Choisissez votre style de citation pour cette session", fmtSet:"Style r\u00E9gl\u00E9 :", copyNote:"Copier la note"
+} : {
+  sub:"One well of sources, drawn from anywhere.",
+  foot:"These sources are the same well Tabula draws from. Add here, cite there. Send to Tabula lands even while Tabula is open, arriving under its own heading.",
+  add:"Add to the well", copied:"Copied.", added:"Added.", removed:"Removed.",
+  empty:"The well awaits its first source.",
+  copyRef:"Copy reference", copyCite:"Copy citation", del:"Remove",
+  needTitle:"A title at least, to begin.",
+  compile:"Compile bibliography", bibTitle:"Bibliography", printPdf:"Print or save as PDF",
+  toTabula:"Send to Tabula", copyAll:"Copy all", sentTab:"Sent to Tabula.", noSources:"Add a source first.",
+  sortBy:"Sorted alphabetically by author.",
+  word:"Download as .doc", wordName:"bibliography", noDl:"Your browser blocked the download. Try Copy all instead.",
+  fmtPrompt:"Choose your citation style for this session", fmtSet:"Style set:", copyNote:"Copy footnote"
+};
+document.getElementById("subLine").textContent = L.sub;
+document.getElementById("footLine").textContent = L.foot;
+document.getElementById("compileBtn").textContent = L.compile;
+document.getElementById("toTabulaBtn").textContent = L.toTabula;
+document.getElementById("copyAllBtn").textContent = L.copyAll;
+document.getElementById("wordBtn").textContent = L.word;
+document.getElementById("addBtn").textContent = L.add;
+var statusEl = document.getElementById("status"); function say(t){ statusEl.textContent = t || ""; if (t) setTimeout(function(){ if(statusEl.textContent===t) statusEl.textContent=""; }, 2500); }
+
+window.addEventListener("message", function (ev) {
+  var d = ev && ev.data;
+  if (d && d.kind === "cd-theme-apply") { try { document.documentElement.classList.toggle("cd-dark", !!d.dark); } catch (e) {} }
+});
+
+var KEY = "fontes_sources";
+var __foMem=null;function load(){ try { var v = localStorage.getItem(KEY); if (v != null) { __foMem=JSON.parse(v) || []; return __foMem; } } catch (e) {} return __foMem||[]; }
+function save(a){ __foMem=a; try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }try{var __h=window.__CD_HANDOFF__;if(__h&&__h.kind==='fontes'&&__h.html){var __arr=JSON.parse(__h.html);if(Object.prototype.toString.call(__arr)==='[object Array]'){__foMem=__arr;window.__foHandled=1;try{localStorage.setItem(KEY,JSON.stringify(__arr));}catch(e){}}}}catch(e){}window.__tabulaCapture=function(){try{return {kind:'fontes',html:JSON.stringify(__foMem||load())};}catch(e){return null;}};window.__tabulaFlush=function(){try{if(__foMem&&(__foMem.length||window.__foHandled))localStorage.setItem(KEY,JSON.stringify(__foMem));}catch(e){}};try{window.addEventListener('pagehide',window.__tabulaFlush);window.addEventListener('beforeunload',window.__tabulaFlush);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')window.__tabulaFlush();});}catch(e){}
+function $(id){ return document.getElementById(id); }
+
+function firstAuthor(s){
+  var a = String(s || "").split(";")[0].trim();
+  if (!a) return { last: FR ? "Auteur" : "Author", first: "" };
+  var p = a.split(",");
+  return { last: (p[0] || "").trim(), first: (p[1] || "").trim() };
+}
+function authorsList(s){
+  return String(s || "").split(";").map(function (x) {
+    var p = x.split(","); return { last: (p[0] || "").trim(), first: (p[1] || "").trim() };
+  }).filter(function (a) { return a.last; });
+}
+function initials(first){
+  return first.split(/\s+/).filter(Boolean).map(function (w) { return w[0].toUpperCase() + "."; }).join(" ");
+}
+function fmtRef(s, style){
+  var as = authorsList(s.author);
+  var y = s.year || (FR ? "s.d." : "n.d.");
+  var names;
+  if (style === "APA" || style === "Harvard") {
+    names = as.map(function (a) { return a.last + (a.first ? ", " + initials(a.first) : ""); }).join("; ") || (FR ? "Auteur inconnu" : "Unknown author");
+    var core = names + " (" + y + "). " + (s.title || "") + ".";
+    if (s.container) core += " " + s.container + (s.volume ? ", " + s.volume : "") + (s.issue ? "(" + s.issue + ")" : "") + (s.pages ? ", " + s.pages : "") + ".";
+    if (s.publisher) core += " " + (s.city ? s.city + ": " : "") + s.publisher + ".";
+    if (s.url) core += " " + s.url;
+    return core;
+  }
+  if (style === "MLA") {
+    names = as.map(function (a, i) { return i === 0 ? (a.last + (a.first ? ", " + a.first : "")) : (a.first + " " + a.last); }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+    var m = names + ". \u201C" + (s.title || "") + ".\u201D";
+    if (s.container) m += " " + s.container + ",";
+    if (s.volume) m += " vol. " + s.volume + ",";
+    if (s.issue) m += " no. " + s.issue + ",";
+    m += " " + y + (s.pages ? ", pp. " + s.pages : "") + ".";
+    if (s.url) m += " " + s.url + ".";
+    return m;
+  }
+  if (style === "Vancouver") {
+    names = as.map(function (a) { return a.last + " " + initials(a.first); }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+    var v = names + ". " + (s.title || "") + ".";
+    if (s.container) v += " " + s.container + ".";
+    if (s.year) v += " " + s.year;
+    if (s.volume) v += ";" + s.volume;
+    if (s.issue) v += "(" + s.issue + ")";
+    if (s.pages) v += ":" + s.pages;
+    v += ".";
+    if (s.url) v += " Available from: " + s.url;
+    return v;
+  }
+  if (style === "Turabian") {
+    names = as.map(function (a, i) { return i === 0 ? (a.last + (a.first ? ", " + a.first : "")) : (a.first + " " + a.last); }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+    var t = names + ". " + (s.title || "") + ".";
+    if (s.container) t += " " + s.container + (s.volume ? " " + s.volume : "") + (s.issue ? ", no. " + s.issue : "") + (s.pages ? " (" + y + "): " + s.pages : " (" + y + ")") + ".";
+    else t += " " + (s.city ? s.city + ": " : "") + (s.publisher ? s.publisher + ", " : "") + y + ".";
+    if (s.url) t += " " + s.url + ".";
+    return t;
+  }
+  if (style === "IEEE") {
+    var num = s._ieeeNum || "1";
+    names = as.map(function (a) { return initials(a.first) + " " + a.last; }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+    var ieee = "[" + num + "] " + names + ", \"" + (s.title || "") + ",\"";
+    if (s.container) ieee += " " + s.container;
+    if (s.volume) ieee += ", vol. " + s.volume;
+    if (s.issue) ieee += ", no. " + s.issue;
+    ieee += ", pp. " + (s.pages || "1") + ", " + y + ".";
+    if (s.url) ieee += " [Online]. Available: " + s.url;
+    return ieee;
+  }
+  if (style === "BibTeX") {
+    return fmtBibTeX(s);
+  }
+  // Chicago
+  names = as.map(function (a, i) { return i === 0 ? (a.last + (a.first ? ", " + a.first : "")) : (a.first + " " + a.last); }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+  var c = names + ". " + (s.title || "") + ".";
+  if (s.container) c += " " + s.container + (s.volume ? " " + s.volume : "") + (s.issue ? ", no. " + s.issue : "") + (s.pages ? " (" + y + "): " + s.pages : " (" + y + ")") + ".";
+  else c += " " + (s.city ? s.city + ": " : "") + (s.publisher ? s.publisher + ", " : "") + y + ".";
+  if (s.url) c += " " + s.url + ".";
+  return c;
+}
+function fmtBibTeX(s){
+  var key = (firstAuthor(s.author).last || "anon").toLowerCase().replace(/[^a-z]/g,"") + (s.year || "nd") + (s.title ? s.title.charAt(0).toLowerCase() : "x");
+  var type = s.type === "article" ? "article" : s.type === "chapter" ? "incollection" : s.type === "website" ? "misc" : "book";
+  var lines = ["@" + type + "{" + key + ","];
+  if (s.author) lines.push("  author = {" + s.author + "},");
+  if (s.title) lines.push("  title = {" + s.title + "},");
+  if (s.container) lines.push("  " + (type === "article" ? "journal" : "booktitle") + " = {" + s.container + "},");
+  if (s.editor) lines.push("  editor = {" + s.editor + "},");
+  if (s.publisher) lines.push("  publisher = {" + s.publisher + "},");
+  if (s.city) lines.push("  address = {" + s.city + "},");
+  if (s.volume) lines.push("  volume = {" + s.volume + "},");
+  if (s.issue) lines.push("  number = {" + s.issue + "},");
+  if (s.year) lines.push("  year = {" + s.year + "},");
+  if (s.pages) lines.push("  pages = {" + s.pages + "},");
+  if (s.url) lines.push("  url = {" + s.url + "},");
+  if (s.accessed) lines.push("  urldate = {" + s.accessed + "},");
+  lines.push("}");
+  return lines.join("\n");
+}
+function fmtCite(s, style){
+  var a = firstAuthor(s.author);
+  var y = s.year || (FR ? "s.d." : "n.d.");
+  if (style === "MLA") return "(" + a.last + (s.pages ? " " + s.pages : "") + ")";
+  if (style === "Chicago") return "(" + a.last + " " + y + (s.pages ? ", " + s.pages : "") + ")";
+  return "(" + a.last + ", " + y + ")";
+}
+function copyText(t){
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t); return true; } } catch (e) {}
+  try {
+    var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy"); ta.remove(); return true;
+  } catch (e) { return false; }
+}
+
+var TYPE_FIELDS = {
+  book:       { show:["author","title","editor","city","pub","year","pages","url","acc"], container:null },
+  article:    { show:["author","title","container","vol","iss","year","pages","url","acc"], container:(FR?"Revue":"Journal") },
+  chapter:    { show:["author","title","container","editor","city","pub","year","pages"], container:(FR?"Titre du livre":"Book title") },
+  thesis:     { show:["author","title","pub","city","year","url","acc"], container:null },
+  newspaper:  { show:["author","title","container","year","url","acc"], container:(FR?"Journal ou magazine":"Newspaper or magazine") },
+  conference: { show:["author","title","container","city","pub","year","pages","url"], container:(FR?"Conf\u00E9rence":"Conference") },
+  website:    { show:["author","title","container","pub","year","url","acc"], container:(FR?"Site ou conteneur":"Website or container") }
+};
+var FIELD_INPUT = { author:"f_author", title:"f_title", container:"f_container", editor:"f_editor", city:"f_city", pub:"f_pub", vol:"f_vol", iss:"f_iss", year:"f_year", pages:"f_pages", url:"f_url", acc:"f_acc" };
+function applyType(){
+  var ty = $("f_type").value;
+  var def = TYPE_FIELDS[ty] || TYPE_FIELDS.book;
+  Object.keys(FIELD_INPUT).forEach(function (key) {
+    var inp = $(FIELD_INPUT[key]); if (!inp) return;
+    var wrap = inp.parentNode;
+    var on = def.show.indexOf(key) >= 0;
+    if (wrap) wrap.style.display = on ? "" : "none";
+    if (!on) inp.value = "";
+  });
+  var lc = $("lContainer");
+  if (lc) lc.textContent = def.container || (FR ? "Revue, livre ou conteneur" : "Journal, book, or container");
+}
+try { $("f_type").onchange = applyType; applyType(); } catch (e) {}
+function fmtNote(s){
+  var as = authorsList(s.author);
+  var y = s.year || (FR ? "s.d." : "n.d.");
+  var names = as.map(function (a) { return (a.first ? a.first + " " : "") + a.last; }).join(", ") || (FR ? "Auteur inconnu" : "Unknown author");
+  var t = s.title || "";
+  if (s.container && (s.type === "article" || s.type === "newspaper" || s.type === "website")) {
+    var n = names + ", \u201C" + t + ",\u201D " + s.container;
+    if (s.volume) n += " " + s.volume;
+    if (s.issue) n += ", no. " + s.issue;
+    n += " (" + y + ")";
+    n += (s.pages ? ": " + s.pages : "") + ".";
+    if (s.url) n += " " + s.url + ".";
+    return n;
+  }
+  if (s.container && s.type === "chapter") {
+    var n2 = names + ", \u201C" + t + ",\u201D in " + s.container;
+    if (s.editor) n2 += ", ed. " + s.editor;
+    n2 += " (" + (s.city ? s.city + ": " : "") + (s.publisher ? s.publisher + ", " : "") + y + ")";
+    n2 += (s.pages ? ", " + s.pages : "") + ".";
+    return n2;
+  }
+  var n3 = names + ", " + t + " (" + (s.city ? s.city + ": " : "") + (s.publisher ? s.publisher + ", " : "") + y + ")";
+  n3 += (s.pages ? ", " + s.pages : "") + ".";
+  return n3;
+}
+function parseTags(s){
+  var t = String(s.tags || "").split(",").map(function(x){return x.trim();}).filter(Boolean);
+  return t;
+}
+function populateTagFilter(){
+  var sel = $("filterTag"); if (!sel) return;
+  var sources = load();
+  var tags = {};
+  sources.forEach(function(s){ parseTags(s).forEach(function(t){ tags[t]=1; }); });
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">All tags</option>';
+  Object.keys(tags).sort().forEach(function(t){
+    var o = document.createElement("option"); o.value = t; o.textContent = t; sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+function getFilteredSources(){
+  var sources = load();
+  var q = ($("srcSearch") ? $("srcSearch").value.trim().toLowerCase() : "");
+  var tagFilter = ($("filterTag") ? $("filterTag").value : "");
+  var sortMode = ($("sortBy") ? $("sortBy").value : "author");
+  var filtered = sources.filter(function(s){
+    if (tagFilter && parseTags(s).indexOf(tagFilter) < 0) return false;
+    if (q) {
+      var hay = [s.author, s.title, s.container, s.tags, s.notes].join(" ").toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  filtered.sort(function(x, y){
+    if (sortMode === "date") {
+      var dx = parseInt(x.year, 10) || 0, dy = parseInt(y.year, 10) || 0;
+      return dy - dx;
+    }
+    if (sortMode === "title") {
+      return (x.title || "").localeCompare(y.title || "");
+    }
+    if (sortMode === "type") {
+      return (x.type || "").localeCompare(y.type || "");
+    }
+    var ax = firstAuthor(x.author).last.toLowerCase(), ay = firstAuthor(y.author).last.toLowerCase();
+    if (ax < ay) return -1; if (ax > ay) return 1;
+    return (String(x.year||"")).localeCompare(String(y.year||""));
+  });
+  if ($("citeStyle").value === "IEEE") {
+    filtered.forEach(function(s, i){ s._ieeeNum = String(i + 1); });
+  }
+  return filtered;
+}
+function render(){
+  var list = $("list"); list.innerHTML = "";
+  var sources = load();
+  populateTagFilter();
+  var style = $("citeStyle").value;
+  if (!sources.length) { var e = document.createElement("div"); e.className = "empty"; e.textContent = L.empty; list.appendChild(e); return; }
+  var view = getFilteredSources();
+  if (!view.length) { var e2 = document.createElement("div"); e2.className = "empty"; e2.textContent = FR ? "Aucune source ne correspond." : "No matching sources."; list.appendChild(e2); return; }
+  view.forEach(function (s, i) {
+    var row = document.createElement("div"); row.className = "src";
+    var ref = document.createElement("div"); ref.className = "ref"; ref.textContent = fmtRef(s, style);
+    var meta = document.createElement("div"); meta.className = "meta"; meta.textContent = (s.type || "") + (s.accessed ? (FR ? " \u00B7 consult\u00E9 " : " \u00B7 accessed ") + s.accessed : "");
+    var tags = parseTags(s);
+    if (tags.length) {
+      var tagRow = document.createElement("div"); tagRow.style.cssText = "margin-top:3px";
+      tags.forEach(function(t){
+        var sp = document.createElement("span"); sp.style.cssText = "display:inline-block;font-size:10.5px;background:rgba(20,86,113,.12);color:var(--ink);border-radius:4px;padding:1px 7px;margin-right:4px;margin-top:2px";
+        sp.textContent = t; tagRow.appendChild(sp);
+      });
+      row.appendChild(tagRow);
+    }
+    if (s.notes) {
+      var noteDiv = document.createElement("div"); noteDiv.style.cssText = "font-size:12px;color:var(--text-2);margin-top:4px;font-style:italic;font-family:var(--serif)";
+      noteDiv.textContent = s.notes; row.appendChild(noteDiv);
+    }
+    var btns = document.createElement("div"); btns.className = "rowbtns";
+    var b1 = document.createElement("button"); b1.className = "small"; b1.textContent = L.copyCite + " " + fmtCite(s, style);
+    b1.onclick = function () { if (copyText(fmtCite(s, style))) say(L.copied); };
+    var b2 = document.createElement("button"); b2.className = "small"; b2.textContent = L.copyRef;
+    b2.onclick = function () { if (copyText(fmtRef(s, style))) say(L.copied); };
+    var b3 = document.createElement("button"); b3.className = "small"; b3.textContent = L.del;
+    b3.onclick = function () { var a = load(); var sig = JSON.stringify(s); var ix = -1; for (var k = 0; k < a.length; k++) { if (JSON.stringify(a[k]) === sig) { ix = k; break; } } if (ix < 0 && i < a.length) ix = i; if (ix >= 0) { a.splice(ix, 1); save(a); } render(); say(L.removed); };
+    if (style === "Chicago") { var bn = document.createElement("button"); bn.className = "small"; bn.textContent = L.copyNote; bn.onclick = function () { if (copyText(fmtNote(s))) say(L.copied); }; btns.appendChild(bn); }
+    btns.appendChild(b1); btns.appendChild(b2); btns.appendChild(b3);
+    row.appendChild(ref); row.appendChild(meta); row.appendChild(btns);
+    list.appendChild(row);
+  });
+}
+
+$("addBtn").onclick = function () {
+  if (!$("f_title").value.trim()) { say(L.needTitle); return; }
+  var a = load();
+  a.push({
+    type: $("f_type").value, author: $("f_author").value, title: $("f_title").value,
+    container: $("f_container").value, editor: $("f_editor").value, city: $("f_city").value,
+    publisher: $("f_pub").value, volume: $("f_vol").value, issue: $("f_iss").value,
+    year: $("f_year").value, pages: $("f_pages").value, url: $("f_url").value, accessed: $("f_acc").value,
+    tags: $("f_tags").value, notes: $("f_notes").value
+  });
+  save(a);
+  ["f_author","f_title","f_container","f_editor","f_city","f_pub","f_vol","f_iss","f_year","f_pages","f_url","f_acc","f_tags","f_notes"].forEach(function (id) { $(id).value = ""; });
+  render(); say(L.added);
+};
+var STYLE_KEY = "fontes_style";
+function fontesGetStyle(){ try { return localStorage.getItem("cd_cite_style") || sessionStorage.getItem(STYLE_KEY) || ""; } catch (e) { return ""; } }
+$("citeStyle").onchange = function () { try { var v=$("citeStyle").value; localStorage.setItem("cd_cite_style", v); sessionStorage.setItem(STYLE_KEY, v); } catch (e) {} render(); };
+(function initStyle(){
+  var saved = fontesGetStyle();
+  if (saved) { $("citeStyle").value = saved; return; }
+  var p = $("fmtPrompt"); if (!p) return;
+  p.style.display = "";
+  $("lFmtPrompt").textContent = L.fmtPrompt;
+  var wrap = $("fmtBtns"); wrap.innerHTML = "";
+  ["Chicago","MLA","APA","Harvard"].forEach(function (st) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = st;
+    if (st === "Chicago") { b.style.borderColor = "var(--ink)"; b.style.fontWeight = "800"; }
+    b.onclick = function () { try { sessionStorage.setItem(STYLE_KEY, st); } catch (e) {} $("citeStyle").value = st; p.style.display = "none"; say(L.fmtSet + " " + st); render(); };
+    wrap.appendChild(b);
+  });
+})();
+window.addEventListener("storage", function (ev) { if (ev && ev.key === KEY) render(); if (ev && ev.key === "cd_cite_style") { try { var v = localStorage.getItem("cd_cite_style"); if (v && $("citeStyle") && $("citeStyle").value !== v) { $("citeStyle").value = v; render(); } } catch (e) {} } });
+
+function sortedSources(){
+  var a = load();
+  return a.slice().sort(function (x, y) {
+    var ax = firstAuthor(x.author).last.toLowerCase(), ay = firstAuthor(y.author).last.toLowerCase();
+    if (ax < ay) return -1; if (ax > ay) return 1;
+    return (String(x.year||"")).localeCompare(String(y.year||""));
+  });
+}
+function bibliographyText(){
+  var style = $("citeStyle").value;
+  return sortedSources().map(function (s) { return fmtRef(s, style); }).join("\n\n");
+}
+function bibliographyHtml(){
+  var style = $("citeStyle").value;
+  var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;" })[c]; }); };
+  var items = sortedSources().map(function (s) { return "<p style='margin:0 0 12px;text-indent:-24px;padding-left:24px'>" + esc(fmtRef(s, style)) + "</p>"; }).join("");
+  return "<h2 style='font-family:Georgia,serif;font-size:18px'>" + L.bibTitle + " (" + style + ")</h2>" + items;
+}
+$("compileBtn").onclick = function () {
+  if (!load().length) { say(L.noSources); return; }
+  var w = null;
+  try { w = window.open("", "_blank"); } catch (e) {}
+  if (!w) { say(L.printPdf); return; }
+  var doc = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>" + L.bibTitle + "</title>"
+    + "<style>body{font-family:Georgia,'Times New Roman',serif;max-width:720px;margin:40px auto;padding:0 24px;color:#1a1a1a;line-height:1.6} h2{margin-bottom:20px} @media print{button{display:none}}</style>"
+    + "</head><body>"
+    + "<button onclick='window.print()' style='font-family:sans-serif;margin-bottom:20px;padding:8px 16px;cursor:pointer'>" + L.printPdf + "</button>"
+    + bibliographyHtml()
+    + "</body></html>";
+  try { w.document.open(); w.document.write(doc); w.document.close(); } catch (e) {}
+};
+$("toTabulaBtn").onclick = function () {
+  if (!load().length) { say(L.noSources); return; }
+  var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;" })[c]; }); };
+  var style = $("citeStyle").value;
+  var html = "<h2>" + L.bibTitle + " (" + style + ")</h2>" + sortedSources().map(function (s) { return "<p>" + esc(fmtRef(s, style)) + "</p>"; }).join("");
+  try { localStorage.setItem("tabula_incoming", JSON.stringify({ title: L.bibTitle, html: html })); } catch (e) {}
+  try { parent.postMessage({ kind: "carpe-open", which: "tabula" }, "*"); } catch (e) {}
+  say(L.sentTab);
+};
+$("copyAllBtn").onclick = function () {
+  if (!load().length) { say(L.noSources); return; }
+  if (copyText(bibliographyText())) say(L.copied);
+};
+$("wordBtn").onclick = function () {
+  if (!load().length) { say(L.noSources); return; }
+  var head = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>"
+    + "<head><meta charset='utf-8'><title>" + L.bibTitle + "</title>"
+    + "<style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6} h2{font-size:14pt} p{margin:0 0 12pt}</style></head><body>";
+  var docHtml = head + bibliographyHtml() + "</body></html>";
+  var ok = false;
+  try {
+    var blob = new Blob(["\ufeff", docHtml], { type: "application/msword" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = L.wordName + ".doc";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 1500);
+    ok = true;
+  } catch (e) { ok = false; }
+  if (!ok) { say(L.noDl); }
+};
+$("f_type").onchange = applyType;
+applyType();
+window.addEventListener("focus", function () { try { applyType(); } catch (e) {} render(); });
+
+/* DOI lookup via CrossRef */
+$("doiBtn").onclick = function(){
+  var doi = ($("doiInput").value || "").trim();
+  if (!doi) { say(FR ? "Saisir un DOI." : "Enter a DOI first."); return; }
+  say(FR ? "Recherche…" : "Looking up…");
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "https://api.crossref.org/works/" + encodeURIComponent(doi), true);
+  xhr.onreadystatechange = function(){
+    if (xhr.readyState !== 4) return;
+    if (xhr.status !== 200) { say(FR ? "DOI introuvable." : "DOI not found."); return; }
+    try {
+      var msg = JSON.parse(xhr.responseText);
+      var m = msg.message;
+      if (m.author) {
+        var au = m.author.map(function(a){ return (a.family||"") + ", " + (a.given||""); }).join("; ");
+        $("f_author").value = au;
+      }
+      if (m.title && m.title[0]) $("f_title").value = m.title[0];
+      if (m["container-title"] && m["container-title"][0]) $("f_container").value = m["container-title"][0];
+      if (m.volume) $("f_vol").value = m.volume;
+      if (m.issue) $("f_iss").value = m.issue;
+      if (m["published-print"] && m["published-print"]["date-parts"]) $("f_year").value = m["published-print"]["date-parts"][0][0];
+      else if (m["published-online"] && m["published-online"]["date-parts"]) $("f_year").value = m["published-online"]["date-parts"][0][0];
+      if (m.page) $("f_pages").value = m.page;
+      if (m.URL) $("f_url").value = m.URL;
+      if (m.publisher) $("f_pub").value = m.publisher;
+      var dt = (m.type || "").indexOf("journal") >= 0 ? "article" : (m.type||"").indexOf("book") >= 0 ? "book" : "article";
+      $("f_type").value = dt;
+      applyType();
+      say(FR ? "Rempli depuis CrossRef." : "Filled from CrossRef.");
+    } catch(e) { say(FR ? "Erreur d'analyse." : "Parse error."); }
+  };
+  xhr.onerror = function(){ say(FR ? "Échec du réseau." : "Network failed."); };
+  xhr.send();
+};
+
+/* Search, sort, filter listeners */
+try {
+  $("srcSearch").addEventListener("input", function(){ render(); });
+  $("sortBy").addEventListener("change", function(){ render(); });
+  $("filterTag").addEventListener("change", function(){ render(); });
+} catch(e){}
+
+/* BibTeX export button */
+var bibExportBtn = document.createElement("button");
+bibExportBtn.type = "button";
+bibExportBtn.className = "small";
+bibExportBtn.textContent = FR ? "Exporter BibTeX" : "Export BibTeX";
+bibExportBtn.onclick = function(){
+  var sources = load();
+  if (!sources.length) { say(L.noSources); return; }
+  var bib = sources.map(function(s){ return fmtBibTeX(s); }).join("\n\n");
+  try {
+    var blob = new Blob([bib], {type:"text/plain;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = "fontes.bib";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function(){ try{URL.revokeObjectURL(url);}catch(e){} }, 1500);
+    say(FR ? "BibTeX exporté." : "BibTeX exported.");
+  } catch(e) { say(L.noDl); }
+};
+try { $("bibBar").appendChild(bibExportBtn); } catch(e){}
+
+render();
+</script>
+</body>
+</html>

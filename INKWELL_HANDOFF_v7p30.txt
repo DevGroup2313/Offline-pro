@@ -1,0 +1,124 @@
+INKWELL v7.30: HANDOFF NOTES
+============================
+Date: 1 October 2026. Stage 1 of the 7.30 round: the faults reported on the
+Fire tablet, iPad and iPhone. Read INKWELL_HANDOFF_v7p29.txt for everything
+before this (device profile, the Mac and Windows history, recovery).
+
+WHERE THE SOURCE LIVES NOW
+--------------------------
+Inkwell.html is now BUILT from readable sources; do not edit it by hand.
+  src/inkwell.html         the desk (the main page)
+  src/rooms/tabula.html    Tabula, embedded in the desk
+  src/rooms/scriba.html    Scriba (also published as scriba_v729.html)
+  src/rooms/fontes.html    Fontes (also published as fontes_v729.html)
+  python3 tools/build_inkwell.py           writes Inkwell.html everywhere
+  python3 tools/build_inkwell.py --check   fails if a built copy is stale
+The first build was checked to reproduce the 7.29 Inkwell.html byte for byte,
+so every 7.30 change is a visible edit to a source file.
+
+CHANGES IN 7.30 (STAGE 1)
+=========================
+1. The Mini model (grammar) did not load on the Fire tablet.
+   The Fire app counts as a low-power device, so it tried the "bundled" model
+   first. That model exists only in the desktop packages (webmodels/), so the
+   attempt failed three times, AND it left the model runtime switched to
+   "look in webmodels/ first" for every later model. Fixed: the page now
+   checks whether the bundled model is present before trying it, and always
+   restores the runtime's settings after a bundled attempt.
+   Verified in Chromium posing as the Fire app, at the Fire app's own address:
+   before, every later download first asked webmodels/ for its files; after,
+   only one presence check goes there, and the model installs from the
+   internet (LaMini-Flan-T5-248M in the passing run).
+
+2. Scriba did not work inside Tabula.
+   Two causes: Tabula's own Scriba button used the browser's speech engine,
+   which the Fire and iPhone/iPad apps do not have, and Tabula's frame was not
+   allowed the microphone. Now Tabula's Scriba button opens Inkwell's own
+   Scriba room (local server, on-device Whisper, or the browser engine,
+   whichever the device has); its button reads "Insert into Tabula" and puts
+   the words exactly where the cursor was in Tabula.
+   Verified: "Before after." with the cursor between the words became
+   "Before middle words after."; opened from the desk afterwards, Scriba is
+   the ordinary Scriba again ("Send to Tabula"). No page errors.
+
+3. Scriba's Dictate button seemed to do nothing.
+   "Dictate" was only a tab that switched to the dictation view, which was
+   already showing. Now, on the dictation view, Dictate starts and stops
+   dictation exactly as Record does. Also, once on-device Whisper has loaded,
+   Scriba now says it is ready, instead of leaving the download count
+   ("Fetching on-device Whisper ... 42 MB") on screen.
+   Verified with a simulated microphone: Record, Stop, and the view switch.
+
+4. The paper stayed small when the Documents or Suggestions panel was folded.
+   Below 1100 px wide (every phone and tablet) a flex size outranked the
+   folded width, so folded panels kept their full columns; on wide screens
+   the paper was also capped at 820 px. Now a folded panel is a slim rail and
+   the paper takes all the freed width. On phones (under 700 px) both panels
+   start folded, and an opened panel slides over the paper instead of
+   squeezing it.
+   Measured, paper width with both panels folded, before -> after:
+     iPhone 393 px wide       99 -> 346 px
+     iPad 1024 px            616 -> 914 px
+     Fire, portrait 1200     820 -> 1072 px
+     Fire, landscape 1920    820 -> 1792 px
+     Laptop 1440             820 -> 1312 px
+
+5. The "Show footer" tab showed through Tabula, Scriba and Fontes.
+   Now it shows only on the desk itself. Verified for each room, open and
+   closed again.
+
+6. Bands at the top and bottom of the apps.
+   iPhone and iPad: the grey bands were the app's own background showing in
+   the status-bar and home-indicator areas. Fire: the navy bands were the
+   status and navigation bars, painted navy by the app's theme. Now the page
+   reports the colours at its own top and bottom edges (day, night, and when
+   a room opens) and the app paints those areas to match, with dark or light
+   status-bar icons to suit. The shared script is
+   Inkwell-Android/app/src/main/assets/ink-host/edge-colours.js.
+   Verified: the Android app's real Java code assembles the page, and in
+   Chromium the page calls setEdges with its colours, and new ones in night
+   mode. The iOS side compiles on GitHub's Mac.
+
+Versions: the Fire app is 7.30 (version code 73000 + build number, so it
+installs over every 7.29 build and keeps the documents); the iPhone/iPad app
+and the web app are 7.30.
+
+NOT VERIFIED (needs your devices)
+---------------------------------
+- Nothing here ran on a real Fire tablet, iPad or iPhone. If the Mini model
+  still fails on the Fire: open the Engine log (the panel that says "Mini
+  failed on every known model") and send its lines; they name the cause.
+- The bar colours on the real Fire launcher and on iOS.
+
+STILL TO DO: THE LATER STAGES OF YOUR REQUEST
+=============================================
+Each will be its own verified stage, in this order unless you say otherwise.
+  Stage 2  Your laptop's strong model, from the Fire and iPad over Wi-Fi:
+           the desktop server listening on the home network, paired with a
+           code shown on the laptop, found from the tablet's AI settings.
+           (Bluetooth is not practical for this: browsers and these app
+           windows cannot open Bluetooth connections to a laptop.)
+  Stage 3  Sync between devices: first a one-tap "Send library to a device"
+           over the home network; then, if you want it, sync through a
+           service you choose. Export and Import library keep working
+           throughout.
+  Stage 4  Writing, editing and grammar on the Fire: the right small models
+           per device (Stage 3 of the 7.29 plan), measured on written test
+           sets.
+  Stage 5  Learners of English: plain explanations for every correction,
+           examples, and a personal list of recurring mistakes.
+  Stage 6  Scriba toward CaptionEd: speakers, timestamps, captions (SRT and
+           VTT), search across recordings.
+  Stage 7  Fontes toward Zotero: library, PDF import, metadata lookup,
+           citation styles.
+Comparisons with Grammarly, Zotero and CaptionEd will be stated as measured
+results on test sets, never as claims of parity.
+
+MAC AND WINDOWS PACKAGES
+------------------------
+The Mac and Windows installers (Inkwell_Mac_v7p29.zip and
+Inkwell_Windows_v7p29.zip) are not in any of the repositories; Inkwell-Cloud
+holds the Mac files of 7.27 only. Building 7.30 installers from the 7.27
+launcher would undo the 7.28 and 7.29 launcher fixes that protect your
+documents, so it was not done. Upload the two 7.29 zips (unzipped) to a
+repository and they will be rebuilt with the 7.30 page.

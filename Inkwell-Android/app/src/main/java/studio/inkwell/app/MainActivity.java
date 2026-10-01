@@ -10,12 +10,17 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.SpeechRecognizer;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
@@ -109,6 +114,32 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    /** 7.30: the status bar and the navigation bar take the page's own edge
+     *  colours, with dark or light icons to suit, so the page meets the screen
+     *  edges seamlessly instead of sitting between two navy bands. */
+    private void applyEdges(String top, String bottom) {
+        int t, b;
+        try {
+            t = Color.parseColor(top);
+            b = Color.parseColor(bottom);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return;
+        }
+        Window w = getWindow();
+        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        w.setStatusBarColor(t);
+        w.setNavigationBarColor(b);
+        View d = w.getDecorView();
+        int flags = d.getSystemUiVisibility();
+        flags = InkwellCore.isLight(t) ? (flags | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
+                : (flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        if (Build.VERSION.SDK_INT >= 26) {
+            flags = InkwellCore.isLight(b) ? (flags | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
+                    : (flags & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        }
+        d.setSystemUiVisibility(flags);
+    }
+
     private boolean micGranted() {
         return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
     }
@@ -148,8 +179,11 @@ public class MainActivity extends Activity {
             if (!InkwellCore.isSafeAssetPath(asset)) return missing();
             try {
                 if (asset.equals("Inkwell.html")) {
+                    String edge = "";
+                    try { edge = readAssetText("ink-host/edge-colours.js"); } catch (IOException ignored) { }
                     String page = InkwellCore.injectHead(readAssetText(asset),
-                            InkwellCore.bridgeScript(InkwellCore.storeJson(store.readAll()), hostInfoJson()));
+                            InkwellCore.bridgeScript(InkwellCore.storeJson(store.readAll()), hostInfoJson())
+                                    + InkwellCore.edgeScript(edge));
                     return new WebResourceResponse("text/html", "UTF-8",
                             new ByteArrayInputStream(page.getBytes(UTF8)));
                 }
@@ -345,6 +379,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String hostInfo() {
             return hostInfoJson();
+        }
+
+        @JavascriptInterface
+        public void setEdges(final String top, final String bottom) {
+            runOnUiThread(() -> applyEdges(top, bottom));
         }
 
         @JavascriptInterface

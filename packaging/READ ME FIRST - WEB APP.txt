@@ -1,8 +1,8 @@
-INKWELL 7.29: THE HOME SCREEN WEB APP
+INKWELL 7.30: THE HOME SCREEN WEB APP
 =====================================
 THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
 any browser. It is the fallback to the iPhone and iPad app.
-THE FILE IT MAKES:   Inkwell-7.29-web-buildN.zip (a ready web site)
+THE FILE IT MAKES:   Inkwell-7.30-web-buildN.zip (a ready web site)
 It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
 only add a page to the Home Screen from a web address, not from a file.
 
@@ -31,7 +31,7 @@ PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
 
 5. Actions tab: "Build the Inkwell web app" runs by itself (or press
    "Run workflow"). When it is green, open Releases: the newest
-   "Inkwell 7.29 web app" release has the site as a .zip under Assets.
+   "Inkwell 7.30 web app" release has the site as a .zip under Assets.
 
 
 PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)

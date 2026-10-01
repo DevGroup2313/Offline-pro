@@ -1,7 +1,7 @@
-INKWELL 7.29 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.30 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.29-buildN.apk
+THE FILE IT MAKES:   Inkwell-7.30-buildN.apk
 NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
 only a white page with the file name. Use the iPhone and iPad package instead.
 
@@ -51,7 +51,7 @@ PART B. BUILD THE APK
 7. Wait for the green tick (about 2 minutes; the first run can take longer).
 
 8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.29 (build N)", has the APK under "Assets".
+   newest release, "Inkwell 7.30 (build N)", has the APK under "Assets".
 
 
 PART C. INSTALL ON THE FIRE TABLET BY USB
@@ -87,7 +87,7 @@ PART E. UPDATING INKWELL LATER
 - New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
   (replace the old one). If the vendor files changed, upload those into
   app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.29'.
+- New version number: in app/build.gradle, change versionName '7.30'.
   (versionCode rises by itself with every build, so Android accepts each
   build as an update.)
 - New icon: replace the five ic_launcher.png files in app/src/main/res/

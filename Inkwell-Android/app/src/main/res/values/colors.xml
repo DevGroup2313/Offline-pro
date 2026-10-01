@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="inkwell_navy">#FF1F4F68</color>
-    <color name="inkwell_paper">#FFE9EDF3</color>
+    <!-- 7.30: the page's own light edge colour, used until the page reports
+         its colours (then the bars follow the page, day or night) -->
+    <color name="inkwell_paper">#FFFFFEF8</color>
 </resources>

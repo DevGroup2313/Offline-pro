@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * is placed in the page, safe names and paths.
  */
 final class InkwellCore {
-    static final String BUILD = "7.29";
+    static final String BUILD = "7.30";
     /** A secure (https) origin that never touches the network: every request
      *  to it is answered from the app's own assets. Secure origins may use the
      *  microphone; the origin never changes, so the page's storage is stable. */
@@ -112,6 +112,21 @@ final class InkwellCore {
       + " }};\n"
       + " document.addEventListener('DOMContentLoaded',function(){try{window.dispatchEvent(new Event('pywebviewready'));}catch(e){}});\n"
       + "})();";
+
+    /** True when dark icons read well on this colour (0xRRGGBB, alpha ignored). */
+    static boolean isLight(int color) {
+        int r = (color >> 16) & 0xff, g = (color >> 8) & 0xff, b = color & 0xff;
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255.0 > 0.6;
+    }
+
+    /** 7.30: the page reports the colours at its top and bottom edges, and the
+     *  status and navigation bars take them, so no band of another colour
+     *  frames the page. edgeSource is ink-host/edge-colours.js. */
+    static String edgeScript(String edgeSource) {
+        if (edgeSource == null || edgeSource.isEmpty()) return "";
+        return "<script>\n" + edgeSource
+                + "(function(t,b){try{window.InkwellAndroid.setEdges(t,b);}catch(e){}});\n</script>\n";
+    }
 
     static String bridgeScript(String storeJson, String hostInfoJson) {
         return "<script>\n/* Inkwell for Android " + BUILD + ": the native bridge and the on-disk copy of the library. */\n"

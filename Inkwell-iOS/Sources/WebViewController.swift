@@ -13,11 +13,16 @@ import WebKit
 /// bridge on both.
 final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate,
                                WKScriptMessageHandler, WKDownloadDelegate {
-    static let build = "7.29"
+    static let build = "7.30"
 
     private var webView: WKWebView!
     private let store = Store()
     private var downloadTargets: [ObjectIdentifier: URL] = [:]
+    /// 7.30: the areas above and below the safe area (status bar, home
+    /// indicator) take the page's own edge colours instead of a grey band.
+    private let topFill = UIView()
+    private let bottomFill = UIView()
+    private var lightTop = true
 
     override func loadView() {
         let config = WKWebViewConfiguration()
@@ -38,16 +43,63 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         }
 
         let root = UIView()
-        root.backgroundColor = UIColor(red: 0xE9 / 255.0, green: 0xED / 255.0, blue: 0xF3 / 255.0, alpha: 1)
+        let paper = UIColor(red: 0xFF / 255.0, green: 0xFE / 255.0, blue: 0xF8 / 255.0, alpha: 1)
+        root.backgroundColor = paper
+        webView.isOpaque = false
+        webView.backgroundColor = paper
+        for fill in [topFill, bottomFill] {
+            fill.backgroundColor = paper
+            fill.translatesAutoresizingMaskIntoConstraints = false
+            root.addSubview(fill)
+        }
         root.addSubview(webView)
         let guide = root.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
+            topFill.topAnchor.constraint(equalTo: root.topAnchor),
+            topFill.bottomAnchor.constraint(equalTo: guide.topAnchor),
+            topFill.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            topFill.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            bottomFill.topAnchor.constraint(equalTo: guide.bottomAnchor),
+            bottomFill.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            bottomFill.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            bottomFill.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             webView.topAnchor.constraint(equalTo: guide.topAnchor),
             webView.bottomAnchor.constraint(equalTo: guide.bottomAnchor),
             webView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
         ])
         view = root
+    }
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return lightTop ? .darkContent : .lightContent
+    }
+
+    /// "#rrggbb" from the page -> a colour; nil if it is not one.
+    static func colour(_ hex: String) -> UIColor? {
+        let h = hex.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "#", with: "")
+        guard h.count == 6, let v = UInt32(h, radix: 16) else { return nil }
+        return UIColor(red: CGFloat((v >> 16) & 0xff) / 255, green: CGFloat((v >> 8) & 0xff) / 255,
+                       blue: CGFloat(v & 0xff) / 255, alpha: 1)
+    }
+
+    static func isLight(_ c: UIColor) -> Bool {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        c.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return 0.299 * r + 0.587 * g + 0.114 * b > 0.6
+    }
+
+    private func applyEdges(top: String, bottom: String) {
+        guard let t = WebViewController.colour(top), let b = WebViewController.colour(bottom) else { return }
+        topFill.backgroundColor = t
+        bottomFill.backgroundColor = b
+        view.backgroundColor = t
+        webView.backgroundColor = t
+        let light = WebViewController.isLight(t)
+        if light != lightTop {
+            lightTop = light
+            setNeedsStatusBarAppearanceUpdate()
+        }
     }
 
     override func viewDidLoad() {
@@ -81,6 +133,10 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     /// on purpose: there is no engine on a phone or tablet.
     private func bootScript() -> String {
         let storeJSON = WebViewController.json(store.readAll())
+        let edgeFile = Bundle.main.bundleURL.appendingPathComponent("web/ink-host/edge-colours.js")
+        let edgeSource = (try? String(contentsOf: edgeFile, encoding: .utf8)) ?? ""
+        let edgeCall = edgeSource.isEmpty ? "" : edgeSource
+            + "(function(t,b){try{window.webkit.messageHandlers.inkwell.postMessage({op:'edges',top:t,bottom:b});}catch(e){}});"
         let hostJSON = WebViewController.json(hostInfo())
         return """
         window.__inkBridgeStore=\(storeJSON);
@@ -103,6 +159,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
          }};
          document.addEventListener('DOMContentLoaded',function(){try{window.dispatchEvent(new Event('pywebviewready'));}catch(e){}});
         })();
+        \(edgeCall)
         """
     }
 
@@ -119,6 +176,10 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
             if let name = body["name"] as? String, let base64 = body["data"] as? String,
                let bytes = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) {
                 saveFile(name: name, data: bytes)
+            }
+        case "edges":
+            if let top = body["top"] as? String, let bottom = body["bottom"] as? String {
+                applyEdges(top: top, bottom: bottom)
             }
         case "log":
             NSLog("Inkwell %@", (body["message"] as? String) ?? "")

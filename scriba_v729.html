@@ -193,7 +193,7 @@ var L = FR ? {
 document.getElementById("subLine").textContent = L.sub;
 document.getElementById("recLbl").textContent = L.rec;
 document.getElementById("copyBtn").textContent = L.copy;
-document.getElementById("toTabula").textContent = L.toTab;
+document.getElementById("toTabula").textContent = window.__INK_SCRIBA_FOR_TABULA ? (FR ? "Ins\u00e9rer dans Tabula" : "Insert into Tabula") : L.toTab;
 document.getElementById("clearBtn").textContent = L.clear;
 document.getElementById("capBtn").textContent = L.cap;
 document.getElementById("hintLine").textContent = L.hint;
@@ -584,7 +584,7 @@ function scribaPageWorker(){
       return;
     }
     if(m.type==="model"){ PAGE.model=m.id; return; }
-    if(m.type==="ready"){ PAGE.ready=true; PAGE.loading=false; PAGE.error=null; var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(null);}catch(e){}}); return; }
+    if(m.type==="ready"){ if(PAGE.loading){ say(T("On-device Whisper is ready. Speak; each phrase appears a moment after you pause.","Whisper sur l\u2019appareil est pr\u00eat. Parlez ; chaque phrase appara\u00eet un instant apr\u00e8s une pause.")); } PAGE.ready=true; PAGE.loading=false; PAGE.error=null; var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(null);}catch(e){}}); return; }
     if(m.type==="probe"){ var pr=PAGE.waits.probe; delete PAGE.waits.probe; if(pr) pr(m); return; }
     if(m.type==="result"||m.type==="error"){
       var cb=PAGE.waits[m.id]; delete PAGE.waits[m.id];
@@ -847,6 +847,14 @@ document.getElementById("clearBtn").onclick = function () {
   say(L.cleared);
 };
 document.getElementById("toTabula").onclick = function () {
+  /* 7.30: opened from Tabula's Scriba button: the words go back to Tabula's cursor */
+  if (window.__INK_SCRIBA_FOR_TABULA) {
+    var said = (pad.innerText || "").trim();
+    if (!said) { say(FR ? "Rien \u00e0 ins\u00e9rer pour l\u2019instant." : "Nothing to insert yet."); return; }
+    try { parent.postMessage({ kind: "ink-scriba-insert", text: said }, "*"); } catch (e) {}
+    say(L.sent);
+    return;
+  }
   var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]; }); };
   var html = "<p>" + esc(pad.innerText || "").replace(/\n/g, "<br>") + "</p>";
   try { localStorage.setItem("tabula_incoming", JSON.stringify({ title: FR ? "Dict\u00E9e de Scriba" : "Scriba dictation", html: html })); } catch (e) {}
@@ -908,7 +916,14 @@ function scribaTab(which) {
   if (rb) { rb.classList.toggle("tabsel", !dict); rb.setAttribute("aria-selected", dict ? "false" : "true"); }
   if (!dict) { try { renderRecordings(); } catch (e) {} }
 }
-try { document.getElementById("tabDictateBtn").onclick = function () { scribaTab("dictate"); }; document.getElementById("tabRecBtn").onclick = function () { scribaTab("recordings"); }; scribaTab("dictate"); } catch (e) {}
+try { document.getElementById("tabDictateBtn").onclick = function () {
+    /* 7.30: "Dictate" is what people press to dictate. On the dictation view
+       it starts and stops recording, exactly as Record does. */
+    var onDictate = this.classList.contains("tabsel");
+    scribaTab("dictate");
+    if (onDictate) { var rb2 = document.getElementById("recBtn"); if (rb2) rb2.click(); }
+  };
+  document.getElementById("tabDictateBtn").title = FR ? "Dicter : appuyez pour commencer ou arr\u00eater" : "Dictate: press to start or stop"; document.getElementById("tabRecBtn").onclick = function () { scribaTab("recordings"); }; scribaTab("dictate"); } catch (e) {}
 </script>
 <script>(function(){try{
   var b=document.getElementById("cdBoostBtn");

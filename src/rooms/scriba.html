@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style id="cd-cd3d">
+.wrap button{border-radius:10px!important;transition:transform .1s ease,box-shadow .15s ease!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(16,42,58,.22),0 2px 0 rgba(16,42,58,.17),0 3px 0 rgba(16,42,58,.12),0 6px 11px -3px rgba(16,42,58,.34)!important;}
+.wrap button:hover{transform:translateY(-1px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 rgba(16,42,58,.22),0 4px 0 rgba(16,42,58,.17),0 6px 0 rgba(16,42,58,.12),0 13px 20px -5px rgba(16,42,58,.4)!important;}
+.wrap button:active{transform:translateY(2px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 rgba(16,42,58,.22),0 2px 5px rgba(16,42,58,.34)!important;}
+html.cd-dark .wrap button,html.cd-sdark .wrap button{background:#2f3c52!important;border:1px solid rgba(255,255,255,.10)!important;color:#eef2f8!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.5),0 3px 0 #0c1017,0 6px 14px -2px rgba(0,0,0,.9)!important;}
+html.cd-dark .wrap button:hover,html.cd-sdark .wrap button:hover{transform:translateY(-1px)!important;background:#374763!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.26),inset 0 -2px 0 rgba(0,0,0,.5),0 5px 0 #0c1017,0 12px 20px -4px rgba(0,0,0,.92)!important;}
+html.cd-dark .wrap button:active,html.cd-sdark .wrap button:active{transform:translateY(3px)!important;box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.5),0 1px 0 #0c1017,0 3px 8px rgba(0,0,0,.85)!important;}
+html.cd-dark header svg,html.cd-sdark header svg{filter:brightness(1.9) saturate(.75)!important;}
+</style>
+<script id="cd-sdark-follow">(function(){
+function L(c){var m=(c||'').match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);return m?(+m[1]*.299+ +m[2]*.587+ +m[3]*.114):null;}
+function darkNow(){try{
+/* measure a themed CONTENT element's text colour, one this dress never restyles.
+   Light text => the app is rendering dark. Robust to whatever trigger the frame uses. */
+var el=document.querySelector('.sheet td,.rib-tab,.tab,label,.sub,.hint,.status,p')||document.body;
+var lum=L(getComputedStyle(el).color);
+if(lum==null)return null; return lum>140;
+}catch(e){return null;}}
+function paint(list,ref){for(var j=0;j<list.length;j++){var e=document.querySelectorAll(list[j]);for(var i=0;i<e.length;i++){
+e[i].style.setProperty('background',ref,'important');
+e[i].style.setProperty('border-top','0','important');
+e[i].style.setProperty('box-shadow','none','important');}}}
+function foot(){try{
+/* Keep the footer BANDLESS, like Tabula: the status bar carries no strip of its own, so
+   whatever it shows sits on the page. Gated on the app's own elements so Tabula, which owns
+   the reference look, is never touched. The grid and the sheet keep their own colours; this
+   routine no longer repaints them. */
+var isAb=!!document.getElementById('abStatus');
+var isIm=!isAb && !!document.querySelector('.stage');
+if(!isAb && !isIm) return;
+var bar=document.getElementById('abStatus')||document.querySelector('.statusbar');
+if(!bar) return;
+bar.style.setProperty('background','transparent','important');
+bar.style.setProperty('border-top','0','important');
+bar.style.setProperty('box-shadow','none','important');
+}catch(e){}}
+function tick(){var d=darkNow();if(d!=null){var r=document.documentElement;if(d){if(!r.classList.contains('cd-sdark'))r.classList.add('cd-sdark');}else{if(r.classList.contains('cd-sdark'))r.classList.remove('cd-sdark');}}foot();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick);else tick();
+setInterval(tick,350);
+try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attributes:true,attributeFilter:['class','data-theme','style']});mo.observe(document.body,{attributes:true,attributeFilter:['class','data-theme','style']});}catch(e){}
+})();</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Scriba</title>
+<style>
+  :root{
+    --navy-1:#3a5170; --navy-2:#2c405c; --navy-3:#16202f;
+    --navy:#22304A; --parchment:#e9edf3; --paper:#f5f8fb;
+    --ink:#1e2a3c; --ink-2:#4d5e76; --line:#c4cfdd;
+    --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+    --ui:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--parchment);color:var(--ink);font-family:var(--ui);}
+  html.cd-dark body{background:#131720;color:#e4e9f1;}
+  .wrap{max-width:820px;margin:0 auto;padding:18px 16px 40px;}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .mark{width:34px;height:34px;flex-shrink:0;color:var(--navy);}
+  html.cd-dark .mark{color:#7fa3cc;}
+  h1{font-family:var(--serif);font-size:26px;font-weight:600;margin:0;letter-spacing:0.01em;}
+  .sub{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-2);margin:0 0 14px;}
+  html.cd-dark .sub{color:#9fb2cc;}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;}
+  button{font-family:var(--ui);font-size:13px;font-weight:700;letter-spacing:0.02em;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);}
+  html.cd-dark button{background:#1a2130;border-color:#2c3a55;color:#e4e9f1;}
+  #recBtn{border:1px solid var(--navy);background:linear-gradient(180deg,var(--navy-1) 0%,var(--navy-2) 48%,var(--navy-3) 100%);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,0.18) inset,0 1px 3px rgba(10,20,40,0.35);display:inline-flex;align-items:center;gap:7px;}
+  #recBtn .dot{width:9px;height:9px;border-radius:50%;background:#e05252;display:none;}
+  #recBtn.live{background:linear-gradient(180deg,#4a6488 0%,#34496a 100%);}
+  #recBtn.live .dot{display:inline-block;animation:sp 1.4s ease-out infinite;}#recBtn.wait{opacity:0.8;cursor:progress;}
+  @keyframes sp{0%{box-shadow:0 0 0 0 rgba(224,82,82,0.55);}70%{box-shadow:0 0 0 9px rgba(224,82,82,0);}100%{box-shadow:0 0 0 0 rgba(224,82,82,0);}}
+  .status{font-size:12px;color:var(--ink-2);min-height:16px;margin:2px 2px 10px;font-style:italic;font-family:var(--serif);}
+  html.cd-dark .status{color:#9fb2cc;}
+  #pad{min-height:56vh;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px;font-family:var(--serif);font-size:16px;line-height:1.75;outline:none;box-shadow:0 1px 0 rgba(255,255,255,0.5) inset,0 2px 8px rgba(25,45,75,0.10);}
+  html.cd-dark #pad{background:#161c28;border-color:#2a3550;color:#e4e9f1;}
+  #pad:empty:before{content:attr(data-ph);color:var(--ink-2);font-style:italic;}
+  .hint{font-size:11.5px;color:var(--ink-2);margin-top:10px;font-family:var(--serif);font-style:italic;}
+#scribaTabs{display:inline-flex;margin:0 0 12px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  #scribaTabs button{font-family:var(--ui);font-size:13px;font-weight:700;border:none;border-right:1px solid var(--line);background:var(--paper);color:var(--ink-2);padding:6px 16px;cursor:pointer;transition:background 0.15s;}
+  #scribaTabs button:last-child{border-right:none;}
+  #scribaTabs button.tabsel{background:var(--navy);color:#fff;}
+  html.cd-dark #scribaTabs{border-color:#2c3a55;}
+  html.cd-dark #scribaTabs button{background:#1a2130;border-color:#2c3a55;color:#9fb2cc;}
+  html.cd-dark #scribaTabs button.tabsel{background:#7fa3cc;color:#101623;}
+</style>
+<style>html.cd-dark #hintLine,html.cd-dark .hint,html.cd-dark .hintline,html.cd-dark .muted,html.cd-dark .sub,html.cd-dark .note{color:#c3ccd8 !important;}</style><style>
+/* 7.27: the view tabs and the language control take the same raised style as
+   Scriba's buttons. The tabs are two separate buttons (the old clipped pill
+   flattened their shadows); the selected one carries Record's navy. The
+   language control sits beside the tabs because it governs both views. */
+#scribaTop{display:flex;flex-wrap:wrap;align-items:center;gap:12px 8px;margin:0 0 16px;}
+.wrap #scribaTabs{display:inline-flex;gap:8px;margin:0;border:none!important;border-radius:0;overflow:visible!important;background:none!important;}
+.wrap #scribaTabs button{border:1px solid var(--line)!important;background:var(--paper)!important;color:var(--ink-2)!important;padding:8px 16px!important;font-size:13px;}
+.wrap #scribaTabs button.tabsel{border-color:var(--navy)!important;background:linear-gradient(180deg,var(--navy-1) 0%,var(--navy-2) 48%,var(--navy-3) 100%)!important;color:#fff!important;}
+.langPick{position:relative;display:inline-flex;align-items:center;gap:8px;margin-left:auto;padding:0 32px 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 0 rgba(16,42,58,.22),0 2px 0 rgba(16,42,58,.17),0 3px 0 rgba(16,42,58,.12),0 6px 11px -3px rgba(16,42,58,.34);transition:transform .1s ease,box-shadow .15s ease;}
+.langPick:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 rgba(16,42,58,.22),0 4px 0 rgba(16,42,58,.17),0 6px 0 rgba(16,42,58,.12),0 13px 20px -5px rgba(16,42,58,.4);}
+.langPick .globe{width:16px;height:16px;flex-shrink:0;color:var(--navy);}
+.langPick::after{content:"";position:absolute;right:13px;top:50%;width:6px;height:6px;margin-top:-5px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);opacity:.7;pointer-events:none;}
+#langSel{-webkit-appearance:none;appearance:none;border:none;background:transparent;font-family:var(--ui);font-size:13px;font-weight:700;letter-spacing:.02em;line-height:normal;color:inherit;padding:8px 0;margin:0;cursor:pointer;outline:none;}
+#langSel option{background:#fff;color:#1e2a3c;font-weight:600;}
+.wrap #scribaTabs button:focus-visible,.langPick:focus-within{outline:2px solid #5b8fc7;outline-offset:2px;}
+html.cd-dark .wrap #scribaTabs button,html.cd-sdark .wrap #scribaTabs button{background:#2f3c52!important;border-color:rgba(255,255,255,.10)!important;color:#c8d3e3!important;}
+html.cd-dark .wrap #scribaTabs button.tabsel,html.cd-sdark .wrap #scribaTabs button.tabsel{background:linear-gradient(180deg,#9bbde3 0%,#7ba1cd 55%,#6187b4 100%)!important;border-color:rgba(255,255,255,.22)!important;color:#0f1622!important;}
+html.cd-dark .wrap #recBtn,html.cd-sdark .wrap #recBtn{background:linear-gradient(180deg,#56789f 0%,#405f88 50%,#2f496d 100%)!important;color:#fff!important;}
+html.cd-dark .wrap #recBtn.live,html.cd-sdark .wrap #recBtn.live{background:linear-gradient(180deg,#6687b4 0%,#4b6c98 100%)!important;}
+html.cd-dark .langPick,html.cd-sdark .langPick{background:#2f3c52;border-color:rgba(255,255,255,.10);color:#eef2f8;box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.5),0 3px 0 #0c1017,0 6px 14px -2px rgba(0,0,0,.9);}
+html.cd-dark .langPick:hover,html.cd-sdark .langPick:hover{background:#374763;box-shadow:inset 0 2px 0 rgba(255,255,255,.26),inset 0 -2px 0 rgba(0,0,0,.5),0 5px 0 #0c1017,0 12px 20px -4px rgba(0,0,0,.92);}
+html.cd-dark .langPick .globe,html.cd-sdark .langPick .globe{color:#9fc0e6;}
+html.cd-dark #langSel option,html.cd-sdark #langSel option{background:#1a2130;color:#e4e9f1;}
+html.cd-dark #recSearch,html.cd-sdark #recSearch{background:#1a2130!important;border-color:#2c3a55!important;color:#e4e9f1!important;}
+html.cd-dark #recSearch::placeholder,html.cd-sdark #recSearch::placeholder{color:#8fa3bf;}
+@media (max-width:480px){.langPick{margin-left:0;}}
+@media (prefers-reduced-motion:reduce){.langPick,.wrap button{transition:none!important;}.langPick:hover{transform:none;}}
+</style>
+<style>
+/* 7.29: scrollbars hidden throughout this page, at your request; scrolling by
+   wheel, trackpad, touch and keyboard is unchanged. */
+*{scrollbar-width:none!important;-ms-overflow-style:none!important;}
+::-webkit-scrollbar,*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5c2.9 2.2 4.3 4.6 4.3 7.2L13.5 20l-4.3-9.3c0-2.6 1.4-5 4.3-7.2z"/><path d="M13.5 11.6V20"/><circle cx="13.5" cy="10.4" r="1"/><path d="M6 9c-.8.9-1.2 1.9-1.2 3s.4 2.1 1.2 3"/><path d="M3.6 7.2C2.6 8.6 2 10.4 2 12s.6 3.4 1.6 4.8"/></svg>
+    <h1>Scriba</h1>
+  </header>
+  <p class="sub" id="subLine">The voice becomes the page.</p>
+  <div id="scribaTop">
+    <div id="scribaTabs" role="tablist" aria-label="Scriba views"><button id="tabDictateBtn" type="button" role="tab" aria-selected="true" class="tabsel">Dictate</button><button id="tabRecBtn" type="button" role="tab" aria-selected="false">Recordings</button></div>
+    <label class="langPick" title="The language you will speak, for dictation and transcription">
+      <svg class="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9s1.3-6.4 3.9-9z"/></svg>
+      <select id="langSel" aria-label="Dictation language">
+      <option value="en-GB">English</option>
+      <option value="fr-FR">Fran&#231;ais</option>
+      <option value="es-ES">Espa&#241;ol</option>
+      <option value="de-DE">Deutsch</option>
+      <option value="it-IT">Italiano</option>
+      <option value="pt-PT">Portugu&#234;s</option>
+      <option value="nl-NL">Nederlands</option>
+      <option value="zh-CN">&#20013;&#25991;</option>
+      <option value="ja-JP">&#26085;&#26412;&#35486;</option>
+      <option value="ar-SA">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</option>
+      <option value="hi-IN">&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;</option>
+      <option value="ru-RU">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</option>
+    </select>
+    </label>
+  </div>
+  <div class="bar">
+    <button id="recBtn" type="button"><span class="dot"></span><span id="recLbl">Record</span></button>
+    <button id="copyBtn" type="button">Copy</button>
+    <button id="toTabula" type="button">Send to Tabula</button>
+    <button id="clearBtn" type="button">Clear</button>
+    <button id="capBtn" type="button"></button>
+  </div>
+  <div class="status" id="status"></div>
+  <div id="pad" contenteditable="true" data-ph="Press Record and speak. Say comma, full stop, question mark, or new paragraph for punctuation."></div>
+  <audio id="capAudio" controls style="display:none;width:100%;margin:10px 0 0"></audio><div id="cdLevelWrap" style="display:none;margin:8px 0 2px;"><div style="height:6px;border-radius:3px;background:rgba(0,0,0,.10);overflow:hidden;"><div id="cdLevelBar" style="height:100%;width:0%;background:#1B6B93;border-radius:3px;transition:width .08s linear;"></div></div></div><button id="cdBoostBtn" type="button" aria-pressed="false" style="margin-top:6px;display:none;">Boost off</button>
+  <div id="recWrap" style="margin-top:14px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div id="recTitle" style="font-family:var(--serif);font-size:15px;font-weight:600"></div>
+      <input id="recSearch" type="text" style="margin-left:auto;font-family:var(--ui);font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:var(--paper);color:var(--ink);max-width:52%">
+    </div>
+    <div id="recList"></div>
+    <div style="margin-top:10px"><button id="transcribeAllBtn" type="button" style="font-size:12px;padding:6px 12px;display:none"></button></div>
+  </div>
+  <p class="hint" id="hintLine">Everything here saves itself as you go, and stays on this device.</p>
+</div>
+<script>
+"use strict";
+var FR = (window.__APP_LANG__ === "fr");
+var L = FR ? {
+  sub:"La voix devient la page. Le bloc se conserve dans le puits partag\u00e9, voyage avec la fen\u00eatre flottante, et Envoyer \u00e0 Tabula arrive m\u00eame quand Tabula est ouvert.", rec:"Enregistrer", stop:"\u25CF Arr\u00EAter", copy:"Copier",
+  toTab:"Envoyer \u00E0 Tabula", clear:"Effacer",
+  ph:"Appuyez sur Enregistrer et parlez. Dites virgule, point, point d\u2019interrogation ou \u00E0 la ligne pour la ponctuation.",
+  hint:"Tout se sauvegarde ici de lui-m\u00EAme, et reste sur cet appareil.",
+  copied:"Copi\u00E9.", cleared:"Effac\u00E9.", sent:"Envoy\u00E9 \u00E0 Tabula.",
+  nomic:"La dict\u00E9e en direct n\u2019est pas disponible ici. Utilisez le micro du clavier de votre appareil.",
+  listening:"\u00C9coute en cours\u2026", stopped:"Arr\u00EAt\u00E9.", err:"La reconnaissance s\u2019est interrompue.", insecure:"La dict\u00E9e exige une page s\u00E9curis\u00E9e. Ouvrez Carpe Diem en https, non comme un fichier local, puis r\u00E9essayez.", transcribeLbl:"Transcrire", transcribing:"Transcription en cours\u2026 laissez la lecture aller jusqu\u2019au bout.", transcribeDone:"Transcription ajout\u00e9e sous le texte.", transcribeNo:"La transcription a besoin du moteur de dict\u00e9e du navigateur (Chrome ou Edge).", nosrRec:"Pas de dict\u00e9e int\u00e9gr\u00e9e ici \u2014 votre voix est enregistr\u00e9e \u00e0 la place, sous Enregistrements.", nosr:"Ce navigateur ne fournit pas de dict\u00E9e int\u00E9gr\u00E9e. Chrome et Edge la prennent en charge ; Safari et Firefox souvent non.", denied:"L\u2019acc\u00E8s au microphone a \u00E9t\u00E9 refus\u00E9. Autorisez le microphone pour cette page, puis appuyez de nouveau sur Enregistrer.", nomicdev:"Aucun microphone n\u2019a \u00E9t\u00E9 trouv\u00E9 sur cet appareil.", asking:"Demande d\u2019acc\u00E8s au microphone\u2026", connected:"Microphone connect\u00E9.", cap:"\ud83c\udf99 Capturer", capStop:"\u25cf Arr\u00EAter la capture", capOn:"Capture en cours\u2026", tooQuiet:"Je vous entends \u00e0 peine. Rapprochez-vous, ou augmentez le niveau d'entr\u00e9e dans les r\u00e9glages audio du syst\u00e8me.", boostOff:"Amplification : non", boostOn:"Amplification", capDone:"Captur\u00E9. \u00C9coutez ci-dessous.", capErr:"La capture audio n\u2019est pas disponible dans ce navigateur.", capNote:"La capture garde votre voix comme un enregistrement \u00E0 r\u00E9\u00E9couter. Elle n\u2019\u00E9crit pas de texte ; seul le moteur de dict\u00E9e le fait.", recTitle:"Enregistrements", recSearch:"Rechercher un enregistrement", recEmpty:"Aucun enregistrement. Appuyez sur Capturer pour en cr\u00E9er un.", playLbl:"Lire", renameLbl:"Renommer", deleteLbl:"Supprimer", exportLbl:"T\u00e9l\u00e9charger", renamePrompt:"Nouveau nom pour cet enregistrement :", savedRec:"Enregistr\u00E9 dans vos enregistrements.", stall:"Le moteur de dict\u00E9e ne r\u00E9pond pas. Il est peut-\u00EAtre bloqu\u00E9 ou hors ligne. La capture fonctionne ; essayez-la.", heard:"Parole entendue\u2026", neterr:"Le moteur de dict\u00E9e de ce navigateur a besoin d\u2019internet pour transcrire. Connectez-vous, ou utilisez le micro du clavier de l\u2019appareil, qui peut fonctionner hors ligne."
+} : {
+  sub:"The voice becomes the page. The pad keeps itself in the shared well, travels with the floating window, and Send to Tabula lands even while Tabula is open.", rec:"Record", stop:"\u25CF Stop", copy:"Copy",
+  toTab:"Send to Tabula", clear:"Clear",
+  ph:"Press Record and speak. Say comma, full stop, question mark, or new paragraph for punctuation.",
+  hint:"Everything here saves itself as you go, and stays on this device.",
+  copied:"Copied.", cleared:"Cleared.", sent:"Sent to Tabula.",
+  nomic:"Live dictation is not available here. Use the microphone on your device keyboard instead.",
+  listening:"Listening\u2026", stopped:"Stopped.", err:"Recognition stopped unexpectedly.", insecure:"Dictation needs a secure page. Open Carpe Diem over https, not as a local file on disk, then try again.", transcribeLbl:"Transcribe", transcribing:"Transcribing\u2026 let the playback run to the end.", transcribeDone:"Transcript added below your text.", transcribeNo:"Transcription needs the browser\u2019s dictation engine (Chrome or Edge).", nosrRec:"No built-in dictation here \u2014 recording your voice instead; find it under Recordings.", nosr:"This browser does not provide built in dictation. Chrome and Edge support it best; Safari and Firefox often do not.", denied:"Microphone access was blocked. Allow the microphone for this page in your browser, then press Record again.", nomicdev:"No microphone was found on this device.", asking:"Asking for microphone access\u2026", connected:"Microphone connected.", cap:"\ud83c\udf99 Capture", capStop:"\u25cf Stop capture", capOn:"Capturing\u2026", tooQuiet:"I can hardly hear you. Move closer, or raise the input level in your system sound settings.", boostOff:"Boost off", boostOn:"Boost", capDone:"Captured. Play it back below.", capErr:"Audio capture is not available in this browser.", capNote:"Capture keeps your voice as a recording you can replay. It does not write text; only the speech engine can do that.", recTitle:"Recordings", recSearch:"Search recordings", recEmpty:"No recordings yet. Press Capture to make one.", playLbl:"Play", renameLbl:"Rename", deleteLbl:"Delete", exportLbl:"Download", renamePrompt:"New name for this recording:", savedRec:"Saved to your recordings.", stall:"The speech engine is not responding. It may be blocked or offline. Capture works; try that instead.", heard:"Heard you\u2026", neterr:"The dictation engine in this browser needs an internet connection to transcribe. Connect to the internet, or use the device keyboard microphone, which can work offline on many devices."
+};
+document.getElementById("subLine").textContent = L.sub;
+document.getElementById("recLbl").textContent = L.rec;
+document.getElementById("copyBtn").textContent = L.copy;
+document.getElementById("toTabula").textContent = window.__INK_SCRIBA_FOR_TABULA ? (FR ? "Ins\u00e9rer dans Tabula" : "Insert into Tabula") : L.toTab;
+document.getElementById("clearBtn").textContent = L.clear;
+document.getElementById("capBtn").textContent = L.cap;
+document.getElementById("hintLine").textContent = L.hint;
+var pad = document.getElementById("pad");
+pad.setAttribute("data-ph", L.ph);
+var langSel = document.getElementById("langSel");
+langSel.value = FR ? "fr-FR" : "en-GB";
+var statusEl = document.getElementById("status");
+function say(t){ try { statusEl.textContent = t || ""; } catch (e) {} }
+function cdPostLive(){ try { parent.postMessage({ kind: "scriba-live", on: !!((typeof live !== "undefined" && live) || (typeof capRec !== "undefined" && capRec && capRec.state === "recording")) }, "*"); } catch (e) {} }
+
+// theme bridge
+window.addEventListener("message", function (ev) {
+  var d = ev && ev.data;
+  if (d && d.kind === "cd-theme-apply") { try { document.documentElement.classList.toggle("cd-dark", !!d.dark); } catch (e) {} }
+});
+
+// persistence in the shared well
+var KEY = "scriba_pad";
+try { var saved = localStorage.getItem(KEY); if (saved) pad.innerHTML = saved; } catch (e) {}
+try { window.addEventListener("storage", function (ev) { if (ev && ev.key === KEY) { try { var v = localStorage.getItem(KEY); if (v != null && v !== pad.innerHTML) pad.innerHTML = v; } catch (e) {} } }); window.addEventListener("focus", function () { try { var v = localStorage.getItem(KEY); if (v != null && v !== pad.innerHTML) pad.innerHTML = v; } catch (e) {} }); } catch (e) {}
+pad.addEventListener("input", function () { try { localStorage.setItem(KEY, pad.innerHTML); } catch (e) {} });;(function(){function __scFlush(){try{if(!window.__scDirty&&!window.__scHandled&&!(pad.textContent||'').trim())return;localStorage.setItem(KEY,pad.innerHTML);}catch(e){}}try{var __h=window.__CD_HANDOFF__;if(__h&&__h.kind==='scriba'&&typeof __h.html==='string'){pad.innerHTML=__h.html;window.__scHandled=1;try{localStorage.setItem(KEY,pad.innerHTML);}catch(e){}}}catch(e){}pad.addEventListener('input',function(){window.__scDirty=1;});window.__tabulaFlush=__scFlush;window.__tabulaCapture=function(){return {kind:'scriba',html:pad.innerHTML};};try{window.addEventListener('pagehide',__scFlush);window.addEventListener('beforeunload',__scFlush);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')__scFlush();});}catch(e){}})();
+
+function punctuate(t) {
+  var map = FR ? [
+    [/\bnouvelle ligne\b/gi, "\n"], [/\b\u00E0 la ligne\b/gi, "\n"],
+    [/\bpoint d[\u2019']interrogation\b/gi, "?"], [/\bpoint d[\u2019']exclamation\b/gi, "!"],
+    [/\bvirgule\b/gi, ","], [/\bpoint\b/gi, "."]
+  ] : [
+    [/\bnew paragraph\b/gi, "\n"], [/\bnew line\b/gi, "\n"],
+    [/\bquestion mark\b/gi, "?"], [/\bexclamation mark\b/gi, "!"],
+    [/\bfull stop\b/gi, "."], [/\bcomma\b/gi, ","], [/\bperiod\b/gi, "."]
+  ];
+  for (var i = 0; i < map.length; i++) t = t.replace(map[i][0], map[i][1]);
+  return t.replace(/\s+([,.?!])/g, "$1");
+}
+function appendText(t) {
+  t = punctuate(t.trim());
+  if (!t) return;
+  var parts = t.split("\n");
+  for (var i = 0; i < parts.length; i++) {
+    if (i > 0) pad.appendChild(document.createElement("br"));
+    if (parts[i]) pad.appendChild(document.createTextNode((pad.textContent && i === 0 ? " " : "") + parts[i]));
+  }
+  try { localStorage.setItem(KEY, pad.innerHTML); } catch (e) {}
+}
+
+// recognition
+var W = window, SR = W.SpeechRecognition || W.webkitSpeechRecognition;
+/* 7.28: Android's built-in web view (the Fire app) has no speech engine
+   behind this name, so it is not offered there. */
+var SCRIBA_IN_APP_WEBVIEW = /; wv\)/.test(navigator.userAgent || "");
+if (SCRIBA_IN_APP_WEBVIEW) SR = null;
+var secure = (W.isSecureContext !== false);
+var rec = null, live = false, scribaWatch = null;
+var recBtn = document.getElementById("recBtn");
+var recLbl = document.getElementById("recLbl");
+function stopUI() { live = false; recBtn.classList.remove("live"); recBtn.classList.remove("wait"); recLbl.textContent = L.rec; cdPostLive(); }
+(function () {
+  var mic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  var onl = (typeof navigator !== "undefined" && "onLine" in navigator) ? !!navigator.onLine : true;
+  var hasMR = typeof MediaRecorder !== "undefined";
+  var caps = FR
+    ? ("build s30 \u00B7 moteur de dict\u00E9e : " + (SR ? "oui" : "non") + " \u00B7 internet : " + (onl ? "oui" : "non") + " \u00B7 serveur Inkwell : oui \u00B7 micro : " + (mic ? "oui" : "non") + " \u00B7 enregistrement : " + (hasMR ? "oui" : "non"))
+    : ("build s30 \u00B7 speech engine: " + (SR ? "yes" : "no") + " \u00B7 internet: " + (onl ? "yes" : "no") + " \u00B7 Inkwell server: yes \u00B7 microphone: " + (mic ? "yes" : "no") + " \u00B7 recording: " + (hasMR ? "yes" : "no"));
+  try { document.getElementById("hintLine").textContent = L.hint + " " + caps + ". " + (SR ? L.capNote : (FR ? "La dict\u00E9e et la transcription utilisent le serveur d'Inkwell (Whisper multilingue)." : "Dictation and transcription use Inkwell's server (multilingual Whisper).")); } catch (e) {}
+  /* deferred: the engine block that defines the server address runs after this */
+  setTimeout(function () { try { scribaStatus(); } catch (e) {} }, 0);
+})();
+var ghostEl = null;
+function ghostShow(t) {
+  try {
+    if (!ghostEl || !ghostEl.parentNode) {
+      ghostEl = document.createElement("span");
+      ghostEl.id = "scribaGhost";
+      ghostEl.style.cssText = "opacity:0.45;font-style:italic;";
+      pad.appendChild(ghostEl);
+    }
+    ghostEl.textContent = (pad.textContent && pad.textContent !== ghostEl.textContent ? " " : "") + t;
+    ghostEl.scrollIntoView({ block: "nearest" });
+  } catch (e) {}
+}
+function ghostClear() { try { if (ghostEl && ghostEl.parentNode) ghostEl.parentNode.removeChild(ghostEl); ghostEl = null; } catch (e) {} }
+function scribaBegin() {
+  try { rec = new SR(); } catch (e) { recBtn.classList.remove("wait"); recLbl.textContent = L.rec; say(L.nomic); return; }
+  rec.continuous = true; rec.interimResults = true;
+  try { rec.lang = langSel.value || navigator.language || "en-US"; } catch (e) {}
+  var got = false; var started = false;
+  if (scribaWatch) { clearTimeout(scribaWatch); }
+  scribaWatch = setTimeout(function () { if (!live) return; if (!started) { live = false; try { rec.stop(); } catch (e) {} ghostClear(); stopUI(); say(L.stall); } else if (!got) { say(L.stall); } }, 8000);
+  rec.onstart = function () { started = true; say(L.listening); };
+  rec.onspeechstart = function () { got = true; say(L.heard); };
+  rec.onresult = function (ev) {
+    var interim = "";
+    for (var k = ev.resultIndex; k < ev.results.length; k++) {
+      if (ev.results[k].isFinal) { got = true; ghostClear(); appendText(ev.results[k][0].transcript); }
+      else { interim += ev.results[k][0].transcript; }
+    }
+    if (interim) { got = true; ghostShow(interim.trim()); say("\u2026 " + interim.trim()); } else { ghostClear(); }
+  };
+  rec.onerror = function (e) { var cd = (e && e.error) || "unknown"; if (cd === "no-speech" || cd === "aborted") return; ghostClear(); stopUI(); say(scribaSRErrorMsg(cd)); };
+  rec.onend = function () { if (live) { try { rec.start(); return; } catch (e) {} } ghostClear(); stopUI(); if (scribaWatch) clearTimeout(scribaWatch); say(L.stopped); };
+  recBtn.classList.remove("wait"); live = true; recBtn.classList.add("live"); recLbl.textContent = L.stop; say(L.listening); cdPostLive();
+  try { rec.start(); } catch (e) { stopUI(); say(L.nomic); }
+}
+
+function cdTranscribe(rec){
+  /* 7.26: a saved recording is decoded in the page, turned into 16 kHz WAV and
+     sent to Inkwell's local Whisper in pieces of up to five minutes, so no
+     ffmpeg is needed. Without local Whisper, the browser's own engine listens
+     to the recording as it plays, where that engine exists. */
+  say(L.transcribing);
+  function appendResult(text){
+    var head=document.createElement("div");
+    head.style.cssText="margin:14px 0 4px;font-weight:700;font-family:var(--serif)";
+    head.textContent=(FR?"Transcription \u00b7 ":"Transcript \u00b7 ")+(rec.name||"");
+    pad.appendChild(head);
+    var body=document.createElement("div");
+    body.textContent=text||(FR?"(rien n\u2019a \u00e9t\u00e9 reconnu)":"(nothing was recognised)");
+    pad.appendChild(body);
+    try{ localStorage.setItem(KEY, pad.innerHTML); }catch(e){}
+    say(L.transcribeDone);
+    if(typeof rec._after==="function") try{ rec._after(); }catch(e){}
+  }
+  function tryLocal(){
+    scribaBlobTo16k(rec.blob,function(f32,err){
+      if(!f32){ if(SR){ tryWebSpeech(); } else { say(T("This recording could not be decoded here: ","Cet enregistrement n\u2019a pas pu \u00eatre d\u00e9cod\u00e9 ici : ")+(err||"?")); } return; }
+      var step=16000*300, parts=[], i;
+      for(i=0;i<f32.length;i+=step) parts.push(f32.subarray(i,Math.min(f32.length,i+step)));
+      var out=[], k=0;
+      (function next(){
+        if(k>=parts.length){ appendResult(out.join(" ").trim()); return; }
+        say(T("Transcribing part ","Transcription de la partie ")+(k+1)+" / "+parts.length+"\u2026");
+        scribaTranscribe16k(parts[k],function(text,e2){
+          if(e2){ say(e2); if(!out.length){ return; } }
+          if(text) out.push(text);
+          k++; next();
+        });
+      })();
+    });
+  }
+  function tryWebSpeech(){
+    if(!SR){ say(scribaNoEngineMsg()); return; }
+    var out=[], startedAt=Date.now(), lastStamp=-1;
+    var r=new SR(); r.lang=(document.getElementById("langSel")||{}).value||"en-GB"; r.continuous=true; r.interimResults=false;
+    var audio=new Audio(); try{ audio.src=URL.createObjectURL(rec.blob); }catch(e){ say(L.capErr); return; }
+    function stamp(){ var secs=Math.floor((Date.now()-startedAt)/1000); var m=Math.floor(secs/60), s2=secs%60; return "["+(m<10?"0":"")+m+":"+(s2<10?"0":"")+s2+"] "; }
+    r.onresult=function(ev){ for(var i=ev.resultIndex;i<ev.results.length;i++){ if(!ev.results[i].isFinal) continue; var line=ev.results[i][0].transcript.trim(); if(!line) continue; var secs=Math.floor((Date.now()-startedAt)/1000); if(lastStamp<0||secs-lastStamp>=15){ out.push("\n"+stamp()); lastStamp=secs; } out.push(punctuate(line)+" "); } };
+    r.onerror=function(ev){ var cd=(ev&&ev.error)||""; if(cd==="not-allowed"||cd==="service-not-allowed") say(scribaSRErrorMsg(cd)); };
+    var done=false;
+    function finish(){ if(done) return; done=true; try{ r.stop(); }catch(e){} try{ audio.pause(); }catch(e){} appendResult(out.join("").trim()); }
+    audio.onended=function(){ setTimeout(finish,800); };
+    audio.onplay=function(){ try{ r.start(); }catch(e){} };
+    audio.play().catch(function(){ say(L.capErr); });
+    var cap=Math.min(3600000,(rec.dur||60000)*1.5+8000);
+    setTimeout(finish,cap);
+  }
+  if(scribaCanTranscribe()){ tryLocal(); }
+  else if(SR){ tryWebSpeech(); }
+  else { say(scribaNoEngineMsg()); }
+}
+
+
+/* ==================== 7.26: SCRIBA'S AUDIO ENGINE ====================
+   Live dictation records raw audio, cuts it at a natural pause every six to
+   twelve seconds, converts each piece to 16 kHz mono WAV and sends the pieces,
+   in order, to Inkwell's local Whisper. Nothing leaves the machine. When local
+   Whisper is not installed, the browser's own dictation engine is used where
+   it exists (Chrome, Edge, Safari); the message says which is in use. */
+var SCRIBA_SERVER="http://127.0.0.1:8317";
+var STT={checked:false, server:false, available:false, loaded:false, loading:false, online:null, error:null, model:null};
+function T(en,fr){ return FR?fr:en; }
+function scribaPlatform(){
+  var ua=(navigator.userAgent||""), pf=(navigator.platform||"");
+  if(/iPhone|iPad|iPod/.test(ua)||(pf==="MacIntel"&&navigator.maxTouchPoints>1)) return "ios";
+  if(/Android|Silk|KF[A-Z]{2,}/.test(ua)) return "android";
+  if(/Mac/.test(pf)) return "mac";
+  if(/Win/.test(pf)) return "win";
+  return "other";
+}
+function scribaHostInfo(cb){
+  try{
+    var api=(window.parent&&window.parent.pywebview&&window.parent.pywebview.api)||(window.pywebview&&window.pywebview.api);
+    if(api&&api.host_info){ Promise.resolve(api.host_info()).then(function(h){cb(h||null);},function(){cb(null);}); return; }
+  }catch(e){}
+  cb(null);
+}
+function scribaStatus(){
+  var xh=new XMLHttpRequest();
+  try{ xh.open("GET",SCRIBA_SERVER+"/api/net_status",true); }catch(e){ STT.checked=true; return; }
+  xh.timeout=6000;
+  xh.onload=function(){
+    STT.checked=true;
+    if(xh.status!==200) return;
+    try{
+      var r=JSON.parse(xh.responseText);
+      STT.server=true; STT.available=!!r.stt_available; STT.loaded=!!r.stt_loaded; STT.loading=!!r.stt_loading;
+      STT.online=r.online; STT.error=r.stt_error||null; STT.model=r.stt_model||null;
+      if(STT.available&&!STT.loaded){
+        try{ var w=new XMLHttpRequest(); w.open("POST",SCRIBA_SERVER+"/api/stt_warm",true); w.setRequestHeader("Content-Type","application/json"); w.send("{}"); }catch(e){}
+        say(T("Local Whisper is getting ready. The first time, it downloads about 150 MB, then it works offline.","Whisper local se pr\u00e9pare. La premi\u00e8re fois, il t\u00e9l\u00e9charge environ 150 Mo, puis fonctionne hors ligne."));
+      }else if(STT.available){
+        say(T("Local Whisper is ready ("+STT.model+"). Dictation stays on this computer.","Whisper local est pr\u00eat ("+STT.model+"). La dict\u00e9e reste sur cet ordinateur."));
+      }else{
+        say(scribaPageOk()?T("Local Whisper is not installed, so Scriba will use on-device Whisper. The first Record fetches the model once.","Whisper local n\u2019est pas install\u00e9 ; Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois.")
+           :(SR?T("Local Whisper is not installed, so Scriba uses this browser's dictation engine.","Whisper local n\u2019est pas install\u00e9 ; Scriba utilise le moteur de dict\u00e9e du navigateur.")
+              :scribaNoEngineMsg()));
+      }
+    }catch(e){}
+  };
+  function noServer(){ STT.checked=true;
+    if(scribaPageOk()) say(T("Scriba will use on-device Whisper. The first Record fetches the model once; after that it works offline.","Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois ; ensuite il fonctionne hors ligne.")); }
+  xh.onerror=noServer;
+  xh.ontimeout=noServer;
+  try{ xh.send(); }catch(e){ STT.checked=true; }
+}
+function scribaNoEngineMsg(){
+  var pl0=scribaPlatform();
+  if(!STT.server&&(pl0==="android"||pl0==="ios"))
+    return T("Live dictation needs WebAssembly and a secure page, which this view does not offer. Capture still records your voice; the recordings wait under Recordings.",
+             "La dict\u00e9e en direct demande WebAssembly et une page s\u00e9curis\u00e9e, que cette vue n\u2019offre pas. La capture enregistre quand m\u00eame votre voix ; les enregistrements attendent sous Enregistrements.");
+  if(STT.server) return T("No dictation engine is installed. Install local Whisper once: run the Inkwell installer again and answer yes to the transcription question, or type: pip3 install transformers torch",
+                          "Aucun moteur de dict\u00e9e n\u2019est install\u00e9. Installez Whisper local : relancez l\u2019installateur d\u2019Inkwell et r\u00e9pondez oui \u00e0 la question sur la transcription, ou tapez : pip3 install transformers torch");
+  return T("This browser has no dictation engine and Inkwell's local server is not reachable here. Capture still records your voice under Recordings.",
+           "Ce navigateur n\u2019a pas de moteur de dict\u00e9e et le serveur local d\u2019Inkwell n\u2019est pas joignable ici. La capture enregistre quand m\u00eame votre voix sous Enregistrements.");
+}
+function scribaSRErrorMsg(code){
+  if(code==="not-allowed") { return scribaMicMsg({name:"NotAllowedError"},null); }
+  if(code==="service-not-allowed") return T("This window does not allow the browser's dictation service. Install local Whisper (pip3 install transformers torch) and Scriba will use it instead.",
+                                            "Cette fen\u00eatre n\u2019autorise pas le service de dict\u00e9e du navigateur. Installez Whisper local (pip3 install transformers torch) et Scriba l\u2019utilisera.");
+  if(code==="network") return L.neterr;
+  return L.err+" ("+code+")";
+}
+function scribaMicMsg(err,host){
+  var n=(err&&err.name)||"", pl=scribaPlatform();
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)||n==="NotSupportedError"||n==="TypeError")
+    return T("This window cannot reach a microphone (the page is not in a secure context, or the web view is too old).","Cette fen\u00eatre n\u2019acc\u00e8de pas au microphone (page non s\u00e9curis\u00e9e ou vue web trop ancienne).");
+  if(n==="NotAllowedError"||n==="SecurityError"||n==="PermissionDeniedError"){
+    if(pl==="mac"&&host&&host.native_host===false)
+      return T("macOS refused the microphone because Inkwell started without its native launcher. Run \u201cInstall or Update Inkwell\u201d once, then open Inkwell from Applications.",
+               "macOS a refus\u00e9 le microphone car Inkwell a d\u00e9marr\u00e9 sans son lanceur natif. Lancez une fois \u00ab Install or Update Inkwell \u00bb, puis ouvrez Inkwell depuis Applications.");
+    if(pl==="mac") return T("macOS refused the microphone. Open System Settings, then Privacy & Security, then Microphone, switch Inkwell on, and press Record again.",
+                            "macOS a refus\u00e9 le microphone. Ouvrez R\u00e9glages Syst\u00e8me, puis Confidentialit\u00e9 et s\u00e9curit\u00e9, puis Microphone, activez Inkwell, et appuyez de nouveau sur Enregistrer.");
+    if(pl==="win") return T("Windows refused the microphone. Open Settings, then Privacy & security, then Microphone. Switch on Microphone access and Let desktop apps access your microphone, then press Record again.",
+                            "Windows a refus\u00e9 le microphone. Ouvrez Param\u00e8tres, puis Confidentialit\u00e9 et s\u00e9curit\u00e9, puis Microphone. Activez l\u2019acc\u00e8s au microphone et l\u2019acc\u00e8s pour les applications de bureau, puis r\u00e9essayez.");
+    if(pl==="ios") return T("The microphone was refused. In the Settings app, open Safari, set Microphone to Ask or Allow, then reopen Inkwell and press Record again.",
+                            "Le microphone a \u00e9t\u00e9 refus\u00e9. Dans R\u00e9glages, ouvrez Safari, r\u00e9glez Microphone sur Demander ou Autoriser, puis rouvrez Inkwell.");
+    if(pl==="android") return T("The microphone was refused. Open Settings, then Apps, then Inkwell (or Silk), then Permissions, allow the microphone, and press Record again.",
+                                "Le microphone a \u00e9t\u00e9 refus\u00e9. Ouvrez Param\u00e8tres, Applications, Inkwell (ou Silk), Autorisations, autorisez le microphone, puis r\u00e9essayez.");
+    return L.denied;
+  }
+  if(n==="NotFoundError"||n==="DevicesNotFoundError"||n==="OverconstrainedError") return L.nomicdev;
+  if(n==="NotReadableError"||n==="TrackStartError"||n==="AbortError")
+    return T("The microphone is busy or blocked. Close other apps that use it (calls, recorders), then press Record again.",
+             "Le microphone est occup\u00e9 ou bloqu\u00e9. Fermez les autres applications qui l\u2019utilisent, puis r\u00e9essayez.");
+  return L.capErr+(n?" ("+n+")":"");
+}
+function scribaExplainMic(err){ scribaHostInfo(function(h){ say(scribaMicMsg(err,h)); }); }
+
+/* raw capture: Float32 samples at the context's own rate */
+function ScribaPcm(stream){
+  var ctx=cdAudioCtx(); this.ctx=ctx; this.rate=ctx.sampleRate; this.bufs=[]; this.len=0;
+  this.src=ctx.createMediaStreamSource(stream);
+  this.proc=ctx.createScriptProcessor(4096,1,1);
+  this.mute=ctx.createGain(); this.mute.gain.value=0;
+  var me=this;
+  this.proc.onaudioprocess=function(ev){ var d=ev.inputBuffer.getChannelData(0); me.bufs.push(new Float32Array(d)); me.len+=d.length; };
+  this.src.connect(this.proc); this.proc.connect(this.mute); this.mute.connect(ctx.destination);
+}
+ScribaPcm.prototype.all=function(){ var out=new Float32Array(this.len), o=0; for(var i=0;i<this.bufs.length;i++){ out.set(this.bufs[i],o); o+=this.bufs[i].length; } this.bufs=[out]; return out; };
+ScribaPcm.prototype.take=function(n){ var a=this.all(); n=Math.min(n,a.length); var head=a.slice(0,n), rest=a.slice(n); this.bufs=rest.length?[rest]:[]; this.len=rest.length; return head; };
+ScribaPcm.prototype.stop=function(){ try{ this.proc.onaudioprocess=null; this.src.disconnect(); this.proc.disconnect(); this.mute.disconnect(); }catch(e){} };
+
+function scribaFrameRms(a,start,end){ var s2=0,n=0; for(var i=start;i<end&&i<a.length;i++){ s2+=a[i]*a[i]; n++; } return n?Math.sqrt(s2/n):0; }
+function scribaPeakRms(a,rate){ var f=Math.max(1,Math.round(rate*0.02)), mx=0; for(var i=0;i+f<=a.length;i+=f){ var r=scribaFrameRms(a,i,i+f); if(r>mx) mx=r; } return mx; }
+/* where to cut: the quietest 20 ms frame in the last 1.5 s, if it is quiet;
+   with force, the quietest frame there whatever its level */
+function scribaQuietCut(a,rate,force){
+  var f=Math.max(1,Math.round(rate*0.02)), from=Math.max(0,a.length-Math.round(rate*1.5)), best=-1, bestR=1e9;
+  for(var i=from;i+f<=a.length;i+=f){ var r=scribaFrameRms(a,i,i+f); if(r<=bestR){ bestR=r; best=i+(f>>1); } }
+  if(best<0) return force?a.length:0;
+  if(bestR<0.015||force) return best;
+  return 0;
+}
+/* box-filtered downsampling to 16 kHz (anti-aliased enough for speech) */
+function scribaTo16k(a,rate){
+  if(rate===16000) return a;
+  var ratio=rate/16000, n=Math.floor(a.length/ratio), out=new Float32Array(n);
+  for(var i=0;i<n;i++){ var s0=Math.floor(i*ratio), s1=Math.min(a.length,Math.max(s0+1,Math.floor((i+1)*ratio))), acc=0; for(var j=s0;j<s1;j++) acc+=a[j]; out[i]=acc/(s1-s0); }
+  return out;
+}
+function scribaWav16(f32){
+  var n=f32.length, buf=new ArrayBuffer(44+n*2), v=new DataView(buf);
+  function str(o,t){ for(var i=0;i<t.length;i++) v.setUint8(o+i,t.charCodeAt(i)); }
+  str(0,"RIFF"); v.setUint32(4,36+n*2,true); str(8,"WAVE"); str(12,"fmt "); v.setUint32(16,16,true);
+  v.setUint16(20,1,true); v.setUint16(22,1,true); v.setUint32(24,16000,true); v.setUint32(28,32000,true);
+  v.setUint16(32,2,true); v.setUint16(34,16,true); str(36,"data"); v.setUint32(40,n*2,true);
+  for(var i=0;i<n;i++){ var x=Math.max(-1,Math.min(1,f32[i])); v.setInt16(44+i*2,x<0?x*32768:x*32767,true); }
+  return buf;
+}
+function scribaB64(buf){ var b=new Uint8Array(buf), out=[], CH=0x8000; for(var i=0;i<b.length;i+=CH) out.push(String.fromCharCode.apply(null,b.subarray(i,i+CH))); return btoa(out.join("")); }
+function scribaPostWav(wavBuf,cb){
+  try{
+    var xhr=new XMLHttpRequest();
+    xhr.open("POST",SCRIBA_SERVER+"/api/transcribe",true);
+    xhr.setRequestHeader("Content-Type","application/json");
+    xhr.timeout=300000;
+    xhr.onload=function(){
+      var r=null; try{ r=JSON.parse(xhr.responseText); }catch(e){}
+      if(xhr.status===200&&r&&r.ok){ cb((r.text||"").trim(),null); return; }
+      cb("",(r&&r.error)||(T("Inkwell's server answered with an error ","Le serveur d\u2019Inkwell a r\u00e9pondu par une erreur ")+xhr.status));
+    };
+    xhr.onerror=function(){ cb("",T("Inkwell's local server is not running. Reopen Inkwell, then try again.","Le serveur local d\u2019Inkwell ne tourne pas. Rouvrez Inkwell, puis r\u00e9essayez.")); };
+    xhr.ontimeout=function(){ cb("",T("Transcription took too long. Try a shorter piece.","La transcription a pris trop de temps. Essayez un passage plus court.")); };
+    xhr.send(JSON.stringify({audio:scribaB64(wavBuf),language:(document.getElementById("langSel")||{}).value||"en"}));
+  }catch(e){ cb("",String(e)); }
+}
+/* a saved recording (webm, mp4, wav...) -> mono Float32 at 16 kHz */
+function scribaBlobTo16k(blob,cb){
+  var ctx=cdAudioCtx(); if(!ctx){ cb(null,"no audio context"); return; }
+  var fr=new FileReader();
+  fr.onload=function(){
+    var done=false;
+    function ok(ab){ if(done) return; done=true; try{
+      var ch=ab.numberOfChannels, n=ab.length, mono=new Float32Array(n);
+      for(var c=0;c<ch;c++){ var d=ab.getChannelData(c); for(var i=0;i<n;i++) mono[i]+=d[i]/ch; }
+      cb(scribaTo16k(mono,ab.sampleRate),null);
+    }catch(e){ cb(null,String(e)); } }
+    function bad(e){ if(done) return; done=true; cb(null,(e&&(e.message||e.name))||"decode failed"); }
+    try{ var pr=ctx.decodeAudioData(fr.result.slice(0),ok,bad); if(pr&&pr.then) pr.then(ok,bad); }catch(e){ bad(e); }
+  };
+  fr.onerror=function(){ cb(null,"read failed"); };
+  fr.readAsArrayBuffer(blob);
+}
+
+/* ================= 7.29: ON-DEVICE WHISPER =================
+   Whisper running inside the page, for every device without Inkwell's local
+   server: the Fire app, iPad and iPhone, Silk, and a desktop without the
+   Python libraries. It runs in a background worker, so the page and the
+   microphone capture never stall while it thinks. The model is fetched once,
+   on the first Record press, and kept by the browser for offline use. */
+var PAGE={worker:null, ready:false, loading:false, error:null, model:null, seq:0, waits:{}, mb:0, onReady:[]};
+var SCRIBA_PAGE_MODELS=["onnx-community/whisper-tiny","Xenova/whisper-tiny"];
+var SCRIBA_WORKER_SRC=[
+ "let TF=null, pipe=null, loading=null;",
+ "async function load(urls, models){",
+ "  if(pipe) return pipe;",
+ "  let lastErr=null;",
+ "  for (const u of urls){ try { TF=await import(u.module); if(u.wasm){ TF.env.backends.onnx.wasm.wasmPaths=u.wasm; } break; } catch(e){ lastErr=e; TF=null; } }",
+ "  if(!TF) throw new Error('the speech library could not be loaded ('+String(lastErr&&lastErr.message||lastErr)+')');",
+ "  if(typeof TF.pipeline!=='function') throw new Error('the speech library has no pipeline function');",
+ "  for (const id of models){",
+ "    try { pipe=await TF.pipeline('automatic-speech-recognition', id, { progress_callback:(p)=>postMessage({type:'progress', file:p.file||'', loaded:p.loaded||0, total:p.total||0, status:p.status||''}) });",
+ "      postMessage({type:'model', id:id}); return pipe; }",
+ "    catch(e){ lastErr=e; }",
+ "  }",
+ "  throw new Error('the Whisper model could not be fetched ('+String(lastErr&&lastErr.message||lastErr)+')');",
+ "}",
+ "onmessage=async(ev)=>{ const m=ev.data||{};",
+ "  try {",
+ "    if(m.type==='probe'){ let ok=false, v=''; for(const u of m.urls){ try{ const t=await import(u.module); ok=typeof t.pipeline==='function'; v=(t.env&&t.env.version)||''; break; }catch(e){} } postMessage({type:'probe', ok:ok, version:v}); return; }",
+ "    loading=loading||load(m.urls, m.models);",
+ "    const p=await loading;",
+ "    if(m.type==='load'){ postMessage({type:'ready'}); return; }",
+ "    if(m.type==='run'){ const out=await p(m.audio, m.opts); postMessage({type:'result', id:m.id, text:String((out&&out.text)||'').trim()}); }",
+ "  } catch(e){ loading=null; pipe=null; postMessage({type:'error', id:m.id, message:String(e&&e.message||e)}); }",
+ "};"].join("\n");
+function scribaPageOk(){
+  return secure && typeof WebAssembly==="object" && typeof Worker==="function" && typeof Blob==="function" && !!(window.URL&&URL.createObjectURL);
+}
+function scribaPageUrls(){
+  var base=document.baseURI||location.href, urls=[];
+  try{ urls.push({module:new URL("vendor/transformers.min.js",base).href, wasm:new URL("vendor/",base).href}); }catch(e){}
+  urls.push({module:"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1", wasm:null});
+  return urls;
+}
+function scribaPageWorker(){
+  if(PAGE.worker) return PAGE.worker;
+  var w=new Worker(URL.createObjectURL(new Blob([SCRIBA_WORKER_SRC],{type:"text/javascript"})),{type:"module"});
+  var files={};
+  w.onmessage=function(ev){
+    var m=ev.data||{};
+    if(m.type==="progress"){
+      if(m.file){ files[m.file]=m.loaded||files[m.file]||0; }
+      var tot=0; for(var k in files) tot+=files[k];
+      var mb=Math.round(tot/1048576);
+      if(PAGE.loading&&mb!==PAGE.mb){ PAGE.mb=mb; say(T("Fetching on-device Whisper, once: ","T\u00e9l\u00e9chargement de Whisper sur l\u2019appareil, une seule fois : ")+mb+" MB\u2026"); }
+      return;
+    }
+    if(m.type==="model"){ PAGE.model=m.id; return; }
+    if(m.type==="ready"){ if(PAGE.loading){ say(T("On-device Whisper is ready. Speak; each phrase appears a moment after you pause.","Whisper sur l\u2019appareil est pr\u00eat. Parlez ; chaque phrase appara\u00eet un instant apr\u00e8s une pause.")); } PAGE.ready=true; PAGE.loading=false; PAGE.error=null; var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(null);}catch(e){}}); return; }
+    if(m.type==="probe"){ var pr=PAGE.waits.probe; delete PAGE.waits.probe; if(pr) pr(m); return; }
+    if(m.type==="result"||m.type==="error"){
+      var cb=PAGE.waits[m.id]; delete PAGE.waits[m.id];
+      if(m.type==="error"){ PAGE.loading=false; PAGE.ready=false; PAGE.error=m.message;
+        var r2=PAGE.onReady; PAGE.onReady=[]; r2.forEach(function(f){try{f(m.message);}catch(e){}}); }
+      if(cb) cb(m.type==="result"?m.text:"", m.type==="error"?m.message:null);
+    }
+  };
+  w.onerror=function(e){ PAGE.error=String((e&&e.message)||"worker error"); PAGE.loading=false; };
+  PAGE.worker=w; return w;
+}
+/* load once; cb(err) */
+function scribaPageLoad(cb){
+  if(PAGE.ready){ cb(null); return; }
+  PAGE.onReady.push(cb);
+  if(PAGE.loading) return;
+  PAGE.loading=true; PAGE.mb=-1;
+  say(T("Preparing on-device Whisper. The first time, the model is downloaded once (a few tens of megabytes); after that it works offline.",
+        "Pr\u00e9paration de Whisper sur l\u2019appareil. La premi\u00e8re fois, le mod\u00e8le est t\u00e9l\u00e9charg\u00e9 une fois (quelques dizaines de m\u00e9gaoctets) ; ensuite il fonctionne hors ligne."));
+  try{ scribaPageWorker().postMessage({type:"load", urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS}); }
+  catch(e){ PAGE.loading=false; PAGE.error=String(e); var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(PAGE.error);}catch(e2){}}); }
+}
+function scribaLangCode(){ var v=((document.getElementById("langSel")||{}).value||"en").toLowerCase(); return v.split("-")[0]; }
+/* 16 kHz mono Float32 -> text, cb(text, err) */
+function scribaPageTranscribe(f32,cb){
+  scribaPageLoad(function(err){
+    if(err){ cb("", scribaPageErrMsg(err)); return; }
+    var id=++PAGE.seq; PAGE.waits[id]=cb;
+    try{ scribaPageWorker().postMessage({type:"run", id:id, audio:f32, urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS,
+           opts:{language:scribaLangCode(), task:"transcribe", chunk_length_s:30, stride_length_s:5}}, [f32.buffer]); }
+    catch(e){ delete PAGE.waits[id]; cb("", String(e)); }
+  });
+}
+function scribaPageErrMsg(err){
+  return T("On-device Whisper could not start: ","Whisper sur l\u2019appareil n\u2019a pas pu d\u00e9marrer : ")+err+
+         T(". The first use needs the internet, to fetch the model once.",". La premi\u00e8re utilisation demande internet, pour t\u00e9l\u00e9charger le mod\u00e8le une fois.");
+}
+/* the one door every transcription goes through: local server first, then the page */
+function scribaTranscribe16k(f32,cb){
+  if(STT.available){ scribaPostWav(scribaWav16(f32),cb); return; }
+  scribaPageTranscribe(f32,cb);
+}
+function scribaCanTranscribe(){ return STT.available || scribaPageOk(); }
+
+var inkLiveStream=null, inkLiveTimer=null, inkPcm=null, inkLiveActive=false, inkQ=[], inkQBusy=false;
+function inkQueue(f32,rate){
+  if(!f32||f32.length<rate*0.4) return;
+  if(scribaPeakRms(f32,rate)<0.006) return;            /* silence: Whisper would invent words */
+  inkQ.push(scribaTo16k(f32,rate));
+  inkQPump();
+}
+function inkQPump(){
+  if(inkQBusy||!inkQ.length) return;
+  inkQBusy=true; ghostShow(T("transcribing\u2026","transcription\u2026"));
+  var a=inkQ.shift();
+  scribaTranscribe16k(a,function(text,err){
+    inkQBusy=false; ghostClear();
+    if(text) appendText(text); else if(err) say(err);
+    if(inkQ.length) inkQPump(); else if(!live) say(L.stopped);
+  });
+}
+function inkLiveTick(){
+  var p=inkPcm; if(!p) return;
+  var sec=p.len/p.rate; if(sec<6) return;
+  var cutAt=scribaQuietCut(p.all(),p.rate,sec>=12);
+  if(cutAt>0) inkQueue(p.take(cutAt),p.rate);
+}
+function inkLiveStart(){
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ scribaExplainMic(null); return; }
+  var ctx=cdAudioCtx(); if(!ctx){ say(L.capErr); return; }
+  try{ if(ctx.state==="suspended") ctx.resume(); }catch(e){}
+  recBtn.classList.add("wait"); recLbl.textContent="\u2026"; say(L.asking);
+  navigator.mediaDevices.getUserMedia({audio:cdMicWants()}).then(function(stream){
+    recBtn.classList.remove("wait");
+    inkLiveStream=stream;
+    try{ inkPcm=new ScribaPcm(stream); }catch(e){ say(L.capErr+" ("+e+")"); try{stream.getTracks().forEach(function(t){t.stop();});}catch(e2){} stopUI(); return; }
+    try{ cdMeterStart(stream); }catch(e){}
+    inkLiveActive=true; live=true; recBtn.classList.add("live"); recLbl.textContent=L.stop;
+    say(STT.available?T("Listening. Local Whisper writes each phrase after a short pause.","\u00c9coute. Whisper local \u00e9crit chaque phrase apr\u00e8s une courte pause.")
+                     :T("Listening. On-device Whisper writes each phrase after a short pause.","\u00c9coute. Whisper sur l\u2019appareil \u00e9crit chaque phrase apr\u00e8s une courte pause.")); cdPostLive();
+    if(!STT.available) scribaPageLoad(function(err){ if(err) say(scribaPageErrMsg(err)); else if(live) say(T("On-device Whisper is ready. Listening.","Whisper sur l\u2019appareil est pr\u00eat. \u00c9coute.")); });
+    inkLiveTimer=setInterval(inkLiveTick,500);
+  }).catch(function(err){ recBtn.classList.remove("wait"); stopUI(); scribaExplainMic(err); });
+}
+function inkLiveStop(){
+  if(inkLiveTimer){ clearInterval(inkLiveTimer); inkLiveTimer=null; }
+  var p=inkPcm; inkPcm=null;
+  if(p){ var rest=p.take(p.len); p.stop(); inkQueue(rest,p.rate); }
+  try{ if(cdMeterStop) cdMeterStop(); }catch(e){}
+  try{ if(inkLiveStream) inkLiveStream.getTracks().forEach(function(t){t.stop();}); }catch(e){}
+  inkLiveStream=null; inkLiveActive=false;
+  live=false; recBtn.classList.remove("live"); recLbl.textContent=L.rec; cdPostLive();
+  if(!inkQBusy&&!inkQ.length) say(L.stopped);
+}
+
+recBtn.onclick = function () {
+  if (live) {
+    if (inkLiveActive) { inkLiveStop(); return; }
+    live = false; try { rec && rec.stop(); } catch (e) {} return;
+  }
+  if (!secure) { say(L.insecure); try { pad.focus(); } catch (e) {} return; }
+  if (STT.available) { inkLiveStart(); return; }
+  if (STT.checked && scribaPageOk()) { inkLiveStart(); return; }
+  if (SR) { recBtn.classList.add("wait"); recLbl.textContent = "\u2026"; say(L.asking); scribaBegin(); return; }
+  if (!STT.checked) { say(T("Still checking which dictation engine is available. Press Record again in a moment.","V\u00e9rification du moteur de dict\u00e9e en cours. Appuyez de nouveau dans un instant.")); return; }
+  say(scribaNoEngineMsg());
+  try { pad.focus(); } catch (e) {}
+};
+
+
+/* ---- Loudness -------------------------------------------------------------
+   Three separate things, because "too quiet" has three separate causes: what the
+   microphone hands over, whether the reader can tell, and what can be done about a
+   recording already made. */
+
+function cdMicWants() {
+  /* Preferences, not demands. Written as plain booleans rather than {exact:true} so
+     a device that cannot offer one ignores it instead of refusing the microphone. */
+  return {
+    autoGainControl: true,
+    noiseSuppression: true,
+    echoCancellation: true
+  };
+}
+
+var cdAC = null;
+function cdAudioCtx() {
+  if (cdAC) return cdAC;
+  try {
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    cdAC = new C();
+  } catch (e) { cdAC = null; }
+  return cdAC;
+}
+
+/* The meter. It reads the stream that is being recorded, so it shows what is
+   actually going down rather than a separate guess at it. */
+var cdMeterStop = null;
+function cdMeterStart(stream) {
+  var ctx = cdAudioCtx();
+  var wrap = document.getElementById("cdLevelWrap");
+  var bar = document.getElementById("cdLevelBar");
+  if (!ctx || !wrap || !bar) return;
+  try { if (ctx.state === "suspended") ctx.resume(); } catch (e) {}
+  var src, an, buf, raf = null, quietSince = Date.now(), warned = false;
+  try {
+    src = ctx.createMediaStreamSource(stream);
+    an = ctx.createAnalyser();
+    an.fftSize = 1024;
+    an.smoothingTimeConstant = 0.75;
+    src.connect(an);
+    buf = new Uint8Array(an.fftSize);
+  } catch (e) { return; }
+  wrap.style.display = "block";
+
+  function frame() {
+    try {
+      an.getByteTimeDomainData(buf);
+      /* Root mean square rather than peak: a single click should not fill the bar. */
+      var sum = 0;
+      for (var i = 0; i < buf.length; i++) {
+        var v = (buf[i] - 128) / 128;
+        sum += v * v;
+      }
+      var rms = Math.sqrt(sum / buf.length);
+      /* A voice sits low on a linear scale, so the bar is drawn on a curve that
+         gives ordinary speech most of the width. */
+      var shown = Math.min(1, Math.pow(rms * 3.2, 0.6));
+      bar.style.width = Math.round(shown * 100) + "%";
+      bar.style.background = (rms < 0.012) ? "#9a9a9f" : (rms > 0.55 ? "#822e1d" : "#1B6B93");
+      if (rms >= 0.012) { quietSince = Date.now(); warned = false; }
+      else if (!warned && Date.now() - quietSince > 4000) {
+        warned = true;
+        say(L.tooQuiet);
+      }
+    } catch (e) {}
+    raf = requestAnimationFrame(frame);
+  }
+  frame();
+
+  cdMeterStop = function () {
+    try { if (raf) cancelAnimationFrame(raf); } catch (e) {}
+    try { src.disconnect(); } catch (e) {}
+    try { wrap.style.display = "none"; bar.style.width = "0%"; } catch (e) {}
+    cdMeterStop = null;
+  };
+}
+
+/* Boost. An <audio> element's volume cannot exceed 1, so a quiet recording cannot be
+   made louder by it. Routing playback through a gain node can. */
+var cdBoostSrc = null, cdBoostGain = null;
+var cdBoostLevels = [1, 2, 3.2];
+var cdBoostAt = 0;
+try {
+  var saved = parseInt(localStorage.getItem("cd_scriba_boost") || "0", 10);
+  if (saved >= 0 && saved < cdBoostLevels.length) cdBoostAt = saved;
+} catch (e) {}
+
+function cdBoostApply() {
+  var btn = document.getElementById("cdBoostBtn");
+  var el = document.getElementById("capAudio");
+  var wanted = cdBoostLevels[cdBoostAt];
+  if (btn) {
+    btn.textContent = (cdBoostAt === 0) ? L.boostOff : (L.boostOn + " \u00d7" + wanted);
+    btn.setAttribute("aria-pressed", String(cdBoostAt > 0));
+  }
+  if (!el) return;
+  if (wanted <= 1) {
+    if (cdBoostGain) { try { cdBoostGain.gain.value = 1; } catch (e) {} }
+    return;
+  }
+  var ctx = cdAudioCtx();
+  if (!ctx) return;
+  try {
+    if (!cdBoostSrc) {
+      /* createMediaElementSource may be called only once per element, so the graph
+         is built on first use and then only its gain is changed. */
+      cdBoostSrc = ctx.createMediaElementSource(el);
+      cdBoostGain = ctx.createGain();
+      cdBoostSrc.connect(cdBoostGain);
+      cdBoostGain.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    cdBoostGain.gain.value = wanted;
+  } catch (e) {}
+}
+
+var capBtn = document.getElementById("capBtn"), capAudio = document.getElementById("capAudio"), capRec = null, capChunks = [];
+capBtn.onclick = function () {
+  if (capRec && capRec.state === "recording") { try { capRec.stop(); } catch (e) {} return; }
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || typeof MediaRecorder === "undefined") { say(L.capErr); return; }
+  navigator.mediaDevices.getUserMedia({ audio: cdMicWants() }).then(function (stream) {
+    capChunks = [];
+    try { capRec = new MediaRecorder(stream); } catch (e) { say(L.capErr); try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e2) {} return; }
+    capRec.ondataavailable = function (ev) { if (ev.data && ev.data.size > 0) capChunks.push(ev.data); };
+    capRec.onstop = function () {
+      try { if (cdMeterStop) cdMeterStop(); } catch (e) {}
+      try { stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+      try { var b = new Blob(capChunks, { type: capRec.mimeType || "audio/webm" }); capAudio.src = URL.createObjectURL(b); capAudio.style.display = "block"; var rr = { id: Date.now() + "_" + Math.random().toString(36).slice(2, 7), name: (FR ? "Enregistrement " : "Recording ") + (new Date()).toLocaleTimeString(), ts: Date.now(), dur: Date.now() - capStartAt, blob: b }; recPut(rr, renderRecordings); } catch (e) {}
+      capBtn.textContent = L.cap; say(L.savedRec); cdPostLive();
+    };
+    cdMeterStart(stream); capStartAt = Date.now(); capRec.start(); capBtn.textContent = L.capStop; say(L.capOn); cdPostLive();
+  }).catch(function (err) { scribaExplainMic(err); });
+};
+document.getElementById("copyBtn").onclick = function () {
+  var t = pad.innerText || "";
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t); say(L.copied); return; }
+  } catch (e) {}
+  try {
+    var r = document.createRange(); r.selectNodeContents(pad);
+    var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    document.execCommand("copy"); s.removeAllRanges(); say(L.copied);
+  } catch (e) {}
+};
+document.getElementById("clearBtn").onclick = function () {
+  pad.innerHTML = "";
+  try { localStorage.setItem(KEY, ""); } catch (e) {}
+  say(L.cleared);
+};
+document.getElementById("toTabula").onclick = function () {
+  /* 7.30: opened from Tabula's Scriba button: the words go back to Tabula's cursor */
+  if (window.__INK_SCRIBA_FOR_TABULA) {
+    var said = (pad.innerText || "").trim();
+    if (!said) { say(FR ? "Rien \u00e0 ins\u00e9rer pour l\u2019instant." : "Nothing to insert yet."); return; }
+    try { parent.postMessage({ kind: "ink-scriba-insert", text: said }, "*"); } catch (e) {}
+    say(L.sent);
+    return;
+  }
+  var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]; }); };
+  var html = "<p>" + esc(pad.innerText || "").replace(/\n/g, "<br>") + "</p>";
+  try { localStorage.setItem("tabula_incoming", JSON.stringify({ title: FR ? "Dict\u00E9e de Scriba" : "Scriba dictation", html: html })); } catch (e) {}
+  try { parent.postMessage({ kind: "carpe-open", which: "tabula" }, "*"); } catch (e) {}
+  say(L.sent);
+};
+
+// recordings library
+var SDB = null, memRecs = [], capStartAt = 0;
+function sdbOpen(cb) { try { if (SDB) { cb(SDB); return; } if (typeof indexedDB === "undefined") { cb(null); return; } var rq = indexedDB.open("scriba_db", 1); rq.onupgradeneeded = function () { try { rq.result.createObjectStore("recordings", { keyPath: "id" }); } catch (e) {} }; rq.onsuccess = function () { SDB = rq.result; cb(SDB); }; rq.onerror = function () { cb(null); }; } catch (e) { cb(null); } }
+function recAll(cb) { sdbOpen(function (db) { if (!db) { cb(memRecs.slice()); return; } try { var tx = db.transaction("recordings", "readonly"); var rq = tx.objectStore("recordings").getAll(); rq.onsuccess = function () { cb(rq.result || []); }; rq.onerror = function () { cb(memRecs.slice()); }; } catch (e) { cb(memRecs.slice()); } }); }
+function recPut(r, cb) { sdbOpen(function (db) { if (!db) { var f = false; for (var i = 0; i < memRecs.length; i++) { if (memRecs[i].id === r.id) { memRecs[i] = r; f = true; break; } } if (!f) memRecs.push(r); cb && cb(); return; } try { var tx = db.transaction("recordings", "readwrite"); tx.objectStore("recordings").put(r); tx.oncomplete = function () { cb && cb(); }; tx.onerror = function () { cb && cb(); }; } catch (e) { cb && cb(); } }); }
+function recDel(id, cb) { sdbOpen(function (db) { if (!db) { memRecs = memRecs.filter(function (x) { return x.id !== id; }); cb && cb(); return; } try { var tx = db.transaction("recordings", "readwrite"); tx.objectStore("recordings").delete(id); tx.oncomplete = function () { cb && cb(); }; tx.onerror = function () { cb && cb(); }; } catch (e) { cb && cb(); } }); }
+function fmtDur(ms) { var s = Math.round((ms || 0) / 1000); var mm = Math.floor(s / 60); s = s % 60; return mm + ":" + (s < 10 ? "0" : "") + s; }
+function renderRecordings() { var host = document.getElementById("recList"); if (!host) return; var q = (document.getElementById("recSearch").value || "").toLowerCase(); recAll(function (list) { list.sort(function (a, b) { return b.ts - a.ts; }); var shown = list.filter(function (r) { return !q || (r.name || "").toLowerCase().indexOf(q) >= 0; }); host.innerHTML = ""; if (!shown.length) { var e = document.createElement("div"); e.style.cssText = "font-size:12.5px;color:var(--ink-2);font-style:italic;padding:6px 0"; e.textContent = L.recEmpty; host.appendChild(e); return; } shown.forEach(function (r) { var row = document.createElement("div"); row.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)"; var nm = document.createElement("div"); nm.style.cssText = "font-size:13px;font-weight:600;flex:1;min-width:120px;font-family:var(--serif)"; nm.textContent = r.name; var meta = document.createElement("div"); meta.style.cssText = "font-size:11px;color:var(--ink-2)"; var dt = new Date(r.ts); meta.textContent = dt.toLocaleDateString() + " \u00b7 " + fmtDur(r.dur); function mkBtn(label, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.style.cssText = "font-size:11.5px;padding:5px 9px"; b.onclick = fn; return b; } row.appendChild(nm); row.appendChild(meta); row.appendChild(mkBtn(L.playLbl, function () { try { capAudio.src = URL.createObjectURL(r.blob); capAudio.style.display = "block"; capAudio.play(); } catch (e) {} })); row.appendChild(mkBtn(L.renameLbl, function () { var nn = prompt(L.renamePrompt, r.name); if (nn != null && nn.trim()) { r.name = nn.trim(); recPut(r, renderRecordings); } })); row.appendChild(mkBtn(L.exportLbl, function () { try { var a = document.createElement("a"); a.href = URL.createObjectURL(r.blob); a.download = (r.name || "recording").replace(/[^\w\- ]+/g, "") + ".webm"; document.body.appendChild(a); a.click(); document.body.removeChild(a); } catch (e) {} })); row.appendChild(mkBtn(L.transcribeLbl, function () { cdTranscribe(r); })); row.appendChild(mkBtn(L.deleteLbl, function () { recDel(r.id, renderRecordings); })); host.appendChild(row); }); }); }
+try { document.getElementById("recTitle").textContent = L.recTitle; document.getElementById("recSearch").setAttribute("placeholder", L.recSearch); document.getElementById("recSearch").addEventListener("input", renderRecordings); renderRecordings(); } catch (e) {}
+/* Transcribe all recordings */
+try{
+  var taBtn=document.getElementById("transcribeAllBtn");
+  taBtn.textContent=FR?"Tout transcrire":"Transcribe all";
+  taBtn.onclick=function(){
+    recAll(function(list){
+      if(!list.length){ say(FR?"Aucun enregistrement.":"No recordings."); return; }
+      var idx=0;
+      taBtn.disabled=true; taBtn.textContent=FR?"Transcription en cours\\u2026 (0/"+list.length+")":"Transcribing\\u2026 (0/"+list.length+")";
+      function next(){
+        if(idx>=list.length){ taBtn.disabled=false; taBtn.textContent=FR?"Tout transcrire":"Transcribe all"; say(FR?"Toutes les transcriptions ajout\\u00e9es.":"All transcripts added."); return; }
+        var r=list[idx]; idx++;
+        taBtn.textContent=FR?"Transcription en cours\\u2026 ("+idx+"/"+list.length+")":"Transcribing\\u2026 ("+idx+"/"+list.length+")";
+        cdTranscribe({
+          blob:r.blob, name:r.name, dur:r.dur,
+          _after:function(){
+            setTimeout(next,300);
+          }
+        });
+      }
+      next();
+    });
+  };
+  /* Show the button when recordings exist */
+  var taObs=new MutationObserver(function(){
+    var rl=document.getElementById("recList");
+    taBtn.style.display=(rl&&rl.children.length>0&&rl.firstChild.className!=="")?"inline-block":"none";
+  });
+  taObs.observe(document.getElementById("recList"),{childList:true});
+}catch(e){}
+function scribaTab(which) {
+  var dict = which !== "recordings";
+  function sh(el2, on) { if (el2) el2.style.display = on ? "" : "none"; }
+  sh(document.querySelector(".bar"), dict);
+  sh(document.getElementById("status"), dict);
+  sh(document.getElementById("pad"), dict);
+  sh(document.getElementById("hintLine"), dict);
+  sh(document.getElementById("recWrap"), !dict);
+  var ca = document.getElementById("capAudio");
+  if (ca) { if (dict) ca.style.display = "none"; else if (ca.getAttribute("src")) ca.style.display = "block"; }
+  var db = document.getElementById("tabDictateBtn"), rb = document.getElementById("tabRecBtn");
+  if (db) { db.classList.toggle("tabsel", dict); db.setAttribute("aria-selected", dict ? "true" : "false"); }
+  if (rb) { rb.classList.toggle("tabsel", !dict); rb.setAttribute("aria-selected", dict ? "false" : "true"); }
+  if (!dict) { try { renderRecordings(); } catch (e) {} }
+}
+try { document.getElementById("tabDictateBtn").onclick = function () {
+    /* 7.30: "Dictate" is what people press to dictate. On the dictation view
+       it starts and stops recording, exactly as Record does. */
+    var onDictate = this.classList.contains("tabsel");
+    scribaTab("dictate");
+    if (onDictate) { var rb2 = document.getElementById("recBtn"); if (rb2) rb2.click(); }
+  };
+  document.getElementById("tabDictateBtn").title = FR ? "Dicter : appuyez pour commencer ou arr\u00eater" : "Dictate: press to start or stop"; document.getElementById("tabRecBtn").onclick = function () { scribaTab("recordings"); }; scribaTab("dictate"); } catch (e) {}
+</script>
+<script>(function(){try{
+  var b=document.getElementById("cdBoostBtn");
+  if(!b) return;
+  /* Boost needs Web Audio. Where it is missing or blocked the control
+     never appears, rather than appearing and doing nothing. */
+  if(!(window.AudioContext||window.webkitAudioContext)) return;
+  b.style.display="inline-block";
+  b.addEventListener("click",function(){
+    cdBoostAt=(cdBoostAt+1)%cdBoostLevels.length;
+    try{localStorage.setItem("cd_scriba_boost",String(cdBoostAt));}catch(e){}
+    cdBoostApply();
+  });
+  cdBoostApply();
+}catch(e){}})();</script>
+</body>
+</html>
