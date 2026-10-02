@@ -115,6 +115,30 @@ Every control pressed in a test browser, with errors recorded:
   desk 111 controls, Tabula 395, Scriba 10, Fontes 15: no errors left. (The
   only control that closes a room is Tabula's New window, by design.)
 
+7.30, THIRD ROUND: ONE ECOSYSTEM FOR DICTATION
+=============================================
+Scriba inside Tabula now writes straight onto Tabula's page; the Scriba room
+does not open. Scriba's own engine (the local server first, then on-device
+Whisper, then the device's own speech engine) runs in a hidden frame in
+"relay" mode and hands every finished phrase to the page that asked. Scriba's
+own page works exactly as before, and its saved pad is never touched by
+dictation into Tabula or the desk.
+  In Tabula: press the microphone. It glows while listening, and a small note
+    on the page says what Scriba is doing. Press it again to stop.
+  On the desk: Insert, "Dictate here": the same, at the desk's caret.
+  On the desk: Insert, "Scriba's pad at the caret": brings in what was
+    dictated earlier in Scriba's own page.
+  In Scriba's room: "Into the document" (beside "Send to Tabula") puts the pad
+    into the open Inkwell document at the caret.
+  After Stop, phrases already spoken are still written (the model may have
+    been loading, with speech queued); once Scriba reports its queue empty,
+    nothing more is accepted, and never more than three minutes after Stop.
+  Tested in a browser with a simulated microphone and the real on-device
+  Whisper: text landed at the cursor in Tabula and on the desk; the Scriba
+  room never opened; the pad was untouched; a stray phrase after Scriba
+  reported done was rejected. Regression: boot on four devices, Rewrite and
+  Draft, and the 96-check night-mode matrix, all passing.
+
 NOT VERIFIED (needs your devices)
 ---------------------------------
 - Nothing here ran on a real Fire tablet, iPad or iPhone. If the Mini model

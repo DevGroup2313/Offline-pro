@@ -2098,6 +2098,7 @@ function appStageHTML(which){
  var j=raw.indexOf('>',i)+1;
  var inject='<scr'+'ipt>window.__CD_NOCLOSE=1;window.__APP_LANG__="en";'
   +((which==='scriba'&&window.__inkScribaForTabula)?'window.__INK_SCRIBA_FOR_TABULA=1;':'')
+  +((which==='scriba'&&window.__inkScribaRelay)?'window.__INK_SCRIBA_RELAY=1;':'')
   /* downloads raised inside the room travel to the desk's own save path,
      the same relay the Tabula room uses */
   +'(function(){try{var C=HTMLAnchorElement.prototype.click;'
@@ -2182,6 +2183,20 @@ function inkTabulaScribaBridge(){
   ev.preventDefault();ev.stopImmediatePropagation();save();
   try{window.parent.postMessage({kind:'ink-scriba-for-tabula'},'*');}catch(x){}
  },true);
+ /* 7.30: while Inkwell's Scriba listens for this page, the button glows and a
+    small note on the page says what it is doing; nothing else of Scriba shows */
+ var note=null,hideT=null;
+ window.__inkDictState=function(on,msg){
+  var b=document.getElementById('scribaBtn');if(b)b.classList.toggle('recording',!!on);
+  if(msg===null){if(!on&&note&&note.textContent){if(hideT)clearTimeout(hideT);hideT=setTimeout(function(){note.style.opacity='0';},5000);}return;}
+  if(!note){note=document.createElement('div');note.id='inkDictNote';
+   note.style.cssText='position:fixed;left:50%;bottom:46px;transform:translateX(-50%);max-width:72%;z-index:2147482000;background:rgba(17,24,39,.92);color:#fff;padding:7px 14px;border-radius:10px;font:13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.3);pointer-events:none;transition:opacity .3s';
+   document.body.appendChild(note);}
+  var text=msg||(on?'\uD83C\uDF99 Listening: speak, and each phrase appears on the page a moment after you pause. Press the microphone again to stop.':'');
+  note.textContent=text;note.style.opacity=text?'1':'0';
+  if(hideT)clearTimeout(hideT);
+  if(!on&&text)hideT=setTimeout(function(){note.style.opacity='0';},5000);
+ };
  window.__inkInsertDictation=function(text){
   var e=ed();text=String(text||'').trim();if(!e||!text)return false;
   e.focus();
@@ -2196,13 +2211,66 @@ function inkTabulaScribaBridge(){
  };
 }
 /* the desk's side of it: open Scriba for that Tabula, and take its words back */
+/* 7.30: Tabula's microphone dictates straight onto Tabula's page. Scriba's
+   own engine (the local server, on-device Whisper or the browser's, whichever
+   this device has) runs in a hidden frame in relay mode and hands each phrase
+   to the Tabula that asked; the Scriba room never opens. The frame is kept
+   once made, so the model stays loaded for the next dictation. */
+var INKDICT={frame:null,target:null,on:false,ready:false,stoppedAt:0,draining:false};
+function inkDictTarget(){var w=INKDICT.target;try{if(w&&w.__inkDictState)return w;}catch(e){}return null;}
+function inkDictFrame(){
+ if(INKDICT.frame&&document.body.contains(INKDICT.frame))return INKDICT.frame;
+ window.__inkScribaRelay=true;var src=appStageHTML('scriba');window.__inkScribaRelay=false;
+ if(src==null)return null;
+ var f=document.createElement('iframe');f.id='inkDictFrame';f.title='Scriba (dictation engine)';
+ f.setAttribute('allow','microphone');f.setAttribute('aria-hidden','true');f.tabIndex=-1;
+ f.style.cssText='position:fixed;left:-10px;top:-10px;width:1px;height:1px;opacity:0;pointer-events:none;border:0';
+ INKDICT.ready=false;
+ f.addEventListener('load',function(){INKDICT.ready=true;if(INKDICT.on)inkDictSend(true);},{once:true});
+ f.srcdoc=src;document.body.appendChild(f);INKDICT.frame=f;return f;
+}
+function inkDictSend(on){try{INKDICT.frame.contentWindow.postMessage({kind:'ink-dictate',on:!!on},'*');}catch(e){}}
+function inkDictToggle(target){
+ if(INKDICT.on&&target&&target!==INKDICT.target){var old=inkDictTarget();if(old)old.__inkDictState(false,'');}
+ var start=!(INKDICT.on&&target===INKDICT.target);
+ INKDICT.target=target||INKDICT.target;
+ var t=inkDictTarget();
+ if(!start){INKDICT.on=false;INKDICT.stoppedAt=Date.now();INKDICT.draining=true;inkDictSend(false);if(t)t.__inkDictState(false,'Stopping; the last phrases you spoke are still being written\u2026');return;}
+ INKDICT.draining=false;
+ if(!inkDictFrame()){if(t)t.__inkDictState(false,'Scriba could not start here.');return;}
+ INKDICT.on=true;if(t)t.__inkDictState(true,'\uD83C\uDF99 Starting Scriba\u2026');
+ if(INKDICT.ready)inkDictSend(true);
+}
 window.addEventListener('message',function(ev){
  var m=ev&&ev.data;if(!m)return;
- if(m.kind==='ink-scriba-for-tabula'){
-  window.__inkScribaForTabula=ev.source||null;
-  openAppStage('scriba');
+ if(m.kind==='ink-scriba-for-tabula'){inkDictToggle(ev.source||null);return;}
+ if(m.kind==='ink-scriba-to-desk'){
+  try{closeAppStage('scriba');}catch(e){}
+  try{pushUndo();}catch(e){}
+  if(window.__inkInsertDictation(m.text))toast('Scriba \u00b7 in the document, at the caret');
   return;
  }
+ if(!INKDICT.frame||ev.source!==INKDICT.frame.contentWindow)return;
+ var t=inkDictTarget();
+ if(m.kind==='ink-dictate-text'){
+  /* phrases spoken before Stop are still written (the model may have been
+     loading, with speech queued); once Scriba reports its queue empty, nothing
+     more is accepted, and never more than three minutes after Stop */
+  if(!INKDICT.on&&!(INKDICT.draining&&Date.now()-INKDICT.stoppedAt<180000))return;
+  var ok=false;try{ok=!!(t&&t.__inkInsertDictation(m.text));}catch(e){}
+  if(!ok)toast('Tabula is closed; dictation stopped.'),inkDictToggle(INKDICT.target);
+  return;
+ }
+ if(m.kind==='ink-dictate-idle'){if(!INKDICT.on){INKDICT.draining=false;if(t)t.__inkDictState(false,'Dictation stopped.');}return;}
+ if(m.kind==='ink-dictate-status'){if(t&&m.text)t.__inkDictState(INKDICT.on,m.text);return;}
+ if(m.kind==='scriba-live'){
+  if(!m.on&&INKDICT.on){INKDICT.on=false;INKDICT.stoppedAt=Date.now();INKDICT.draining=true;}
+  if(t)t.__inkDictState(!!m.on,m.on?'':null);  /* stopping keeps Scriba's last word on screen */
+  return;
+ }
+});
+window.addEventListener('message',function(ev){
+ var m=ev&&ev.data;if(!m)return;
  if(m.kind==='ink-scriba-insert'){
   var w=window.__inkScribaForTabula;window.__inkScribaForTabula=null;
   try{closeAppStage('scriba');}catch(e){}
@@ -2212,6 +2280,40 @@ window.addEventListener('message',function(ev){
  }
 });
 function openScribaStage(){window.__inkScribaForTabula=null;openAppStage('scriba');}
+/* 7.30: the desk is a dictation target too. Scriba's engine writes at the
+   desk's caret exactly as it writes onto Tabula's page. */
+(function(){
+ var note=null,hideT=null;
+ window.__inkDictState=function(on,msg){
+  if(msg===null){if(!on&&note&&note.textContent){if(hideT)clearTimeout(hideT);hideT=setTimeout(function(){note.style.opacity='0';},5000);}return;}
+  if(!note){note=document.createElement('div');note.id='inkDeskDictNote';
+   note.style.cssText='position:fixed;left:50%;bottom:52px;transform:translateX(-50%);max-width:72%;z-index:2147482000;background:rgba(17,24,39,.92);color:#fff;padding:7px 14px;border-radius:10px;font:13px/1.45 -apple-system,system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.3);pointer-events:none;transition:opacity .3s';
+   document.body.appendChild(note);}
+  var text=msg||(on?'\uD83C\uDF99 Listening: each phrase appears at the caret a moment after you pause. Insert \u25B8 Dictate here again stops it.':'');
+  note.textContent=text;note.style.opacity=text?'1':'0';
+  if(hideT)clearTimeout(hideT);
+  if(!on&&text)hideT=setTimeout(function(){note.style.opacity='0';},5000);
+ };
+ window.__inkInsertDictation=function(text){
+  text=String(text||'').trim();if(!text)return false;
+  var s0=ed.selectionStart,before=ed.value.slice(0,s0);
+  if(before.length&&!/\s$/.test(before))text=' '+text;
+  if(!window.__inkDictUndo){try{pushUndo();}catch(e){}window.__inkDictUndo=true;setTimeout(function(){window.__inkDictUndo=false;},60000);}
+  ed.setRangeText(text,s0,ed.selectionEnd,'end');
+  try{afterChange();}catch(e){}
+  return true;
+ };
+})();
+function inkDeskDictToggle(){try{hideMenu();}catch(e){}inkDictToggle(window);}
+function inkDeskInsertScribaPad(){
+ try{hideMenu();}catch(e){}
+ var raw='';try{raw=localStorage.getItem('scriba_pad')||'';}catch(e){}
+ var d=document.createElement('div');d.innerHTML=raw;
+ d.querySelectorAll('br').forEach(function(b){b.replaceWith('\n');});
+ var t=(d.textContent||'').replace(/\u00a0/g,' ').trim();
+ if(!t){toast('Scriba\u2019s pad is empty.');return;}
+ try{pushUndo();}catch(e){}window.__inkInsertDictation(t);toast('Scriba\u2019s pad is in the document');
+}
 function openFontesStage(){openAppStage('fontes');}
 
 /* ================= EXPORT, CARPE DIEM'S OWN (7.02) =================
@@ -3530,6 +3632,8 @@ const panel = el("div", { class: "popAnim", style: { position: "fixed", zIndex: 
 /* ================= MENUS ================= */
 const MENUS={
  insert:[['lbl','Into this document'],
+  ['\uD83C\uDF99 Dictate here; Scriba writes at the caret',function(){inkDeskDictToggle();}],
+  ['\uD83C\uDF99 Scriba\u2019s pad at the caret',function(){inkDeskInsertScribaPad();}],
   ['✱ Citation · '+citeStyleName(),function(){citeInsertUI();}],
   ['⚓ Footnote at the caret',function(){plantFootnote();}],
   ['… Plant a References section at the end',function(){plantRefs();}],

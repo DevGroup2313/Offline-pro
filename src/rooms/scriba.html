@@ -925,6 +925,56 @@ function scribaTab(which) {
   if (rb) { rb.classList.toggle("tabsel", !dict); rb.setAttribute("aria-selected", dict ? "false" : "true"); }
   if (!dict) { try { renderRecordings(); } catch (e) {} }
 }
+/* 7.30: inside Inkwell, Scriba's pad goes straight into the open document too,
+   at the caret, beside "Send to Tabula" */
+if (window.parent !== window && window.__CD_NOCLOSE && !window.__INK_SCRIBA_RELAY && !window.__INK_SCRIBA_FOR_TABULA) {
+  (function () {
+    var b = document.createElement("button"); b.type = "button"; b.id = "toDesk";
+    b.textContent = FR ? "Dans le document" : "Into the document";
+    b.title = FR ? "Ins\u00e9rer le texte dict\u00e9 dans le document d\u2019Inkwell, au curseur" : "Put the dictated text into Inkwell\u2019s document, at the caret";
+    b.onclick = function () {
+      var said = (pad.innerText || "").trim();
+      if (!said) { say(FR ? "Rien \u00e0 ins\u00e9rer pour l\u2019instant." : "Nothing to insert yet."); return; }
+      try { parent.postMessage({ kind: "ink-scriba-to-desk", text: said }, "*"); } catch (e) {}
+      say(FR ? "Dans le document." : "In the document.");
+    };
+    var tt = document.getElementById("toTabula"); tt.parentNode.insertBefore(b, tt);
+  })();
+}
+/* 7.30: relay mode. Inside Inkwell, Tabula's microphone dictates straight onto
+   Tabula's page. Inkwell runs this Scriba out of sight with __INK_SCRIBA_RELAY
+   set: every finished phrase (from whichever engine this device has: the local
+   server, on-device Whisper or the browser's own) is handed to Inkwell instead
+   of being written into Scriba's pad, so the pad and its saved copy are never
+   touched, and Inkwell starts and stops the dictation. */
+if (window.__INK_SCRIBA_RELAY) {
+  appendText = function (t) {
+    t = punctuate(String(t || "").trim());
+    if (!t) return;
+    try { parent.postMessage({ kind: "ink-dictate-text", text: t }, "*"); } catch (e) {}
+  };
+  var relaySay = say;
+  say = function (t) {
+    relaySay(t);
+    try { parent.postMessage({ kind: "ink-dictate-status", text: String(t || "") }, "*"); } catch (e) {}
+    /* "Stopped." is said once the last queued phrase has been written: Inkwell
+       accepts phrases until then, and nothing after */
+    if (t === L.stopped) { try { parent.postMessage({ kind: "ink-dictate-idle" }, "*"); } catch (e) {} }
+  };
+  window.addEventListener("message", function (ev) {
+    var d = ev && ev.data;
+    if (!d || d.kind !== "ink-dictate") return;
+    if (d.lang) { try { langSel.value = d.lang; } catch (e) {} }
+    var want = !!d.on, tries = 0;
+    (function go() {
+      if (want === !!live) { cdPostLive(); return; }
+      /* the engine check runs at load; pressing Record before it ends only says "still checking" */
+      if (want && !STT.checked && tries++ < 60) { setTimeout(go, 250); return; }
+      recBtn.click();
+      setTimeout(cdPostLive, 600);
+    })();
+  });
+}
 try { document.getElementById("tabDictateBtn").onclick = function () {
     /* 7.30: "Dictate" is what people press to dictate. On the dictation view
        it starts and stops recording, exactly as Record does. */
