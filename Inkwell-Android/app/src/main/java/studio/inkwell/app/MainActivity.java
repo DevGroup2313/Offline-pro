@@ -39,8 +39,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Iterator;
+
+import org.json.JSONObject;
 
 /**
  * Inkwell for Android and the Fire tablet: one web view showing Inkwell.html
@@ -73,6 +78,9 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setTextZoom(100);
+        // 7.31: the laptop's model over the home Wi-Fi is plain http (a local
+        // address cannot have a certificate); the page itself is https
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
@@ -379,6 +387,61 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String hostInfo() {
             return hostInfoJson();
+        }
+
+        /** 7.31: the page's requests to the laptop's model, made by the app
+         *  itself. A page's own requests from its secure address to a plain
+         *  http address on the home network are blocked or held for a
+         *  permission the app window cannot show; the app's are not. The
+         *  answer comes back through window.__inkHttpDone(id, status, text). */
+        @JavascriptInterface
+        public void httpRequest(final String id, final String method, final String url,
+                                final String headersJson, final String body) {
+            new Thread(() -> {
+                int status = 0;
+                String text;
+                HttpURLConnection c = null;
+                try {
+                    URL u = new URL(url);
+                    if (!"http".equals(u.getProtocol()) && !"https".equals(u.getProtocol())) {
+                        throw new IOException("only http and https");
+                    }
+                    c = (HttpURLConnection) u.openConnection();
+                    c.setConnectTimeout(8000);
+                    c.setReadTimeout(240000);
+                    c.setRequestMethod(method == null || method.isEmpty() ? "GET" : method);
+                    JSONObject h = new JSONObject(headersJson == null || headersJson.isEmpty() ? "{}" : headersJson);
+                    Iterator<String> keys = h.keys();
+                    while (keys.hasNext()) {
+                        String k = keys.next();
+                        c.setRequestProperty(k, h.optString(k));
+                    }
+                    if (body != null && !body.isEmpty() && !"GET".equals(c.getRequestMethod())) {
+                        byte[] b = body.getBytes(UTF8);
+                        c.setDoOutput(true);
+                        c.setFixedLengthStreamingMode(b.length);
+                        OutputStream o = c.getOutputStream();
+                        try {
+                            o.write(b);
+                        } finally {
+                            o.close();
+                        }
+                    }
+                    status = c.getResponseCode();
+                    InputStream in = status >= 400 ? c.getErrorStream() : c.getInputStream();
+                    text = in == null ? "" : new String(Store.readAll(in), UTF8);
+                } catch (Exception e) {
+                    status = 0;
+                    text = String.valueOf(e.getMessage());
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                final String js = "window.__inkHttpDone&&window.__inkHttpDone(" + InkwellCore.jsonQuote(id)
+                        + "," + status + "," + InkwellCore.jsonQuote(text) + ")";
+                runOnUiThread(() -> {
+                    if (web != null) web.evaluateJavascript(js, null);
+                });
+            }).start();
         }
 
         @JavascriptInterface

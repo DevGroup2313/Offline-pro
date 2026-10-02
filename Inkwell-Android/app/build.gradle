@@ -21,8 +21,8 @@ android {
         applicationId 'studio.inkwell.app'
         minSdk 24
         targetSdk 34
-        versionCode 73000 + runNumber
-        versionName '7.30'
+        versionCode 73100 + runNumber
+        versionName '7.31'
     }
 
     signingConfigs {

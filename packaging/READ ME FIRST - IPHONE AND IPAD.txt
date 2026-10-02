@@ -1,7 +1,7 @@
-INKWELL 7.30 FOR IPHONE AND IPAD
+INKWELL 7.31 FOR IPHONE AND IPAD
 ================================
 THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
-THE FILE IT MAKES:   Inkwell-7.30-ios-buildN.ipa
+THE FILE IT MAKES:   Inkwell-7.31-ios-buildN.ipa
 NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
 
 IMPORTANT, PLEASE READ FIRST
@@ -62,7 +62,7 @@ PART B. BUILD THE .IPA
 7. Wait for the green tick.
 
 8. On the main page, open "Releases" (right-hand side). The newest release,
-   "Inkwell 7.30 for iPhone and iPad (build N)", has the .ipa under "Assets".
+   "Inkwell 7.31 for iPhone and iPad (build N)", has the .ipa under "Assets".
 
 
 PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
@@ -118,7 +118,7 @@ PART F. UPDATING INKWELL LATER
 ------------------------------
 - New Inkwell page: upload the new Inkwell.html into web/ (replace the old
   one); new vendor files go into web/vendor/.
-- New version number: in project.yml, change MARKETING_VERSION: "7.30".
+- New version number: in project.yml, change MARKETING_VERSION: "7.31".
 - New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
   with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
   with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.

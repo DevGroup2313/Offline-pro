@@ -139,21 +139,79 @@ dictation into Tabula or the desk.
   reported done was rejected. Regression: boot on four devices, Rewrite and
   Draft, and the 96-check night-mode matrix, all passing.
 
+7.31: THE FIRE TABLET AND YOUR LAPTOP'S MODEL
+============================================
+Look for "v7.31" beside the date in the masthead. If it is not there, the
+device is not running 7.31.
+
+1. Your laptop's model, from the Fire tablet and the iPad (Stage 2).
+   Before 7.31 the tablet was told "the server is the better path", but
+   nothing on the laptop listened to the home network, and the tablet app's
+   window may not contact a laptop by itself (Android and iOS block an app
+   page from reaching plain-http addresses on the home network). Now:
+   - On the laptop (Mac or Windows, 7.31 installed): Engine, under "Your
+     laptop's model", press "Share with my tablets on this Wi-Fi". It shows
+     an address (for example 192.168.1.20:8318) and a 6-digit code. The
+     first time, Windows or macOS may ask whether to allow Inkwell on the
+     network: choose Allow (on Windows, "Private networks").
+   - On the tablet, same Wi-Fi: Engine, "Your laptop's model": type the
+     address and the code, press "Connect to my laptop". The engine pill
+     changes to the laptop's model.
+   - The laptop listens on a second port (8318) that answers ONLY the
+     writing tools (corrections, rewrites, drafting, review, Scriba's
+     transcription), ONLY with the code. Your library, the model shelf and
+     the settings stay reachable only from the laptop itself. "Stop
+     sharing" closes the port; "New code" unpairs every tablet. Nothing is
+     reachable from the network until you switch sharing on.
+   - The Fire and iPhone/iPad apps make the connection themselves (natively)
+     and hand the answer to the page.
+   Tested here with the real laptop server and two browser windows, one as
+   the laptop and one as the Fire app (with every direct request from the
+   Fire page blocked, so only the app's own path could work): wrong code
+   refused and reported as a wrong code; right code connected; a correction
+   and a rewrite came back from the laptop; after "Stop sharing" the tablet
+   showed it disconnected. From the network, the library, model upload and
+   the sharing switch answer "not found".
+
+2. "Diagnose this device" (Engine panel) for the Mini model on the Fire.
+   The Mini model loads in every test here, including Chromium posing as
+   the Fire app with its processor slowed six times, so the cause on your
+   tablet cannot be seen from here. The report checks, step by step and
+   timed: the app's web engine and its version, WebAssembly, storage, the
+   model cache, the runtime files inside the app, starting the runtime,
+   reaching huggingface.co (where the models come from) and a 2 MB
+   download, then the install log word for word. "Copy the report" or
+   "Save the report", and send it: the first FAIL line names the cause.
+   If the Chrome version it reports is below 119, update "Android System
+   WebView" from the Amazon Appstore, if your Fire offers it (I am not
+   certain every Fire model does).
+   The Fire app now also recognises itself as a Fire tablet (its window
+   names the model, KFSNWI, rather than Silk).
+
+3. "Between your devices": on a tablet connected to the laptop, the Push
+   and Pull buttons are replaced by an honest note. Over the home Wi-Fi the
+   laptop shares its model only, never your documents, until Stage 3. Use
+   File, Export library and File, Import library meanwhile.
+
+Versions: the Fire app 7.31 (version code 73100 + build number), the
+iPhone/iPad app and the web app 7.31, the Mac and Windows launcher 7.31
+with server.py 2.12. The launcher's protections for your documents are
+unchanged from 7.29; only the server gained the sharing port.
+
 NOT VERIFIED (needs your devices)
 ---------------------------------
 - Nothing here ran on a real Fire tablet, iPad or iPhone. If the Mini model
   still fails on the Fire: open the Engine log (the panel that says "Mini
   failed on every known model") and send its lines; they name the cause.
 - The bar colours on the real Fire launcher and on iOS.
+- The laptop link between real devices: the firewall prompt, and the
+  tablet reaching the laptop's address on your router.
 
 STILL TO DO: THE LATER STAGES OF YOUR REQUEST
 =============================================
 Each will be its own verified stage, in this order unless you say otherwise.
-  Stage 2  Your laptop's strong model, from the Fire and iPad over Wi-Fi:
-           the desktop server listening on the home network, paired with a
-           code shown on the laptop, found from the tablet's AI settings.
-           (Bluetooth is not practical for this: browsers and these app
-           windows cannot open Bluetooth connections to a laptop.)
+  Stage 2  Done in 7.31 (above). Bluetooth is not practical for this:
+           these app windows cannot open Bluetooth connections to a laptop.
   Stage 3  Sync between devices: first a one-tap "Send library to a device"
            over the home network; then, if you want it, sync through a
            service you choose. Export and Import library keep working

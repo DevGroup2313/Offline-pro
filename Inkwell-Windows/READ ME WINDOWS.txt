@@ -1,4 +1,4 @@
-INKWELL 7.30 FOR WINDOWS
+INKWELL 7.31 FOR WINDOWS
 ========================
 IMPORTANT: do not run the old "Build Windows App.bat" from v7.25 again. It
 deletes the folder that holds your documents. This version never deletes
@@ -18,3 +18,15 @@ access your microphone".
 Python 3.8 or newer is required (python.org; tick "Add python.exe to PATH").
 Local transcription (Whisper) is optional; the installer offers it.
 Backups are made in %LOCALAPPDATA%\Inkwell\backups before anything changes.
+
+
+YOUR TABLETS CAN USE THIS COMPUTER'S MODEL (NEW IN 7.31)
+--------------------------------------------------------
+1. Open Inkwell here. Engine, under "Your laptop's model": press
+   "Share with my tablets on this Wi-Fi". It shows an address and a code.
+2. If the computer asks whether to allow Inkwell (or Python) on the
+   network, choose Allow (Private networks only).
+3. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
+   model": type the address and the code, then "Connect to my laptop".
+Only the writing tools are shared, and only with the code. Your documents
+are never reachable from the network. "Stop sharing" closes it again.

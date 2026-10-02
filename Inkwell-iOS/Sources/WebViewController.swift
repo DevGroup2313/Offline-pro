@@ -11,9 +11,9 @@ import WebKit
 /// of the library and file saving wired to the system. It mirrors the Android
 /// app (Inkwell-Android/.../MainActivity.java), so the page sees the same
 /// bridge on both.
-final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate,
+final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply,
                                WKScriptMessageHandler, WKDownloadDelegate {
-    static let build = "7.30"
+    static let build = "7.31"
 
     private var webView: WKWebView!
     private let store = Store()
@@ -31,6 +31,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         config.mediaTypesRequiringUserActionForPlayback = []
         config.websiteDataStore = .default()
         config.userContentController.add(self, name: "inkwell")
+        config.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "inkwellReply")
         config.userContentController.addUserScript(
             WKUserScript(source: bootScript(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
 
@@ -146,6 +147,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
          function P(v){return Promise.resolve(v);}
          function post(m){try{H.postMessage(m);return true;}catch(e){return false;}}
          window.InkwellNative={saveFile:function(n,m,b){return post({op:'saveFile',name:String(n),mime:String(m||'application/octet-stream'),data:String(b)});}};
+         var R=window.webkit.messageHandlers.inkwellReply;
+         if(R)window.InkwellNative.http=function(m,u,h,b){return R.postMessage({op:'http',method:String(m||'GET'),url:String(u),headers:h||{},body:b==null?'':String(b)})
+          .then(function(r){return r||{status:0,text:'no answer'};},function(e){return {status:0,text:String(e)};});};
          window.pywebview={api:{
           save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},
           storage_set:function(k,v){return P(post({op:'storageSet',key:String(k),value:String(v)}));},
@@ -164,6 +168,33 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     }
 
     /* --------------------------------------------- what the page may call */
+
+    /// 7.31: requests to the laptop's model over the home Wi-Fi, made by the
+    /// app itself. The page's own requests from inkwell://localhost to a plain
+    /// http address on the network may be blocked as mixed or local-network
+    /// content; the app's are not. The answer returns as the promise's value.
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage,
+                               replyHandler: @escaping (Any?, String?) -> Void) {
+        guard let body = message.body as? [String: Any], (body["op"] as? String) == "http",
+              let urlText = body["url"] as? String, let url = URL(string: urlText),
+              let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {
+            replyHandler(["status": 0, "text": "not a web address"], nil)
+            return
+        }
+        var request = URLRequest(url: url, timeoutInterval: 240)
+        request.httpMethod = (body["method"] as? String) ?? "GET"
+        if let headers = body["headers"] as? [String: Any] {
+            for (k, v) in headers { request.setValue(String(describing: v), forHTTPHeaderField: k) }
+        }
+        if let text = body["body"] as? String, !text.isEmpty, request.httpMethod != "GET" {
+            request.httpBody = Data(text.utf8)
+        }
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let text = data.flatMap { String(data: $0, encoding: .utf8) } ?? (error?.localizedDescription ?? "")
+            DispatchQueue.main.async { replyHandler(["status": status, "text": text], nil) }
+        }.resume()
+    }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let op = body["op"] as? String else { return }

@@ -1,4 +1,4 @@
-INKWELL 7.30 FOR MAC
+INKWELL 7.31 FOR MAC
 ====================
 1. In your current Inkwell, choose File, Export library, and keep the file.
 2. Unzip this package. Keep all its files together.
@@ -22,3 +22,15 @@ Local transcription (Whisper) is optional. The installer offers it. Without
 it, Scriba uses the Mac's own dictation engine where that is available.
 
 Problems: see INKWELL_HANDOFF_v7p29.txt, section "If something goes wrong".
+
+
+YOUR TABLETS CAN USE THIS COMPUTER'S MODEL (NEW IN 7.31)
+--------------------------------------------------------
+1. Open Inkwell here. Engine, under "Your laptop's model": press
+   "Share with my tablets on this Wi-Fi". It shows an address and a code.
+2. If the computer asks whether to allow Inkwell (or Python) on the
+   network, choose Allow.
+3. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
+   model": type the address and the code, then "Connect to my laptop".
+Only the writing tools are shared, and only with the code. Your documents
+are never reachable from the network. "Stop sharing" closes it again.

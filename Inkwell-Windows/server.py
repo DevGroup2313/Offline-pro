@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-server.py; Inkwell companion server (v2.11)
+server.py; Inkwell companion server (v2.12)
 ===========================================
 
 Serves the local AI endpoints Inkwell.html expects at http://127.0.0.1:8317:
@@ -1636,6 +1636,14 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/upload_model":
             return self._upload_model(parse_qs(parsed.query))
         m = re.match(r"^/api/([a-z_]+)$", parsed.path)
+        if m and m.group(1) in ("lan_status", "lan_enable"):
+            if self.client_address[0] not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+                return self._send(403, {"error": "only from this computer"})
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or b"{}"))
+            except Exception:
+                body = {}
+            return self._send(200, (ep_lan_status if m.group(1) == "lan_status" else ep_lan_enable)(body))
         if not m or m.group(1) not in ROUTES:
             return self._send(404, {"error": "unknown endpoint"})
         try:
@@ -1695,6 +1703,148 @@ class Handler(BaseHTTPRequestHandler):
         pass  # quiet
 
 
+
+# ---------------------------------------------------------------- home network (v2.12)
+# The laptop's model for the tablets on the same Wi-Fi. Off until switched on
+# from the laptop itself. A second listener on LAN_PORT serves only the writing
+# and voice endpoints, and only to a device that sends the 6-digit pairing code
+# in X-Inkwell-Key. Models, the shelf and the synced library are never served
+# to the network. The code and the on/off choice live in inkwell_lan.json.
+import hmac
+import secrets
+import socket
+
+LAN_PORT = int(os.environ.get("INKWELL_LAN_PORT", "8318"))
+LAN_PATH = os.path.join(DATA_DIR, "inkwell_lan.json")
+LAN_ROUTES = {"correct", "rewrite", "rewrite_preset", "rewrite_custom", "presets", "compose",
+              "tone", "similarity", "socrat", "review", "reader", "transcribe", "stt_status",
+              "stt_warm", "net_status"}
+LAN = {"server": None}
+
+
+def lan_conf():
+    try:
+        with open(LAN_PATH, encoding="utf-8") as f:
+            c = json.load(f)
+    except Exception:
+        c = {}
+    if not (isinstance(c.get("code"), str) and len(c["code"]) == 6 and c["code"].isdigit()):
+        c["code"] = "%06d" % secrets.randbelow(1000000)
+        c.setdefault("enabled", False)
+        lan_conf_write(c)
+    return c
+
+
+def lan_conf_write(c):
+    tmp = LAN_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(c, f)
+    os.replace(tmp, LAN_PATH)
+
+
+def lan_addresses():
+    """This computer's address on the home network, as other devices see it."""
+    found = []
+    try:
+        s2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s2.connect(("192.0.2.1", 9))  # no packet is sent; this only picks the outgoing interface
+        found.append(s2.getsockname()[0])
+        s2.close()
+    except Exception:
+        pass
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in found and not ip.startswith("127."):
+                found.append(ip)
+    except Exception:
+        pass
+    return [ip for ip in found if not ip.startswith("127.")]
+
+
+def lan_status():
+    c = lan_conf()
+    return {"ok": True, "enabled": bool(c.get("enabled")), "running": LAN["server"] is not None,
+            "code": c["code"], "port": LAN_PORT,
+            "addresses": ["%s:%d" % (ip, LAN_PORT) for ip in lan_addresses()]}
+
+
+def lan_start():
+    if LAN["server"] is not None:
+        return True
+    try:
+        srv = ThreadingHTTPServer(("0.0.0.0", LAN_PORT), LanHandler)
+    except OSError as e:
+        print(f"[inkwell] home network: port {LAN_PORT} unavailable ({e})")
+        return False
+    LAN["server"] = srv
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    print(f"[inkwell] home network: tablets can connect at {', '.join(lan_status()['addresses']) or 'this computer'}")
+    return True
+
+
+def lan_stop():
+    srv, LAN["server"] = LAN["server"], None
+    if srv is not None:
+        threading.Thread(target=lambda: (srv.shutdown(), srv.server_close()), daemon=True).start()
+
+
+def ep_lan_status(body):
+    return lan_status()
+
+
+def ep_lan_enable(body):
+    c = lan_conf()
+    if body.get("new_code"):
+        c["code"] = "%06d" % secrets.randbelow(1000000)
+    c["enabled"] = bool(body.get("on", c.get("enabled")))
+    lan_conf_write(c)
+    if c["enabled"]:
+        lan_start()
+    else:
+        lan_stop()
+    return lan_status()
+
+
+class LanHandler(Handler):
+    """What a paired tablet may ask of the laptop: writing and voice, nothing else."""
+
+    def _cors(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Inkwell-Key")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        # browsers ask before a page reaches a device on the private network
+        self.send_header("Access-Control-Allow-Private-Network", "true")
+
+    def _send(self, code, obj):
+        data = json.dumps(obj).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self._cors()
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _paired(self):
+        given = (self.headers.get("X-Inkwell-Key") or "").strip()
+        return bool(given) and hmac.compare_digest(given, lan_conf()["code"])
+
+    def do_GET(self):
+        path = self.path.split("?")[0]
+        if not self._paired():
+            return self._send(401, {"error": "pairing code needed", "paired": False})
+        if path in ("/api/health", "/api/net_status", "/api/stt_status", "/api/presets"):
+            return Handler.do_GET(self)
+        return self._send(404, {"error": "not offered to other devices"})
+
+    def do_POST(self):
+        m = re.match(r"^/api/([a-z_]+)$", self.path.split("?")[0])
+        if not self._paired():
+            return self._send(401, {"error": "pairing code needed", "paired": False})
+        if not m or m.group(1) not in LAN_ROUTES:
+            return self._send(404, {"error": "not offered to other devices"})
+        return Handler.do_POST(self)
+
 def _boot_background():
     _migrate_legacy(["models"])  # before the model scan, so a moved shelf is found
     _load_models()
@@ -1702,5 +1852,10 @@ def _boot_background():
 
 if __name__ == "__main__":
     threading.Thread(target=_boot_background, daemon=True).start()
+    try:
+        if lan_conf().get("enabled"):
+            lan_start()
+    except Exception as e:
+        print(f"[inkwell] home network not started: {e}")
     print(f"[inkwell] listening on http://{HOST}:{PORT}; keep this window open while you write")
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

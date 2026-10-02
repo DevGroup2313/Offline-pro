@@ -1353,7 +1353,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.30 · I · OCTOBRIS · MMXXVI';
+const BUILD='7.31 · II · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -1543,7 +1543,7 @@ function backupNudge(){
 }
 function markExported(){SV('lastExport',Date.now());}
 let S={docs:LS('docs')||[],active:LS('active')||null,rules:LS('rules')||[],profile:LS('profile')||'',
-server:LS('server')||'http://127.0.0.1:8317',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
+server:LS('server')||'http://127.0.0.1:8317',lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
 stats:LS('stats')||{},modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
@@ -3816,7 +3816,7 @@ const CREED='Commit to truth and accuracy above everything else, including being
 
 /* ================= DEVICE CURATION ================= */
 const UA=(navigator.userAgent||'');
-const IS_FIREREAL=/silk|kindle/i.test(UA);
+const IS_FIREREAL=/silk|kindle|\bKF[A-Z]{2,5}\b/i.test(UA); /* 7.31: the Fire app's own window names the model (KFSNWI), not Silk */
 const IS_TOUCHDEV=matchMedia('(pointer: coarse)').matches;
 const ON_ANDROID=/android/i.test(UA);
 const ON_MAC=/Macintosh|Mac OS X/.test(UA);
@@ -3824,7 +3824,27 @@ const ON_WIN=/Windows NT/.test(UA);
 const LOW_POWER=IS_FIREREAL||ON_ANDROID||((navigator.hardwareConcurrency||8)<=4);
 const HAS_GPU='gpu' in navigator;
 function deviceName(){if(IS_FIREREAL)return 'Fire Tablet';if(ON_ANDROID)return 'Android device'; if(ON_MAC)return 'Mac';if(ON_WIN)return 'Windows laptop';return 'this device';}
+const IS_TABLETAPP=ON_ANDROID||/iPhone|iPad/.test(UA)||(/Macintosh/.test(UA)&&(navigator.maxTouchPoints||0)>1);
+/* 7.31: the laptop shares its model with the tablets on the same Wi-Fi */
+async function inkLanRefresh(){
+ const el=document.getElementById('lanBox');if(!el)return;
+ if(IS_TABLETAPP){return;}
+ if(!S.connected||!inkSrvLocal(S.server)){el.innerHTML='<span style="color:var(--mut)">The companion server is not running on this computer yet, so there is nothing to share.</span>';return;}
+ try{const r=await fetch(S.server+'/api/lan_status',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const j=await r.json();
+  el.innerHTML=j.enabled
+   ?'<b>On.</b> On the tablet: Engine \u25B8 Your laptop\u2019s model, then enter<br>address <b style="font-size:15px">'+esc((j.addresses||[])[0]||'this computer\u2019s Wi-Fi address')+'</b> and code <b style="font-size:17px;letter-spacing:.12em">'+esc(j.code)+'</b>'
+    +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
+    +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
+   :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
+ }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.31 on this computer.</span>';}
+}
+async function inkLanSet(on,newCode){
+ try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}
+ inkLanRefresh();
+ if(on)toast('Sharing on this Wi-Fi. If the computer asks whether to accept incoming connections, choose Allow.');
+}
 function engineAdvice(){
+ if(IS_TABLETAPP)return 'On the '+deviceName()+', install Mini first: small, and offline once installed. For stronger rewriting and drafting, use your laptop\u2019s model over the same Wi-Fi: below, under Your laptop\u2019s model. If Mini will not install, press Diagnose this device and send the report: it names the cause.';
  if(IS_FIREREAL)return 'On the '+deviceName()+', install Mini first: tiny and instant. Pro 0.5B works but slowly; server.py on any laptop on the same Wi-Fi is the strongest path for the tablet.';
  if(!HAS_GPU)return 'This device has no WebGPU. Install Mini for inline grammar; Pro will run on CPU at reduced speed. server.py on a laptop is the faster path.';
  return 'On the '+deviceName()+' with WebGPU, Pro Qwen2.5 runs rewrites and the reviewer entirely offline after one download; Mini covers inline grammar between them.';}
@@ -6868,6 +6888,48 @@ if(which==='server'){if(!S.connected)return instSay('No server answering at '+S.
    const r=await api('rewrite',{text:sample,mode:'concise',style:''});
    instSay('Server answers: "'+((r.text||'').slice(0,220)||'(silence)')+'"');return;}
  }catch(e){instSay(which+' test failed: '+(e&&e.message?e.message:e));}}
+/* 7.31: a diagnostic report for the models on this device. Each step is
+   timed and its error kept word for word, so a failure on a device we cannot
+   test (the Fire tablet) names its own cause. */
+async function inkDiagnose(){
+ const out=document.getElementById('diagOut'),L=[];
+ const say=m=>{L.push(m);if(out){out.style.display='';out.value=L.join('\n');out.scrollTop=out.scrollHeight;}};
+ const step=async(name,fn)=>{const t=performance.now();
+  try{const r=await fn();say('OK    '+name+' ('+Math.round(performance.now()-t)+' ms)'+(r?': '+r:''));return true;}
+  catch(e){say('FAIL  '+name+' ('+Math.round(performance.now()-t)+' ms): '+(e&&e.message?e.message:e));return false;}};
+ const tmo=(p,ms,what)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+': no answer in '+ms/1000+' s')),ms))]);
+ say('Inkwell '+BUILD+' · model diagnostic · '+new Date().toISOString());
+ say('Device: '+deviceName()+' · app: '+(ON_ANDROID?'Fire/Android app':(window.InkwellNative?'iPhone/iPad app':(window.pywebview?'desktop app':'browser'))));
+ say('Agent: '+navigator.userAgent);
+ const cv=(navigator.userAgent.match(/Chrome\/(\d+)/)||[])[1];if(cv)say('Chrome engine version: '+cv+(+cv<119?'  (older than the model runtime expects; update "Android System WebView")':''));
+ say('Address: '+location.origin+' · online: '+navigator.onLine+' · low power mode: '+!!LOW_POWER);
+ say('Processors: '+(navigator.hardwareConcurrency||'?')+' · memory hint: '+(navigator.deviceMemory?navigator.deviceMemory+' GB':'not reported'));
+ say('WebAssembly: '+(typeof WebAssembly==='object'));
+ try{say('WebAssembly SIMD: '+WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11])));}catch(e){say('WebAssembly SIMD: check failed');}
+ say('SharedArrayBuffer: '+(typeof SharedArrayBuffer!=='undefined')+' · cross-origin isolated: '+!!window.crossOriginIsolated+' · WebGPU: '+('gpu' in navigator));
+ say('Cache storage: '+(typeof caches!=='undefined')+' · IndexedDB: '+(typeof indexedDB!=='undefined'));
+ if(navigator.storage&&navigator.storage.estimate){try{const e=await navigator.storage.estimate();say('Storage: '+fmtMB(e.usage||0)+' used of '+fmtMB(e.quota||0)+' allowed');}catch(e){say('Storage estimate failed: '+e.message);}}
+ if(typeof caches!=='undefined'){await step('open the model cache',async()=>{const c=await caches.open('transformers-cache');const k=await c.keys();return k.length+' files cached';});}
+ await step('read vendor/transformers.min.js',async()=>{const r=await fetch(new URL('vendor/transformers.min.js',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return fmtMB((await r.arrayBuffer()).byteLength);});
+ await step('read vendor/ort-wasm-simd-threaded.jsep.wasm',async()=>{const r=await fetch(new URL('vendor/ort-wasm-simd-threaded.jsep.wasm',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+  const b=await r.arrayBuffer();await WebAssembly.compile(b);return fmtMB(b.byteLength)+', compiles';});
+ await step('start the model runtime',async()=>{const m=await tmo(loadTF(),60000,'runtime');return 'version '+((m.env&&m.env.version)||'?');});
+ const hf='https://huggingface.co/Xenova/flan-t5-small/resolve/main/';
+ await step('reach huggingface.co (model files)',async()=>{const r=await tmo(fetch(hf+'config.json',{cache:'no-store'}),20000,'huggingface.co');if(!r.ok)throw new Error('HTTP '+r.status);return (await r.json()).model_type||'answered';});
+ await step('download a 2 MB model file',async()=>{const t=performance.now();const r=await tmo(fetch(hf+'tokenizer.json',{cache:'no-store'}),60000,'download');if(!r.ok)throw new Error('HTTP '+r.status);
+  const n=(await r.arrayBuffer()).byteLength;return fmtMB(n)+' at '+(n/1048576/((performance.now()-t)/1000)).toFixed(1)+' MB/s';});
+ say('Server: '+S.server+' · connected: '+S.connected+(S.serverNeedsCode?' · the code was refused':''));
+ say('Mini: '+(MINI?MININAME:'not installed')+' · Pro: '+(PRO?PRONAME:'not installed'));
+ say('--- install log ---');say(INSTLOG.join('\n')||'(empty: no install tried since the app opened)');
+ say('--- end ---');
+ const b=document.getElementById('diagBtns');if(b)b.style.display='';}
+function inkDiagCopy(){const t=(document.getElementById('diagOut')||{}).value||'';
+ const done=()=>toast('Report copied'),fail=()=>{const o=document.getElementById('diagOut');o.focus();o.select();
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}toast(ok?'Report copied':'Copy refused: the report is selected; use the system Copy');};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,fail);else fail();}
+function inkDiagSave(){const t=(document.getElementById('diagOut')||{}).value||'',name='inkwell-diagnostic.txt';
+ if(nativeSave(name,t))return toast('Saved '+name+' via the system dialog');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=name;a.click();}
 async function installMini(){
  if(MINI){toast('Mini-model active: '+MININAME);return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('miniBtn')||{textContent:''};
@@ -6955,7 +7017,7 @@ async function installPro(){
    toast('Pro installed on '+PRODEVICE+'; cached, offline from now on');return;
   }catch(e){/* installLoad logged each attempt */}}
  setPill();btn.textContent='⬇ Install Pro model';
- instSay('Pro failed on every known model. On this machine, server.py is the better path.');
+ instSay(IS_TABLETAPP?'Pro failed on every known model. On a tablet, your laptop\u2019s model over Wi-Fi is the stronger path: Your laptop\u2019s model, below. The diagnostic report shows what this device lacks.':'Pro failed on every known model. On this machine, server.py is the better path.');
  toast('Pro failed; the Engine log says why; server.py is the other path');}
 function ejectPro(){PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);
  const pb=document.getElementById('proBtn');if(pb)pb.textContent='⬇ Install Pro model';setPill();toast('Pro model unloaded (cached files remain)');}
@@ -6975,9 +7037,30 @@ async function proChatDo(system,user,maxTok,onTok){
  const sp=splitThink(raw);if(sp[1])maybeShowThink(sp[1]);return sp[0];}
 
 /* ================= SERVER ================= */
-async function api(path,body){const r=await fetch(S.server+'/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+/* 7.31: a server on another device (the laptop, over the home Wi-Fi) answers
+   only with its pairing code, sent with every request */
+function inkSrvLocal(u){return /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i.test(String(u||''));}
+function inkSrvHeaders(json){const h={};if(json)h['Content-Type']='application/json';
+ if(S.lanKey&&!inkSrvLocal(S.server))h['X-Inkwell-Key']=S.lanKey;return h;}
+/* the one door to the server: on the Fire, iPhone and iPad apps a laptop on
+   the home network is reached by the app itself (window.InkwellNative.http),
+   since the page's own requests from its secure address to a plain http
+   address on the network are blocked or held for a permission the app window
+   cannot show; on the laptop, and in a browser, the page asks directly */
+async function inkSrvFetch(path,opts){
+ opts=opts||{};const url=S.server+path,method=opts.method||'GET',headers=inkSrvHeaders(!!opts.body);
+ const N=window.InkwellNative;
+ if(N&&typeof N.http==='function'&&!inkSrvLocal(S.server)){
+  const r=await N.http(method,url,headers,opts.body||'');
+  if(!r||!r.status)throw new Error((r&&r.text)||'no answer');
+  return {ok:r.status>=200&&r.status<300,status:r.status,json:async()=>JSON.parse(r.text||'{}')};
+ }
+ return fetch(url,{method:method,headers:headers,body:opts.body});
+}
+async function api(path,body){const r=await inkSrvFetch('/api/'+path,{method:'POST',body:JSON.stringify(body||{})});
  if(!r.ok)throw 0;return r.json();}
-async function ping(){try{const r=await fetch(S.server+'/api/health');const j=await r.json();
+async function ping(){try{const r=await inkSrvFetch('/api/health');
+ S.serverNeedsCode=(r.status===401);const j=await r.json();
  if(!j.ok)throw 0;S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;}catch(e){S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;}setPill();}
 function setPill(){const p=document.getElementById('enginePill');
  if(S.connected){p.className='pill on';p.innerHTML='<i></i>'+(S.serverModel?'Server · '+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');}
@@ -8682,7 +8765,7 @@ const WORDBANK=[['show',['demonstrate','indicate','evince','reveal','suggest']],
  ['walk through',['explain','rehearse','review']],
  ['boil down to',['reduce to','amount to','come down to']],
  ['spell out',['specify','state plainly','set out']]];
-function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');}catch(e){
+function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');if(which==='server')setTimeout(function(){try{inkLanRefresh();}catch(e){}},0);}catch(e){
  try{var api=window.pywebview&&window.pywebview.api;if(api&&api.report_error)api.report_error('openModal '+(which||'?')+': '+String(e&&e.name||'')+': '+String(e&&e.message||e)+' | '+String(e&&e.stack||'').split('\n').slice(0,3).join(' <- '));}catch(x){}
  try{var bb=document.getElementById('modalBody');if(bb){bb.innerHTML='<div style="padding:14px;font-size:13px;color:var(--mut);line-height:1.6">This panel could not be drawn; the fault is recorded. Try again — a repeat means the detail is already with the author.</div><p style="text-align:center"><button onclick="closeModal()">Close</button></p>';document.getElementById('modal').style.display='flex';}}catch(x){}
  }}
@@ -8823,11 +8906,22 @@ function openModalDo(which){
  '<div class="rl">Mini (inline grammar): '+(MINI?'<b>'+esc(MININAME)+'</b> <button class="lkbtn" onclick="ejectMini();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="miniBtn" onclick="installMini()">⬇ Install Mini-model</button>')+'</div>'+
  '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ Server</button> <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Pro</button> <button class="lkbtn" onclick="testEngine(\'mini\')">▶ Mini</button> <button class="lkbtn" id="srvStart" onclick="startServerFromPage()" style="display:none" title="Ask the launcher to bring the companion server up on this device">▶ Start it here</button></div>'+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
- '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Python server</h4>'+
- '<p style="font-size:13px;color:var(--mut);line-height:1.6">Run <code>server.py</code> on a laptop; the strongest path. On the Fire Tablet enter the laptop’s Wi-Fi address here.</p>'+
+ '<div class="rl" style="margin-top:8px">A model will not install? <button class="lkbtn" onclick="inkDiagnose()">🩺 Diagnose this device</button> <span id="diagBtns" style="display:none"><button class="lkbtn" onclick="inkDiagCopy()">Copy the report</button> <button class="lkbtn" onclick="inkDiagSave()">Save the report</button></span></div>'+
+ '<textarea id="diagOut" readonly style="display:none;width:100%;height:190px;font:11px/1.45 ui-monospace,monospace;margin-top:4px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>'+
+'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Your laptop\u2019s model</h4>'+
+ (IS_TABLETAPP
+  ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">The laptop\u2019s model is stronger than anything a tablet can hold. On the laptop: Engine \u25B8 <i>Share with my tablets on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
+   +'<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input id="svUrl" placeholder="laptop address, e.g. 192.168.1.20:8318" value="'+esc(inkSrvLocal(S.server)?'':S.server.replace(/^https?:\/\//,''))+'" style="flex:1;min-width:200px">'
+   +'<input id="svKey" inputmode="numeric" maxlength="6" placeholder="6-digit code" value="'+esc(S.lanKey||'')+'" style="width:120px"></div>'
+   +'<div class="row"><button class="primary" onclick="saveServer()">Connect to my laptop</button>'
+   +(inkSrvLocal(S.server)?'':' <button onclick="document.getElementById(\'svUrl\').value=\'\';saveServer()">Forget the laptop</button>')+'</div>'
+   +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):''):(S.serverNeedsCode?'The laptop answered but the code is wrong: check the 6 digits on the laptop.':(inkSrvLocal(S.server)?'Not connected to a laptop.':'Not answering at '+esc(S.server)+': is the laptop awake, on the same Wi-Fi, with sharing on?')))+'</div>'
+  :'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your tablets on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
+   +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>')+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Between your devices</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">The laptop is the hub. Run server.py there, put its Wi-Fi address above and press Save &amp; reconnect. Push sends every document and pinned note up to the laptop; pull brings down what was last pushed, adding only what you do not already have here. One shared copy; the freshest push wins.</p>'+
- '<div class="row"><button onclick="syncPush()">⇪ Push my library to the laptop</button> <button onclick="syncPull()">⇩ Pull the laptop’s library here</button></div>'+
+ (inkSrvLocal(S.server)?'<div class="row"><button onclick="syncPush()">⇪ Push my library to the laptop</button> <button onclick="syncPull()">⇩ Pull the laptop’s library here</button></div>'
+  :'<p style="font-size:12px;color:var(--mut);line-height:1.6">Over the home Wi-Fi, the laptop shares its model only, never your documents; sending the library between devices this way is the next stage. Until then: File \u25B8 Export library here, and File \u25B8 Import library on the other device.</p>')+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Your own models (GGUF / MLX)</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Models downloaded from Ollama or LM Studio onto your flash drive move in from here, or by dropping the file anywhere onto Inkwell. They install once and stay until you swap or remove them. Every Inkwell package carries the llama.cpp runtime inside, so a GGUF runs with GPU offload and needs nothing installed. The shelf lives beside server.py.</p>'+
  '<div class="row"><button onclick="document.getElementById(\'mdlFile\').click()">⇩ Import a .gguf file</button>'+
@@ -8838,7 +8932,7 @@ function openModalDo(which){
  '<div id="mdlShelf" style="margin-top:6px"></div>'+
  '<p style="font-size:12px;color:var(--mut);line-height:1.6">GPU offload is automatic where the build allows it. On the Mac, <code>CMAKE_ARGS="-DGGML_METAL=on" pip install llama-cpp-python</code> once, and every layer runs on Metal. On the laptops: plain <code>pip install llama-cpp-python</code> for CPU, or the CUDA wheel for an NVIDIA card. Big models (Ministral 3B, Qwen3 4B, LFM2 1.2B and so on) run here, not in the browser.</p>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Which model is actually answering shows in the engine pill once connected.</p>'+
- '<input id="svUrl" value="'+S.server+'">'+
+ (IS_TABLETAPP?'':'<p style="font-size:12.5px;color:var(--mut);line-height:1.6;margin-top:10px"><b>Server address</b> (normally http://127.0.0.1:8317):</p><input id="svUrl" value="'+esc(S.server)+'">')+
  '<p style="font-size:13px;color:var(--mut);line-height:1.6"><b>Mini-model override</b> (optional HF ONNX repo id):</p>'+
  '<input id="svRepo" placeholder="model repo id (optional)" value="'+esc(S.modelRepo)+'">'+
  '<button class="primary" onclick="saveServer()">Save &amp; reconnect</button>';}
@@ -8896,7 +8990,12 @@ function openModalDo(which){
  document.getElementById('modal').style.display='flex';}
 const SKELETONSTR=SKELETON;
 function ins(w){insertAtCursor(w+' ');closeModal();}
-function saveServer(){S.server=document.getElementById('svUrl').value;SV('server',S.server);
+function inkNormServer(v){v=String(v||'').trim().replace(/\/+$/,'');if(!v)return 'http://127.0.0.1:8317';
+ if(!/^https?:\/\//i.test(v))v='http://'+v;
+ if(!/:\d+$/.test(v.replace(/^https?:\/\//i,''))&&!inkSrvLocal(v))v+=':8318';
+ return v;}
+function saveServer(){S.server=inkNormServer(document.getElementById('svUrl').value);SV('server',S.server);
+ const kEl=document.getElementById('svKey');if(kEl){S.lanKey=kEl.value.replace(/\D/g,'').slice(0,6);SV('lanKey',S.lanKey);}
  S.modelRepo=document.getElementById('svRepo').value.trim();SV('modelRepo',S.modelRepo);
  closeModal();pingFails=0;ping();toast('Saved; reconnecting…');}
 /* the local-network bridge: this device ⇄ the laptop running server.py */
@@ -9078,7 +9177,7 @@ async function refreshShelf(){
   +(window.pywebview?'<b>The desk is installed</b>; the engine answers from beside it from this line on.':'The desk is running in a browser; the engine lives in the installed app, which starts it itself.')
   +' <button class="lkbtn" style="margin-top:6px" onclick="inkStartServer(this)">▶ Start the engine</button>'
   +' <span id="svStartNote" style="font-size:11.5px;display:block;margin-top:6px;font-style:italic"></span></div>';return;}
- try{const r=await fetch(S.server+'/api/models');const j=await r.json();
+ try{const r=await inkSrvFetch('/api/models');const j=await r.json();
   if(!j.found||!j.found.length){el.innerHTML='<div style="font-size:12px;color:var(--mut);font-style:italic">The shelf is empty. Import from your flash drive above.</div>';return;}
   el.innerHTML=j.found.map(m=>'<div class="rl"><b style="font-family:Georgia,serif">'+esc(m.name)+'</b>'+
    '<code style="font-size:10.5px">'+m.kind+'</code>'+

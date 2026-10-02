@@ -1,8 +1,8 @@
 @echo off
 setlocal EnableExtensions
-title Inkwell 7.30: install or update
+title Inkwell 7.31: install or update
 cd /d "%~dp0"
-set "VER=7.30"
+set "VER=7.31"
 set "ROOT=%LOCALAPPDATA%\Inkwell"
 
 echo ==================================================
@@ -131,7 +131,7 @@ REM ---- 7. shortcuts on the Desktop and in the Start menu ---------------------
 set "INK_PYW=%PYW%"
 set "INK_APP=%ROOT%"
 set "INK_ICO=%ROOT%\inkwell.ico"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$q=[char]34; $ws=New-Object -ComObject WScript.Shell; foreach($d in @([Environment]::GetFolderPath('Desktop'), (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'))){ $sc=$ws.CreateShortcut((Join-Path $d 'Inkwell.lnk')); $sc.TargetPath=$env:INK_PYW; $sc.Arguments=$q+(Join-Path $env:INK_APP 'inkwell_app.py')+$q; $sc.WorkingDirectory=$env:INK_APP; $sc.IconLocation=$env:INK_ICO; $sc.Description='Inkwell 7.30'; $sc.Save() }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$q=[char]34; $ws=New-Object -ComObject WScript.Shell; foreach($d in @([Environment]::GetFolderPath('Desktop'), (Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'))){ $sc=$ws.CreateShortcut((Join-Path $d 'Inkwell.lnk')); $sc.TargetPath=$env:INK_PYW; $sc.Arguments=$q+(Join-Path $env:INK_APP 'inkwell_app.py')+$q; $sc.WorkingDirectory=$env:INK_APP; $sc.IconLocation=$env:INK_ICO; $sc.Description='Inkwell 7.31'; $sc.Save() }"
 echo 7. Shortcuts: Desktop and Start menu.
 
 echo.

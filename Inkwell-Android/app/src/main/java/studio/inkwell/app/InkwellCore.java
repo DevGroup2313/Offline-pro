@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * is placed in the page, safe names and paths.
  */
 final class InkwellCore {
-    static final String BUILD = "7.30";
+    static final String BUILD = "7.31";
     /** A secure (https) origin that never touches the network: every request
      *  to it is answered from the app's own assets. Secure origins may use the
      *  microphone; the origin never changes, so the page's storage is stable. */
@@ -99,6 +99,9 @@ final class InkwellCore {
         "(function(){var A=window.InkwellAndroid;if(!A)return;\n"
       + " function P(v){return Promise.resolve(v);}\n"
       + " window.InkwellNative={saveFile:function(n,m,b){try{return A.saveFile(String(n),String(m||'application/octet-stream'),String(b))==='true';}catch(e){return false;}}};\n"
+      + " var HQ={},HN=0;window.__inkHttpDone=function(id,st,tx){var f=HQ[id];delete HQ[id];if(f)f({status:st,text:tx});};\n"
+      + " window.InkwellNative.http=function(m,u,h,b){return new Promise(function(res){var id='h'+(++HN);HQ[id]=res;\n"
+      + "  try{A.httpRequest(id,String(m||'GET'),String(u),JSON.stringify(h||{}),b==null?'':String(b));}catch(e){delete HQ[id];res({status:0,text:String(e)});}});};\n"
       + " window.pywebview={api:{\n"
       + "  save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},\n"
       + "  storage_set:function(k,v){try{A.storageSet(String(k),String(v));return P(true);}catch(e){return P(false);}},\n"
