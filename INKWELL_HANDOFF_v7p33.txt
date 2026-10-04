@@ -1,0 +1,103 @@
+INKWELL v7.33: HANDOFF NOTES
+============================
+Date: 4 October 2026. Read INKWELL_HANDOFF_v7p32.txt and earlier for
+everything before this.
+
+Look for "v7.33" beside the date at the top.
+
+YOUR REPORT (with screenshots from the Mac app)
+-----------------------------------------------
+- Rewrite and "Use this" changed text that was not selected, and added text
+  that did not belong; the in-app models made writing worse on the iPhone,
+  iPad, Fire and Mac; selecting text painted the whole page and could cover
+  the edit buttons; the corrector flagged far too much. You asked for the
+  weak models to be removed and for better ones.
+
+1. REWRITES REPLACED THE WRONG TEXT (DOCUMENT DAMAGE): FIXED
+------------------------------------------------------------
+Seen in your screenshots: the Introduction was selected, but the Concise
+and Shorten versions were of text from a later section, and the document
+lost about 107 words ("public be3what the claim..."). Cause, reproduced in a
+test browser: the page repaints its text whenever the suggestions change;
+the repaint destroyed the browser's selection, and the app then read a
+wrong position (Chrome: the whole page; Safari, which the Mac, iPhone and
+iPad apps use, can re-anchor the selection on other text of the same
+length). The text taken for a rewrite, and the text "Use this" replaced,
+were then not the text you had selected.
+Changes:
+- Every repaint notes the selection and puts it back exactly.
+- A selection position that cannot be read is treated as unknown, never as
+  "the end of the page".
+- The rewrite target is checked against the text visibly selected; if they
+  differ, the visible text is found in the document; if it cannot be found,
+  nothing is rewritten.
+- "Use this", accepting a suggestion, and "Fix the selection" now check that
+  the text at the stored position is still exactly the original text. If it
+  moved, it is found again; if it is gone, nothing is replaced.
+- "Fix the selection" could replace the WHOLE document with the corrected
+  selection if the selection was lost while the model worked. It can no
+  longer replace anything without a selection.
+- A rewrite now needs a selection; it never rewrites the whole document.
+Tested: drag, triple-click and double-click selections on a 5,486-word
+document across pages, before and after repaints; "Use this" replaced
+exactly the selected paragraph and nothing else; after text was inserted
+above, it found the paragraph at its new place; with the text gone, it
+replaced nothing.
+NOT tested in Safari itself (not available in this sandbox). Your
+documents: the version list (File) keeps earlier versions; "The Difficulty
+Was the Point ... 5429 words" in your list looks like the undamaged copy.
+
+2. THE IN-APP MODELS ARE REMOVED
+--------------------------------
+GECToR and the 0.5-billion-parameter Pro model are no longer offered on any
+device. On start, Inkwell switches them off and deletes their downloaded
+files (Scriba's Whisper files stay). Rewriting and drafting need a real
+writing model, which runs on the laptop; see the next round.
+
+3. THE RULES ENGINE: FAR FEWER FALSE ALARMS
+-------------------------------------------
+Measured on 3,000 correct Wikipedia sentences (62,489 words) and the 748
+learner sentences of JFLEG:
+                               red "grammar" flags     clarity + style notes
+                               on correct text         on correct text
+  before 7.33                        316                    2,168
+  7.33                               100 *                  hidden unless
+                                                            asked for
+  * nearly all real faults in that text (stray spaces before punctuation,
+    "1990's", "is comprised of"); in the Scholarly register 101.
+On the learner sentences, 75% of red flags now fall on words the human
+correctors changed (54% before).
+Faults fixed, each seen on correct text: "may" (the verb) taken for the
+month; "an FBI" corrected to "a FBI"; "an honorary" to "a honorary"; an
+ellipsis "..." corrected to one full stop; "In addition to" given a comma;
+a comma demanded after "However," that already had one; "lowercase
+sentence start" after initials and abbreviations (M.A., U.S., i.e., e.g.);
+"Capital I" inside foreign words and in "i.e."; accented words cut in half;
+"there was 1 individual"; "well known" (not before a noun) hyphenated;
+names like "Bang Bang" called doubled words; empty red marks. Comma
+splices, "which/that" notes, dangling openers and "spell out a numeral"
+moved from grammar to clarity or style.
+Clarity and style notes (weak words, passive voice, repeated words, long
+sentences) are hidden unless you press "Show clarity and style notes": on
+correct text they were mostly noise.
+
+4. SELECTING TEXT
+-----------------
+- Safari painted the space between selected lines and the gaps between
+  pages in the selection colour. The page blocks now have no selection
+  colour; only the words are highlighted. (Not verified in Safari itself.)
+- The floating edit buttons for a selection used a position estimate from
+  the old single-field editor, which could put them over the toolbar. They
+  now sit just above the selection, or below it when there is no room, and
+  never over the toolbar or the selected words.
+
+ABOUT "FULL PARITY WITH GRAMMARLY"
+----------------------------------
+Stated plainly: Grammarly's corrections come from large models running on
+Grammarly's servers, trained on very large amounts of edited text. No model
+that fits inside an app window on a phone or tablet comes near that; the
+measurements in 7.32 showed it. What Inkwell can do offline is a precise
+rules engine (this round), plus a real writing model on your laptop shared
+over Wi-Fi, and Apple's own on-device model on iPhones and iPads that have
+it (next round). Any comparison will be stated as measured results, not as
+parity.

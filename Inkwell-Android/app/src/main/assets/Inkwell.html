@@ -234,6 +234,12 @@ body.sprinting #paper{box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 0 0 1px r
 body.readable #editor,body.readable #hli{font:19px/2.05 Tahoma,Verdana,Georgia,sans-serif;letter-spacing:.015em}
 #editor{position:relative;z-index:2;background:transparent;color:var(--ink);border:none;outline:none;resize:none;overflow:hidden;min-height:55vh;caret-color:var(--acc)}
 #editor::selection{background:#3f6f8f33}
+/* 7.33: Safari paints the space between selected lines, and the gaps between
+   pages, in the selection colour of the page blocks; those blocks get none,
+   and the words keep it (their text sits in an inline .pgw span) */
+#editFlow::selection,.pgsheet::selection,.pgt::selection,.pgfolio::selection{background:transparent}
+.pgw::selection,.pgw ::selection{background:#9cc3ea;color:inherit}
+[data-theme=dark] .pgw::selection,[data-theme=dark] .pgw ::selection{background:#3f6a96}
 #hl{position:absolute;top:0;left:0;width:100%;z-index:1;pointer-events:none;color:transparent;overflow:hidden}
 .hl{color:transparent;border-radius:2px;padding-bottom:1px}
 .hl.flash{animation:flash .9s}
@@ -1597,7 +1603,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.32 · IV · OCTOBRIS · MMXXVI';
+const BUILD='7.33 · IV · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -1788,7 +1794,7 @@ function backupNudge(){
 function markExported(){SV('lastExport',Date.now());}
 let S={docs:LS('docs')||[],active:LS('active')||null,rules:LS('rules')||[],profile:LS('profile')||'',
 server:LS('server')||'http://127.0.0.1:8317',lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
-stats:LS('stats')||{},modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
+stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
@@ -1853,7 +1859,20 @@ function _fSplitPages(t){
  }
  return out;
 }
+/* 7.33: replacing a sheet's text destroys the browser's selection in it; the
+   browser then re-anchors it somewhere (Safari can move it to other text of
+   the same length, which is how a rewrite of one paragraph replaced another).
+   Every repaint now notes the selection first and puts it back after. */
+function _fSelSnap(){
+ const sel=window.getSelection();
+ if(!_fRoot||!sel||!sel.rangeCount||!_fRoot.contains(sel.anchorNode))return null;
+ const p=flowSelPos();return p?{s:p.s,e:p.e}:null;}
+function _fSelRestore(p){if(p){try{flowSetSel(p.s,p.e,true);}catch(e){}}}
 function _fSyncSheets(pages){
+ const snap=_fSelSnap();
+ _fSyncSheetsDo(pages);
+ _fSelRestore(snap);}
+function _fSyncSheetsDo(pages){
  const root=_fRoot;if(!root)return;
  while(_fSheets.length<pages.length){
   const sh=document.createElement('div');sh.className='pgsheet';
@@ -1908,7 +1927,9 @@ function _fLocalFromDom(node,off){
   if(sh.root===node||sh.txt===node||sh.root.contains(node)){
    if(node===sh.txt)return Math.min(off,sh.end-sh.start);
    const r=document.createRange();r.selectNodeContents(sh.txt);
-   try{r.setEnd(node,off);}catch(e){return sh.end-sh.start;}
+   /* 7.33: a point the browser left in a piece of text that no longer exists
+      (after a repaint) is unknown, not "the end of the page" */
+   try{r.setEnd(node,off);}catch(e){return null;}
    return r.toString().length;
   }
  }
@@ -4080,7 +4101,7 @@ async function inkLanRefresh(){
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
    :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
- }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.32 on this computer.</span>';}
+ }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.33 on this computer.</span>';}
 }
 async function inkLanSet(on,newCode){
  try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}
@@ -4088,10 +4109,8 @@ async function inkLanSet(on,newCode){
  if(on)toast('Sharing on this Wi-Fi. If the computer asks whether to accept incoming connections, choose Allow.');
 }
 function engineAdvice(){
- if(IS_TABLETAPP)return 'On the '+deviceName()+', install Mini first: small, and offline once installed. For stronger rewriting and drafting, use your laptop\u2019s model over the same Wi-Fi: below, under Your laptop\u2019s model. If Mini will not install, press Diagnose this device and send the report: it names the cause.';
- if(IS_FIREREAL)return 'On the '+deviceName()+', install Mini first: tiny and instant. Pro 0.5B works but slowly; server.py on any laptop on the same Wi-Fi is the strongest path for the tablet.';
- if(!HAS_GPU)return 'This device has no WebGPU. Install the grammar model (GECToR) for corrections; Pro will run on CPU at reduced speed. server.py on a laptop is the faster path.';
- return 'On the '+deviceName()+' with WebGPU, Pro Qwen2.5 runs rewrites and the reviewer entirely offline after one download; Mini covers inline grammar between them.';}
+ if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your laptop\u2019s model over the same Wi-Fi (below).';
+ return 'On this computer, the companion server runs the writing model; corrections come from the rules engine, offline.';}
 
 /* ================= HELPERS ================= */
 function matchCase(src,dst){if(!dst)return dst;
@@ -6748,6 +6767,8 @@ function showTip(id){
 function nextTip(){var i0=(__tipIdx._any||0);var id=TIPNEXT[i0%TIPNEXT.length];__tipIdx._any=i0+1;showTip(id);}
 function hideTips(){try{var c=document.getElementById("tipCard");if(c)c.style.display="none";if(typeof S!=="undefined"){S.noTips=true;SV("noTips",true);}}catch(e){}}
 function expandRow(i){EXPID=(EXPID===i?-1:i);renderCards();}
+function inkStyleSwitch(){
+ return '<div style="margin:0 2px 10px"><button class="lkbtn" onclick="inkToggleStyle()">'+(S.showStyle?'Hide clarity and style notes':'Show clarity and style notes'+(INK_STYLE_HIDDEN?' ('+INK_STYLE_HIDDEN+')':''))+'</button></div>';}
 function renderCards(){
  if(ALTMODE){renderAlts('');return;}
  const c=document.getElementById('cards');
@@ -6757,10 +6778,10 @@ function renderCards(){
     marks itself changes. The counts above stay truthful either way. */
  /* the signature keys on spans and fix lengths, not on whole strings, so a
     thesis-scale list does not spend its render budget copying text */
- const sig=(S.solo?'s1:':'')+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
+ const sig=(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
  if(sig===CARDSIG)return;
  CARDSIG=sig;
- if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">✨ The page is clean.</div>';return;}
+ if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">✨ No correctness issues found.</div>'+inkStyleSwitch();return;}
  if(S.solo){SOLOI=Math.max(0,Math.min(SOLOI,EDITS.length-1));
   c.innerHTML='<div class="soloNav"><button onclick="soloMove(-1)">‹</button><span>'+(SOLOI+1)+' of '+EDITS.length+'</span><button onclick="soloMove(1)">›</button></div>'+cardHTML(EDITS[SOLOI],SOLOI,true);
   return;}
@@ -6771,7 +6792,7 @@ function renderCards(){
     document, and Locate/Accept indexes stay true because the array is whole. */
  const CARCAP=400,shown=EDITS.slice(0,CARCAP),restN=EDITS.length-shown.length;
  c.innerHTML=(leg?'<div class="catLeg">'+leg+'</div>':'')+
-  '<div style="font-size:11px;color:var(--mut);margin:0 2px 9px">A quiet list. Tap a row to open it; <b>1×</b> above goes one at a time.</div>'+
+  '<div style="font-size:11px;color:var(--mut);margin:0 2px 9px">A quiet list. Tap a row to open it; <b>1×</b> above goes one at a time.</div>'+inkStyleSwitch()+
   shown.map((e,i)=>EXPID===i?cardHTML(e,i,false):
    '<div class="crow" onclick="expandRow('+i+')"><span class="cdot c-'+e.cat+'"></span>'+
    '<span class="cor">'+esc(e.orig)+'</span>'+
@@ -6795,9 +6816,11 @@ function studyTop(){const top=Object.entries(S.stats).sort((a,b)=>b[1]-a[1]);
  document.getElementById('modal').style.display='flex';}
 function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pushUndo();
  const wasFirst=(Object.values(S.stats).reduce((a,b)=>a+b,0)===0);
+ const orig=(typeof e.orig==='string'&&e.end>e.start)?e.orig:ed.value.slice(e.start,e.end);
+ const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
+ if(!r){scan();return;}
  bumpStat(e.why||'');
- ed.value=ed.value.slice(0,e.start)+e.fix+ed.value.slice(e.end);
- ed.setSelectionRange(e.start+e.fix.length,e.start+e.fix.length);afterChange();SND.accept();showUndoChip();
+ ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
  if(wasFirst)showTip('learn');toast('Accepted ✔');clearSel();}
 function dismissOne(i){SND.dismiss();EDITS.splice(i,1);if(S.solo&&SOLOI>0)SOLOI--;EXPID=-1;renderCards();renderHL();clearSel();}
 function wbAccept(i,a){const e=EDITS[i];if(!e||!a)return;
@@ -6860,7 +6883,79 @@ function toggleLesson(i){const el=document.getElementById('lrn'+i);if(!el)return
  el.style.display=el.style.display==='block'?'none':'block';}
 let EXPID=-1;
 
-function scan(){EDITS=ruleEdits(ed.value).sort((a,b)=>a.start-b.start);EXPID=-1;
+
+/* ================= 7.33: THE PRECISION GATE =================
+   Measured on 3,000 correct Wikipedia sentences (62,489 words) and the 748
+   learner sentences of the JFLEG test set: the red "grammar" rules raised 316
+   false alarms on correct text, and the clarity and style notes 2,168, of
+   which only 147 of 912 on the learner sentences touched words the human
+   correctors changed. This gate removes the false alarms found, case by case,
+   and moves the unreliable rules out of "grammar". Clarity and style notes are
+   kept, but shown only when the writer asks for them. */
+const INK_ABBR=/(?:^|[\s(\[“"'.])(?:i\.e|e\.g|etc|cf|vs|viz|al|pl|sing|p|pp|no|nos|vol|vols|ed|eds|fig|figs|approx|ca|c|ch|chap|sec|esp|incl|dept|univ|dr|mr|mrs|ms|prof|st|jr|sr|inc|ltd|co|corp|op|ibid|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec|[a-z])$/i;
+const INK_VOWEL_LETTER=/^[AEFHILMNORSX](?:[A-Z0-9]|$)/;          /* "an FBI", "an MA", "an HR" */
+const INK_SILENT_H=/^(honest|honou?r|honorary|honourable|honorable|hour|heir|heiress|herb(?:al)?)/i;
+const INK_MONTH_AMBIG=/^(may|march|august)$/i;
+const INK_DET=/(?:^|\s)(a|an|the|this|that|these|those|his|her|its|their|our|my|your|such|one|any|every|each)\s+$/i;
+const INK_FUNC_NEXT=/^\s*(for|by|in|as|to|and|or|but|that|which|who|at|on|of|with|from|among|throughout|across|since)\b/i;
+const INK_DEMOTE={
+ 'Possible comma splice':'c',
+ '“Which” restricting is accepted British usage':'s',
+ 'A restrictive clause takes “that” in US style':'s',
+ '“Which” carries the comma':'c',
+ 'The opening clause must name its doer':'c',
+ 'Spell out a numeral at a sentence start':'s'};
+function inkRuleGate(t,out){
+ const L=ch=>!!ch&&/[\p{L}\p{M}'’]/u.test(ch);
+ const res=[];
+ for(const e0 of out){
+  if(typeof e0.start!=='number'||typeof e0.end!=='number'||e0.end<e0.start)continue; /* a mark with no place */
+  const e=Object.assign({},e0),why=String(e.why||''),o=t.slice(e.start,e.end),before=t.slice(Math.max(0,e.start-40),e.start),after=t.slice(e.end,e.end+40);
+  if(e.cat==='g'&&e.end<=e.start&&e.fix==null)continue;                    /* a red mark on nothing */
+  /* a span that cuts a word with accented letters in half ("Cant|ú"): the
+     patterns' word edges know only A to Z */
+  const NA=ch=>!!ch&&/[\p{L}\p{M}]/u.test(ch)&&!/[A-Za-z]/.test(ch);
+  if(e.cat==='g'&&(NA(t[e.start-1])||NA(t[e.end])))continue;
+  for(const k in INK_DEMOTE)if(why.indexOf(k)===0)e.cat=INK_DEMOTE[k];
+  if(why.indexOf('Sentence begins lowercase')===0){
+   const pre=t.slice(Math.max(0,e.start-12),e.start);
+   if(INK_ABBR.test(pre)||/\d$/.test(pre)||/\.\.$/.test(pre)||/^\.\s+[a-z]\.[a-z]\./i.test(t.slice(e.start,e.start+8)))continue;}  /* i.e. not, A.E.C.C. in, 17. b3 */
+  if(/^Capital(ise the pronoun)? I/.test(why)){
+   const i=t.indexOf('i',e.start);if(i<0)continue;
+   if(L(t[i-1])||L(t[i+1])||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
+  if(why.indexOf('“an” belongs before vowel sounds only')===0){
+   const w=(o.split(/\s+/)[1]||'');
+   if(INK_VOWEL_LETTER.test(w)||INK_SILENT_H.test(w)||L(t[e.start-1]))continue;}
+  if(why.indexOf('Article "a" vs "an"')===0||why.indexOf('“a” before a vowel sound wants “an”')===0){
+   if(L(t[e.start-1])||(e.end-e.start<=2&&L(t[e.end])))continue;
+   const w=(after.replace(/^\s+/,'').split(/\s+/)[0]||'');
+   if(/^an$/i.test(o.trim())&&(INK_VOWEL_LETTER.test(w)||INK_SILENT_H.test(w)))continue;}
+  if(why.indexOf('Months carry a capital')===0){
+   if(INK_MONTH_AMBIG.test(o)&&!/\d\s*(?:st|nd|rd|th)?\s*$/.test(before)&&!/^\s*\d/.test(after))continue;}
+  if(why.indexOf('A comma follows these sentence openers')===0&&/,/.test(o))continue;
+  if(why.indexOf('The introductory marker takes its comma')===0&&/^\s*(to|of|with)\b/i.test(after))continue;
+  if(why.indexOf('Two dots')===0&&(t[e.start-1]==='.'||t[e.end]==='.'))continue;
+  if(why.indexOf('One terminal mark is enough')===0&&/^(\.\.\.|…)$/.test(o))continue;
+  if(why.indexOf('Space after a period before the next sentence')===0){
+   if(!/^\.[A-Z][a-z]/.test(o)||t[e.start-1]==='.'||/(?:^|[\s(])[A-Z]$/.test(t.slice(Math.max(0,e.start-2),e.start))||/(www|https?:|\/)\S*$/.test(before))continue;}
+  if(why.indexOf('Hyphenate a compound modifier')===0&&(!INK_DET.test(before)||INK_FUNC_NEXT.test(after)))continue;
+  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&/^[A-Z]/.test(o))continue;
+  if(why.indexOf('Agreement — “there have / there are / there were”')===0&&/\b(?:1|one)$/i.test(o))continue;
+  if(why.indexOf('Possible comma splice')===0&&/;\s*\w+\s*$/.test(before))continue;
+  res.push(e);}
+ return res;}
+/* the rules as the page shows them: through the gate, and, unless the writer
+   asks for them, without the clarity and style notes */
+let INK_STYLE_HIDDEN=0;
+function inkRules(t){
+ const all=inkRuleGate(t,ruleEdits(t));
+ if(S.showStyle){INK_STYLE_HIDDEN=0;return all;}
+ const keep=all.filter(e=>e.cat!=='c'&&e.cat!=='s');
+ INK_STYLE_HIDDEN=all.length-keep.length;
+ return keep;}
+function inkToggleStyle(){S.showStyle=!S.showStyle;SV('showStyle',S.showStyle);CARDSIG='';scan();
+ toast(S.showStyle?'Clarity and style notes shown':'Only correctness: clarity and style notes hidden');}
+function scan(){EDITS=inkRules(ed.value).sort((a,b)=>a.start-b.start);EXPID=-1;
  renderCards();updateStats();renderHL();renderOutline();}
 
 /* ================= LESSONS ================= */
@@ -7171,6 +7266,18 @@ function inkAiModel(slot){const f=async(input,opts,onTok)=>{
   const g=Object.assign({},opts||{});delete g.streamer;
   const r=await inkAiAsk(slot,{op:'run',input:input,opts:g,stream:!!onTok},null,onTok||null,0);return r.out;};
  f.__worker=slot;return f;}
+/* 7.33: the removed models' downloaded files are deleted; Scriba's Whisper
+   files (the same cache) stay */
+async function inkPurgeOldModels(){
+ try{
+  if(typeof caches==='undefined')return;
+  const names=await caches.keys();let n=0;
+  for(const nm of names){const c=await caches.open(nm);
+   for(const req of await c.keys()){
+    if(/gector|Qwen2\.5|flan-t5|LaMini|grammar-synthesis|grammar_error|t5-base-grammar/i.test(req.url)&&!/whisper/i.test(req.url)){
+     await c.delete(req);n++;}}}
+  if(n)instSay('Removed '+n+' downloaded files of the old in-app models.');
+ }catch(e){}}
 /* the page notes when a load starts; if the app closes before it ends (the
    system can close an app that asks for too much memory), the next start
    does not load the model again by itself */
@@ -7274,7 +7381,11 @@ function inkDiagCopy(){const t=(document.getElementById('diagOut')||{}).value||'
 function inkDiagSave(){const t=(document.getElementById('diagOut')||{}).value||'',name='inkwell-diagnostic.txt';
  if(nativeSave(name,t))return toast('Saved '+name+' via the system dialog');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=name;a.click();}
+/* 7.33: the in-app models are removed (see the Engine panel); the install
+   entry points remain only to say so, for old buttons and settings */
 async function installMini(){
+ S.miniAuto=false;SV('miniAuto',false);
+ return toast('The in-app grammar model was removed in 7.33: it made writing worse. The rules engine and your laptop\u2019s model do this work.');
  if(MINI){toast('Grammar model active: '+MININAME);return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('miniBtn')||{textContent:''};
  pill.className='pill load';pill.innerHTML='<i></i>Preparing the grammar model…';btn.textContent='…';
@@ -7374,6 +7485,8 @@ const PRO_VARIANTS=[
    There, the laptop's model over the Wi-Fi does this work. */
 const PRO_ALLOWED=!IS_TABLETAPP;
 async function installPro(){
+ S.proAuto=false;SV('proAuto',false);
+ return toast('The in-app Pro model was removed in 7.33: it made writing worse. Your laptop\u2019s model does rewriting and drafting.');
  if(!PRO_ALLOWED){S.proAuto=false;SV('proAuto',false);
   instSay('Pro is not offered on phones and tablets: it needs more memory than the system gives an app, and the system closes the app. Use your laptop\u2019s model: Your laptop\u2019s model, below.');
   return toast('Pro needs a laptop; connect to your laptop\u2019s model instead');}
@@ -8035,7 +8148,7 @@ function chunkText(t,limit){
  return chunks.length?chunks:[{text:t,off:0}];}
 async function correct(){
  const t=ed.value.trim();if(!t)return toast('Write something first 🙂');
- let rules=ruleEdits(ed.value),ai=[];
+ let rules=inkRules(ed.value),ai=[];
  if(S.connected){toast('AI is reading…');
   try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    ai=(r.edits||[]).filter(e=>e.fix!==undefined);}catch(e){toast('AI request failed');}}
@@ -8058,7 +8171,7 @@ async function correct(){
 /* ================= HIGHLIGHTS + CARDS ================= */
 function renderHL(){const t=ed.value;
  if(!_fSheets||!_fSheets.length)return;
- const keep=_fSel;
+ const snap=_fSelSnap(),keep=snap||_fSel;
  _fSheets.forEach(function(sh){
   const s0=sh.start,s1=sh.end,sub=t.slice(s0,s1);
   let html='',pos=0;
@@ -8067,10 +8180,11 @@ function renderHL(){const t=ed.value;
    if(b<=a||a<pos)return;
    html+=esc(sub.slice(pos,a))+'<span class="hl c-'+e.cat+(idx===FLASHIDX?' flash':'')+'" data-hi="'+idx+'">'+esc(sub.slice(a,b))+'</span>';pos=b;});
   html+=esc(sub.slice(pos));
+  if(sub)html='<span class="pgw">'+html+'</span>';
   if(sh._html!==html){sh._html=html;sh.txt.innerHTML=html;}
  });
  FLASHIDX=-1;
- if(_fRoot&&(document.activeElement===_fRoot))flowSetSel(keep.s,keep.e,true);
+ if(snap||(_fRoot&&document.activeElement===_fRoot))flowSetSel(keep.s,keep.e,true);
  autoGrow();}
 function autoGrow(){renderPages();}
 /* Tabula's seams: a band where each page would turn, a small folio number at
@@ -8095,19 +8209,30 @@ function applySyn(w){
  ed.setSelectionRange(s,s+rep.length);
  afterChange();hideBubble();toast('Now: '+rep);
 }
-/* caret geometry for keyboard/touch selections: estimate from line count */
-function bubbleAtCaret(endPos){
- const lineH=ed.value.includes('\r')?0:32.4; /* 18px font × 1.8 */
- const lines=ed.value.slice(0,endPos).split('\n').length;
- const wrap=document.getElementById('editWrap');
- const pr=document.getElementById('paper').getBoundingClientRect();
- const y=pr.top+36+Math.min(lines,40)*lineH-ed.scrollTop-56;
- showBubbleAt(pr.left+pr.width*0.5-160,y);}
+/* 7.33: the selection's own position on screen. The bubble sits just above
+   the selection, or just below it when there is no room above; it never
+   covers the toolbar, and never the selected words themselves. (Before, an
+   estimate from the old single-field editor could put it over the toolbar.) */
+function bubbleForSelection(){
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount||sel.isCollapsed)return false;
+ const rs=[...sel.getRangeAt(0).getClientRects()].filter(r=>r.width>0&&r.height>0);
+ if(!rs.length)return false;
+ const top=Math.min(...rs.map(r=>r.top)),bottom=Math.max(...rs.map(r=>r.bottom)),left=rs[0].left;
+ const hd=document.querySelector('header');const floor=hd?Math.max(0,hd.getBoundingClientRect().bottom)+6:8;
+ showBubbleAt(left-20,-9999);
+ const bh=bub.offsetHeight||56;
+ let y=top-bh-10;
+ if(y<floor)y=bottom+10;
+ if(y+bh>innerHeight-8)y=Math.max(floor,Math.min(innerHeight-bh-8,top-bh-10));
+ bub.style.top=Math.max(floor,y)+'px';
+ return true;}
+function bubbleAtCaret(endPos){bubbleForSelection();}
 document.addEventListener('mouseup',e=>{
  if(e.target.closest('#bubble'))return;
  setTimeout(()=>{if(document.activeElement!==ed)return hideBubble();
   const s=ed.selectionStart,e2=ed.selectionEnd;if(e2-s<2)return hideBubble();
-  showBubbleAt(e.clientX-90,e.clientY-58);},10);});
+  if(!bubbleForSelection())showBubbleAt(e.clientX-90,e.clientY-58);},10);});
 /* keyboard (shift+arrows) and long-press touch selections */
 let selTimer=null;
 document.addEventListener('selectionchange',()=>{
@@ -8227,9 +8352,10 @@ const DEMORW=(function(){
 let ALTSEL=null,ALTS=[],ALTMODE=false;
 function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];renderCards();}
 async function improveAlternatives(){
- const s=ed.selectionStart,e2=ed.selectionEnd;
- if(e2-s<1){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
- const t=ed.value.slice(s,e2);ALTSEL={s,e2,t};
+ const sel=inkTargetText();
+ if(sel.whole){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
+ if(sel.lost||!sel.t){toast('Select the text again, please: the selection was lost.');return hideBubble();}
+ const s=sel.s,e2=sel.e2,t=sel.t;ALTSEL={s,e2,t,before:ed.value.slice(Math.max(0,s-60),s)};
  ALTS=[];ALTMODE=true;
  hideBubble();
  if(S.panelFold)foldPanel();
@@ -8272,8 +8398,9 @@ function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
   else if(before.length&&endOfLine&&!/\n\n$/.test(before)&&/\n$/.test(before))text='\n'+text;
   if(after.length&&!/^\s/.test(after))text+=' ';
  }
- ed.value=ed.value.slice(0,ALTSEL.s)+text+ed.value.slice(ALTSEL.e2);
- ed.setSelectionRange(ALTSEL.s,ALTSEL.s+text.length);afterChange();
+ const r=inkSafeReplace(ALTSEL.s,ALTSEL.e2,ALTSEL.t,text,ALTSEL.before);
+ if(!r)return;
+ ed.setSelectionRange(r.s,r.e);afterChange();
  closeAlts();toast('Applied ✔');}
 /* ===== 7.30: Rewrite ▾ and ✨ Draft =====
    Both menus called rewrite() and compose(), which no longer existed, so every
@@ -8285,12 +8412,57 @@ const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual
  shorten:'Shorter',summarize:'Summary',expand:'Expanded',paraphrase:'Paraphrase',humanize:'Natural'};
 function inkTargetText(){
  /* the selection, or the whole page when nothing is selected; the range is
-    remembered so "Use this" replaces exactly what was rewritten */
+    remembered so "Use this" replaces exactly what was rewritten.
+    7.33: the position is checked against the text the writer can see
+    selected; if they differ, the visible text is found in the document, and
+    if it cannot be found, nothing is rewritten. */
  const s=ed.selectionStart,e=ed.selectionEnd;
- return (e>s)?{s:s,e2:e,t:ed.value.slice(s,e),whole:false}:{s:0,e2:ed.value.length,t:ed.value,whole:true};
+ if(!(e>s))return {s:0,e2:ed.value.length,t:ed.value,whole:true};
+ const seen=inkDomSelText();
+ const t=ed.value.slice(s,e);
+ if(seen!==null&&inkNorm(seen)!==inkNorm(t)){
+  const at=inkFindNear(ed.value,seen,s);
+  if(at<0)return {s:s,e2:s,t:'',whole:false,lost:true};
+  _fSel={s:at,e:at+seen.length};
+  return {s:at,e2:at+seen.length,t:ed.value.slice(at,at+seen.length),whole:false};
+ }
+ return {s:s,e2:e,t:t,whole:false};
 }
+/* the selected text as the page shows it, without page numbers; null when
+   the selection is not on the page */
+function inkDomSelText(){
+ const sel=window.getSelection();
+ if(!_fRoot||!sel||!sel.rangeCount||sel.isCollapsed||!_fRoot.contains(sel.anchorNode))return null;
+ const frag=sel.getRangeAt(0).cloneContents();
+ frag.querySelectorAll&&frag.querySelectorAll('.pgfolio').forEach(function(n){n.remove();});
+ const box=document.createElement('div');box.appendChild(frag);
+ return _fCanonNode(box);}
+function inkNorm(x){return String(x||'').replace(/\s+/g,' ').trim();}
+/* the occurrence of piece in text nearest to pos, or -1 */
+function inkFindNear(text,piece,pos){
+ if(!piece)return -1;
+ let best=-1,bd=Infinity,i=text.indexOf(piece);
+ while(i>=0){const d=Math.abs(i-pos);if(d<bd){bd=d;best=i;}i=text.indexOf(piece,i+1);}
+ return best;}
+/* 7.33: every replacement by position first checks that the text there is
+   still the text the change was made from; if it moved, the same text is
+   found again; if it is gone, nothing is replaced. Returns the new range or
+   null. before: for an insertion, the text just before the insertion point. */
+function inkSafeReplace(s,e,orig,repl,before){
+ const t=ed.value;
+ if(s===e&&!orig){
+  if(before&&t.slice(Math.max(0,s-before.length),s)!==before){
+   const at=inkFindNear(t,before,s-before.length);
+   if(at<0){toast('The text has changed since, so nothing was inserted. Place the cursor and try again.');return null;}
+   s=e=at+before.length;}
+ }else if(t.slice(s,e)!==orig){
+  const at=inkFindNear(t,orig,s);
+  if(at<0){toast('That text has changed since, so nothing was replaced. Select it again.');return null;}
+  s=at;e=at+orig.length;}
+ ed.value=t.slice(0,s)+repl+t.slice(e);
+ return {s:s,e:s+repl.length};}
 function inkAltsOpen(sel,status){
- ALTSEL={s:sel.s,e2:sel.e2,t:sel.t};ALTS=[];ALTMODE=true;
+ ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts(status);
@@ -8298,6 +8470,8 @@ function inkAltsOpen(sel,status){
 function rewrite(mode){
  const label=RW_LABEL[mode]||mode;
  const sel=inkTargetText();
+ if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
+ if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!sel.t.trim()){toast('Type or select something to rewrite first.');return;}
  inkAltsOpen(sel,'Rewriting'+(sel.whole?' the whole page':' the selection')+': '+label+'…');
  let pending=0;
@@ -8356,8 +8530,10 @@ function composeRun(instr){
 /* ===== Grammarly-style preset and custom rewriting (7.25) ===== */
 function rewritePreset(preset){
  const sel=inkTargetText(),s=sel.s,e=sel.e2,t=sel.t;
+ if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
+ if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,text:t};ALTS=[];ALTMODE=true;
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts('Rewriting with preset: '+preset+'…');
@@ -8419,8 +8595,10 @@ function rewriteCustomPrompt(){
 function rewriteCustom(instruction){
  if(!instruction||!instruction.trim()){toast('Enter an instruction first.');return;}
  const sel=inkTargetText(),s=sel.s,e=sel.e2,t=sel.t;
+ if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
+ if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,text:t};ALTS=[];ALTMODE=true;
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts('Rewriting with your instruction…');
@@ -8445,11 +8623,12 @@ function applyEditsText(t,edits){
  const fx=edits.filter(e=>e.fix).sort((a,b)=>b.start-a.start);
  for(const e of fx){if(e.start>=0&&e.end<=t.length&&e.start<e.end)t=t.slice(0,e.start)+e.fix+t.slice(e.end);}return t;}
 async function fixSelection(){
- const s=ed.selectionStart,e2=ed.selectionEnd;
- if(e2-s<1){hideBubble();return correct();}
- const t=ed.value.slice(s,e2);hideBubble();
+ const tgt=inkTargetText();
+ if(tgt.whole){hideBubble();return correct();}
+ if(tgt.lost||!tgt.t){toast('Select the text again, please: the selection was lost.');return;}
+ const s=tgt.s,e2=tgt.e2,t=tgt.t;hideBubble();
  let fixed=null;
- let rules=ruleEdits(t);
+ let rules=inkRules(t);
  if(S.connected){toast('AI is reading the selection…');
   try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    const ai=(r.edits||[]).filter(e=>e.fix!==undefined&&e.cat!=='r');
@@ -8462,7 +8641,7 @@ async function fixSelection(){
   try{const ai=await runMini(t);
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
  if(fixed===null){fixed=applyEditsText(t,rules);if(fixed===t)fixed=null;}
- if(fixed!=null&&fixed!==t){pushUndo();replaceSel(fixed);afterChange();toast('Selection corrected ✔');}
+ if(fixed!=null&&fixed!==t){pushUndo();if(replaceSel(fixed,{s:s,e2:e2,t:t})){afterChange();toast('Selection corrected ✔');}}
  else if(fixed===null)toast('The selection is already clean ✔');}
 
 /* ================= TONE + FORMALITY + RHYTHM + STATS ================= */
@@ -8639,9 +8818,12 @@ function onType(){LASTTYPE=Date.now();saveNow();clearTimeout(scanTimer);
  clearTimeout(onType._hl);onType._hl=setTimeout(renderHL,L>400000?500:L>120000?380:L>40000?280:220);;}
 function persist(){SV('docs',S.docs);SV('active',S.active);}
 function sel(){const s=ed.selectionStart,e=ed.selectionEnd;return s!==e?ed.value.slice(s,e):ed.value;}
-function replaceSel(rep){const s=ed.selectionStart,e=ed.selectionEnd;
- if(s!==e){ed.value=ed.value.slice(0,s)+rep+ed.value.slice(e);ed.setSelectionRange(s,s+rep.length);}
- else ed.value=rep;saveNow();}
+/* 7.33: never replaces the whole document: with no selection it does nothing */
+function replaceSel(rep,range){const s=range?range.s:ed.selectionStart,e=range?range.e2:ed.selectionEnd;
+ if(e<=s){toast('Nothing is selected, so nothing was replaced.');return false;}
+ const r=inkSafeReplace(s,e,range?range.t:ed.value.slice(s,e),rep);
+ if(!r)return false;
+ ed.setSelectionRange(r.s,r.e);saveNow();return true;}
 function copyAll(){navigator.clipboard.writeText(ed.value).then(()=>toast('Copied 📋')).catch(()=>toast('Copy blocked'));}
 /* ============ WORD EXPORT (.docx, built on the device; no server) ============ */
 const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
@@ -9280,11 +9462,9 @@ function openModalDo(which){
  '<p style="font-size:13px;color:var(--mut);line-height:1.65"><b>The rules engine is always on and needs nothing else.</b> It corrects spelling, grammar, punctuation, agreement, redundancy and register entirely offline, and it reads as you type. The AI below is an optional extra layer — drafting, rewording and a second grammar opinion — for writers who want it. Everything on this page lives on this device once installed; nothing is sent anywhere.</p>'+
  '<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">The shelf models (GGUF, MLX; an Import lands them there, and each stays until you swap or remove it) run through the companion server, which starts itself with the installed app and answers offline. The Mini and Pro rows need the internet once, the very first time, and are cached after.</p>'+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
- '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">In-browser models</h4>'+
- '<div class="rl">Pro (rewrites, drafting, reviewer): '+(!PRO_ALLOWED?'<span style="color:var(--mut)">not on phones and tablets (it needs more memory than the system gives an app); your laptop\u2019s model does this work, below</span>':PRO?'<b>'+esc(PRONAME)+'</b> on <b>'+esc(PRODEVICE||'?')+'</b> <button class="lkbtn" onclick="ejectPro();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="proBtn" onclick="installPro()">⬇ Install Pro model</button> <span style="color:var(--mut)">'+(('gpu' in navigator)?'Qwen2.5 on WebGPU':'small model on CPU')+'</span>')+'</div>'+
- '<div class="rl">Grammar model (GECToR, Grammarly\u2019s research model; about 124 MB, once): '+(MINI?'<b>'+esc(MININAME)+'</b> <button class="lkbtn" onclick="ejectMini();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="miniBtn" onclick="installMini()">⬇ Install the grammar model</button>')+'</div>'+
- '<p style="font-size:11.5px;color:var(--mut);line-height:1.55;margin:2px 0 6px">It suggests; it never changes your text by itself. It fixes single words (verb forms, agreement, articles, prepositions, spelling, commas) and never rewrites a sentence, and a safety filter refuses any change to names, numbers, quotations or your choice of words. Each suggestion says why, for writers learning English.</p>'+
- '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ Server</button> <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Pro</button> <button class="lkbtn" onclick="testEngine(\'mini\')">▶ Mini</button> <button class="lkbtn" id="srvStart" onclick="startServerFromPage()" style="display:none" title="Ask the launcher to bring the companion server up on this device">▶ Start it here</button></div>'+
+ '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">On-device writing models</h4>'+
+ '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Removed in 7.33. The small models that fit inside an app window (GECToR and the 0.5-billion-parameter Pro model) made writing worse, not better, so Inkwell no longer offers them, and their downloaded files were deleted from this device. Corrections come from the rules engine, which now shows only correctness unless you ask for clarity and style notes; rewriting and drafting come from a real writing model on your laptop (below).</p>'+
+ '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>'+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
  '<div class="rl" style="margin-top:8px">A model will not install? <button class="lkbtn" onclick="inkDiagnose()">🩺 Diagnose this device</button> <span id="diagBtns" style="display:none"><button class="lkbtn" onclick="inkDiagCopy()">Copy the report</button> <button class="lkbtn" onclick="inkDiagSave()">Save the report</button></span></div>'+
  '<textarea id="diagOut" readonly style="display:none;width:100%;height:190px;font:11px/1.45 ui-monospace,monospace;margin-top:4px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>'+
@@ -9688,6 +9868,10 @@ function renderPatterns(){
  step('favicon',function(){ const lk=document.createElement('link');lk.rel='icon';lk.type='image/svg+xml';
   lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64));document.head.appendChild(lk); });
  step('pros',function(){
+  S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
+  try{inkAiMark('',false);}catch(e){}
+  inkPurgeOldModels();
+  return;
   var crashed=null;try{crashed=localStorage.getItem('ink_ai_loading');}catch(e){}
   if(crashed){inkAiMark('',false);S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
    instSay('Inkwell closed while a model was loading last time, so no model loads at start. Install it again from here if you wish; on a phone or tablet, your laptop\u2019s model is the safer path.');
