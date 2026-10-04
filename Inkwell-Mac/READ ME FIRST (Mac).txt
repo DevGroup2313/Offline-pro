@@ -1,4 +1,4 @@
-INKWELL 7.31 FOR MAC
+INKWELL 7.32 FOR MAC
 ====================
 1. In your current Inkwell, choose File, Export library, and keep the file.
 2. Unzip this package. Keep all its files together.

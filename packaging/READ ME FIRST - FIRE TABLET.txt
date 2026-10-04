@@ -1,7 +1,7 @@
-INKWELL 7.31 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.32 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.31-buildN.apk
+THE FILE IT MAKES:   Inkwell-7.32-buildN.apk
 NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
 only a white page with the file name. Use the iPhone and iPad package instead.
 
@@ -51,7 +51,7 @@ PART B. BUILD THE APK
 7. Wait for the green tick (about 2 minutes; the first run can take longer).
 
 8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.31 (build N)", has the APK under "Assets".
+   newest release, "Inkwell 7.32 (build N)", has the APK under "Assets".
 
 
 PART C. INSTALL ON THE FIRE TABLET BY USB
@@ -87,7 +87,7 @@ PART E. UPDATING INKWELL LATER
 - New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
   (replace the old one). If the vendor files changed, upload those into
   app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.31'.
+- New version number: in app/build.gradle, change versionName '7.32'.
   (versionCode rises by itself with every build, so Android accepts each
   build as an update.)
 - New icon: replace the five ic_launcher.png files in app/src/main/res/
@@ -96,16 +96,35 @@ PART E. UPDATING INKWELL LATER
 - Every commit starts a new build; install its APK as in Part C.
 
 
-YOUR LAPTOP'S MODEL, AND WHEN THE MINI MODEL WILL NOT INSTALL (7.31)
--------------------------------------------------------------------
+THE GRAMMAR MODEL ON THIS DEVICE (NEW IN 7.32)
+----------------------------------------------
+- Engine, "Install the grammar model": GECToR, a research model published by
+  Grammarly (about 124 MB, downloaded once, then offline). It replaces the
+  earlier small model, which made more sentences worse than it improved.
+- It only suggests; nothing changes until you accept a suggestion. It fixes
+  single words (verb forms, agreement, articles, prepositions, spelling,
+  commas), never rewrites a sentence, and a safety filter refuses any change
+  to names, numbers, quotations or your choice of words. Each suggestion
+  says why.
+- Measured on 200 learner sentences and 200 correct encyclopedia sentences:
+  it improved 33% of the learner sentences, made 4.5% worse, and offered a
+  change in 1.5% of the correct sentences. It works in the background, so
+  the page stays responsive while it reads.
+- If the app ever closes while a model is loading, Inkwell does not load it
+  again by itself at the next start.
+- If the grammar model will not install: Engine, "Diagnose this device",
+  then "Copy the report" or "Save the report", and send it. The first line
+  marked FAIL names the cause.
+
+YOUR LAPTOP'S MODEL
+-------------------
 - Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.31 for Mac or Windows): Engine, "Share
+  Wi-Fi. On the laptop (Inkwell 7.32 for Mac or Windows): Engine, "Share
   with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
   On the tablet: Engine, "Your laptop's model": enter both, then "Connect
   to my laptop".
-- If the Mini model will not install: Engine, "Diagnose this device", then
-  "Copy the report" or "Save the report", and send it. The first line
-  marked FAIL names the cause.
+- The larger "Pro" model is not offered on phones and tablets: it needs more
+  memory than the system gives an app, and the system closes the app.
 
 
 PROBLEMS

@@ -1,0 +1,127 @@
+INKWELL v7.32: HANDOFF NOTES
+============================
+Date: 4 October 2026. Read INKWELL_HANDOFF_v7p30.txt (7.30 and 7.31) and
+INKWELL_HANDOFF_v7p29.txt for everything before this.
+
+Look for "v7.32" beside the date at the top. If it is not there, the device
+is not running 7.32.
+
+YOUR REPORT
+-----------
+1. iPhone, iPad and Fire: the app lagged and crashed as soon as a local model
+   was added; twice the app had to be uninstalled.
+2. Windows: Inkwell would not install, opened as a "Python page" where
+   nothing worked, and could not be uninstalled.
+3. A better model for the Fire, iPad and iPhone: one that does not make
+   things worse or ruin your work.
+
+1. THE MODELS NO LONGER FREEZE OR CLOSE THE APP
+-----------------------------------------------
+Causes found:
+- The models ran on the page's own thread. While a model loaded or answered,
+  the page could not respond. Measured in Chromium posing as the Fire app,
+  with the processor slowed four times: loading froze the page for up to 4.3
+  seconds at a time.
+- The larger "Pro" model (at least half a gigabyte) was offered on phones and
+  tablets, and it reloaded itself at every start once installed. iOS and
+  Fire OS close an app that takes that much memory, so the app could close
+  at every start.
+Changes:
+- Every model now runs in its own background worker. Measured the same way:
+  the page's longest pause while the grammar model loaded was 0.6 s, and
+  0.2 s while it checked a paragraph.
+- Pro is not offered on phones and tablets; the Engine panel says why and
+  points to your laptop's model. A Pro set to load at start is switched off.
+- If the app closes while a model is loading, the next start does not load
+  it again by itself, and says so.
+- On phones and tablets, a model set to load at start waits six seconds, so
+  the page is ready first.
+- Scriba's on-device Whisper (already in a worker) is now given in-memory
+  copies of its files, as the models are, so no app window has to serve
+  files to a worker from its private address.
+Not verified on your devices: iOS (WebKit) could not be tested here, only
+Chromium. The code uses features Safari has had since version 15.
+
+2. WINDOWS: A REAL PROGRAM, A REAL INSTALLER, A REAL UNINSTALLER
+--------------------------------------------------------------
+Cause: the old installer ran Inkwell through Python. When Python or its
+window component (pywebview) was missing, Inkwell opened in the web browser
+instead, where the app's own functions do not exist, so nothing worked. There
+was no uninstaller, because nothing had been installed in the Windows sense.
+Change: GitHub now builds Inkwell for Windows as a standalone program
+(.github/workflows/windows.yml): PyInstaller bundles Python, the window
+component and the companion server into Inkwell.exe; Inno Setup makes
+Inkwell-7.32-Windows-Setup.exe. The build tests the program without a window
+(the library export, and the companion server starting and answering) before
+it makes the installer.
+- Installs for you only, no administrator password, into
+  %LOCALAPPDATA%\Programs\Inkwell; Start menu, and Desktop if ticked.
+- Uninstall: Settings, Apps, Inkwell, Uninstall.
+- Your documents stay in %LOCALAPPDATA%\Inkwell\storage, a different folder,
+  which neither installing nor uninstalling touches. Before installing, the
+  installer copies it to %LOCALAPPDATA%\Inkwell\backups\setup-<date>.
+- It removes the old Python-based program files and shortcuts.
+- Not in the Windows program: the separate Python Whisper and the "shelf"
+  models (GGUF), which need Python libraries. Scriba uses on-device Whisper
+  in the page; the grammar model works as everywhere else.
+Not verified here: the window itself (GitHub's machines have no screen), and
+the installer on your laptop. The program is unsigned, so SmartScreen warns:
+More info, Run anyway.
+
+3. THE GRAMMAR MODEL ON EVERY DEVICE: GECToR, MEASURED, BEHIND A FILTER
+---------------------------------------------------------------------
+Measured on 4 October 2026 on two test sets:
+- 200 learner sentences from the JFLEG test set (Johns Hopkins University;
+  essays by learners of English, each with four human corrections). A
+  sentence counts as "made worse" when the model's version is further from
+  every human correction than the original was.
+- 200 correct sentences from English Wikipedia (Wikimedia's copy on Hugging
+  Face). Any change counts against the model.
+Speeds are on one processor core of the test machine; a tablet is slower.
+
+                                 improved  made worse  correct text changed  ms
+  flan-t5-small (the old model)     7.5%     27.5%        39.5%             123
+  grammar-synthesis-small          15.0%     65.0%        97.5%             112
+  grammar_error_correcter_v1       47.0%     13.5%        18.5%            1110
+  t5-base-grammar-correction       61.0%     11.0%        28.0%             990
+  GECToR large 2024                41.0%     16.0%        15.0%              88
+  GECToR base 2020 (chosen),
+    cautious setting                36.0%      6.0%         3.0%              38
+  ... with Inkwell's safety filter  33.0%      4.5%         1.5%              38
+
+The old model made far more sentences worse than it improved, which matches
+what you saw. The chosen model is GECToR base (Grammarly's "Tag, Not
+Rewrite" design, 2020; the ONNX copy Meyssa/gector-base-2020, about 124 MB,
+Apache 2.0). It does not rewrite sentences: it marks single words to keep,
+delete, replace or change in form. The decoder is a port of Grammarly's
+published code (src/lib/gector_core.js), with its verb-form list in
+vendor/verb-form-vocab.txt (Apache 2.0; vendor/GECTOR-LICENCE.txt).
+t5-base-grammar-correction improves more sentences, but it rewrites more,
+changed 28% of the correct sentences, and is about 26 times slower.
+
+The safety filter (src/lib/gec_filter.js) stands between every model and
+your text, the Pro model included. It keeps only small, local edits, and
+refuses any change to numbers, names (capitalised words, and small words
+inside a name), quotations, a pronoun's person (their to your), and any
+replacement of one content word by a different word. Each kept suggestion
+gives a plain reason for learners: verb form, agreement, article,
+preposition, spelling, punctuation, capital letter.
+Nothing is ever applied without you accepting it, except "Fix the
+selection", which you ask for and which Undo reverses.
+
+Read by hand, the three correct sentences that still received a suggestion:
+"hardships including" to "hardships, including" (sound), "which they lost"
+to "who they lost" (wrong), and "has dimensions of" to "has a dimension of"
+(wrong). This is why the model only suggests.
+
+VERSIONS
+--------
+Fire app 7.32 (version code 73200 + build number); iPhone and iPad 7.32;
+web app 7.32; Mac launcher 7.32 (installer unchanged in design); Windows
+7.32, the new standalone program.
+
+STILL TO DO
+-----------
+Stages 3 to 7 of the plan in INKWELL_HANDOFF_v7p30.txt: sync between devices,
+learners of English (the reasons above are the first step), Scriba toward
+CaptionEd, Fontes toward Zotero.

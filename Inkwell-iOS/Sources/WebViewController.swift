@@ -13,7 +13,7 @@ import WebKit
 /// bridge on both.
 final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply,
                                WKScriptMessageHandler, WKDownloadDelegate {
-    static let build = "7.31"
+    static let build = "7.32"
 
     private var webView: WKWebView!
     private let store = Store()

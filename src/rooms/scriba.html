@@ -564,8 +564,21 @@ var SCRIBA_WORKER_SRC=[
 function scribaPageOk(){
   return secure && typeof WebAssembly==="object" && typeof Worker==="function" && typeof Blob==="function" && !!(window.URL&&URL.createObjectURL);
 }
+/* 7.32: the worker is handed in-memory copies of the app's own speech
+   library, so it never has to fetch them from the app's private address
+   (the Fire and iPhone/iPad app windows may not serve a worker's requests) */
+var SCRIBA_BLOBS=null;
+function scribaBlobUrls(cb){
+  if(SCRIBA_BLOBS!==null){ cb(); return; }
+  var base=document.baseURI||location.href;
+  function one(f,type){ return fetch(new URL("vendor/"+f,base).href).then(function(r){ if(!r.ok) throw new Error(f); return r.arrayBuffer(); })
+    .then(function(b){ return URL.createObjectURL(new Blob([b],{type:type})); }); }
+  Promise.all([one("transformers.min.js","text/javascript"),one("ort-wasm-simd-threaded.jsep.mjs","text/javascript"),one("ort-wasm-simd-threaded.jsep.wasm","application/wasm")])
+    .then(function(u){ SCRIBA_BLOBS={module:u[0], wasm:{mjs:u[1], wasm:u[2]}}; cb(); },function(){ SCRIBA_BLOBS=false; cb(); });
+}
 function scribaPageUrls(){
   var base=document.baseURI||location.href, urls=[];
+  if(SCRIBA_BLOBS) urls.push(SCRIBA_BLOBS);
   try{ urls.push({module:new URL("vendor/transformers.min.js",base).href, wasm:new URL("vendor/",base).href}); }catch(e){}
   urls.push({module:"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1", wasm:null});
   return urls;
@@ -604,8 +617,10 @@ function scribaPageLoad(cb){
   PAGE.loading=true; PAGE.mb=-1;
   say(T("Preparing on-device Whisper. The first time, the model is downloaded once (a few tens of megabytes); after that it works offline.",
         "Pr\u00e9paration de Whisper sur l\u2019appareil. La premi\u00e8re fois, le mod\u00e8le est t\u00e9l\u00e9charg\u00e9 une fois (quelques dizaines de m\u00e9gaoctets) ; ensuite il fonctionne hors ligne."));
-  try{ scribaPageWorker().postMessage({type:"load", urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS}); }
-  catch(e){ PAGE.loading=false; PAGE.error=String(e); var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(PAGE.error);}catch(e2){}}); }
+  scribaBlobUrls(function(){
+    try{ scribaPageWorker().postMessage({type:"load", urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS}); }
+    catch(e){ PAGE.loading=false; PAGE.error=String(e); var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(PAGE.error);}catch(e2){}}); }
+  });
 }
 function scribaLangCode(){ var v=((document.getElementById("langSel")||{}).value||"en").toLowerCase(); return v.split("-")[0]; }
 /* 16 kHz mono Float32 -> text, cb(text, err) */

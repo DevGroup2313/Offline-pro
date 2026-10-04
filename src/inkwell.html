@@ -1139,6 +1139,12 @@ body.tabStageOn #footTab{display:none !important}
 <div id="modal" onclick="if(event.target.id==='modal')closeModal()"><div class="box" id="modalBody" role="dialog" aria-modal="true"></div></div>
 
 
+<script id="inkLibs">
+/* 7.32: the grammar model's decoder and the safety filter (src/lib); the
+   model worker is given this same text */
+@@LIB_GECTOR_CORE@@
+@@LIB_GEC_FILTER@@
+</script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
    A choice the user has made is always kept. */
@@ -1353,7 +1359,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.31 · II · OCTOBRIS · MMXXVI';
+const BUILD='7.32 · IV · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -3836,7 +3842,7 @@ async function inkLanRefresh(){
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
    :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
- }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.31 on this computer.</span>';}
+ }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.32 on this computer.</span>';}
 }
 async function inkLanSet(on,newCode){
  try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}
@@ -3846,7 +3852,7 @@ async function inkLanSet(on,newCode){
 function engineAdvice(){
  if(IS_TABLETAPP)return 'On the '+deviceName()+', install Mini first: small, and offline once installed. For stronger rewriting and drafting, use your laptop\u2019s model over the same Wi-Fi: below, under Your laptop\u2019s model. If Mini will not install, press Diagnose this device and send the report: it names the cause.';
  if(IS_FIREREAL)return 'On the '+deviceName()+', install Mini first: tiny and instant. Pro 0.5B works but slowly; server.py on any laptop on the same Wi-Fi is the strongest path for the tablet.';
- if(!HAS_GPU)return 'This device has no WebGPU. Install Mini for inline grammar; Pro will run on CPU at reduced speed. server.py on a laptop is the faster path.';
+ if(!HAS_GPU)return 'This device has no WebGPU. Install the grammar model (GECToR) for corrections; Pro will run on CPU at reduced speed. server.py on a laptop is the faster path.';
  return 'On the '+deviceName()+' with WebGPU, Pro Qwen2.5 runs rewrites and the reviewer entirely offline after one download; Mini covers inline grammar between them.';}
 
 /* ================= HELPERS ================= */
@@ -6796,21 +6802,22 @@ function diffEdits(a,b,off){
 /* Only transformers.js-native ONNX layouts belong here; a root-layout repo
    404s quietly and reads to the user as an install that hangs forever.
    Both below were verified loading and correcting on 15 September 2026. */
-const CAND_BASE=[
- {id:'Xenova/flan-t5-small',prefix:'Fix the grammar of this sentence: '},
- {id:'Xenova/LaMini-Flan-T5-248M',prefix:'Fix the grammar of this sentence: '}];
-const CANDIDATES=CAND_BASE;
-async function loadTF(){if(!TFMOD){
- /* the package carries vendored transformers.js; the CDN is the fallback, not the door */
- /* 7.29: the self-contained build (it carries its own ONNX runtime). The old
-    web build imported bare package names no browser can resolve, so the local
-    copy never loaded and every load went to the internet. The runtime's wasm
-    is taken from vendor/ only when the module itself loaded from there. */
- const local=new URL('vendor/transformers.min.js',document.baseURI||location.href).href;var fromLocal=false;
- try{TFMOD=await import(local);fromLocal=true;}
- catch(e){try{TFMOD=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');}catch(e2){throw e2;}}
- if(fromLocal&&TFMOD&&TFMOD.env){try{TFMOD.env.backends.onnx.wasm.wasmPaths=new URL('vendor/',document.baseURI||location.href).href;}catch(e){}}
- TFPIPE=TFMOD.pipeline;}return TFMOD;}
+/* 7.32: the grammar model is GECToR (Grammarly's "Tag, Not Rewrite" design,
+   2020; Meyssa/gector-base-2020, about 124 MB). It does not rewrite
+   sentences: it marks single words to keep, delete, replace or change in form,
+   and every change passes the safety filter (src/lib/gec_filter.js) before it
+   is offered. Measured on 4 October 2026 on 200 learner sentences (the JFLEG
+   test set) and 200 correct encyclopedia sentences, one processor core:
+     flan-t5-small, the model before 7.32: 7.5% improved, 27.5% made worse,
+       39.5% of correct sentences changed
+     GECToR base at the setting below, filtered: 33.0% improved, 4.5% made
+       worse, 1.5% of correct sentences given a suggestion; 38 ms a sentence
+   The larger 2024 GECToR made more sentences worse (12%) and is not used.
+   Nothing is ever changed without the writer accepting the suggestion. */
+const GEC_MODEL={id:'Meyssa/gector-base-2020',kind:'gector',name:'GECToR base'};
+const GEC_TUNING={keepBias:0.5,minErrorProb:0.7,minProb:0.8};
+const CANDIDATES=[GEC_MODEL];
+/* 7.32: the runtime now starts only inside the model workers (below) */
 
 /* --- the installer: honest progress, stall aborts, word-for-word errors --- */
 const INSTLOG=[];
@@ -6833,26 +6840,121 @@ function trackProgress(onTick){
 async function inkHasBundled(id){
  try{const r=await fetch(new URL('webmodels/'+id+'/config.json',location.href).href,{cache:'no-store'});
   return r.ok;}catch(e){return false;}}
-async function installLoad(task,id,variants,onTick,bundled){
+/* 7.32: the models run in their own background worker, one per model, so
+   loading and thinking never hold up the page. Before this, both ran on the
+   page's own thread: on the Fire tablet, iPhone and iPad the page froze for
+   seconds at a time while a model loaded or answered. The worker is built
+   from the app's own files (handed over as in-memory copies, so no app
+   window has to serve a worker from its private address), and a stalled or
+   failed load ends the worker outright, which frees its memory at once. */
+const INK_AI_SRC=`
+let TF=null,PIPE=null;
+const post=m=>self.postMessage(m);
+self.onmessage=async e=>{const d=e.data;
+ try{
+  if(d.op==='init'){
+   TF=await import(d.tf);
+   const w=TF.env.backends.onnx.wasm;
+   if(d.mjs&&d.wasm)w.wasmPaths={mjs:d.mjs,wasm:d.wasm};
+   w.numThreads=1;w.proxy=false;
+   TF.env.allowLocalModels=false;
+   post({id:d.id,ok:true,version:TF.env.version||''});}
+  else if(d.op==='load'&&d.task==='gector'){
+   /* GECToR: a word-tagging model (Grammarly's design); the decoder and the
+      safety filter come from the page's own scripts, given at start */
+   TF.env.allowLocalModels=false;
+   const prog=p=>post({id:d.id,progress:{file:p.file,loaded:p.loaded,progress:p.progress}});
+   const tok=await TF.AutoTokenizer.from_pretrained(d.model,{progress_callback:prog});
+   const model=await TF.AutoModelForTokenClassification.from_pretrained(d.model,Object.assign({},d.opts,{progress_callback:prog}));
+   const id2=model.config.id2label||{},labels=[];for(const k in id2)labels[+k]=id2[k];
+   const verbs=GECTOR.verbForms(d.verbs||'');
+   const infer=async ids=>{const t=new TF.Tensor('int64',BigInt64Array.from(ids.map(BigInt)),[1,ids.length]);
+    const m=new TF.Tensor('int64',BigInt64Array.from(ids.map(()=>1n)),[1,ids.length]);
+    const o=await model({input_ids:t,attention_mask:m});return o.logits.data;};
+   const cfg=Object.assign({encodeWord:w=>tok.encode(' '+w,{add_special_tokens:false}),infer:infer,labels:labels,verbs:verbs,
+    START_ID:50265,prefixIds:[0],suffixIds:[2],iterations:3},d.tuning||{});
+   PIPE={gector:true,run:async s=>{const out=GECTOR.join(await GECTOR.correct(GECTOR.split(s),cfg));
+    const f=GECFILTER.filter(s,out,verbs);f.edits.forEach(e=>{e.why=GECFILTER.reason(e.orig,e.fix,verbs);});return f;}};
+   post({id:d.id,ok:true,device:'wasm'});}
+  else if(d.op==='load'){
+   const env=TF.env;
+   if(d.localBase){env.allowLocalModels=true;env.localModelPath=d.localBase;}
+   else env.allowLocalModels=false;
+   const o=Object.assign({},d.opts,{progress_callback:p=>post({id:d.id,progress:{file:p.file,loaded:p.loaded,progress:p.progress}})});
+   PIPE=await TF.pipeline(d.task,d.model,o);
+   post({id:d.id,ok:true,device:(PIPE.model&&PIPE.model.device)||d.opts.device||'wasm'});}
+  else if(d.op==='run'&&PIPE&&PIPE.gector){
+   post({id:d.id,ok:true,out:await PIPE.run(String(d.input||''))});}
+  else if(d.op==='run'){
+   if(!PIPE)throw new Error('no model loaded');
+   const g=Object.assign({},d.opts);
+   if(d.stream&&TF.TextStreamer&&PIPE.tokenizer)
+    g.streamer=new TF.TextStreamer(PIPE.tokenizer,{skip_prompt:true,skip_special_tokens:true,callback_function:t=>post({id:d.id,tok:t})});
+   const out=await PIPE(d.input,g);
+   post({id:d.id,ok:true,out:JSON.parse(JSON.stringify(out))});}
+ }catch(err){post({id:d.id,ok:false,error:String(err&&err.message?err.message:err)});}
+};`;
+const INKAI={files:null,slots:{}};
+async function inkAiFiles(){
+ if(INKAI.files)return INKAI.files;
+ const u=f=>new URL('vendor/'+f,document.baseURI||location.href).href;
+ const blob=async(f,type)=>{const r=await fetch(u(f));if(!r.ok)throw new Error(f+': HTTP '+r.status);
+  return URL.createObjectURL(new Blob([await r.arrayBuffer()],{type:type}));};
+ let files;
+ try{files={tf:await blob('transformers.min.js','text/javascript'),
+  mjs:await blob('ort-wasm-simd-threaded.jsep.mjs','text/javascript'),
+  wasm:await blob('ort-wasm-simd-threaded.jsep.wasm','application/wasm')};}
+ catch(e){/* no vendor folder (should not happen): the published runtime, once */
+  files={tf:'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1'};}
+ return INKAI.files=files;}
+function inkAiEnd(slot,why){const w=INKAI.slots[slot];if(!w)return;delete INKAI.slots[slot];
+ try{w.worker.terminate();}catch(e){}
+ for(const k in w.cb){try{w.cb[k].rej(new Error(why||'stopped'));}catch(e){}}}
+async function inkAiStart(slot){
+ inkAiEnd(slot,'restarted');
+ const files=await inkAiFiles();
+ const libs=(document.getElementById('inkLibs')||{}).textContent||'';
+ const worker=new Worker(URL.createObjectURL(new Blob([libs+'\n'+INK_AI_SRC],{type:'text/javascript'})),{type:'module'});
+ const w={worker:worker,cb:{},seq:0};INKAI.slots[slot]=w;
+ worker.onmessage=e=>{const d=e.data,c=w.cb[d.id];if(!c)return;
+  if(d.progress){if(c.on)c.on(d);return;}
+  if(d.tok!==undefined){if(c.tok)c.tok(d.tok);return;}
+  delete w.cb[d.id];if(d.ok)c.res(d);else c.rej(new Error(d.error));};
+ worker.onerror=e=>{inkAiEnd(slot,'the model worker stopped: '+((e&&e.message)||'no reason given'));};
+ await inkAiAsk(slot,Object.assign({op:'init'},files),null,null,60000);
+ return w;}
+function inkAiAsk(slot,msg,on,tok,ms){const w=INKAI.slots[slot];
+ if(!w)return Promise.reject(new Error('the model is not loaded'));
+ return new Promise((res,rej)=>{const id=++w.seq;w.cb[id]={res:res,rej:rej,on:on,tok:tok};
+  if(ms)setTimeout(()=>{if(w.cb[id]){delete w.cb[id];rej(new Error('no answer in '+ms/1000+' s'));}},ms);
+  w.worker.postMessage(Object.assign({id:id},msg));});}
+/* a callable model, as the rest of the page expects: model(input, options) */
+function inkAiModel(slot){const f=async(input,opts,onTok)=>{
+  const g=Object.assign({},opts||{});delete g.streamer;
+  const r=await inkAiAsk(slot,{op:'run',input:input,opts:g,stream:!!onTok},null,onTok||null,0);return r.out;};
+ f.__worker=slot;return f;}
+/* the page notes when a load starts; if the app closes before it ends (the
+   system can close an app that asks for too much memory), the next start
+   does not load the model again by itself */
+function inkAiMark(slot,on){try{if(on)localStorage.setItem('ink_ai_loading',slot+'@'+Date.now());else localStorage.removeItem('ink_ai_loading');}catch(e){}}
+async function installLoad(task,id,variants,onTick,bundled,slot,extra){
+ slot=slot||'mini';
  let lastErr=null;
- const env=TFMOD&&TFMOD.env;
- const before=env?{allow:env.allowLocalModels,path:env.localModelPath}:null;
- if(bundled&&env){env.allowLocalModels=true;
-  try{env.localModelPath=new URL('webmodels/',location.href).href;}catch(e){}}
+ const localBase=bundled?new URL('webmodels/',location.href).href:'';
  variants=variants.map(o=>Object.assign({},o,bundled?{local_files_only:true}:{}));
+ inkAiMark(slot,true);
  try{
   for(const o of variants){
    const tr=trackProgress(onTick);
-   try{return await new Promise((res,rej)=>{tr.arm(rej);
-    TFPIPE(task,id,Object.assign({},o,{progress_callback:tr.cb})).then(res,rej);});}
-   catch(e){lastErr=e;instSay(id+' ['+(o.dtype||'default')+(o.device?', '+o.device:'')+(bundled?', bundled':'')+']: '+(e&&e.message?e.message:e));}
+   try{
+    await inkAiStart(slot);
+    const r=await new Promise((res,rej)=>{tr.arm(rej);
+     inkAiAsk(slot,Object.assign({op:'load',task:task,model:id,opts:o,localBase:localBase},extra||{}),d=>tr.cb(d.progress),null,0).then(res,rej);});
+    const m=inkAiModel(slot);m.device=r.device;m.kind=task;return m;}
+   catch(e){lastErr=e;inkAiEnd(slot,'load failed');
+    instSay(id+' ['+(o.dtype||'default')+(o.device?', '+o.device:'')+(bundled?', bundled':'')+']: '+(e&&e.message?e.message:e));}
    finally{tr.done();}}
- }finally{
-  /* 7.30: a bundled attempt must not leave the runtime looking in webmodels/
-     for every model after it: on the Fire app that sent each later download
-     to the app's own files first. */
-  if(bundled&&env&&before){env.allowLocalModels=before.allow;env.localModelPath=before.path;}
- }
+ }finally{inkAiMark(slot,false);}
  throw lastErr||new Error('no variant loaded');}
 /* the AI bridge to the launcher: bring the companion server up on demand */
 async function startServerFromPage(){
@@ -6877,9 +6979,12 @@ async function testEngine(which){
  const sample='she dont goes to the school and the results was received with alot of enthusiasm.';
  instSay('Testing '+which+'…');
  try{
-  if(which==='mini'){if(!MINI)return instSay('Mini is not installed.');
-   const out=await MINI(MINIPREFIX+'she dont goes to the school',{max_new_tokens:64,num_beams:1,repetition_penalty:1.3});
-   instSay('Mini answers: "'+((Array.isArray(out)?out[0]&&out[0].generated_text:out&&out.generated_text)||'(silence)')+'"');return;}
+  if(which==='mini'){if(!MINI)return instSay('The grammar model is not installed.');
+   const s0='He go to school yesterday and I has three reason for it.';
+   if(MINI.kind==='gector'){const r=await MINI(s0);
+    instSay('Grammar model: "'+s0+'" → "'+((r&&r.text)||s0)+'"'+((r&&r.edits&&r.edits.length)?' ('+r.edits.map(e=>e.why).join('; ')+')':''));return;}
+   const out=await MINI(MINIPREFIX+s0,{max_new_tokens:64,num_beams:1});
+   instSay('Grammar model answers: "'+((Array.isArray(out)?out[0]&&out[0].generated_text:out&&out.generated_text)||'(silence)')+'"');return;}
   if(which==='pro'){if(!PRO)return instSay('Pro is not installed.');
    const r=await proChat('You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Output ONLY the corrected text.',sample,180);
    instSay('Pro answers: "'+r.slice(0,300)+'"');return;}
@@ -6913,7 +7018,8 @@ async function inkDiagnose(){
  await step('read vendor/transformers.min.js',async()=>{const r=await fetch(new URL('vendor/transformers.min.js',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return fmtMB((await r.arrayBuffer()).byteLength);});
  await step('read vendor/ort-wasm-simd-threaded.jsep.wasm',async()=>{const r=await fetch(new URL('vendor/ort-wasm-simd-threaded.jsep.wasm',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
   const b=await r.arrayBuffer();await WebAssembly.compile(b);return fmtMB(b.byteLength)+', compiles';});
- await step('start the model runtime',async()=>{const m=await tmo(loadTF(),60000,'runtime');return 'version '+((m.env&&m.env.version)||'?');});
+ await step('start the model runtime in the background',async()=>{const busy=!!INKAI.slots.diag;if(busy)inkAiEnd('diag');
+  try{await tmo(inkAiStart('diag'),60000,'runtime');return 'it answers';}finally{inkAiEnd('diag','done');}});
  const hf='https://huggingface.co/Xenova/flan-t5-small/resolve/main/';
  await step('reach huggingface.co (model files)',async()=>{const r=await tmo(fetch(hf+'config.json',{cache:'no-store'}),20000,'huggingface.co');if(!r.ok)throw new Error('HTTP '+r.status);return (await r.json()).model_type||'answered';});
  await step('download a 2 MB model file',async()=>{const t=performance.now();const r=await tmo(fetch(hf+'tokenizer.json',{cache:'no-store'}),60000,'download');if(!r.ok)throw new Error('HTTP '+r.status);
@@ -6931,50 +7037,80 @@ function inkDiagSave(){const t=(document.getElementById('diagOut')||{}).value||'
  if(nativeSave(name,t))return toast('Saved '+name+' via the system dialog');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=name;a.click();}
 async function installMini(){
- if(MINI){toast('Mini-model active: '+MININAME);return;}
+ if(MINI){toast('Grammar model active: '+MININAME);return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('miniBtn')||{textContent:''};
- pill.className='pill load';pill.innerHTML='<i></i>Preparing mini-model…';btn.textContent='…';
- instSay('[' + new Date().toLocaleTimeString() + '] Mini install begins.');
- let mod;try{mod=await loadTF();}catch(e){setPill();btn.textContent='⬇ Install Mini-model';
-  instSay('The runtime itself failed to arrive (it needs the internet once): '+(e&&e.message?e.message:e));
-  return toast('Runtime needs internet once');}
- mod.env.allowLocalModels=false;
- const BUNDLED={id:'flan-t5-small',prefix:'Fix the grammar of this sentence: ',bundled:true};
- const core=S.modelRepo?[{id:S.modelRepo,prefix:MINIPREFIX}].concat(CANDIDATES):CANDIDATES;
- const haveBundled=await inkHasBundled(BUNDLED.id);
- if(!haveBundled)instSay('No bundled model in this build; fetching one (once, then offline).');
- const list=!haveBundled?core:((LOW_POWER||!navigator.onLine)?[BUNDLED].concat(core):core.concat([BUNDLED]));
- for(const c of list){
-  btn.textContent='⬇ '+c.id.split('/')[1];
-  try{MINI=await installLoad('text2text-generation',c.id,[{dtype:'q4'},{dtype:'q8'},{}],
-    (total,file,pc)=>{pill.innerHTML='<i></i>Mini ↓ '+fmtMB(total);
-     btn.textContent=(c.bundled?'⬇ bundled ':'⬇ ')+fmtMB(total);},c.bundled);
-   MINIPREFIX=c.prefix;MININAME=c.id.split('/')[1]+(c.bundled?' · bundled':'');
-   S.miniAuto=true;SV('miniAuto',true);setPill();btn.textContent='✓ Mini';
-   instSay('Mini installed: '+MININAME+'. Cached; never needs the internet again.');
-   showTip('mini');toast('Mini-model installed; cached, offline from now on');return;
+ pill.className='pill load';pill.innerHTML='<i></i>Preparing the grammar model…';btn.textContent='…';
+ instSay('[' + new Date().toLocaleTimeString() + '] Grammar model install begins.');
+ if(typeof Worker!=='function'){setPill();btn.textContent='⬇ Install the grammar model';
+  instSay('This window cannot run a model in the background, so the model would freeze the page. Not installed.');
+  return toast('This window cannot run the model safely');}
+ /* Grammarly's verb-form list, shipped in vendor/, for verb corrections */
+ let verbs='';
+ try{const r=await fetch(new URL('vendor/verb-form-vocab.txt',document.baseURI||location.href).href);if(r.ok)verbs=await r.text();}catch(e){}
+ if(!verbs)instSay('The verb-form list (vendor/verb-form-vocab.txt) is missing from this build; verb-form corrections are skipped.');
+ /* a model repository named in the Engine panel (desktop only) is tried first,
+    as a sentence-rewriting model, behind the same safety filter */
+ const custom=(S.modelRepo&&!IS_TABLETAPP)?[{id:S.modelRepo,kind:'t5',prefix:MINIPREFIX,name:S.modelRepo.split('/').pop()}]:[];
+ const tick=(total,file,pc)=>{pill.innerHTML='<i></i>Grammar model ↓ '+fmtMB(total);btn.textContent='⬇ '+fmtMB(total);};
+ for(const c of custom.concat(CANDIDATES)){
+  btn.textContent='⬇ '+c.name;
+  try{
+   MINI=c.kind==='gector'
+    ?await installLoad('gector',c.id,[{dtype:'q8'}],tick,false,'mini',{verbs:verbs,tuning:GEC_TUNING})
+    :await installLoad('text2text-generation',c.id,[{dtype:'q8'},{dtype:'q4'}],tick,false,'mini');
+   MINIPREFIX=c.prefix||'';MININAME=c.name;
+   S.miniAuto=true;SV('miniAuto',true);setPill();btn.textContent='✓ Grammar model';
+   instSay('Grammar model installed: '+MININAME+'. Cached; it never needs the internet again.');
+   showTip('mini');toast('Grammar model installed; cached, offline from now on');return;
   }catch(e){/* installLoad already logged each attempt */}
  }
- setPill();btn.textContent='⬇ Install Mini-model';
- instSay('Mini failed on every known model. The log above says why, word for word.');
- toast('Mini install failed; the Engine log says why');}
-function ejectMini(){MINI=null;MININAME='';S.miniAuto=false;SV('miniAuto',false);
- const mb=document.getElementById('miniBtn');if(mb)mb.textContent='⬇ Install Mini-model';setPill();toast('Mini-model unloaded (cached files remain)');}
+ setPill();btn.textContent='⬇ Install the grammar model';
+ instSay('The grammar model did not install. The log above says why, word for word; Diagnose this device shows what the device lacks.');
+ toast('Grammar model install failed; the Engine log says why');}
+function ejectMini(){inkAiEnd('mini','unloaded');MINI=null;MININAME='';S.miniAuto=false;SV('miniAuto',false);
+ const mb=document.getElementById('miniBtn');if(mb)mb.textContent='⬇ Install the grammar model';setPill();toast('Grammar model unloaded (its files stay cached)');}
 async function runMini(t){return aiRun(()=>runMiniDo(t));}
 async function runMiniDo(t){
- const ss=[];const re=/[^.!?]+[.!?]?\s*/g;let m;
- while((m=re.exec(t)))ss.push({s:m[0].trim(),i:m.index});
+ /* sentence by sentence; each sentence's offset is where its first character
+    is, not where the space before it is */
+ const ss=[];const re=/[^.!?]+[.!?]*\s*/g;let m;
+ while((m=re.exec(t))){const lead=m[0].length-m[0].replace(/^\s+/,'').length;
+  const sen=m[0].trim();if(sen)ss.push({s:sen,i:m.index+lead});}
  let all=[],n=0;
+ if(MINI.kind!=='gector')await inkVerbs();
  for(const x of ss){
   if(x.s.split(/\s+/).length<3)continue;
-  n++;document.getElementById('stModel').textContent='Mini-model '+n+'/'+ss.length+'…';
-  try{const out=await MINI(MINIPREFIX+x.s,{max_new_tokens:Math.min(200,Math.ceil(x.s.split(/\s+/).length*1.8)+16),num_beams:1,repetition_penalty:1.3});
-   const gen=(Array.isArray(out)?out[0]&&out[0].generated_text:(out&&out.generated_text))||'';
-   const clean=gen.trim();
-   if(clean&&clean.toLowerCase()!==x.s.trim().toLowerCase())all=all.concat(diffEdits(x.s,clean,x.i));
-  }catch(e){console.warn('mini sentence failed',e);}}
+  n++;document.getElementById('stModel').textContent='Grammar model '+n+'/'+ss.length+'…';
+  try{
+   if(MINI.kind==='gector'){
+    const r=await MINI(x.s);
+    for(const e of (r&&r.edits)||[])all.push({start:e.start+x.i,end:e.end+x.i,orig:e.orig,fix:e.fix,why:e.why||'Grammar',cat:'ai'});
+   }else{
+    const out=await MINI(MINIPREFIX+x.s,{max_new_tokens:Math.min(200,Math.ceil(x.s.split(/\s+/).length*1.6)+16),num_beams:1});
+    const gen=(Array.isArray(out)?out[0]&&out[0].generated_text:(out&&out.generated_text))||'';
+    all=all.concat(inkSafeEdits(x.s,gen.trim(),x.i,'Grammar model'));
+   }
+  }catch(e){console.warn('grammar model: sentence failed',e);}}
  document.getElementById('stModel').textContent='';return all;}
-
+/* 7.32: the safety filter for every model's corrections: only small, local
+   edits that keep the writer's meaning, names, numbers and quotations */
+let INKVERBS=null;
+async function inkVerbs(){if(INKVERBS)return INKVERBS;
+ let txt='';try{const r=await fetch(new URL('vendor/verb-form-vocab.txt',document.baseURI||location.href).href);if(r.ok)txt=await r.text();}catch(e){}
+ return INKVERBS=GECTOR.verbForms(txt);}
+function inkSafeEdits(src,out,off,label){
+ if(!out||out===src)return [];
+ const f=GECFILTER.filter(src,out,INKVERBS);
+ return f.edits.map(e=>({start:e.start+(off||0),end:e.end+(off||0),orig:e.orig,fix:e.fix,
+  why:(label?label+': ':'')+GECFILTER.reason(e.orig,e.fix,INKVERBS),cat:'ai'}));}
+/* a whole text and a model's corrected version of it -> the safe edits,
+   one paragraph at a time (the filter compares word by word) */
+function inkSafeEditsText(src,out,off,label){
+ const ps=src.split(/(\n+)/),qs=out.split(/(\n+)/);
+ if(ps.length!==qs.length)return src.length<4000?inkSafeEdits(src,out,off,label):[];
+ let res=[],pos=0;
+ for(let k=0;k<ps.length;k++){if(k%2===0&&ps[k]!==qs[k])res=res.concat(inkSafeEdits(ps[k],qs[k],(off||0)+pos,label));pos+=ps[k].length;}
+ return res;}
 /* ================= PRO MODEL ================= */
 const SYS_RW={scholarly:'You are Inkwell, a doctoral-level academic editor. Rewrite in formal, scholarly English: precise diction, third person, no contractions, no informal vocabulary; hedge speculative claims appropriately; preserve all citations, numbers and meaning exactly. Output ONLY the rewritten text.',
 professional:'You are Inkwell, a business editor. Rewrite to sound professional and polished while keeping the meaning. Output ONLY the rewritten text.',
@@ -6994,23 +7130,30 @@ const PRO_VARIANTS=[
  {dtype:'q4',device:'webgpu'},
  {dtype:'q8',device:'wasm'},
  {dtype:'q4',device:'wasm'}];
+/* 7.32: not on phones and tablets. The smallest Pro model needs about half a
+   gigabyte of memory for itself; iOS and Fire OS close an app that takes that
+   much, which is what closed Inkwell on the iPhone, iPad and Fire tablet.
+   There, the laptop's model over the Wi-Fi does this work. */
+const PRO_ALLOWED=!IS_TABLETAPP;
 async function installPro(){
+ if(!PRO_ALLOWED){S.proAuto=false;SV('proAuto',false);
+  instSay('Pro is not offered on phones and tablets: it needs more memory than the system gives an app, and the system closes the app. Use your laptop\u2019s model: Your laptop\u2019s model, below.');
+  return toast('Pro needs a laptop; connect to your laptop\u2019s model instead');}
  if(PRO){toast('Pro model active: '+PRONAME+(PRODEVICE?' ('+PRODEVICE+')':''));return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('proBtn')||{textContent:''};
  if(!('gpu' in navigator)){toast('No WebGPU here; will try CPU (slow but works), or use server.py');}
  pill.className='pill load';pill.innerHTML='<i></i>Preparing Pro model…';btn.textContent='…';
- let mod;try{mod=await loadTF();}catch(e){setPill();btn.textContent='⬇ Install Pro model';
-  instSay('The runtime itself failed to arrive (it needs the internet once): '+(e&&e.message?e.message:e));
-  return toast('Runtime needs internet once');}
- mod.env.allowLocalModels=false;
+ if(typeof Worker!=='function'){setPill();btn.textContent='⬇ Install Pro model';
+  instSay('This window cannot run a model in the background, so the model would freeze the page. Not installed.');
+  return toast('This window cannot run the model safely');}
  const hasGPU='gpu' in navigator;
  instSay('[' + new Date().toLocaleTimeString() + '] Pro install begins ('+(hasGPU?'WebGPU':'CPU')+').');
  for(const id of PRO_CANDIDATES){try{
    btn.textContent='⬇ '+id.split('/')[1];
    const variants=PRO_VARIANTS.filter(v=>hasGPU||v.device!=='webgpu');
    PRO=await installLoad('text-generation',id,variants,
-    (total,file,pc)=>{pill.innerHTML='<i></i>Pro ↓ '+fmtMB(total);btn.textContent='⬇ '+fmtMB(total);});
-   PRODEVICE=(PRO&&PRO.model&&PRO.model.device)||(hasGPU?'webgpu':'wasm');
+    (total,file,pc)=>{pill.innerHTML='<i></i>Pro ↓ '+fmtMB(total);btn.textContent='⬇ '+fmtMB(total);},false,'pro');
+   PRODEVICE=(PRO&&PRO.device)||(hasGPU?'webgpu':'wasm');
    PRONAME=id.split('/')[1];S.proAuto=true;SV('proAuto',true);
    setPill();btn.textContent='✓ Pro';
    instSay('Pro installed: '+PRONAME+' on '+PRODEVICE+'. Cached; works offline from now on.');
@@ -7019,7 +7162,7 @@ async function installPro(){
  setPill();btn.textContent='⬇ Install Pro model';
  instSay(IS_TABLETAPP?'Pro failed on every known model. On a tablet, your laptop\u2019s model over Wi-Fi is the stronger path: Your laptop\u2019s model, below. The diagnostic report shows what this device lacks.':'Pro failed on every known model. On this machine, server.py is the better path.');
  toast('Pro failed; the Engine log says why; server.py is the other path');}
-function ejectPro(){PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);
+function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);
  const pb=document.getElementById('proBtn');if(pb)pb.textContent='⬇ Install Pro model';setPill();toast('Pro model unloaded (cached files remain)');}
 async function proChat(system,user,maxTok,onTok){return aiRun(()=>proChatDo(system,user,maxTok,onTok));}
 async function proChatDo(system,user,maxTok,onTok){
@@ -7028,11 +7171,7 @@ async function proChatDo(system,user,maxTok,onTok){
  system=CREED+"\n\nThe writer's voice and standing rules follow; you assist, you never lead."+voiceNotes()+'\n\n'+system;
  const gen={max_new_tokens:maxTok||420,temperature:0.35,do_sample:true};
  let acc='';
- if(onTok&&TFMOD&&TFMOD.TextStreamer&&PRO.tokenizer){
-  const streamer=new TFMOD.TextStreamer(PRO.tokenizer,{skip_prompt:true,skip_special_tokens:true,
-   callback_function:t=>{acc+=t;onTok(acc);}});
-  gen.streamer=streamer;}
- const out=await PRO([{role:'system',content:system},{role:'user',content:user}],gen);
+ const out=await PRO([{role:'system',content:system},{role:'user',content:user}],gen,onTok?(t=>{acc+=t;onTok(acc);}):null);
  const g=out[0].generated_text;const raw=(Array.isArray(g)?g[g.length-1].content:g||acc||'').trim();
  const sp=splitThink(raw);if(sp[1])maybeShowThink(sp[1]);return sp[0];}
 
@@ -7065,7 +7204,7 @@ async function ping(){try{const r=await inkSrvFetch('/api/health');
 function setPill(){const p=document.getElementById('enginePill');
  if(S.connected){p.className='pill on';p.innerHTML='<i></i>'+(S.serverModel?'Server · '+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');}
  else if(PRO){p.className='pill on';p.innerHTML='<i></i>Pro · '+esc(PRONAME)+(PRODEVICE?' · '+esc(PRODEVICE):'');}
- else if(MINI){p.className='pill mini';p.innerHTML='<i></i>Mini · '+esc(MININAME);}
+ else if(MINI){p.className='pill mini';p.innerHTML='<i></i>Grammar · '+esc(MININAME);}
  else{p.className='pill off';p.innerHTML='<i></i>Rules engine · offline';}}
 (function loop(){ping().finally(()=>setTimeout(loop,pingFails>5?60000:15000));})();
 
@@ -7662,14 +7801,14 @@ async function correct(){
  if(S.connected){toast('AI is reading…');
   try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    ai=(r.edits||[]).filter(e=>e.fix!==undefined);}catch(e){toast('AI request failed');}}
- else if(MINI){toast('Mini-model checking…');
-  try{ai=await runMini(t);}catch(e){toast('Mini-model error; see console');}}
+ else if(MINI){toast('The grammar model is reading…');
+  try{ai=await runMini(t);}catch(e){toast('Grammar model error; the Engine log says why');}}
  else if(PRO){toast('Pro checking…');
   try{const chunks=chunkText(ed.value,2400);const SYS='You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.';
    for(let ci=0;ci<chunks.length;ci++){const ch=chunks[ci];
     document.getElementById('stModel').textContent='Pro '+ (ci+1)+'/'+chunks.length+'…';
     const fixed=await proChat(SYS,ch.text,Math.min(1200,wordCt(ch.text)*2+80));
-    if(fixed)ai=ai.concat(diffEdits(ch.text,fixed,ch.off).map(x=>Object.assign(x,{why:'Pro model'})));}
+    if(fixed){await inkVerbs();ai=ai.concat(inkSafeEditsText(ch.text,fixed,ch.off,'Pro model'));}}
    document.getElementById('stModel').textContent='';}catch(e){toast('Pro error; see console');}}
  else{/* the rules engine IS the deep pass; no nudge toward models, because none
    is needed. AI layers on top only if the writer asks for it (Studio ▸ ⚙). */}
@@ -8078,8 +8217,10 @@ async function fixSelection(){
    const ai=(r.edits||[]).filter(e=>e.fix!==undefined&&e.cat!=='r');
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
  if(fixed===null&&PRO){toast('Pro fixing…');
-  try{fixed=await proChat('You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.',t,Math.min(1200,wordCt(t)*2+80));}catch(e){}}
- if(fixed===null&&MINI){toast('Mini-model fixing…');
+  try{const pf=await proChat('You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.',t,Math.min(1200,wordCt(t)*2+80));
+   /* 7.32: only the safe edits from Pro's version, never its rewording */
+   if(pf){await inkVerbs();fixed=applyEditsText(t,inkSafeEditsText(t,pf,0,'Pro'));}}catch(e){}}
+ if(fixed===null&&MINI){toast('Grammar model fixing…');
   try{const ai=await runMini(t);
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
  if(fixed===null){fixed=applyEditsText(t,rules);if(fixed===t)fixed=null;}
@@ -8902,8 +9043,9 @@ function openModalDo(which){
  '<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">The shelf models (GGUF, MLX; an Import lands them there, and each stays until you swap or remove it) run through the companion server, which starts itself with the installed app and answers offline. The Mini and Pro rows need the internet once, the very first time, and are cached after.</p>'+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">In-browser models</h4>'+
- '<div class="rl">Pro (rewrites, drafting, reviewer): '+(PRO?'<b>'+esc(PRONAME)+'</b> on <b>'+esc(PRODEVICE||'?')+'</b> <button class="lkbtn" onclick="ejectPro();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="proBtn" onclick="installPro()">⬇ Install Pro model</button> <span style="color:var(--mut)">'+(('gpu' in navigator)?'Qwen2.5 on WebGPU':'small model on CPU')+'</span>')+'</div>'+
- '<div class="rl">Mini (inline grammar): '+(MINI?'<b>'+esc(MININAME)+'</b> <button class="lkbtn" onclick="ejectMini();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="miniBtn" onclick="installMini()">⬇ Install Mini-model</button>')+'</div>'+
+ '<div class="rl">Pro (rewrites, drafting, reviewer): '+(!PRO_ALLOWED?'<span style="color:var(--mut)">not on phones and tablets (it needs more memory than the system gives an app); your laptop\u2019s model does this work, below</span>':PRO?'<b>'+esc(PRONAME)+'</b> on <b>'+esc(PRODEVICE||'?')+'</b> <button class="lkbtn" onclick="ejectPro();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="proBtn" onclick="installPro()">⬇ Install Pro model</button> <span style="color:var(--mut)">'+(('gpu' in navigator)?'Qwen2.5 on WebGPU':'small model on CPU')+'</span>')+'</div>'+
+ '<div class="rl">Grammar model (GECToR, Grammarly\u2019s research model; about 124 MB, once): '+(MINI?'<b>'+esc(MININAME)+'</b> <button class="lkbtn" onclick="ejectMini();openModal(\'server\')">Unload</button>':'<button class="lkbtn" id="miniBtn" onclick="installMini()">⬇ Install the grammar model</button>')+'</div>'+
+ '<p style="font-size:11.5px;color:var(--mut);line-height:1.55;margin:2px 0 6px">It suggests; it never changes your text by itself. It fixes single words (verb forms, agreement, articles, prepositions, spelling, commas) and never rewrites a sentence, and a safety filter refuses any change to names, numbers, quotations or your choice of words. Each suggestion says why, for writers learning English.</p>'+
  '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ Server</button> <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Pro</button> <button class="lkbtn" onclick="testEngine(\'mini\')">▶ Mini</button> <button class="lkbtn" id="srvStart" onclick="startServerFromPage()" style="display:none" title="Ask the launcher to bring the companion server up on this device">▶ Start it here</button></div>'+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
  '<div class="rl" style="margin-top:8px">A model will not install? <button class="lkbtn" onclick="inkDiagnose()">🩺 Diagnose this device</button> <span id="diagBtns" style="display:none"><button class="lkbtn" onclick="inkDiagCopy()">Copy the report</button> <button class="lkbtn" onclick="inkDiagSave()">Save the report</button></span></div>'+
@@ -9307,7 +9449,13 @@ function renderPatterns(){
  step('footfold',function(){ if(S.footFold)document.body.classList.add('ftrFolded'); });
  step('favicon',function(){ const lk=document.createElement('link');lk.rel='icon';lk.type='image/svg+xml';
   lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64));document.head.appendChild(lk); });
- step('pros',function(){ if(S.miniAuto&&!MINI)installMini(); if(S.proAuto&&!PRO)installPro(); });
+ step('pros',function(){
+  var crashed=null;try{crashed=localStorage.getItem('ink_ai_loading');}catch(e){}
+  if(crashed){inkAiMark('',false);S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
+   instSay('Inkwell closed while a model was loading last time, so no model loads at start. Install it again from here if you wish; on a phone or tablet, your laptop\u2019s model is the safer path.');
+   setTimeout(function(){toast('No model loaded at start: the app closed while one was loading last time');},2500);return;}
+  if(!PRO_ALLOWED&&S.proAuto){S.proAuto=false;SV('proAuto',false);}
+  setTimeout(function(){ if(S.miniAuto&&!MINI)installMini(); if(S.proAuto&&!PRO)installPro(); },IS_TABLETAPP?6000:0); });
  step('door',function(){ if(S.door)showDoor();else doorTipCycle(); });
  step('watch',function(){
   setInterval(function(){ try{

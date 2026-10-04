@@ -8,7 +8,7 @@ options:
     iOS: "16.0"
 settings:
   base:
-    MARKETING_VERSION: "7.31"
+    MARKETING_VERSION: "7.32"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Inkwell:

@@ -1,31 +1,95 @@
-INKWELL 7.31 FOR WINDOWS
+INKWELL 7.32 FOR WINDOWS
 ========================
-IMPORTANT: do not run the old "Build Windows App.bat" from v7.25 again. It
-deletes the folder that holds your documents. This version never deletes
-any folder.
+New in 7.32: Inkwell for Windows is a normal Windows program. It no longer
+needs Python, and it has a real installer and a real uninstaller.
 
-1. In your current Inkwell, choose File, Export library, and keep the file.
-2. Unzip this package. Keep all its files together.
-3. Double-click "Install or Update Inkwell.bat". If Windows SmartScreen
-   warns, choose More info, then Run anyway.
-4. Answer its questions. It works for a first install and for an update.
-5. Open Inkwell from the Desktop or Start menu. In Scriba, press Record.
+The older installer ("Install or Update Inkwell.bat") ran Inkwell through
+Python. When Python or its window component was missing, Inkwell opened as a
+page in the web browser where nothing worked, and there was nothing to
+uninstall. That installer is retired.
 
+
+PART A. INSTALL (OR UPDATE) INKWELL
+-----------------------------------
+1. If an older Inkwell still opens: File, Export library, and keep the file.
+   (If it no longer opens, your documents are still on the computer, in
+   %LOCALAPPDATA%\Inkwell\storage. The new installer keeps that folder and
+   copies it to %LOCALAPPDATA%\Inkwell\backups before it changes anything.)
+
+2. Get the installer, Inkwell-7.32-Windows-Setup.exe:
+   from the GitHub release "Inkwell 7.32 for Windows (build N)" (under
+   Assets), or build it yourself (Part C).
+
+3. Double-click it. Windows may show "Windows protected your PC": choose
+   "More info", then "Run anyway". (The installer is not signed with a paid
+   certificate; that is the only reason for the warning.)
+
+4. Follow the installer. It needs no administrator password. It installs
+   Inkwell for you only, into %LOCALAPPDATA%\Programs\Inkwell, puts Inkwell in
+   the Start menu (and on the Desktop if you tick the box), and removes the
+   old Python-based shortcuts and program files. It never removes your
+   documents.
+
+5. Open Inkwell. Look for "v7.32" beside the date at the top.
+   If your documents are not there, choose File, Import library, and pick the
+   file from step 1, or the newest backup in %LOCALAPPDATA%\Inkwell\backups.
+
+Inkwell uses Microsoft Edge WebView2, which is part of Windows 11 and of
+up-to-date Windows 10. If Inkwell says WebView2 is missing, install
+"Microsoft Edge WebView2 Runtime" from Microsoft's website.
+
+
+PART B. UNINSTALL
+-----------------
+Settings, Apps, Installed apps, Inkwell, Uninstall. (On Windows 10: Settings,
+Apps, Inkwell, Uninstall.) Your documents stay in %LOCALAPPDATA%\Inkwell; to
+remove them as well, delete that folder by hand after exporting anything you
+want to keep.
+
+The old Python-based Inkwell had no uninstaller. Installing 7.32 removes its
+program files and shortcuts. Python itself is not needed by Inkwell any more;
+whether you keep Python is your choice.
+
+
+PART C. BUILD THE INSTALLER YOURSELF ON GITHUB (OPTIONAL)
+---------------------------------------------------------
+This package also holds everything GitHub needs to build the installer.
+1. github.com, "+", New repository (private is fine), Create repository.
+2. Unzip this package. Show hidden files (File Explorer, View, Show, Hidden
+   items) so the folder ".github" can be seen.
+3. On the new repository's page, "uploading an existing file": drag in
+   EVERYTHING inside the package folder (.github, Inkwell-Windows, web, and
+   the files beside them), then "Commit changes".
+4. If ".github" is missing on the repository's page: Add file, Create new
+   file, name it exactly  .github/workflows/build-windows.yml  and paste the
+   text of "WORKFLOW build-windows.yml (copy).txt" into it.
+5. Actions tab: "Build Inkwell for Windows" runs by itself (or press "Run
+   workflow"). It takes about 10 minutes. It builds Inkwell.exe, tests that
+   its companion server starts and answers, and makes the installer.
+6. Releases (right-hand side): "Inkwell 7.32 for Windows (build N)", with
+   the installer under Assets.
+   A red "Publish a release" step: Settings, Actions, General, Workflow
+   permissions, "Read and write permissions", Save, and run it again.
+
+
+SCRIBA AND THE MICROPHONE
+-------------------------
 If Scriba says Windows refused the microphone: Settings, Privacy and
-security, Microphone. Switch on Microphone access and "Let desktop apps
-access your microphone".
+security, Microphone. Switch on "Microphone access" and "Let desktop apps
+access your microphone". In this program Scriba transcribes with on-device
+Whisper inside the page (downloaded once, then offline). The separate Python
+Whisper of the old installer is not part of it, and neither are the "shelf"
+models (GGUF, run through Python libraries): the companion server inside
+Inkwell.exe answers with its built-in writing engine. The grammar model in
+Engine (GECToR) works as on every other device.
 
-Python 3.8 or newer is required (python.org; tick "Add python.exe to PATH").
-Local transcription (Whisper) is optional; the installer offers it.
-Backups are made in %LOCALAPPDATA%\Inkwell\backups before anything changes.
 
-
-YOUR TABLETS CAN USE THIS COMPUTER'S MODEL (NEW IN 7.31)
---------------------------------------------------------
+YOUR TABLETS CAN USE THIS COMPUTER'S MODEL
+------------------------------------------
 1. Open Inkwell here. Engine, under "Your laptop's model": press
    "Share with my tablets on this Wi-Fi". It shows an address and a code.
-2. If the computer asks whether to allow Inkwell (or Python) on the
-   network, choose Allow (Private networks only).
+2. If Windows asks whether to allow Inkwell on the network, choose Allow
+   (Private networks only).
 3. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
    model": type the address and the code, then "Connect to my laptop".
 Only the writing tools are shared, and only with the code. Your documents

@@ -1,0 +1,160 @@
+name: Build Inkwell for Windows
+
+# Builds Inkwell as a Windows program that needs nothing else installed: no
+# Python, no pip. PyInstaller bundles Python, the window component (pywebview,
+# which uses Microsoft Edge WebView2, part of Windows 10 and 11) and the
+# companion server into Inkwell.exe; Inno Setup wraps it in a normal installer
+# with an uninstaller in Settings, Apps. Both are published as a release.
+#
+# Files are found wherever they sit: inkwell_app.py (with server.py, the icons
+# and build/inkwell.iss beside it), and the first folder holding Inkwell.html
+# together with vendor/transformers.min.js.
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+    paths-ignore:
+      - 'Inkwell-Android/app/src/main/java/**'
+      - 'Inkwell-Android/app/src/main/res/**'
+      - 'Inkwell-Android/*.gradle'
+      - 'Inkwell-iOS/**'
+      - 'Inkwell-Web/**'
+      - 'Inkwell-Mac/**'
+      - 'artwork/**'
+      - '.github/workflows/main.yml'
+      - '.github/workflows/ios.yml'
+      - '.github/workflows/web.yml'
+      - '.github/workflows/packages.yml'
+      - '**.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Find the Windows launcher and the web app
+        run: |
+          set -euo pipefail
+          iss="$(find . -maxdepth 4 -path '*/build/inkwell.iss' -not -path './.git/*' | sort | head -n 1)"
+          if [ -z "$iss" ]; then
+            echo "::error::No build/inkwell.iss in this repository. Upload everything inside the Windows package."
+            exit 1
+          fi
+          win="$(dirname "$(dirname "$iss")")"; win="${win#./}"
+          src=""
+          while IFS= read -r f; do
+            d="$(dirname "$f")"
+            if [ -f "$d/vendor/transformers.min.js" ]; then src="${d#./}"; break; fi
+          done < <(find . -maxdepth 6 -name Inkwell.html -not -path './.git/*' | sort)
+          if [ -z "$src" ]; then
+            echo "::error::No Inkwell.html with a vendor folder beside it. Upload the web folder from the package."
+            exit 1
+          fi
+          version="$(grep -o "const BUILD='[0-9][0-9.]*" "$src/Inkwell.html" | head -n 1 | sed "s/const BUILD='//")"
+          {
+            echo "WIN_DIR=$win"
+            echo "WEB_SOURCE=$src"
+            echo "INKWELL_VERSION=${version:-unknown}"
+          } >> "$GITHUB_ENV"
+          echo "launcher: $win; web app from: $src; version ${version:-unknown}"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Gather the files the program carries
+        run: |
+          set -euo pipefail
+          rm -rf stage && mkdir -p stage
+          cp "$WEB_SOURCE/Inkwell.html" stage/
+          cp -R "$WEB_SOURCE/vendor" stage/vendor
+          for n in scriba_v729.html fontes_v729.html; do
+            f="$(find . -maxdepth 6 -name "$n" -not -path './.git/*' -not -path './stage/*' | sort | head -n 1)"
+            if [ -n "$f" ]; then cp "$f" stage/; fi
+          done
+          for n in inkwell_app.py server.py inkwell.png inkwell.ico; do cp "$WIN_DIR/$n" stage/; done
+          ls -la stage stage/vendor
+
+      - name: Build Inkwell.exe
+        working-directory: stage
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pywebview pyinstaller
+          python -m PyInstaller --noconfirm --clean --windowed --onedir --name Inkwell \
+            --icon inkwell.ico \
+            --runtime-hook "../$WIN_DIR/build/quiet_console.py" \
+            --add-data "Inkwell.html;." --add-data "vendor;vendor" \
+            --add-data "server.py;." --add-data "inkwell.png;." --add-data "inkwell.ico;." \
+            $( [ -f scriba_v729.html ] && echo '--add-data scriba_v729.html;.' ) \
+            $( [ -f fontes_v729.html ] && echo '--add-data fontes_v729.html;.' ) \
+            --collect-all webview --collect-all clr_loader --collect-all pythonnet \
+            --hidden-import http.server --hidden-import hmac --hidden-import secrets --hidden-import wave \
+            --hidden-import difflib --hidden-import importlib.util --hidden-import socket --hidden-import shutil \
+            --hidden-import urllib.request --hidden-import urllib.parse --hidden-import random --hidden-import gc \
+            inkwell_app.py 2>&1 | tail -n 40
+          test -f dist/Inkwell/Inkwell.exe
+          ls dist/Inkwell dist/Inkwell/_internal | head -n 60
+
+      - name: Test the program without a window
+        working-directory: stage/dist/Inkwell
+        run: |
+          set -uo pipefail
+          # 1. the installer's safety copy road runs and returns
+          ./Inkwell.exe --export-library "$RUNNER_TEMP/library.json"; echo "export exit code: $?"
+          # 2. the companion server starts from inside the program and answers
+          ./Inkwell.exe --inkwell-engine "$PWD/_internal/server.py" &
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -s -m 2 http://127.0.0.1:8317/api/health | tee "$RUNNER_TEMP/health.json" | grep -q '"ok"'; then ok=1; break; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/health.json" || true; echo
+          curl -s -m 10 -X POST -H 'Content-Type: application/json' -d '{"text":"she dont goes to school","rules":[],"style":""}' http://127.0.0.1:8317/api/correct | head -c 300; echo
+          taskkill //F //IM Inkwell.exe //T || true
+          if [ "$ok" != 1 ]; then echo "::error::The companion server inside Inkwell.exe did not answer."; exit 1; fi
+
+      - name: Make the installer
+        run: |
+          set -euo pipefail
+          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          if [ ! -f "$iscc" ]; then choco install innosetup -y --no-progress >/dev/null; fi
+          src="$(cygpath -w "$PWD/stage/dist/Inkwell")"
+          out="$(cygpath -w "$PWD/out")"
+          mkdir -p out
+          "$iscc" //Qp "//DAppVersion=$INKWELL_VERSION" "//DSourceDir=$src" "//DOutputDir=$out" "$(cygpath -w "$PWD/$WIN_DIR/build/inkwell.iss")"
+          setup="Inkwell-${INKWELL_VERSION}-Windows-Setup.exe"
+          test -f "out/$setup"
+          echo "SETUP_NAME=$setup" >> "$GITHUB_ENV"
+          ls -la out
+
+      - name: Keep the installer with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-Windows
+          path: out/${{ env.SETUP_NAME }}
+          if-no-files-found: error
+
+      - name: Publish a release you can download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="windows-build-${{ github.run_number }}"
+          title="Inkwell ${INKWELL_VERSION} for Windows (build ${{ github.run_number }})"
+          notes="Download ${SETUP_NAME} under Assets and open it. Python is not needed. If Windows SmartScreen says it protected your PC, choose More info, then Run anyway (the installer is not signed with a paid certificate). To remove Inkwell: Settings, Apps, Inkwell, Uninstall; your documents stay. Built from commit ${{ github.sha }}."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "out/$SETUP_NAME" --clobber
+          else
+            gh release create "$tag" "out/$SETUP_NAME" --target "${{ github.sha }}" --title "$title" --notes "$notes"
+          fi

@@ -2,9 +2,10 @@
 # INKWELL  |  Copyright (c) 2026 Yannie D. Forest. All rights reserved.
 # No licence is granted. See LICENCE.txt.
 #
-# Makes the download packages, one per kind of device. Mac and Windows are
-# install packages (run their installer); Fire tablet, iPhone/iPad and the web
-# app are build packages (put them on GitHub, which builds the app):
+# Makes the download packages, one per kind of device. Mac is an install
+# package (run its installer); Windows, Fire tablet, iPhone/iPad and the web
+# app are build packages (put them on GitHub, which builds the app; for
+# Windows, the installer GitHub builds is also published as a release):
 #   python3 packaging/make_packages.py <output-folder>
 # Each zip holds one folder whose CONTENTS become a new GitHub repository: the
 # project, its workflow (in .github, plus a .txt copy for when the uploader
@@ -36,8 +37,8 @@ def copy(src, dst):
         shutil.copy2(src, dst)
 
 
-def common(pkg, readme, workflow, workflow_name):
-    copy(os.path.join("packaging", readme), os.path.join(pkg, readme))
+def common(pkg, readme, workflow, workflow_name, src_dir="packaging"):
+    copy(os.path.join(src_dir, readme), os.path.join(pkg, readme))
     copy(workflow, os.path.join(pkg, ".github", "workflows", workflow_name))
     copy(workflow, os.path.join(pkg, "WORKFLOW %s (copy).txt" % workflow_name))
     copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
@@ -87,9 +88,17 @@ def mac(pkg):
 
 
 def windows(pkg):
-    """Install or update on Windows: run "Install or Update Inkwell.bat"."""
-    shutil.copytree(os.path.join(ROOT, "Inkwell-Windows"), pkg)
-    desktop_page(pkg)
+    """Windows 7.32: a standalone program built on GitHub (PyInstaller and
+    Inno Setup, no Python needed on the computer). The package holds the READ
+    ME (how to get and run the installer) and everything GitHub needs to build
+    it: the workflow, the launcher sources and the web app."""
+    common(pkg, "READ ME WINDOWS.txt", ".github/workflows/windows.yml", "build-windows.yml", src_dir="Inkwell-Windows")
+    win = os.path.join(pkg, "Inkwell-Windows")
+    for name in ("inkwell_app.py", "server.py", "inkwell.png", "inkwell.ico", "build"):
+        copy(os.path.join("Inkwell-Windows", name), os.path.join(win, name))
+    shutil.copytree(ASSETS, os.path.join(pkg, "web"))
+    for name in ("scriba_v729.html", "fontes_v729.html"):
+        copy(name, os.path.join(pkg, name))
 
 
 def zip_folder(folder, zip_path):
