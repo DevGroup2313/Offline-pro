@@ -1,0 +1,165 @@
+INKWELL v7.34: HANDOFF NOTES
+============================
+Date: 6 October 2026. Read INKWELL_HANDOFF_v7p33.txt and the earlier notes
+for everything before this.
+
+Look for "v7.34" beside the date at the top. If it is not there, the device
+is not running 7.34.
+
+YOUR REPORT
+-----------
+1. The models wrote worse than you; the editor and the grammar corrector
+   were poor; you asked for a stronger writing model on every device, full
+   Grammarly parity with and without AI, teaching while it edits.
+2. The web app did not work offline without a server and had no model.
+3. Grammarly's "rewrite with my own instruction" and its prompt library.
+4. Fontes inside Inkwell, as good as Zotero.
+5. Mac: "Inkwell has opened in your browser, because the component that
+   draws its own window is not installed", and Python updates the installer
+   did not pull.
+6. A package and a stronger model for the new Mac mini (16 GB).
+
+WHAT CANNOT BE PROMISED
+-----------------------
+Full parity with Grammarly offline is not something I can claim. Grammarly
+runs large models on its own servers; a model that fits on a phone, a tablet
+or a 16 GB computer is smaller. What follows is measured, and says where
+each device stands.
+
+HOW THE MODELS WERE MEASURED
+----------------------------
+Two test sets, as in 7.32:
+- learner sentences from the JFLEG test set (each with four human
+  corrections; "made worse" means further from every human correction than
+  the original was);
+- correct sentences from English Wikipedia (any change counts against the
+  model).
+Plus 24 rewrites (concise and scholarly) of thesis paragraphs and Wikipedia
+passages, counting the citations and numbers kept.
+Every model ran in llama.cpp, 4-bit (Q4_K_M), temperature 0, with the same
+copy-editor instruction. 100 sentences of each kind for the small models,
+50 for the large ones. Speeds are on this test machine's processor (4
+cores, no graphics), so they compare models with each other and say
+nothing about your devices.
+
+  "improved" and "worse": learner sentences, behind Inkwell's safety filter.
+  "correct changed": correct sentences the model changed at all (curly and
+  straight quotes, and Markdown asterisks, counted as the same).
+  "citations kept": in the 24 rewrites.
+
+                         improved  worse  correct changed  citations kept
+  Qwen3 4B Instruct 2507   40%      9%         8%             16/16
+  LFM2.5 1.2B Instruct     37%      3%         3%             11/16
+  Qwen3.5 4B               46%     12%        22%             16/16
+  Ministral 3 14B          36%     30%        50%             10/16
+  Llama 3.2 3B             39%     21%        47%             15/16
+  (more rows to follow: see the end of this file)
+
+Findings:
+- Bigger is not better at this task. Ministral 3 14B changed half of the
+  correct sentences; it rewrites where it should leave alone.
+- Qwen3 4B Instruct 2507 is the best balance measured: it kept every
+  citation in every rewrite and changed few correct sentences.
+- LFM2.5 1.2B is the most careful proofreader (3% made worse), but its
+  rewrites dropped citations.
+
+1. THE FACT GUARD (EVERY DEVICE)
+--------------------------------
+Every rewrite alternative, from any engine, is checked: a version that drops
+a citation or a number, or adds a name or a number the text does not
+contain, is marked in red with exactly what it changed, and its button
+reads "Use anyway". On the measured rewrites it flagged none of Qwen3 4B's
+24 and 8 of LFM2.5's 24, each a real loss.
+
+2. THE WEB APP: OFFLINE, AND A WRITING MODEL IN THE PAGE
+--------------------------------------------------------
+- Fixed: the offline store listed the citation-style folder as a file,
+  which can make a browser refuse the whole offline install. It now lists
+  every file. Tested: loaded once, then offline, Cite formats in every
+  style.
+- New: on a laptop or desktop with WebGPU (Chrome, Edge), Engine, "Writing
+  model inside this window" installs LFM2.5 1.2B Instruct (Liquid AI, LFM
+  Open License v1.0), about 850 MB once, then offline. It runs on
+  Transformers.js 4.3.1 (vendor/tf4, web app only); Scriba's Whisper stays
+  on 3.8.1.
+- Found while testing: the browser builds of these models use an
+  operation the browser's processor-only engine lacks, so they need WebGPU.
+  On a computer without WebGPU the panel says so and points to the
+  companion server.
+- Tested in Chromium with emulated WebGPU: installed from the Engine panel,
+  Check found "shows" and "was" and gave their reasons. Not tested on real
+  graphics hardware; its speed on your computer is not known.
+- Not offered on phones and tablets (memory; see 7.32).
+
+3. iPHONE AND iPAD: APPLE'S ON-DEVICE MODEL
+-------------------------------------------
+On iOS 26 with Apple Intelligence, Inkwell uses Apple's own model
+(Foundation Models framework) for proofreading, rewriting and drafting,
+offline, behind the safety filter and the fact guard. The build compiles
+it (GitHub, newest Xcode). Not tested on a real device here.
+
+4. MAC AND WINDOWS: THE WRITING MODEL ON THE COMPUTER
+-----------------------------------------------------
+- Engine, "Writing model on this computer": one press downloads the
+  measured model and runs it with the bundled llama.cpp runtime (Metal on
+  Apple Silicon), offline. The server recommends the strongest measured
+  model the computer's memory holds.
+- Fixed: the runtime is started with an explicit context size (8192), its
+  chat template and no hidden "thinking" pass. Without a context size a
+  recent runtime can reserve memory for the model's whole trained context,
+  more than a 16 GB computer has.
+- Tested here: the server installed and ran Qwen3 4B; correction found
+  "shows" and "Their" and missed "participants was"; a rewrite to formal
+  and concise kept "Smith (2019, p. 12)" exactly.
+
+5. MAC: NO PYTHON NEEDED
+------------------------
+Cause of "opened in your browser": the old installer built Inkwell from
+Python on the Mac. On a new Mac it found Apple's own Python 3.9 with an old
+pip, which cannot install the current window component (pywebview and
+PyObjC need newer versions), so the window could not be drawn.
+Change: GitHub now builds Inkwell.app with Python and the window component
+inside it (PyInstaller), for Apple Silicon and Intel, as a .dmg. Nothing to
+install on the Mac. The build tests the app without a window (library
+export, the bundled llama.cpp runtime, the companion server answering).
+The older Python installer is kept in its own folder; it now chooses the
+newest Python on the Mac and updates pip before anything else.
+
+6. CITE AND FONTES: THE ENGINE AND STYLES ZOTERO USES
+----------------------------------------------------
+- citeproc-js 2.4.63 and the official Citation Style Language styles: APA
+  7, Harvard (Cite Them Right), Chicago author-date and notes, OSCOLA (with
+  and without ibid), MHRA notes, MLA 9, IEEE, Nature; British and American
+  locales. Offline.
+- Add sources by DOI (Crossref), ISBN (Open Library), or BibTeX, RIS or
+  CSL-JSON, pasted or from a file (Zotero exports all three). Duplicates
+  are not added twice. Export BibTeX, RIS, CSL-JSON.
+- Citations are tracked in the document. Refresh, or a change of style,
+  formats every citation again in document order: later notes take the
+  short form or "ibid", "(n 1)" cross-references, numbered styles number
+  by first citation, and citations move between footnotes and the text
+  when you change between a note style and an in-text style. A note you
+  edited by hand is left as written. Undo restores both text and record.
+- The bibliography is built from the sources cited, in the style's order,
+  under "References", "Bibliography" or "Works Cited".
+- The Fontes room uses the same engine inside Inkwell, and imports and
+  exports the same formats; on its own it keeps its simpler formatting.
+Not yet like Zotero: no browser connector, no PDF attachments, no group
+libraries, no Word plug-in (citations are text in Inkwell's document).
+
+7. REWRITE WITH YOUR OWN PROMPT, AND A PROMPT LIBRARY
+----------------------------------------------------
+Select text, then "Rewrite with a prompt": write how it should sound, or
+pick a prepared prompt; the result shows as a marked difference, to keep or
+drop. Works with any engine; checked by the fact guard.
+
+VERSIONS
+--------
+Fire app 7.34 (version code 73400 + build); iPhone and iPad 7.34; web app
+7.34; Mac 7.34 (Inkwell.app); Windows 7.34; companion server 2.13.
+
+NOT DONE IN 7.34
+----------------
+- Scriba: no new work in this round.
+- Speed on your devices: not measurable here (no Apple Silicon, no
+  graphics card, no Fire tablet in this sandbox).
