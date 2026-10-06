@@ -1872,7 +1872,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.33 · IV · OCTOBRIS · MMXXVI';
+const BUILD='7.34 · VI · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -4392,7 +4392,7 @@ async function inkLanRefresh(){
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
    :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
- }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.33 on this computer.</span>';}
+ }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.34 on this computer.</span>';}
 }
 async function inkLanSet(on,newCode){
  try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}

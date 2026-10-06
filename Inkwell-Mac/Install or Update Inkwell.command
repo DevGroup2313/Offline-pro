@@ -1,5 +1,5 @@
 #!/bin/zsh
-# INKWELL 7.33: install or update on macOS.
+# INKWELL 7.34: install or update on macOS.
 # Double-click this file (the first time: right-click, Open). It works for a
 # first install and for an update. Your documents, notes and models are kept.
 #
@@ -22,7 +22,7 @@
 set -u
 cd "$(dirname "$0")" || exit 1
 HERE="$(pwd)"
-VER="7.33"
+VER="7.34"
 APPS="${INKWELL_APPS_DIR:-/Applications}"
 SUPPORT="$HOME/Library/Application Support/Inkwell"
 STAMP="$(date +%Y%m%d-%H%M%S)"
