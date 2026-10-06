@@ -1645,7 +1645,8 @@ def _ram_gb():
 
 def _recommended(ram):
     """The strongest measured model this computer's memory holds comfortably."""
-    fit = [m for m in WRITING_MODELS if not ram or m.get("min_ram_gb", 8) <= ram + 0.5]
+    # memory unknown: the smallest measured model, never the largest
+    fit = [m for m in WRITING_MODELS if ram and m.get("min_ram_gb", 8) <= ram + 0.5]
     return (fit[0] if fit else WRITING_MODELS[-1])["id"] if WRITING_MODELS else None
 
 
