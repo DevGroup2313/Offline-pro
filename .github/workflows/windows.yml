@@ -89,7 +89,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          url="$(gh api repos/ggml-org/llama.cpp/releases/latest --jq '.assets[].browser_download_url' | grep -E 'bin-win-cpu-x64\.zip$' | head -n 1)"
+          # the newest release that already carries this build (a release can be
+          # published before all of its files are uploaded)
+          url="$(gh api 'repos/ggml-org/llama.cpp/releases?per_page=10' --jq '.[].assets[].browser_download_url' | grep -E 'bin-win-cpu-x64\.zip$' | head -n 1 || true)"
+          if [ -z "$url" ]; then echo "Files in the latest llama.cpp releases:"; gh api 'repos/ggml-org/llama.cpp/releases?per_page=2' --jq '.[].assets[].name' || true; fi
           if [ -z "$url" ]; then echo "::error::No llama.cpp Windows CPU build in the latest release"; exit 1; fi
           echo "llama.cpp: $url"
           curl -fsSL -o llama.zip "$url"
