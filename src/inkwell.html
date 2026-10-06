@@ -3893,7 +3893,7 @@ async function inkWmRefresh(){
  if(I.state==='error')h+='<div style="color:#b03a2e">The install stopped: '+esc(I.error||'')+'</div>';
  if(!c.runtime)h+='<div style="color:var(--mut)">This installation lacks the llama.cpp runtime that runs the model. Reinstall Inkwell 7.34 or later on this computer.</div>';
  else if(!busy)(c.models||[]).forEach(m=>{const inst=(c.installed||[]).indexOf(m.file)>=0,act=c.active===m.file;
-  if(!act)h+='<div style="margin-top:6px"><button class="lkbtn" onclick="inkWmInstall(\''+esc(m.id)+'\')">'+(inst?'▶ Use ':'⬇ Install ')+esc(m.label)+'</button> <span style="color:var(--mut)">'+(inst?'already downloaded':(m.bytes/1e9).toFixed(1)+' GB, once')+'. '+esc(m.note||'')+'</span></div>';});
+  if(!act)h+='<div style="margin-top:6px"><button class="lkbtn" onclick="inkWmInstall(\''+esc(m.id)+'\')">'+(inst?'▶ Use ':'⬇ Install ')+esc(m.label)+'</button> <span style="color:var(--mut)">'+(inst?'already downloaded':(m.bytes/1e9).toFixed(1)+' GB, once')+'. '+esc(m.note||'')+(c.recommended===m.id?' <b>Recommended for this computer'+(c.ram_gb?' ('+Math.round(c.ram_gb)+' GB of memory)':'')+'.</b>':(m.min_ram_gb&&c.ram_gb&&m.min_ram_gb>c.ram_gb+0.5?' Needs '+m.min_ram_gb+' GB of memory; this computer has '+Math.round(c.ram_gb)+'.':''))+'</span></div>';});
  box.innerHTML=h||'<span style="color:var(--mut)">No writing model is offered by this server.</span>';
  clearTimeout(WM_POLL);if(busy&&document.getElementById('wmBox'))WM_POLL=setTimeout(inkWmRefresh,2000);
  else if(I.state==='done'&&!S.serverModel){ping();}}

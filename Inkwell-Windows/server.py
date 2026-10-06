@@ -1617,6 +1617,38 @@ WRITING_MODELS = [
 INSTALL = {"state": "idle", "id": None, "done": 0, "total": 0, "error": None}
 
 
+def _ram_gb():
+    """This computer's memory in GB (0 when it cannot be read)."""
+    try:
+        if sys.platform == "darwin":
+            import subprocess
+            return int(subprocess.check_output(["sysctl", "-n", "hw.memsize"]).strip()) / 2 ** 30
+        if sys.platform.startswith("win"):
+            import ctypes
+            class MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("sullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            m = MS(); m.dwLength = ctypes.sizeof(MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+            return m.ullTotalPhys / 2 ** 30
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    return int(line.split()[1]) / 2 ** 20
+    except Exception:
+        pass
+    return 0
+
+
+def _recommended(ram):
+    """The strongest measured model this computer's memory holds comfortably."""
+    fit = [m for m in WRITING_MODELS if not ram or m.get("min_ram_gb", 8) <= ram + 0.5]
+    return (fit[0] if fit else WRITING_MODELS[-1])["id"] if WRITING_MODELS else None
+
+
 def _runtime_ok():
     if _find_runtime():
         return True
@@ -1628,7 +1660,9 @@ def _runtime_ok():
 
 
 def ep_model_catalog(body):
+    ram = _ram_gb()
     return {"ok": True, "models": WRITING_MODELS, "runtime": _runtime_ok(),
+            "ram_gb": round(ram, 1), "recommended": _recommended(ram),
             "installed": [c["name"] for c in scan_local_models()],
             "active": AI.get("local_name"), "ready": AI["ready"], "loading": AI["loading"],
             "install": dict(INSTALL), "load_error": AI.get("load_error")}
