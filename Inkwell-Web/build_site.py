@@ -76,6 +76,11 @@ def main():
         f.write(page)
 
     shutil.copytree(os.path.join(assets, "vendor"), os.path.join(out, "vendor"))
+    # 7.34: Transformers.js 4 for the writing model inside the window (only
+    # the web app carries it; the apps use their own engines)
+    tf4 = os.path.join(HERE, "tf4")
+    if os.path.isdir(tf4):
+        shutil.copytree(tf4, os.path.join(out, "vendor", "tf4"))
     shutil.copytree(os.path.join(HERE, "icons"), os.path.join(out, "icons"))
 
     manifest = {

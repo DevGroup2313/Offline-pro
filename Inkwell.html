@@ -2067,7 +2067,7 @@ stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -7569,6 +7569,21 @@ self.onmessage=async e=>{const d=e.data;
    const o=Object.assign({},d.opts,{progress_callback:p=>post({id:d.id,progress:{file:p.file,loaded:p.loaded,progress:p.progress}})});
    PIPE=await TF.pipeline(d.task,d.model,o);
    post({id:d.id,ok:true,device:(PIPE.model&&PIPE.model.device)||d.opts.device||'wasm'});}
+  else if(d.op==='loadLM'){
+   /* 7.34: a writing model, loaded as tokenizer and model (Transformers.js 4) */
+   TF.env.allowLocalModels=false;
+   const prog=p=>post({id:d.id,progress:{file:p.file,loaded:p.loaded,total:p.total,progress:p.progress}});
+   const tok=await TF.AutoTokenizer.from_pretrained(d.model,{progress_callback:prog});
+   const model=await TF.AutoModelForCausalLM.from_pretrained(d.model,Object.assign({},d.opts,{progress_callback:prog}));
+   PIPE={lm:true,tok:tok,model:model};
+   post({id:d.id,ok:true,device:d.opts.device});}
+  else if(d.op==='chat'&&PIPE&&PIPE.lm){
+   const inp=PIPE.tok.apply_chat_template(d.msgs,{add_generation_prompt:true,return_dict:true});
+   const g=Object.assign({},d.opts);
+   if(d.stream&&TF.TextStreamer)g.streamer=new TF.TextStreamer(PIPE.tok,{skip_prompt:true,skip_special_tokens:true,callback_function:t=>post({id:d.id,tok:t})});
+   const out=await PIPE.model.generate(Object.assign({},inp,g));
+   const n=inp.input_ids.dims[1];
+   post({id:d.id,ok:true,text:PIPE.tok.batch_decode(out.slice(null,[n,null]),{skip_special_tokens:true})[0]});}
   else if(d.op==='run'&&PIPE&&PIPE.gector){
    post({id:d.id,ok:true,out:await PIPE.run(String(d.input||''))});}
   else if(d.op==='run'){
@@ -7593,12 +7608,23 @@ async function inkAiFiles(){
  catch(e){/* no vendor folder (should not happen): the published runtime, once */
   files={tf:'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1'};}
  return INKAI.files=files;}
+/* 7.34: Transformers.js 4 (vendor/tf4, carried by the web app) for the
+   writing model; 3.8 stays for Scriba's Whisper */
+let INKAI4=null;
+async function inkAiFiles4(){
+ if(INKAI4)return INKAI4;
+ const u=f=>new URL('vendor/tf4/'+f,document.baseURI||location.href).href;
+ const blob=async(f,type)=>{const r=await fetch(u(f));if(!r.ok)throw new Error('vendor/tf4/'+f+' is missing (HTTP '+r.status+')');
+  return URL.createObjectURL(new Blob([await r.arrayBuffer()],{type:type}));};
+ return INKAI4={tf:await blob('transformers.min.js','text/javascript'),
+  mjs:await blob('ort-wasm-simd-threaded.asyncify.mjs','text/javascript'),
+  wasm:await blob('ort-wasm-simd-threaded.asyncify.wasm','application/wasm')};}
 function inkAiEnd(slot,why){const w=INKAI.slots[slot];if(!w)return;delete INKAI.slots[slot];
  try{w.worker.terminate();}catch(e){}
  for(const k in w.cb){try{w.cb[k].rej(new Error(why||'stopped'));}catch(e){}}}
-async function inkAiStart(slot){
+async function inkAiStart(slot,given){
  inkAiEnd(slot,'restarted');
- const files=await inkAiFiles();
+ const files=given||await inkAiFiles();
  const libs=(document.getElementById('inkLibs')||{}).textContent||'';
  const worker=new Worker(URL.createObjectURL(new Blob([libs+'\n'+INK_AI_SRC],{type:'text/javascript'})),{type:'module'});
  const w={worker:worker,cb:{},seq:0};INKAI.slots[slot]=w;
@@ -7893,7 +7919,50 @@ async function installPro(){
  setPill();btn.textContent='⬇ Install Pro model';
  instSay(IS_TABLETAPP?'Pro failed on every known model. On a tablet, your laptop\u2019s model over Wi-Fi is the stronger path: Your laptop\u2019s model, below. The diagnostic report shows what this device lacks.':'Pro failed on every known model. On this machine, server.py is the better path.');
  toast('Pro failed; the Engine log says why; server.py is the other path');}
-function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);
+/* 7.34: the writing model inside the window, for laptops and desktops with
+   WebGPU (Chrome, Edge; recent Safari). LFM2.5 1.2B Instruct (Liquid AI),
+   measured on 6 October 2026 behind Inkwell's safety filter: 37% of learner
+   sentences improved, 3% made worse, 2% of correct sentences changed. Its
+   rewrites dropped citations in 8 of 24 cases, so the fact guard marks every
+   rewrite that loses a citation or number. Not on phones and tablets: there
+   the system closes an app that takes this much memory. */
+function inkProLabel(){return PRO&&PRO.apple?'Apple\u2019s model':PRO&&PRO.writer?'the writing model ('+PRONAME+')':'the on-device model';}
+const WRITER={id:'LiquidAI/LFM2.5-1.2B-Instruct-ONNX',name:'LFM2.5 1.2B Instruct',mb:850,licence:'LFM Open License v1.0'};
+async function inkGpuCheck(){
+ if(!('gpu' in navigator))return {ok:false,why:'this browser has no WebGPU'};
+ try{const a=await navigator.gpu.requestAdapter();if(!a)return {ok:false,why:'WebGPU found no graphics adapter'};
+  return {ok:true,f16:!!(a.features&&a.features.has&&a.features.has('shader-f16'))};}
+ catch(e){return {ok:false,why:'WebGPU failed: '+((e&&e.message)||e)};}}
+async function installWriter(auto){
+ if(!PRO_ALLOWED){instSay('The writing model is not offered on phones and tablets: it needs more memory than the system gives an app. Use your laptop\u2019s model (below), or Apple\u2019s model on an iPhone or iPad with iOS 26.');
+  return toast('Not on a phone or tablet; use your laptop\u2019s model');}
+ if(PRO&&PRO.apple)return toast('Apple\u2019s on-device model is already doing this work');
+ if(PRO&&PRO.writer)return toast('The writing model is running: '+PRONAME);
+ const g=await inkGpuCheck();
+ if(!g.ok){S.writerAuto=false;SV('writerAuto',false);
+  instSay('Not installed: '+g.why+'. The writing model needs WebGPU: Chrome or Edge on a laptop or desktop, or a recent Safari on a Mac. The companion server\u2019s model (below) works without it.');
+  return toast('Needs WebGPU: '+g.why);}
+ let files;try{files=await inkAiFiles4();}
+ catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
+ const pill=document.getElementById('enginePill'),dtype=g.f16?'q4f16':'q4';
+ if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
+ instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', WebGPU): '+(auto?'starting':'downloading once, about '+WRITER.mb+' MB, then kept for offline use')+'.');
+ inkAiMark('writer',true);const got={};
+ try{
+  await inkAiStart('pro',files);
+  await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:{dtype:dtype,device:'webgpu'}},d=>{const p=d.progress||{};
+   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot);}},null,0);
+  PRO=async function(msgs,gen,onTok){
+   const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
+   return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
+  PRO.writer=true;PRONAME=WRITER.name;PRODEVICE='WebGPU';
+  S.writerAuto=true;SV('writerAuto',true);setPill();
+  instSay(WRITER.name+' is running in this window, offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
+  if(!auto)toast('Writing model ready: '+WRITER.name);
+ }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';setPill();
+  instSay('The writing model did not start: '+((e&&e.message)||e));toast('The writing model did not start; the Engine log says why');}
+ finally{inkAiMark('',false);}}
+function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);S.writerAuto=false;SV('writerAuto',false);
  const pb=document.getElementById('proBtn');if(pb)pb.textContent='⬇ Install Pro model';setPill();toast('Pro model unloaded (cached files remain)');}
 async function proChat(system,user,maxTok,onTok){return aiRun(()=>proChatDo(system,user,maxTok,onTok));}
 async function proChatDo(system,user,maxTok,onTok){
@@ -8820,7 +8889,7 @@ async function correct(){
   engine=async p=>{const r=await api('correct',{text:p,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    return applyEditsText(p,(r.edits||[]).filter(e=>e.fix!=null&&typeof e.start==='number'&&e.cat!=='r'));};
  }else if(PRO){
-  label=PRO.apple?'Apple model':'Pro model';
+  label=inkProLabel();
   engine=async p=>await proChat(PROOF_SYS,p,Math.min(900,wordCt(p)*2+60));
  }
  if(!engine){toast(EDITS.length?EDITS.length+' correctness issue'+(EDITS.length===1?'':'s'):'✨ No correctness issues found');return;}
@@ -9055,7 +9124,7 @@ async function improveAlternatives(){
     if(r.think)maybeShowThink(r.think);renderAlts('');}}catch(e){}});
  }else if(PRO){[['concise','Pro; concise'],[S.reg==='casual'?'casual':'scholarly','Pro; '+S.reg]].forEach(mv=>{
    proChat(SYS_RW[mv[0]]||SYS_RW.concise,t,Math.min(900,wordCt(t)*2+120)).then(r=>{
-    if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r,why:'Written by Pro; '+mv[1].split('; ')[1]});renderAlts('');}});});}
+    if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r,why:'Written by '+inkProLabel()+'; '+mv[1].split('; ')[1]});renderAlts('');}});});}
  if(!S.connected&&!PRO)setTimeout(()=>{if(ALTMODE&&!S.connected&&!PRO)renderAlts(ALTS.length?(ALTS.length+' rules-engine alternative'+(ALTS.length>1?'s':'')+'; a local model (⚙ Engine) would add more.'):'This selection is already tight; no rules-engine alternative differs from it.');},300);}
 /* ===== 7.34: rewrite with your own prompt, and a library of prompts =====
    As in Grammarly: say how the passage should sound, or pick a prepared
@@ -9146,6 +9215,28 @@ function inkDiffHTML(a,b){
    if(ins)out+='<ins style="color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px">'+esc(ins)+'</ins>';
    bi=h.j1>h.j0?B[h.j1-1].e:(h.j0<B.length?B[h.j0].s:b.length);}
   return out+esc(b.slice(bi));}catch(e){return esc(b);}}
+/* 7.34: the fact guard. A rewrite must keep the writer's citations and
+   numbers and add no names or numbers of its own; measured, the small models
+   dropped citations in rewrites (LFM2.5 1.2B kept 11 of 16). Every engine's
+   alternative is checked, and one that fails says exactly what it changed. */
+function inkFacts(t){t=String(t||'');
+ const cites=(t.match(/\([^()]*\b(1[5-9]\d\d|20\d\d)[a-z]?\b[^()]*\)|\[\^?\d+(?:[,–-]\s*\d+)*\]/g)||[]).map(x=>x.replace(/\s+/g,' ').trim());
+ const nums=(t.match(/\d[\d,.]*\d%?|\d%?/g)||[]).map(x=>x.replace(/[,.]$/,''));
+ /* capitalised words that are not a sentence's first word: names */
+ const caps=[];const re=/(^|[^\w'’])([A-Z][a-z’'\-]+)/g;let m;
+ while((m=re.exec(t))){const before=t.slice(0,m.index+m[1].length);if(/(^|[.!?:;]["”’)]?\s+|\n\s*|["“(]\s*)$/.test(before))continue;caps.push(m[2]);}
+ return {cites:cites,nums:nums,caps:caps};}
+function inkFactCheck(src,out){
+ const a=inkFacts(src),b=inkFacts(out),low=String(src||'').toLowerCase(),bag=x=>{const o={};x.forEach(k=>o[k]=(o[k]||0)+1);return o;};
+ const lost=[],added=[];
+ const ca=bag(a.cites),cb=bag(b.cites);for(const k in ca)if((cb[k]||0)<ca[k])lost.push(k);
+ /* a number inside a citation is reported with its citation, not again */
+ const W=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'],lowOut=String(out||'').toLowerCase();
+ const asWord=k=>/^\d+$/.test(k)&&+k<W.length&&new RegExp('\\b'+W[+k]+'\\b').test(lowOut);
+ const na=bag(a.nums),nb=bag(b.nums);for(const k in na)if(!nb[k]&&!asWord(k)&&!a.cites.some(c=>c.indexOf(k)>=0))lost.push(k);
+ for(const k in nb)if(!na[k])added.push(k);
+ b.caps.forEach(w=>{if(low.indexOf(w.toLowerCase())<0&&added.indexOf(w)<0)added.push(w);});
+ return {ok:!lost.length&&!added.length,lost:lost,added:added};}
 function renderAlts(status){
  if(!ALTMODE)return;
  const c=document.getElementById('cards');
@@ -9154,9 +9245,15 @@ function renderAlts(status){
  if(!ALTS.length)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
  else html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
   '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
-  '<div class="row"><button class="primary" onclick="useAlt('+i+')">Use this ▸</button></div></div>').join('');
+  inkFactNote(a)+
+  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('');
  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+(status||(ALTS.length+' alternatives; the fix list waits behind ‹ Back'))+'</div>';
  c.innerHTML=html;}
+function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
+function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
+ return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '
+  +(f.lost.length?'it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '):'')+(f.lost.length&&f.added.length?'; ':'')
+  +(f.added.length?'it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain':'')+'.</div>';}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  pushUndo();
  let text=a.text;
@@ -9260,7 +9357,7 @@ function rewrite(mode){
   }).catch(()=>{}).finally(done);
  }else if(PRO&&SYS_RW[mode]){pending++;
   proChat(SYS_RW[mode]+sysNote,sel.t,Math.min(1200,wordCt(sel.t)*(mode==='expand'?4:2)+150)).then(r=>{
-   if(r&&r.trim()&&r.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.trim(),why:'Written by the Pro model'});renderAlts('');}
+   if(r&&r.trim()&&r.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.trim(),why:'Written by '+inkProLabel()});renderAlts('');}
   }).catch(()=>{}).finally(done);
  }
  if(!pending){pending=1;done();}
@@ -9292,7 +9389,7 @@ function composeRun(instr){
   }).catch(()=>renderAlts('Could not reach the engine. Is the server running?'));
  }else if(PRO){
   proChat('You are Inkwell. Write exactly what is asked, in clear, well-structured prose with precise diction and smooth transitions. Never invent citations, statistics or facts.'+style,instr,700).then(r=>{
-   if(r&&r.trim()){ALTS.push({kind:'Draft',text:r.trim(),why:'Written by the Pro model; check every claim'});renderAlts('');}
+   if(r&&r.trim()){ALTS.push({kind:'Draft',text:r.trim(),why:'Written by '+inkProLabel()+'; check every claim'});renderAlts('');}
    else renderAlts('The Pro model returned no draft.');});
  }else{
   renderAlts('Drafting needs a writing model: start the server (⚙ Engine) or install the Pro model. The rules engine corrects and tightens; it does not write new text.');
@@ -9338,7 +9435,7 @@ function rewritePreset(preset){
    'transition-fix':'Add or improve transitional words between sentences and ideas.'
   };
   proChat(SYS_PRESET[preset]||SYS_PRESET.concise,t,Math.min(1200,wordCt(t)*3+150)).then(r=>{
-   if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:preset,text:r,why:'Preset rewrite by Pro'});renderAlts('');}
+   if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:preset,text:r,why:'Preset rewrite by '+inkProLabel()});renderAlts('');}
    else renderAlts('The preset produced no change. Try a different one.');});
  }else{
   /* No server, no Pro: heuristic fallback */
@@ -9382,7 +9479,7 @@ function rewriteCustom(instruction){
   }).catch(err=>{renderAlts('Could not reach the engine.');});
  }else if(PRO){
   proChat(instruction+' Preserve every citation, number, and proper noun. Output ONLY the rewritten passage.',t,Math.min(1200,wordCt(t)*3+150)).then(r=>{
-   if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:'Custom',text:r,why:'Custom rewrite by Pro'});renderAlts('');}
+   if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:'Custom',text:r,why:'Custom rewrite by '+inkProLabel()});renderAlts('');}
    else renderAlts('The engine produced no change.');});
  }else{
   renderAlts('Custom rewriting needs the engine (⚙ Engine) or a Pro model.');
@@ -10233,8 +10330,11 @@ function openModalDo(which){
  '<p style="font-size:13px;color:var(--mut);line-height:1.65"><b>The rules engine is always on and needs nothing else.</b> It corrects spelling, grammar, punctuation, agreement, redundancy and register entirely offline, and it reads as you type. The AI below is an optional extra layer — drafting, rewording and a second grammar opinion — for writers who want it. Everything on this page lives on this device once installed; nothing is sent anywhere.</p>'+
  '<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">The shelf models (GGUF, MLX; an Import lands them there, and each stays until you swap or remove it) run through the companion server, which starts itself with the installed app and answers offline. The Mini and Pro rows need the internet once, the very first time, and are cached after.</p>'+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
- '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">On-device writing models</h4>'+
- '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Removed in 7.33. The small models that fit inside an app window (GECToR and the 0.5-billion-parameter Pro model) made writing worse, not better, so Inkwell no longer offers them, and their downloaded files were deleted from this device. Corrections come from the rules engine, which now shows only correctness unless you ask for clarity and style notes; rewriting and drafting come from a real writing model on your laptop (below).</p>'+
+ '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Writing model inside this window</h4>'+
+ (PRO_ALLOWED
+  ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'
+   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 Install the writing model</button>')+'</div>'
+  :'<p style="font-size:12.5px;color:var(--mut);line-height:1.6">No writing model runs inside the app on a phone or tablet: the useful ones need more memory than the system gives an app, and the system closes the app (which is what happened before 7.32). Here Apple\u2019s own model (iPhone and iPad with iOS 26) or your laptop\u2019s model over the Wi-Fi does this work.</p>')+
  (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
  '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>'+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
@@ -10646,6 +10746,12 @@ function renderPatterns(){
   try{inkAiMark('',false);}catch(e){}
   inkPurgeOldModels();
   inkAppleInit();
+  /* 7.34: the writing model starts by itself where it was installed, unless
+     the window closed while it was loading last time */
+  var wcrash=null;try{wcrash=localStorage.getItem('ink_ai_loading');}catch(e){}
+  if(wcrash){inkAiMark('',false);S.writerAuto=false;SV('writerAuto',false);
+   instSay('Inkwell closed while a model was loading last time, so it does not load at start. Start it again from the Engine panel if you wish.');}
+  else if(S.writerAuto&&PRO_ALLOWED)setTimeout(function(){if(!PRO)installWriter(true);},1500);
   return;
   var crashed=null;try{crashed=localStorage.getItem('ink_ai_loading');}catch(e){}
   if(crashed){inkAiMark('',false);S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);

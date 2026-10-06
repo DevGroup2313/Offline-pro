@@ -1,7 +1,7 @@
-INKWELL 7.33 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.34 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.33-buildN.apk
+THE FILE IT MAKES:   Inkwell-7.34-buildN.apk
 NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
 only a white page with the file name. Use the iPhone and iPad package instead.
 
@@ -51,7 +51,7 @@ PART B. BUILD THE APK
 7. Wait for the green tick (about 2 minutes; the first run can take longer).
 
 8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.33 (build N)", has the APK under "Assets".
+   newest release, "Inkwell 7.34 (build N)", has the APK under "Assets".
 
 
 PART C. INSTALL ON THE FIRE TABLET BY USB
@@ -87,7 +87,7 @@ PART E. UPDATING INKWELL LATER
 - New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
   (replace the old one). If the vendor files changed, upload those into
   app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.33'.
+- New version number: in app/build.gradle, change versionName '7.34'.
   (versionCode rises by itself with every build, so Android accepts each
   build as an update.)
 - New icon: replace the five ic_launcher.png files in app/src/main/res/
@@ -96,22 +96,26 @@ PART E. UPDATING INKWELL LATER
 - Every commit starts a new build; install its APK as in Part C.
 
 
-CORRECTIONS AND MODELS ON THIS DEVICE (7.33)
+CORRECTIONS AND MODELS ON THIS DEVICE (7.34)
 --------------------------------------------
-- The in-app models (the GECToR grammar model and the small "Pro" model)
-  were removed in 7.33: on real writing they made more things worse than
-  better. Inkwell deletes their downloaded files by itself.
-- Corrections come from the rules engine, offline. In 7.33 it shows only
-  correctness (spelling, grammar, punctuation) unless you press "Show
-  clarity and style notes"; its false alarms on correct text were measured
-  and cut by about two thirds.
-- Rewriting and drafting come from a real writing model on your laptop,
-  over the same Wi-Fi (below).
+- Corrections come from the rules engine, offline; it shows only
+  correctness unless you press "Show clarity and style notes".
+- No writing model runs inside the app on the Fire tablet. The ones good
+  enough to help (1 billion parameters and more) need about a gigabyte of
+  memory, and in an app window they also need WebGPU, which I could not
+  confirm the Fire's app window provides. Fire OS closes an app that takes
+  that much memory; this is what closed Inkwell before 7.32.
+- The strong path on the Fire is your Mac or laptop's model over the same
+  Wi-Fi (below): Correct, Rewrite, Draft and the prompt library use it, and
+  every rewrite is checked for dropped citations and numbers.
+- Cite (Insert, Citation): the same engine and styles Zotero uses (APA,
+  Harvard, Chicago, OSCOLA, MHRA, MLA, IEEE, Nature), offline. Adding a
+  source by DOI or ISBN needs the internet; BibTeX, RIS and CSL-JSON do not.
 
 YOUR LAPTOP'S MODEL
 -------------------
 - Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.33 for Mac or Windows): Engine, "Share
+  Wi-Fi. On the laptop (Inkwell 7.34 for Mac or Windows): Engine, "Share
   with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
   On the tablet: Engine, "Your laptop's model": enter both, then "Connect
   to my laptop".

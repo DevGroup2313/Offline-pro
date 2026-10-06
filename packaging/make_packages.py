@@ -64,7 +64,7 @@ def ios(pkg):
 
 def web(pkg):
     common(pkg, "READ ME FIRST - WEB APP.txt", ".github/workflows/web.yml", "build-web.yml")
-    for name in ("build_site.py", "VERSION.txt", "icons"):
+    for name in ("build_site.py", "VERSION.txt", "icons", "tf4"):
         copy(os.path.join("Inkwell-Web", name), os.path.join(pkg, name))
     shutil.copytree(ASSETS, os.path.join(pkg, "web"))
 

@@ -1,4 +1,4 @@
-INKWELL 7.33 FOR WINDOWS
+INKWELL 7.34 FOR WINDOWS
 ========================
 New in 7.32: Inkwell for Windows is a normal Windows program. It no longer
 needs Python, and it has a real installer and a real uninstaller.
@@ -16,8 +16,8 @@ PART A. INSTALL (OR UPDATE) INKWELL
    %LOCALAPPDATA%\Inkwell\storage. The new installer keeps that folder and
    copies it to %LOCALAPPDATA%\Inkwell\backups before it changes anything.)
 
-2. Get the installer, Inkwell-7.33-Windows-Setup.exe:
-   from the GitHub release "Inkwell 7.33 for Windows (build N)" (under
+2. Get the installer, Inkwell-7.34-Windows-Setup.exe:
+   from the GitHub release "Inkwell 7.34 for Windows (build N)" (under
    Assets), or build it yourself (Part C).
 
 3. Double-click it. Windows may show "Windows protected your PC": choose
@@ -30,7 +30,7 @@ PART A. INSTALL (OR UPDATE) INKWELL
    old Python-based shortcuts and program files. It never removes your
    documents.
 
-5. Open Inkwell. Look for "v7.33" beside the date at the top.
+5. Open Inkwell. Look for "v7.34" beside the date at the top.
    If your documents are not there, choose File, Import library, and pick the
    file from step 1, or the newest backup in %LOCALAPPDATA%\Inkwell\backups.
 
@@ -66,7 +66,7 @@ This package also holds everything GitHub needs to build the installer.
 5. Actions tab: "Build Inkwell for Windows" runs by itself (or press "Run
    workflow"). It takes about 10 minutes. It builds Inkwell.exe, tests that
    its companion server starts and answers, and makes the installer.
-6. Releases (right-hand side): "Inkwell 7.33 for Windows (build N)", with
+6. Releases (right-hand side): "Inkwell 7.34 for Windows (build N)", with
    the installer under Assets.
    A red "Publish a release" step: Settings, Actions, General, Workflow
    permissions, "Read and write permissions", Save, and run it again.

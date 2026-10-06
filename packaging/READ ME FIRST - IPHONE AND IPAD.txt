@@ -1,7 +1,7 @@
-INKWELL 7.33 FOR IPHONE AND IPAD
+INKWELL 7.34 FOR IPHONE AND IPAD
 ================================
 THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
-THE FILE IT MAKES:   Inkwell-7.33-ios-buildN.ipa
+THE FILE IT MAKES:   Inkwell-7.34-ios-buildN.ipa
 NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
 
 IMPORTANT, PLEASE READ FIRST
@@ -62,7 +62,7 @@ PART B. BUILD THE .IPA
 7. Wait for the green tick.
 
 8. On the main page, open "Releases" (right-hand side). The newest release,
-   "Inkwell 7.33 for iPhone and iPad (build N)", has the .ipa under "Assets".
+   "Inkwell 7.34 for iPhone and iPad (build N)", has the .ipa under "Assets".
 
 
 PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
@@ -114,22 +114,33 @@ PART E. YOUR DOCUMENTS
   for the first recording.
 
 
-PART E2. CORRECTIONS AND MODELS ON THIS DEVICE (7.33)
---------------------------------------------
-- The in-app models (the GECToR grammar model and the small "Pro" model)
-  were removed in 7.33: on real writing they made more things worse than
-  better. Inkwell deletes their downloaded files by itself.
-- Corrections come from the rules engine, offline. In 7.33 it shows only
-  correctness (spelling, grammar, punctuation) unless you press "Show
-  clarity and style notes"; its false alarms on correct text were measured
-  and cut by about two thirds.
-- Rewriting and drafting come from a real writing model on your laptop,
-  over the same Wi-Fi (below).
+PART E2. CORRECTIONS AND MODELS ON THIS DEVICE (7.34)
+-----------------------------------------------------
+- New in 7.34: on an iPhone or iPad with iOS 26 and Apple Intelligence
+  switched on, Inkwell uses Apple's own on-device language model. It runs
+  on the device, offline, and is far stronger than any model an app can
+  carry. Engine shows "Apple's on-device model: available" when it is there,
+  or the reason it is not (older iOS, a device without Apple Intelligence,
+  or Apple Intelligence switched off in Settings).
+  Not verified: this could not be tested on a real iPhone or iPad here. The
+  build compiles the code against Apple's framework; the first real test is
+  yours.
+- Every correction from Apple's model passes Inkwell's safety filter (no
+  changes to names, numbers, quotations or citations), and every rewrite is
+  checked: one that drops a citation or number, or adds a name, is marked in
+  red with exactly what it changed.
+- Without Apple's model, corrections come from the rules engine, offline;
+  it shows only correctness unless you press "Show clarity and style notes".
+- No other model runs inside the app on a phone or tablet: the useful ones
+  need more memory than iOS gives an app, and iOS closes the app.
+- Cite (Insert, Citation): the same engine and styles Zotero uses (APA,
+  Harvard, Chicago, OSCOLA, MHRA, MLA, IEEE, Nature), offline. Adding a
+  source by DOI or ISBN needs the internet; BibTeX, RIS and CSL-JSON do not.
 
 YOUR LAPTOP'S MODEL
 -------------------
 - Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.33 for Mac or Windows): Engine, "Share
+  Wi-Fi. On the laptop (Inkwell 7.34 for Mac or Windows): Engine, "Share
   with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
   On the tablet: Engine, "Your laptop's model": enter both, then "Connect
   to my laptop".
@@ -139,7 +150,7 @@ PART F. UPDATING INKWELL LATER
 ------------------------------
 - New Inkwell page: upload the new Inkwell.html into web/ (replace the old
   one); new vendor files go into web/vendor/.
-- New version number: in project.yml, change MARKETING_VERSION: "7.33".
+- New version number: in project.yml, change MARKETING_VERSION: "7.34".
 - New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
   with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
   with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.

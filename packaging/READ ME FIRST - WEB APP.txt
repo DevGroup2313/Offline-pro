@@ -1,8 +1,8 @@
-INKWELL 7.33: THE HOME SCREEN WEB APP
+INKWELL 7.34: THE HOME SCREEN WEB APP
 =====================================
 THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
 any browser. It is the fallback to the iPhone and iPad app.
-THE FILE IT MAKES:   Inkwell-7.33-web-buildN.zip (a ready web site)
+THE FILE IT MAKES:   Inkwell-7.34-web-buildN.zip (a ready web site)
 It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
 only add a page to the Home Screen from a web address, not from a file.
 
@@ -31,7 +31,7 @@ PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
 
 5. Actions tab: "Build the Inkwell web app" runs by itself (or press
    "Run workflow"). When it is green, open Releases: the newest
-   "Inkwell 7.33 web app" release has the site as a .zip under Assets.
+   "Inkwell 7.34 web app" release has the site as a .zip under Assets.
 
 
 PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)
@@ -65,6 +65,31 @@ PART D. YOUR DOCUMENTS
   tabs. Use File, Export library and File, Import library to move documents.
 - Export regularly: a browser may clear a web app's storage, for example when
   the device is short of space.
+
+
+PART D2. OFFLINE, AND THE WRITING MODEL (7.34)
+----------------------------------------------
+- After the first visit the web app opens and works with no internet and no
+  server: the rules engine, Scriba's page, Fontes and Cite (with every
+  citation style) are kept on the device.
+- New in 7.34, on a laptop or desktop: a writing model inside the page.
+  Engine, "Writing model inside this window", "Install the writing model".
+  It is LFM2.5 1.2B Instruct (Liquid AI, LFM Open License v1.0), downloaded
+  once (about 850 MB), then offline. It needs WebGPU: Chrome or Edge on
+  Windows or a Mac; recent Safari on a Mac may work but was not tested.
+  Measured behind Inkwell's safety filter (6 October 2026): 37% of learner
+  sentences improved, 3% made worse, 2% of correct sentences changed.
+  Its rewrites are weaker: in the measurement it dropped citations in 8 of
+  24 rewrites, so every rewrite that drops a citation or number, or adds a
+  name, is marked in red, with "Use anyway" instead of "Use this".
+  Not tested on real graphics hardware here; its speed on your computer is
+  not yet known.
+- On a phone or tablet the web app offers no writing model (the system
+  closes a page that takes this much memory). There, use Apple's model in
+  the iPhone and iPad app (iOS 26), or your Mac's model over the Wi-Fi.
+- The folder "tf4" in this package carries the engine for this model
+  (Transformers.js 4.3.1, Apache 2.0, and ONNX Runtime Web, MIT). Upload it
+  with everything else in Part A.
 
 
 PART E. UPDATING INKWELL LATER
