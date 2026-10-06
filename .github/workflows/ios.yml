@@ -78,6 +78,22 @@ jobs:
           fi
           ls -la web web/vendor
 
+      - name: Use the newest Xcode on the runner
+        # 7.34: Apple's on-device model (Foundation Models) needs the iOS 26 SDK
+        run: |
+          set -euo pipefail
+          x="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -n 1 || true)"
+          if [ -n "$x" ]; then sudo xcode-select -s "$x/Contents/Developer"; fi
+          xcodebuild -version
+          sdk="$(xcrun --sdk iphoneos --show-sdk-path)"
+          if [ -d "$sdk/System/Library/Frameworks/FoundationModels.framework" ]; then
+            echo "FM_LDFLAGS=-weak_framework FoundationModels" >> "$GITHUB_ENV"
+            echo "Apple's Foundation Models framework: present in this SDK"
+          else
+            echo "FM_LDFLAGS=" >> "$GITHUB_ENV"
+            echo "::warning::This Xcode has no Foundation Models framework; the app is built without Apple's on-device model."
+          fi
+
       - name: Generate the Xcode project
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
@@ -94,6 +110,7 @@ jobs:
             -sdk iphoneos SYMROOT="$PWD/build" \
             MARKETING_VERSION="$INKWELL_VERSION" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            OTHER_LDFLAGS="\$(inherited) $FM_LDFLAGS" \
             build 2>&1 | tee -a build_log.txt
 
       - name: Package the .ipa
@@ -104,6 +121,8 @@ jobs:
           test -f "$app/Info.plist"
           test -f "$app/web/Inkwell.html"
           plutil -p "$app/Info.plist"
+          # how the app links Apple's on-device model: "weak" lets it open on iOS 16 to 25
+          otool -l "$app/Inkwell" | grep -B1 -A3 FoundationModels | grep -E "cmd|name" || echo "not linked against FoundationModels"
           rm -rf Payload && mkdir Payload
           cp -R "$app" Payload/
           zip -qry "$IPA_NAME" Payload

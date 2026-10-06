@@ -150,6 +150,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
          var R=window.webkit.messageHandlers.inkwellReply;
          if(R)window.InkwellNative.http=function(m,u,h,b){return R.postMessage({op:'http',method:String(m||'GET'),url:String(u),headers:h||{},body:b==null?'':String(b)})
           .then(function(r){return r||{status:0,text:'no answer'};},function(e){return {status:0,text:String(e)};});};
+         if(R)window.InkwellNative.appleAI={
+          status:function(){return R.postMessage({op:'aiStatus'}).then(function(r){return r||{available:false,reason:'no answer'};},function(e){return {available:false,reason:String(e)};});},
+          respond:function(i,p){return R.postMessage({op:'aiRespond',instructions:String(i||''),prompt:String(p||'')}).then(function(r){return r||{error:'no answer'};},function(e){return {error:String(e)};});}};
          window.pywebview={api:{
           save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},
           storage_set:function(k,v){return P(post({op:'storageSet',key:String(k),value:String(v)}));},
@@ -175,6 +178,15 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     /// content; the app's are not. The answer returns as the promise's value.
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage,
                                replyHandler: @escaping (Any?, String?) -> Void) {
+        /* 7.34: Apple's on-device model (AppleWritingModel.swift) */
+        if let body = message.body as? [String: Any], let op = body["op"] as? String, op == "aiStatus" || op == "aiRespond" {
+            if op == "aiStatus" { replyHandler(AppleWritingModel.status(), nil); return }
+            AppleWritingModel.respond(instructions: (body["instructions"] as? String) ?? "",
+                                      prompt: (body["prompt"] as? String) ?? "") { answer in
+                DispatchQueue.main.async { replyHandler(answer, nil) }
+            }
+            return
+        }
         guard let body = message.body as? [String: Any], (body["op"] as? String) == "http",
               let urlText = body["url"] as? String, let url = URL(string: urlText),
               let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else {

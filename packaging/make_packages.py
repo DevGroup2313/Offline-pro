@@ -82,9 +82,18 @@ def desktop_page(pkg):
 
 
 def mac(pkg):
-    """Install or update on a Mac: run "Install or Update Inkwell.command"."""
-    shutil.copytree(os.path.join(ROOT, "Inkwell-Mac"), pkg)
-    desktop_page(pkg)
+    """Mac 7.34: a ready-made app built on GitHub (PyInstaller; no Python
+    needed on the Mac), delivered as a .dmg in the "Inkwell for Mac" release.
+    The package holds the READ ME, everything GitHub needs to build the app,
+    and the older Python installer in its own folder."""
+    common(pkg, "READ ME FIRST (Mac).txt", ".github/workflows/mac.yml", "build-mac.yml", src_dir="Inkwell-Mac")
+    shutil.copytree(os.path.join(ROOT, "Inkwell-Mac"), os.path.join(pkg, "Inkwell-Mac"))
+    shutil.copytree(ASSETS, os.path.join(pkg, "web"))
+    for name in ("scriba_v729.html", "fontes_v729.html"):
+        copy(name, os.path.join(pkg, name))
+    legacy = os.path.join(pkg, "Build on this Mac (Python)")
+    shutil.copytree(os.path.join(ROOT, "Inkwell-Mac"), legacy)
+    desktop_page(legacy)
 
 
 def windows(pkg):

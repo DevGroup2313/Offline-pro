@@ -65,16 +65,24 @@ cands=()
 xcode-select -p >/dev/null 2>&1 && cands+=(/usr/bin/python3)
 p="$(command -v python3 2>/dev/null)"; [[ -n "$p" ]] && cands+=("$p")
 cands+=(/opt/homebrew/bin/python3 /usr/local/bin/python3 /Library/Frameworks/Python.framework/Versions/Current/bin/python3)
-PY=""
-for c in "${cands[@]}"; do   # first choice: a Python that already has the window component
-  [[ -x "$c" ]] || continue
-  "$c" -c 'import sys; assert sys.version_info >= (3, 8); import webview' >/dev/null 2>&1 && { PY="$c"; break; }
+# 7.34: the NEWEST Python on this Mac is chosen, not the first found. Apple's own
+# /usr/bin/python3 is 3.9 with an old pip; current pywebview needs current
+# PyObjC, which needs a newer Python and pip, so on a new Mac the install
+# failed with "update required" messages and Inkwell opened in the browser.
+# (The simplest route on any Mac is the ready-made app: the .dmg in the
+# "Inkwell for Mac" release. This script remains for building it yourself.)
+for c in /opt/homebrew/bin/python3.1[0-9](N) /usr/local/bin/python3.1[0-9](N) /Library/Frameworks/Python.framework/Versions/3.1[0-9]/bin/python3(N); do
+  [[ -x "$c" ]] && cands=("$c" "${cands[@]}")
 done
-if [[ -z "$PY" ]]; then
-  for c in "${cands[@]}"; do
-    [[ -x "$c" ]] || continue
-    "$c" -c 'import sys; assert sys.version_info >= (3, 8)' >/dev/null 2>&1 && { PY="$c"; break; }
-  done
+PY=""; best=0
+for c in "${cands[@]}"; do
+  [[ -x "$c" ]] || continue
+  v="$("$c" -c 'import sys; print(sys.version_info[0]*100+sys.version_info[1])' 2>/dev/null)" || continue
+  [[ -n "$v" && "$v" -ge 308 && "$v" -gt "$best" ]] && { best="$v"; PY="$c"; }
+done
+if [[ -n "$PY" && "$best" -lt 310 ]]; then
+  line "   Note: the newest Python here is $(( best / 100 )).$(( best % 100 )); the window component works best with 3.10 or newer"
+  line "   (python.org or Homebrew). If the next step fails, use the ready-made app (.dmg) instead."
 fi
 [[ -n "$PY" ]] || stop "no Python 3.8 or newer was found. Install the Apple command line tools with: xcode-select --install"
 PY="$("$PY" -c 'import sys; print(sys.executable)')"
@@ -85,13 +93,15 @@ pip_install() {
   "$PY" -m pip install --user --upgrade "$@" || "$PY" -m pip install --user --upgrade --break-system-packages "$@"
 }
 if ! "$PY" -c 'import webview' >/dev/null 2>&1; then
-  line "   Installing the window component (pywebview), once; this needs the internet."
-  pip_install pywebview
+  line "   Updating pip, then installing the latest window component (pywebview); this needs the internet."
+  pip_install pip setuptools wheel >/dev/null 2>&1
+  pip_install pywebview 2>&1 | tail -n 15
 fi
 if "$PY" -c 'import webview' >/dev/null 2>&1; then
   line "   Window component: pywebview $("$PY" -c 'import webview; print(getattr(webview, "__version__", "?"))' 2>/dev/null)"
 else
-  line "   WARNING: pywebview is not available, so Inkwell will open in your browser instead of its own window."
+  line "   WARNING: pywebview could not be installed for this Python, so Inkwell would open in your browser."
+  line "   The ready-made Mac app needs no Python at all: the .dmg in the \"Inkwell for Mac\" release on GitHub."
 fi
 
 # 4. optional local Whisper --------------------------------------------------

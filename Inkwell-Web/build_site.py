@@ -95,8 +95,12 @@ def main():
         json.dump(manifest, f, indent=2)
 
     files = ["./", "index.html", "manifest.webmanifest"]
+    # every file, in sub-folders too (vendor/csl holds the citation styles);
+    # a folder in this list would make the whole offline install fail
     for folder in ("icons", "vendor"):
-        files += sorted(folder + "/" + n for n in os.listdir(os.path.join(out, folder)))
+        for base, _dirs, names in os.walk(os.path.join(out, folder)):
+            rel = os.path.relpath(base, out).replace(os.sep, "/")
+            files += sorted(rel + "/" + n for n in names)
     digest = hashlib.sha256(page.encode("utf-8")).hexdigest()[:10]
     build = "%s-%s" % (version, digest)
     with open(os.path.join(out, "sw.js"), "w", encoding="utf-8") as f:

@@ -147,6 +147,16 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
     </div>
   </div>
 
+  <div class="card" id="impCard" style="display:none">
+    <label id="lImp" for="impText">Add from a DOI, an ISBN, or BibTeX, RIS or CSL-JSON (Zotero exports all three)</label>
+    <textarea id="impText" rows="3" style="width:100%;box-sizing:border-box;font:12px/1.45 ui-monospace,Menlo,monospace;padding:8px;border-radius:8px;border:1px solid var(--edge);margin:6px 0" placeholder="10.1093/oxfordhb/9780199290550.001.0001 · 9780198248439 · @book{…} · TY  - JOUR"></textarea>
+    <div class="rowbtns">
+      <button id="impBtn" type="button">Add to the well</button>
+      <label class="small" style="cursor:pointer;border:1px solid var(--edge);border-radius:8px;padding:5px 10px">Open a .bib, .ris or .json file<input id="impFile" type="file" accept=".bib,.ris,.json,.txt" style="display:none"></label>
+      <span class="status" id="impStatus"></span>
+    </div>
+  </div>
+
   <div class="card" style="padding:10px 16px">
     <div class="grid" style="grid-template-columns:1fr auto auto;gap:8px;align-items:center">
       <input id="srcSearch" placeholder="Search sources by author, title, tag…" style="font-size:13px">
@@ -219,6 +229,13 @@ var KEY = "fontes_sources";
 var __foMem=null;function load(){ try { var v = localStorage.getItem(KEY); if (v != null) { __foMem=JSON.parse(v) || []; return __foMem; } } catch (e) {} return __foMem||[]; }
 function save(a){ __foMem=a; try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} }try{var __h=window.__CD_HANDOFF__;if(__h&&__h.kind==='fontes'&&__h.html){var __arr=JSON.parse(__h.html);if(Object.prototype.toString.call(__arr)==='[object Array]'){__foMem=__arr;window.__foHandled=1;try{localStorage.setItem(KEY,JSON.stringify(__arr));}catch(e){}}}}catch(e){}window.__tabulaCapture=function(){try{return {kind:'fontes',html:JSON.stringify(__foMem||load())};}catch(e){return null;}};window.__tabulaFlush=function(){try{if(__foMem&&(__foMem.length||window.__foHandled))localStorage.setItem(KEY,JSON.stringify(__foMem));}catch(e){}};try{window.addEventListener('pagehide',window.__tabulaFlush);window.addEventListener('beforeunload',window.__tabulaFlush);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')window.__tabulaFlush();});}catch(e){}
 function $(id){ return document.getElementById(id); }
+/* 7.34: inside Inkwell the room formats with the desk's engine: citeproc-js
+   and the official Citation Style Language styles, as Zotero does. On its
+   own (no desk around it) it keeps its own simpler formatting. */
+var INK = null; try { if (window.parent && window.parent !== window && window.parent.INK_FONTES) INK = window.parent.INK_FONTES; } catch (e) { INK = null; }
+var CSLF = null;
+function escH(t){ return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" })[c]; }); }
+function inkStyleLabel(){ if (!INK) return $("citeStyle").value; var id = INK.style(), st = INK.styles(); for (var i = 0; i < st.length; i++) if (st[i][0] === id) return st[i][1]; return id; }
 
 function firstAuthor(s){
   var a = String(s || "").split(";")[0].trim();
@@ -430,7 +447,14 @@ function getFilteredSources(){
   }
   return filtered;
 }
+var renderSeq = 0;
 function render(){
+  if (!INK) return renderPlain();
+  var seq = ++renderSeq;
+  INK.format().then(function (f) { if (seq !== renderSeq) return; CSLF = f; renderPlain(); })
+    .catch(function (err) { CSLF = null; INK = null; inkRoomPlain(); renderPlain(); say((FR ? "Formatage simple : " : "Simple formatting: ") + (err && err.message || err)); });
+}
+function renderPlain(){
   var list = $("list"); list.innerHTML = "";
   var sources = load();
   populateTagFilter();
@@ -440,7 +464,9 @@ function render(){
   if (!view.length) { var e2 = document.createElement("div"); e2.className = "empty"; e2.textContent = FR ? "Aucune source ne correspond." : "No matching sources."; list.appendChild(e2); return; }
   view.forEach(function (s, i) {
     var row = document.createElement("div"); row.className = "src";
-    var ref = document.createElement("div"); ref.className = "ref"; ref.textContent = fmtRef(s, style);
+    var ref = document.createElement("div"); ref.className = "ref";
+    var useCSL = !!(CSLF && s.id && CSLF.bib[s.id] != null);
+    if (useCSL) ref.innerHTML = CSLF.bib[s.id]; else ref.textContent = fmtRef(s, style);
     var meta = document.createElement("div"); meta.className = "meta"; meta.textContent = (s.type || "") + (s.accessed ? (FR ? " \u00B7 consult\u00E9 " : " \u00B7 accessed ") + s.accessed : "");
     var tags = parseTags(s);
     if (tags.length) {
@@ -456,13 +482,16 @@ function render(){
       noteDiv.textContent = s.notes; row.appendChild(noteDiv);
     }
     var btns = document.createElement("div"); btns.className = "rowbtns";
-    var b1 = document.createElement("button"); b1.className = "small"; b1.textContent = L.copyCite + " " + fmtCite(s, style);
-    b1.onclick = function () { if (copyText(fmtCite(s, style))) say(L.copied); };
+    var b1 = document.createElement("button"); b1.className = "small";
+    var citeTxt = useCSL ? (CSLF.cite[s.id] || "") : fmtCite(s, style);
+    b1.textContent = useCSL && CSLF.note ? L.copyNote : L.copyCite + " " + citeTxt;
+    b1.onclick = function () { if (copyText(citeTxt)) say(L.copied); };
+    if (useCSL && CSLF.numeric) b1.style.display = "none";
     var b2 = document.createElement("button"); b2.className = "small"; b2.textContent = L.copyRef;
-    b2.onclick = function () { if (copyText(fmtRef(s, style))) say(L.copied); };
+    b2.onclick = function () { if (copyText(useCSL ? CSLF.text[s.id] : fmtRef(s, style))) say(L.copied); };
     var b3 = document.createElement("button"); b3.className = "small"; b3.textContent = L.del;
     b3.onclick = function () { var a = load(); var sig = JSON.stringify(s); var ix = -1; for (var k = 0; k < a.length; k++) { if (JSON.stringify(a[k]) === sig) { ix = k; break; } } if (ix < 0 && i < a.length) ix = i; if (ix >= 0) { a.splice(ix, 1); save(a); } render(); say(L.removed); };
-    if (style === "Chicago") { var bn = document.createElement("button"); bn.className = "small"; bn.textContent = L.copyNote; bn.onclick = function () { if (copyText(fmtNote(s))) say(L.copied); }; btns.appendChild(bn); }
+    if (!useCSL && style === "Chicago") { var bn = document.createElement("button"); bn.className = "small"; bn.textContent = L.copyNote; bn.onclick = function () { if (copyText(fmtNote(s))) say(L.copied); }; btns.appendChild(bn); }
     btns.appendChild(b1); btns.appendChild(b2); btns.appendChild(b3);
     row.appendChild(ref); row.appendChild(meta); row.appendChild(btns);
     list.appendChild(row);
@@ -485,8 +514,38 @@ $("addBtn").onclick = function () {
 };
 var STYLE_KEY = "fontes_style";
 function fontesGetStyle(){ try { return localStorage.getItem("cd_cite_style") || sessionStorage.getItem(STYLE_KEY) || ""; } catch (e) { return ""; } }
-$("citeStyle").onchange = function () { try { var v=$("citeStyle").value; localStorage.setItem("cd_cite_style", v); sessionStorage.setItem(STYLE_KEY, v); } catch (e) {} render(); };
+$("citeStyle").onchange = function () {
+  if (INK) { INK.setStyle($("citeStyle").value); render(); return; }
+  try { var v=$("citeStyle").value; localStorage.setItem("cd_cite_style", v); sessionStorage.setItem(STYLE_KEY, v); } catch (e) {} render(); };
+/* inside Inkwell: the official styles, the desk's choice, and the import card */
+var PLAIN_OPTIONS = $("citeStyle").innerHTML;
+function inkRoomPlain(){ $("citeStyle").innerHTML = PLAIN_OPTIONS; var v = fontesGetStyle(); if (v) $("citeStyle").value = v; var c = $("impCard"); if (c) c.style.display = "none"; }
+(function inkRoomInit(){
+  if (!INK) return;
+  try {
+    var sel = $("citeStyle"); sel.innerHTML = "";
+    INK.styles().forEach(function (x) { var o = document.createElement("option"); o.value = x[0]; o.textContent = x[1]; sel.appendChild(o); });
+    sel.value = INK.style();
+    $("impCard").style.display = "";
+  } catch (e) { INK = null; inkRoomPlain(); }
+})();
+function impSay(t){ var el = $("impStatus"); if (el) el.textContent = t || ""; }
+function impReport(r){ impSay(r.added + (r.added === 1 ? " source added" : " sources added") + (r.dup ? "; " + r.dup + " already in the well" : "") + (r.found ? "" : "; nothing recognised (a DOI starts with 10., an ISBN has 10 or 13 digits)")); }
+try {
+  $("impBtn").onclick = function () {
+    if (!INK) return; var v = $("impText").value; if (!v.trim()) { impSay("Paste a DOI, an ISBN, or BibTeX or RIS first."); return; }
+    impSay("Adding…");
+    INK.add(v).then(function (r) { if (r.added) $("impText").value = ""; impReport(r); render(); })
+      .catch(function (err) { impSay("Not added: " + (err && err.message || err) + (navigator.onLine ? "" : " (a DOI or ISBN lookup needs the internet)")); });
+  };
+  $("impFile").onchange = function () {
+    var f = this.files && this.files[0]; if (!f || !INK) return; var rd = new FileReader();
+    rd.onload = function () { INK.add(String(rd.result || "")).then(function (r) { impReport(r); render(); }).catch(function (err) { impSay("Could not read " + f.name + ": " + (err && err.message || err)); }); };
+    rd.readAsText(f); this.value = "";
+  };
+} catch (e) {}
 (function initStyle(){
+  if (INK) return;
   var saved = fontesGetStyle();
   if (saved) { $("citeStyle").value = saved; return; }
   var p = $("fmtPrompt"); if (!p) return;
@@ -500,7 +559,7 @@ $("citeStyle").onchange = function () { try { var v=$("citeStyle").value; localS
     wrap.appendChild(b);
   });
 })();
-window.addEventListener("storage", function (ev) { if (ev && ev.key === KEY) render(); if (ev && ev.key === "cd_cite_style") { try { var v = localStorage.getItem("cd_cite_style"); if (v && $("citeStyle") && $("citeStyle").value !== v) { $("citeStyle").value = v; render(); } } catch (e) {} } });
+window.addEventListener("storage", function (ev) { if (ev && ev.key === KEY) render(); if (INK && ev && ev.key === "cd_cite_style") { try { $("citeStyle").value = INK.style(); } catch (e) {} render(); return; } if (ev && ev.key === "cd_cite_style") { try { var v = localStorage.getItem("cd_cite_style"); if (v && $("citeStyle") && $("citeStyle").value !== v) { $("citeStyle").value = v; render(); } } catch (e) {} } });
 
 function sortedSources(){
   var a = load();
@@ -511,14 +570,20 @@ function sortedSources(){
   });
 }
 function bibliographyText(){
+  if (CSLF) return CSLF.full.map(function (x) { return x.text; }).join("\n\n");
   var style = $("citeStyle").value;
   return sortedSources().map(function (s) { return fmtRef(s, style); }).join("\n\n");
+}
+function bibliographyEntriesHtml(){
+  if (CSLF) return CSLF.full.map(function (x) { return x.html; });
+  var style = $("citeStyle").value;
+  return sortedSources().map(function (s) { return escH(fmtRef(s, style)); });
 }
 function bibliographyHtml(){
   var style = $("citeStyle").value;
   var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;" })[c]; }); };
-  var items = sortedSources().map(function (s) { return "<p style='margin:0 0 12px;text-indent:-24px;padding-left:24px'>" + esc(fmtRef(s, style)) + "</p>"; }).join("");
-  return "<h2 style='font-family:Georgia,serif;font-size:18px'>" + L.bibTitle + " (" + style + ")</h2>" + items;
+  var items = bibliographyEntriesHtml().map(function (h) { return "<p style='margin:0 0 12px;text-indent:-24px;padding-left:24px'>" + h + "</p>"; }).join("");
+  return "<h2 style='font-family:Georgia,serif;font-size:18px'>" + L.bibTitle + " (" + esc(inkStyleLabel()) + ")</h2>" + items;
 }
 $("compileBtn").onclick = function () {
   if (!load().length) { say(L.noSources); return; }
@@ -536,8 +601,7 @@ $("compileBtn").onclick = function () {
 $("toTabulaBtn").onclick = function () {
   if (!load().length) { say(L.noSources); return; }
   var esc = function (t) { return String(t).replace(/[&<>]/g, function (c) { return ({ "&":"&amp;","<":"&lt;",">":"&gt;" })[c]; }); };
-  var style = $("citeStyle").value;
-  var html = "<h2>" + L.bibTitle + " (" + style + ")</h2>" + sortedSources().map(function (s) { return "<p>" + esc(fmtRef(s, style)) + "</p>"; }).join("");
+  var html = "<h2>" + L.bibTitle + " (" + esc(inkStyleLabel()) + ")</h2>" + bibliographyEntriesHtml().map(function (h) { return "<p>" + h + "</p>"; }).join("");
   try { localStorage.setItem("tabula_incoming", JSON.stringify({ title: L.bibTitle, html: html })); } catch (e) {}
   try { parent.postMessage({ kind: "carpe-open", which: "tabula" }, "*"); } catch (e) {}
   say(L.sentTab);
@@ -622,21 +686,32 @@ bibExportBtn.textContent = FR ? "Exporter BibTeX" : "Export BibTeX";
 bibExportBtn.onclick = function(){
   var sources = load();
   if (!sources.length) { say(L.noSources); return; }
-  var bib = sources.map(function(s){ return fmtBibTeX(s); }).join("\n\n");
+  var bib = INK ? INK.exportText("bib") : sources.map(function(s){ return fmtBibTeX(s); }).join("\n\n");
+  downloadText(bib, "fontes.bib", FR ? "BibTeX export\u00E9." : "BibTeX exported.");
+};
+function downloadText(text, name, done){
   try {
-    var blob = new Blob([bib], {type:"text/plain;charset=utf-8"});
+    var blob = new Blob([text], {type:"text/plain;charset=utf-8"});
     var url = URL.createObjectURL(blob);
     var link = document.createElement("a");
     link.href = url;
-    link.download = "fontes.bib";
+    link.download = name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     setTimeout(function(){ try{URL.revokeObjectURL(url);}catch(e){} }, 1500);
-    say(FR ? "BibTeX exporté." : "BibTeX exported.");
+    say(done);
   } catch(e) { say(L.noDl); }
-};
+}
 try { $("bibBar").appendChild(bibExportBtn); } catch(e){}
+/* RIS and CSL-JSON, for Zotero, EndNote, Mendeley and others (inside Inkwell) */
+if (INK) {
+  [["ris", "Export RIS", "fontes.ris"], ["json", "Export CSL-JSON", "fontes.json"]].forEach(function (k) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "small"; b.textContent = k[1];
+    b.onclick = function () { if (!load().length) { say(L.noSources); return; } downloadText(INK.exportText(k[0]), k[2], (FR ? "Export\u00E9." : "Exported.")); };
+    try { $("bibBar").appendChild(b); } catch (e) {}
+  });
+}
 
 render();
 </script>

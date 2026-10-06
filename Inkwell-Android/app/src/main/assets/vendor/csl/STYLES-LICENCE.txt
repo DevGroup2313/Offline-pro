@@ -1,0 +1,7 @@
+The .csl files are citation styles from the Citation Style Language project
+(https://github.com/citation-style-language/styles), used unchanged under the
+Creative Commons Attribution-ShareAlike 3.0 Unported licence
+(https://creativecommons.org/licenses/by-sa/3.0/). The locale files
+(locales-en-GB.xml, locales-en-US.xml) are from
+https://github.com/citation-style-language/locales under the same licence.
+Each style file names its own authors in its <info> block.

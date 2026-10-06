@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-server.py; Inkwell companion server (v2.12)
+server.py; Inkwell companion server (v2.13)
 ===========================================
 
 Serves the local AI endpoints Inkwell.html expects at http://127.0.0.1:8317:
@@ -86,6 +86,21 @@ CREED = (
     "long sentences. 9. Authenticity: avoid jargon, be clear and concise, preserve the "
     "writer's original voice. 10. Always maintain an academic voice.\n\n"
 )
+
+# 2.13: the creed above suits answers to questions; it does not belong in front
+# of the writer's own text. Its rules (say "I am not certain", avoid dashes,
+# keep an academic voice) led models to add hedges, remove dashes and change
+# the register of text they were only asked to correct or rewrite. Editing
+# prompts now say only what to change, and that nothing may be added.
+EDIT_SYSTEM = ("You edit the user's text. Do exactly what is asked and nothing more. "
+               "Keep every claim, citation, name, number, quotation and dash; add no content, "
+               "examples, sources, hedges or conclusions that are not in the text. "
+               "Output only the edited text, with no comment.")
+PROOF_SYSTEM = ("You are a careful copy editor. Correct only errors of grammar, spelling and punctuation in the "
+                "user's text. Change as little as possible: keep every word that is already correct, keep the "
+                "writer's meaning, register and voice, keep names, numbers, quotations and citations exactly. "
+                "If the text is already correct, return it unchanged. Output only the corrected text, with no "
+                "explanation.")
 
 # ---------------------------------------------------------------- AI backend
 AI = {"pipe": None, "gec": None, "stt": None, "ready": False, "loading": False,
@@ -218,7 +233,12 @@ def spawn_llama(model_path):
             env.get("LD_LIBRARY_PATH", "")
     errfh = open(errlog, "w")
     proc = subprocess.Popen(
-        [binp, "-m", model_path, "--port", str(port), "-ngl", "999"],
+        # 7.34: an explicit context (a recent runtime otherwise reserves memory
+        # for the model's whole trained context, more than a 16 GB computer
+        # has); the model's own chat template; no hidden "thinking" pass, so
+        # answers start at once (the same settings as Inkwell's measurements)
+        [binp, "-m", model_path, "--port", str(port), "-ngl", "999",
+         "-c", os.environ.get("INKWELL_CTX", "8192"), "--jinja", "--reasoning-budget", "0"],
         stdout=subprocess.DEVNULL, stderr=errfh,
         cwd=os.path.dirname(binp), start_new_session=True)
     deadline = time.time() + 180
@@ -244,15 +264,15 @@ def spawn_llama(model_path):
     return None
 
 
-def llama_chat(prompt, max_tokens):
+def llama_chat(prompt, max_tokens, system=None, temperature=0.2):
     import urllib.request
     proc, base = AI["local"]
     req = urllib.request.Request(
         base + "/v1/chat/completions",
         data=json.dumps({
-            "messages": [{"role": "system", "content": "You are Inkwell."},
+            "messages": [{"role": "system", "content": system or "You are Inkwell."},
                          {"role": "user", "content": prompt}],
-            "temperature": 0.2, "n_predict": max_tokens,
+            "temperature": temperature, "max_tokens": max_tokens,
             "stream": False}).encode(),
         headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=600) as r:
@@ -383,15 +403,15 @@ def unload_local():
     gc.collect()
 
 
-def _generate_local(prompt, max_new_tokens):
-    """Local model inference with the creed as system message."""
+def _generate_local(prompt, max_new_tokens, system=None, temperature=0.2):
+    """Local model inference; system is the instruction, prompt the text."""
     if AI["local_kind"] == "gguf-bundled":
-        return llama_chat(prompt, max_new_tokens).strip()
+        return llama_chat(prompt, max_new_tokens, system, temperature).strip()
     if AI["local_kind"] == "gguf":
         out = AI["local"].create_chat_completion(
-            messages=[{"role": "system", "content": "You are Inkwell."},
+            messages=[{"role": "system", "content": system or "You are Inkwell."},
                       {"role": "user", "content": prompt}],
-            max_tokens=max_new_tokens, temperature=0.2)
+            max_tokens=max_new_tokens, temperature=temperature)
         return out["choices"][0]["message"]["content"].strip()
     if AI["local_kind"] == "mlx":
         model, tok, mlx_gen = AI["local"]
@@ -473,13 +493,13 @@ def _load_models():
             AI["loading"] = False
 
 
-def generate(prompt, max_new_tokens=420):
+def generate(prompt, max_new_tokens=420, system=None, temperature=0.2):
     """One call into the active instruct engine; None if AI unavailable."""
     if not AI["ready"]:
         return None
     if AI.get("local"):
         try:
-            return _generate_local(prompt, max_new_tokens)
+            return _generate_local(prompt, max_new_tokens, system, temperature)
         except Exception as e:
             print(f"[inkwell] local generation error: {e}")
             return None
@@ -1142,13 +1162,11 @@ def ep_correct(body):
                 if cached is not None and cached.lower() != sent.lower():
                     edits += word_diff_edits(sent, cached, off)
                 continue
-            if AI.get("local") and engine is None:
+            if AI.get("local"):
                 try:
-                    fixed = strip_think(_generate_local(CREED + dcl + "Fix the grammar, spelling, punctuation and "
-                                            "word choice of the sentence below for formal academic English. "
-                                            "Preserve meaning and every number and citation exactly. "
-                                            "Output ONLY the corrected sentence, nothing else.\n\n"
-                                            + sent, max_new_tokens=min(256, len(sent.split()) * 2 + 20)) or "")
+                    fixed = strip_think(_generate_local(sent, max_new_tokens=min(256, len(sent.split()) * 2 + 20),
+                                                        system=PROOF_SYSTEM + (" " + dcl if dcl else ""),
+                                                        temperature=0.0) or "")
                     fixed = fixed.strip() if fixed else ""
                     if len(_CORRECT_CACHE) < _CORRECT_CACHE_MAX:
                         _CORRECT_CACHE[cache_key] = fixed or None
@@ -1262,8 +1280,8 @@ def ep_rewrite(body):
     mode = body.get("mode", "concise")
     style = body.get("style", "")
     instr = REWRITE_PROMPTS.get(mode, REWRITE_PROMPTS["concise"])
-    prompt = CREED + f"{instr}. {style}\n\n{text}".strip()
-    raw = generate(prompt, max_new_tokens=min(1200, len(text.split()) * 3 + 150))
+    raw = generate(text, max_new_tokens=min(1200, len(text.split()) * 3 + 150),
+                   system=f"{instr} {style} {EDIT_SYSTEM}".strip(), temperature=0.2)
     ans, thk = split_off_think(raw) if raw else (None, None)
     if ans:
         return {"text": ans, "think": thk}
@@ -1284,8 +1302,9 @@ def ep_rewrite_preset(body):
     ctx = ""
     if context.strip():
         ctx = f"\n\nContext (the surrounding passage, for reference only; do not rewrite it):\n{context[:2000]}"
-    prompt = CREED + f"{instr}\n\nPassage to rewrite:\n{text}{ctx}\n\nOutput ONLY the rewritten passage. Preserve every citation, number, and proper noun exactly."
-    raw = generate(prompt, max_new_tokens=min(1500, len(text.split()) * 3 + 200))
+    prompt = f"Passage to rewrite:\n{text}{ctx}"
+    raw = generate(prompt, max_new_tokens=min(1500, len(text.split()) * 3 + 200),
+                   system=f"{instr} {EDIT_SYSTEM}", temperature=0.2)
     ans, thk = split_off_think(raw) if raw else (None, None)
     if ans:
         return {"ok": True, "text": ans, "think": thk, "preset": preset}
@@ -1303,11 +1322,9 @@ def ep_rewrite_custom(body):
         return {"ok": False, "error": "no text to rewrite"}
     if not instruction.strip():
         return {"ok": False, "error": "no instruction provided"}
-    prompt = (CREED + f"The user wants the following passage rewritten with this specific goal: "
-              f"{instruction}\n\nPassage:\n{text}\n\n"
-              f"Output ONLY the rewritten passage. Preserve every citation, number, and proper noun. "
-              f"Do not fabricate facts, citations, or statistics.")
-    raw = generate(prompt, max_new_tokens=min(1500, len(text.split()) * 3 + 200))
+    raw = generate(text, max_new_tokens=min(1500, len(text.split()) * 3 + 200),
+                   system=f"Rewrite the user's passage with this goal: {instruction}. {EDIT_SYSTEM}",
+                   temperature=0.2)
     ans, thk = split_off_think(raw) if raw else (None, None)
     if ans:
         return {"ok": True, "text": ans, "think": thk}
@@ -1584,6 +1601,102 @@ def ep_stt_status(_body):
     return out
 
 
+# ---------------------------------------------------------------- 2.13: the writing model
+# One measured model, installed with one press from the laptop's Engine panel:
+# downloaded once into the models folder, then run by the bundled llama.cpp
+# runtime (bin/), offline. The choice and its measurements are in
+# INKWELL_HANDOFF_v7p34.txt.
+WRITING_MODELS = [
+    # measured 6 October 2026 (JFLEG learner sentences and correct Wikipedia
+    # sentences, behind Inkwell's safety filter): 40% improved, 9% made worse,
+    # 6% of correct sentences changed; every citation kept in 24 rewrites.
+    {"id": "qwen3-4b-2507", "label": "Qwen3 4B Instruct (2507)", "repo": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+     "file": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf", "bytes": 2497281120, "min_ram_gb": 8,
+     "licence": "Apache 2.0", "note": "the measured choice for 8 GB computers and up"},
+]
+INSTALL = {"state": "idle", "id": None, "done": 0, "total": 0, "error": None}
+
+
+def _runtime_ok():
+    if _find_runtime():
+        return True
+    try:
+        import importlib.util
+        return importlib.util.find_spec("llama_cpp") is not None
+    except Exception:
+        return False
+
+
+def ep_model_catalog(body):
+    return {"ok": True, "models": WRITING_MODELS, "runtime": _runtime_ok(),
+            "installed": [c["name"] for c in scan_local_models()],
+            "active": AI.get("local_name"), "ready": AI["ready"], "loading": AI["loading"],
+            "install": dict(INSTALL), "load_error": AI.get("load_error")}
+
+
+def _fetch(url, dest):
+    """Download url to dest (via dest.part), counting bytes into INSTALL.
+    curl first on a Mac (the system's certificates); Python otherwise."""
+    import subprocess, urllib.request
+    part = dest + ".part"
+    if sys.platform == "darwin" and shutil.which("curl"):
+        proc = subprocess.Popen(["curl", "-fsSL", "-o", part, url])
+        while proc.poll() is None:
+            try:
+                INSTALL["done"] = os.path.getsize(part)
+            except OSError:
+                pass
+            time.sleep(1)
+        if proc.returncode != 0:
+            raise RuntimeError(f"download failed (curl exit {proc.returncode})")
+    else:
+        with urllib.request.urlopen(url, timeout=60) as r, open(part, "wb") as f:
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk:
+                    break
+                f.write(chunk)
+                INSTALL["done"] += len(chunk)
+    if INSTALL["total"] and os.path.getsize(part) != INSTALL["total"]:
+        raise RuntimeError(f"download incomplete ({os.path.getsize(part)} of {INSTALL['total']} bytes)")
+    os.replace(part, dest)
+
+
+def _install_worker(m):
+    try:
+        os.makedirs(MODELS_DIR, exist_ok=True)
+        dest = os.path.join(MODELS_DIR, m["file"])
+        if not (os.path.isfile(dest) and os.path.getsize(dest) == m["bytes"]):
+            _fetch(f"https://huggingface.co/{m['repo']}/resolve/main/{m['file']}", dest)
+        INSTALL["state"] = "loading"
+        unload_local()
+        cand = {"kind": "gguf", "path": dest, "name": m["file"]}
+        if not load_local_path(cand):
+            raise RuntimeError(AI.get("load_error") or "the model would not start")
+        c = conf_read(); c["active"] = m["file"]; conf_write(c)
+        AI["ready"] = True
+        AI["pipe_kind"] = "local"
+        _CORRECT_CACHE.clear()
+        INSTALL["state"] = "done"
+    except Exception as e:
+        INSTALL["state"] = "error"
+        INSTALL["error"] = f"{type(e).__name__}: {e}"
+        print("[inkwell] model install:", INSTALL["error"])
+
+
+def ep_model_install(body):
+    m = next((x for x in WRITING_MODELS if x["id"] == body.get("id")), None)
+    if not m:
+        return {"ok": False, "error": "unknown model"}
+    if INSTALL["state"] in ("downloading", "loading"):
+        return {"ok": False, "error": "an install is already running"}
+    if not _runtime_ok():
+        return {"ok": False, "error": "the llama.cpp runtime (bin/) is missing from this installation"}
+    INSTALL.update({"state": "downloading", "id": m["id"], "done": 0, "total": m["bytes"], "error": None})
+    threading.Thread(target=_install_worker, args=(m,), daemon=True).start()
+    return {"ok": True}
+
+
 ROUTES = {
     "correct": ep_correct, "rewrite": ep_rewrite, "rewrite_preset": ep_rewrite_preset,
     "rewrite_custom": ep_rewrite_custom, "presets": ep_presets,
@@ -1593,7 +1706,10 @@ ROUTES = {
     "sync_push": ep_sync_push, "sync_pull": ep_sync_pull,
     "transcribe": ep_transcribe, "stt_status": ep_stt_status, "net_status": ep_net_status,
     "stt_warm": ep_stt_warm,
+    "model_catalog": ep_model_catalog, "model_install": ep_model_install,
 }
+# endpoints that only this computer may call, never a tablet on the network
+LOCAL_ONLY = ("lan_status", "lan_enable", "model_catalog", "model_install")
 
 
 # ---------------------------------------------------------------- HTTP layer
@@ -1636,9 +1752,9 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/upload_model":
             return self._upload_model(parse_qs(parsed.query))
         m = re.match(r"^/api/([a-z_]+)$", parsed.path)
+        if m and m.group(1) in LOCAL_ONLY and self.client_address[0] not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+            return self._send(403, {"error": "only from this computer"})
         if m and m.group(1) in ("lan_status", "lan_enable"):
-            if self.client_address[0] not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
-                return self._send(403, {"error": "only from this computer"})
             try:
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or b"{}"))
             except Exception:

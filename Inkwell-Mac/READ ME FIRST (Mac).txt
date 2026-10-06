@@ -1,34 +1,60 @@
-INKWELL 7.33 FOR MAC
+INKWELL 7.34 FOR MAC
 ====================
-1. In your current Inkwell, choose File, Export library, and keep the file.
-2. Unzip this package. Keep all its files together.
-3. Double-click "Install or Update Inkwell.command".
-   If macOS refuses to open it: open Terminal, type  zsh  and a space, drag
-   the .command file into the Terminal window, and press Return.
-4. Answer its questions. It works for a first install and for an update.
-5. In Inkwell, open Scriba and press Record. Click Allow when macOS asks.
+New in 7.34: Inkwell for Mac is a ready-made app. It needs no Python, no
+pip and no command line tools. Use it on every Mac, old or new.
 
-Your documents, models and settings are kept, and backed up first. The
-backup folder is shown at the end; a copy of the library is put on your
-Desktop.
-
-The installer needs Python 3 and a C compiler, both part of Apple's command
-line tools. If either is missing it says so; install them with:
-    xcode-select --install
-(This is not Xcode. It is a small separate download that works on Macs where
-Xcode cannot be installed.)
-
-Local transcription (Whisper) is optional. The installer offers it. Without
-it, Scriba uses the Mac's own dictation engine where that is available.
-
-Problems: see INKWELL_HANDOFF_v7p29.txt, section "If something goes wrong".
+Why: the older installer built Inkwell from Python on your Mac. On a new
+Mac it picked Apple's built-in Python (3.9, with an old pip), which can no
+longer install the current window component (pywebview and PyObjC). The
+install failed with "update required" messages, and Inkwell opened in the
+browser ("the component that draws its own window is not installed").
 
 
-YOUR TABLETS CAN USE THIS COMPUTER'S MODEL (NEW IN 7.31)
---------------------------------------------------------
+PART A. INSTALL (OR UPDATE) INKWELL
+-----------------------------------
+1. If an older Inkwell opens: File, Export library, and keep the file.
+   (Your documents also stay in ~/Library/Application Support/Inkwell.)
+2. Download the disk image from the GitHub release "Inkwell 7.34 for Mac
+   (build N)", under Assets:
+     Inkwell-7.34-Mac-AppleSilicon.dmg   for M1, M2, M3, M4 and later
+                                         (your Mac mini)
+     Inkwell-7.34-Mac-Intel.dmg          for Intel Macs (your 2019 MacBook Pro)
+   Not sure? Apple menu, About This Mac: "Chip" means Apple Silicon,
+   "Processor ... Intel" means Intel.
+3. Open the .dmg. Drag Inkwell onto Applications. If asked, Replace.
+4. Open Inkwell from Applications. The first time, macOS refuses ("Apple
+   could not verify..."), because the app is not signed with a paid Apple
+   certificate. Then: System Settings, Privacy & Security, scroll down,
+   press "Open Anyway" beside Inkwell, and confirm. Only once.
+5. Look for "v7.34" beside the date at the top. If your documents are not
+   there: File, Import library, and pick the file from step 1.
+6. Scriba: the first time you press Record, macOS asks for the microphone;
+   choose Allow.
+
+
+PART B. THE WRITING MODEL ON THIS MAC
+-------------------------------------
+Engine, "Writing model on this computer": press Install. It downloads the
+model once (a few gigabytes) and runs it on this Mac, offline, with Apple's
+Metal graphics acceleration on Apple Silicon. Correct, Rewrite and Draft
+use it; your tablets use it over the Wi-Fi when sharing is on (Part D).
+
+
+PART C. BUILD IT YOURSELF (OPTIONAL)
+------------------------------------
+On GitHub: upload everything in this package to a new repository; the
+workflow "Build Inkwell for Mac" (.github/workflows/build-mac.yml, also as
+"WORKFLOW build-mac.yml (copy).txt") makes both disk images; see the
+iPhone package's READ ME for the upload steps, which are the same.
+On this Mac without GitHub: the folder "Build on this Mac (Python)" holds
+the older installer. In 7.34 it chooses the newest Python on the Mac and
+updates pip first, but it still depends on Python; the .dmg does not.
+
+PART D. YOUR TABLETS CAN USE THIS COMPUTER'S MODEL
+--------------------------------------------------
 1. Open Inkwell here. Engine, under "Your laptop's model": press
    "Share with my tablets on this Wi-Fi". It shows an address and a code.
-2. If the computer asks whether to allow Inkwell (or Python) on the
+2. If the computer asks whether to allow Inkwell on the
    network, choose Allow.
 3. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
    model": type the address and the code, then "Connect to my laptop".

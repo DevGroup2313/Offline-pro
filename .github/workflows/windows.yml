@@ -84,6 +84,22 @@ jobs:
           for n in inkwell_app.py server.py inkwell.png inkwell.ico; do cp "$WIN_DIR/$n" stage/; done
           ls -la stage stage/vendor
 
+      - name: Fetch the llama.cpp runtime for the writing model
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url="$(gh api repos/ggml-org/llama.cpp/releases/latest --jq '.assets[].browser_download_url' | grep -E 'bin-win-cpu-x64\.zip$' | head -n 1)"
+          if [ -z "$url" ]; then echo "::error::No llama.cpp Windows CPU build in the latest release"; exit 1; fi
+          echo "llama.cpp: $url"
+          curl -fsSL -o llama.zip "$url"
+          mkdir -p llama stage/bin/win && (cd llama && unzip -q ../llama.zip)
+          srv="$(find llama -name llama-server.exe -type f | head -n 1)"
+          if [ -z "$srv" ]; then echo "::error::llama-server.exe is not in the llama.cpp download"; exit 1; fi
+          cp "$(dirname "$srv")"/* stage/bin/win/
+          ls stage/bin/win | head -n 40
+          stage/bin/win/llama-server.exe --version 2>&1 | tail -n 3
+
       - name: Build Inkwell.exe
         working-directory: stage
         run: |
@@ -94,7 +110,7 @@ jobs:
             --icon inkwell.ico \
             --runtime-hook "../$WIN_DIR/build/quiet_console.py" \
             --add-data "Inkwell.html;." --add-data "vendor;vendor" \
-            --add-data "server.py;." --add-data "inkwell.png;." --add-data "inkwell.ico;." \
+            --add-data "server.py;." --add-data "inkwell.png;." --add-data "inkwell.ico;." --add-data "bin;bin" \
             $( [ -f scriba_v729.html ] && echo '--add-data scriba_v729.html;.' ) \
             $( [ -f fontes_v729.html ] && echo '--add-data fontes_v729.html;.' ) \
             --collect-all webview --collect-all clr_loader --collect-all pythonnet \
@@ -120,6 +136,8 @@ jobs:
           done
           cat "$RUNNER_TEMP/health.json" || true; echo
           curl -s -m 10 -X POST -H 'Content-Type: application/json' -d '{"text":"she dont goes to school","rules":[],"style":""}' http://127.0.0.1:8317/api/correct | head -c 300; echo
+          curl -s -m 10 -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8317/api/model_catalog | head -c 400; echo
+          ./_internal/bin/win/llama-server.exe --version 2>&1 | tail -n 2 || echo "::warning::the bundled llama-server did not report a version"
           taskkill //F //IM Inkwell.exe //T || true
           if [ "$ok" != 1 ]; then echo "::error::The companion server inside Inkwell.exe did not answer."; exit 1; fi
 

@@ -407,6 +407,29 @@ body[data-motion=calm] .tabula-btn::before,body[data-motion=minimal] .tabula-btn
 .tabTool{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 4px}
 #modal h3{font-family:Georgia,serif;margin:0 0 10px}
 #modal textarea,#modal input{width:100%;font-size:13px;border:1px solid var(--line);border-radius:12px;padding:9px;margin:4px 0;background:var(--bg);color:var(--ink);box-shadow:inset 0 1px 3px #0001}
+/* 7.34 the Cite panel */
+#modal .ctPanel .ctRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+#modal .ctPanel .ctRow>label{font-size:12px;color:var(--mut)}
+#modal .ctPanel select{font-size:13px;border:1px solid var(--line);border-radius:10px;padding:7px 8px;background:var(--bg);color:var(--ink);max-width:100%}
+#modal .ctPanel #ctStyle{flex:1;min-width:0}
+#modal .ctPanel #ctAdd{flex:1;min-width:200px;font:12px/1.4 ui-monospace,Menlo,monospace;margin:0}
+#modal .ctPanel #ctFind{flex:1;min-width:160px;margin:0}
+#modal .ctPanel #ctLoc{width:84px;margin:0}
+#modal .ctPanel .ctCol{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#modal .ctPanel .ctCol button{padding:8px 18px;font-size:13px}
+#modal .ctPanel .ctFile{cursor:pointer;text-align:center}
+#modal .ctPanel .ctFile input{display:none}
+#modal .ctPanel .ctHint{font-size:11.5px;color:var(--mut);line-height:1.5;margin:8px 0 2px}
+#modal .ctPanel #ctList{max-height:40vh;overflow:auto;margin-top:4px}
+#modal .ctPanel .ctItem{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;margin:5px 0;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer}
+#modal .ctPanel .ctItem.on{background:var(--accSoft,rgba(30,90,130,.12))}
+#modal .ctPanel .ctItem input[type=checkbox]{width:auto;flex:none;margin:4px 0 0;box-shadow:none}
+#modal .ctPanel .ctItem span{font:13px/1.5 Georgia,serif;color:var(--ink)}
+#modal .ctPanel .ctItem i{font-family:inherit}
+#modal .ctPanel .ctActs{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;align-items:center}
+#modal .ctPanel .ctActs button{flex:1 1 auto;font-size:12.5px;padding:8px 12px}
+#modal .ctPanel .ctSmall{margin-top:8px;font-size:12px;color:var(--mut)}
+#modal .ctPanel .ctSmall button{flex:none}
 .rl{display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0;flex-wrap:wrap}
 .rl code{background:var(--tray);padding:3px 8px;border-radius:7px}
 .wbrow{margin:10px 0}
@@ -977,6 +1000,7 @@ body.tabStageOn #footTab{display:none !important}
  <div class="brow">
   <button class="primary bdot" data-tip="Fix this selection" onclick="fixSelection()">✔</button>
   <button id="bubImp" class="bdot" data-tip="Alternatives; see them and choose" onclick="improveAlternatives()">✨</button>
+  <button class="bdot" data-tip="Rewrite with a prompt: say how it should sound" onclick="openPromptRewrite()">✍</button>
   <button class="bdot" data-tip="Close" onclick="hideBubble()">✕</button>
  </div>
  <div class="bsyn" id="bubSyn"></div>
@@ -1150,6 +1174,7 @@ body.tabStageOn #footTab{display:none !important}
    model worker is given this same text */
 @@LIB_GECTOR_CORE@@
 @@LIB_GEC_FILTER@@
+@@LIB_FONTES_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -1560,7 +1585,7 @@ stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -3677,7 +3702,7 @@ const MENUS={
   ['📚 References; check and edit',()=>refEditor()],
   ['🛡 Originality; library & document',()=>originality()],
   ['🧭 Authenticity; machine-trace reading',()=>textureCheck()]],
- rewrite:[['lbl','Whole page or selection'],
+ rewrite:[['✍ Rewrite with a prompt…',()=>openPromptRewrite()],['div'],['lbl','The selection'],
   ['Scholarly',()=>rewrite('scholarly')],['Professional',()=>rewrite('professional')],
   ['Casual',()=>rewrite('casual')],['Concise',()=>rewrite('concise')],
   ['Confident',()=>rewrite('confident')],['Shorten',()=>rewrite('shorten')],
@@ -3695,7 +3720,7 @@ const MENUS={
   ['Tone: cautious',()=>rewritePreset('tone-cautious')],
   ['Parallel fix',()=>rewritePreset('parallel-fix')],['Transition fix',()=>rewritePreset('transition-fix')],
   ['div'],
-  ['✍ Custom instruction…',()=>rewriteCustomPrompt()]],
+  ['✍ Rewrite with a prompt…',()=>openPromptRewrite()]],
  studio:[['lbl','The desk'],
   ['✦ Open the welcome door',()=>showDoor()],
   ['✦ Door at every start',()=>{S.door=!S.door;SV('door',S.door);toast(S.door?'The door greets you every open':'Straight to the desk from now on');},()=>S.door?'on':''],
@@ -3850,9 +3875,31 @@ const ON_MAC=/Macintosh|Mac OS X/.test(UA);
 const ON_WIN=/Windows NT/.test(UA);
 const LOW_POWER=IS_FIREREAL||ON_ANDROID||((navigator.hardwareConcurrency||8)<=4);
 const HAS_GPU='gpu' in navigator;
-function deviceName(){if(IS_FIREREAL)return 'Fire Tablet';if(ON_ANDROID)return 'Android device'; if(ON_MAC)return 'Mac';if(ON_WIN)return 'Windows laptop';return 'this device';}
+function deviceName(){if(IS_FIREREAL)return 'Fire Tablet';if(ON_ANDROID)return 'Android device';if(/iPhone/.test(UA))return 'iPhone';if(/iPad/.test(UA)||(/Macintosh/.test(UA)&&(navigator.maxTouchPoints||0)>1))return 'iPad'; if(ON_MAC)return 'Mac';if(ON_WIN)return 'Windows laptop';return 'this device';}
 const IS_TABLETAPP=ON_ANDROID||/iPhone|iPad/.test(UA)||(/Macintosh/.test(UA)&&(navigator.maxTouchPoints||0)>1);
 /* 7.31: the laptop shares its model with the tablets on the same Wi-Fi */
+/* 7.34: the writing model on this computer: one measured model, installed
+   with one press, run by the companion server, shared with the tablets */
+let WM_POLL=null;
+async function inkWmRefresh(){
+ const box=document.getElementById('wmBox');if(!box)return;
+ let c;try{c=await api('model_catalog',{});}catch(e){box.innerHTML='<span style="color:var(--mut)">The companion server is not answering, or it is older than 7.34. Reinstall Inkwell 7.34 on this computer.</span>';return;}
+ const I=c.install||{},busy=I.state==='downloading'||I.state==='loading';
+ let h='';
+ if(c.active&&c.ready)h+='<div>✓ <b>'+esc(c.active.replace(/\.gguf$/i,''))+'</b> is running. Correct, Rewrite and Draft use it, offline; your tablets use it over the Wi-Fi when sharing is on.</div>';
+ if(busy){const pc=I.total?Math.min(100,Math.round(100*I.done/I.total)):0;
+  h+='<div>'+(I.state==='loading'?'Starting the model…':'Downloading, once: '+fmtMB(I.done)+' of '+fmtMB(I.total)+' ('+pc+'%)')+'</div>'
+   +'<div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:4px 0"><div style="height:100%;width:'+pc+'%;background:var(--acc)"></div></div>';}
+ if(I.state==='error')h+='<div style="color:#b03a2e">The install stopped: '+esc(I.error||'')+'</div>';
+ if(!c.runtime)h+='<div style="color:var(--mut)">This installation lacks the llama.cpp runtime that runs the model. Reinstall Inkwell 7.34 or later on this computer.</div>';
+ else if(!busy)(c.models||[]).forEach(m=>{const inst=(c.installed||[]).indexOf(m.file)>=0,act=c.active===m.file;
+  if(!act)h+='<div style="margin-top:6px"><button class="lkbtn" onclick="inkWmInstall(\''+esc(m.id)+'\')">'+(inst?'▶ Use ':'⬇ Install ')+esc(m.label)+'</button> <span style="color:var(--mut)">'+(inst?'already downloaded':(m.bytes/1e9).toFixed(1)+' GB, once')+'. '+esc(m.note||'')+'</span></div>';});
+ box.innerHTML=h||'<span style="color:var(--mut)">No writing model is offered by this server.</span>';
+ clearTimeout(WM_POLL);if(busy&&document.getElementById('wmBox'))WM_POLL=setTimeout(inkWmRefresh,2000);
+ else if(I.state==='done'&&!S.serverModel){ping();}}
+async function inkWmInstall(id){
+ try{const r=await api('model_install',{id:id});if(!r.ok)return toast(r.error||'The install did not start');}catch(e){return toast('The companion server did not answer');}
+ toast('Downloading the writing model, once; this takes a few minutes');inkWmRefresh();}
 async function inkLanRefresh(){
  const el=document.getElementById('lanBox');if(!el)return;
  if(IS_TABLETAPP){return;}
@@ -6567,7 +6614,13 @@ function renderCards(){
 function soloMove(d){SOLOI=Math.max(0,Math.min(EDITS.length-1,SOLOI+d));renderCards();
  if(EDITS[SOLOI])locate(SOLOI);}
 function pushUndo(){UNDO.push(ed.value);if(UNDO.length>60)UNDO.shift();}
-function undo(){if(!UNDO.length)return toast('Nothing to undo');ed.value=UNDO.pop();afterChange();toast('Undone');}
+function undo(){if(!UNDO.length)return toast('Nothing to undo');ed.value=UNDO.pop();
+ /* 7.34: Cite's record of its citations goes back with the text */
+ try{const d=inkDoc(),r=CITE_UNDO.get(ed.value);if(d&&r!==undefined){d.citeRec=JSON.parse(r);persist();}}catch(e){}
+ afterChange();toast('Undone');}
+const CITE_UNDO=new Map();
+function citeUndoPoint(){pushUndo();const d=inkDoc();if(!d)return;
+ CITE_UNDO.set(ed.value,JSON.stringify(d.citeRec||[]));if(CITE_UNDO.size>60)CITE_UNDO.delete(CITE_UNDO.keys().next().value);}
 function bumpStat(why){S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);renderPatterns();}
 function studyTop(){const top=Object.entries(S.stats).sort((a,b)=>b[1]-a[1]);
  if(!top.length)return;const L=lessonFor(top[0][0]);
@@ -6865,14 +6918,70 @@ const LESSONS={
  'Spell out a numeral at a sentence start':['Convention: a sentence never opens on a numeral. Spell it or recast the sentence.','"3 reasons…" → "Three reasons…"'],
  'Contraction — the formal register':['Formal prose writes contractions out. The register is a promise kept letter by letter.','"it\'s" → "it is"'],
  'Doubled word':['Doubled words usually come from a stop mid-edit. Reading aloud catches them before the page ships.','"the the" → "the"'],};
+/* 7.34: lessons for the rules and model categories that had none (43 of the
+   62 that fire on learner writing fell back to one generic sentence). Each
+   states the rule and gives an example; where British and American usage
+   differ, it says so. */
+Object.assign(LESSONS,{
+ 'Capitalise the pronoun I':['The pronoun I is always a capital letter, wherever it stands in the sentence.','"Yesterday i left early" → "Yesterday I left early"'],
+ 'Capital I':['The pronoun I is always a capital letter, wherever it stands in the sentence.','"Yesterday i left early" → "Yesterday I left early"'],
+ '“a” before a vowel sound':['Choose a or an by the sound that follows, not the letter: an before a vowel sound, a before a consonant sound.','an hour · an MA · an FBI agent · a university · a one-off'],
+ '“an” belongs before vowel sounds':['Choose a or an by the sound that follows, not the letter: an before a vowel sound, a before a consonant sound.','an hour · an MA · an FBI agent · a university · a one-off'],
+ 'Count nouns take “fewer”':['Fewer goes with things you can count; less with amounts you cannot.','fewer errors, fewer students · less time, less evidence'],
+ 'Count nouns take “number of”':['Number of goes with things you can count; amount of with quantities you cannot.','a number of studies · an amount of money'],
+ 'A comma follows these sentence openers':['A linking adverb at the start of a sentence (However, Moreover, Therefore) is followed by a comma.','"However the data suggest…" → "However, the data suggest…"'],
+ 'The introductory marker takes its comma':['An introductory word or phrase (For example, In 2010, In this chapter) is usually followed by a comma; the comma shows where the main clause begins.','"For example the 2010 survey…" → "For example, the 2010 survey…"'],
+ 'An opening transition takes a comma':['An introductory word or phrase is usually followed by a comma.','"For example the survey…" → "For example, the survey…"'],
+ 'The verb answers to':['The verb agrees with the head noun of the subject, not with the noun nearest to it.','"The number of students are rising" → "The number of students is rising"'],
+ '"The number of" takes a singular verb':['"The number of X" is singular (one number); "a number of X" means several X and is plural.','The number of cases is rising · A number of cases were reported'],
+ '"The number of X is…"':['"The number of X" is singular (one number); "a number of X" means several X and is plural.','The number of cases is rising · A number of cases were reported'],
+ '“Its” is the possessive':['its means belonging to it; it\'s means it is or it has.','The committee published its report · It\'s clear that…'],
+ 'Double comparative':['Use either the -er ending or more, never both.','"more stronger" → "stronger" · "more clearer" → "clearer"'],
+ '“Breathe” is the verb':['breath is the noun (rhymes with death); breathe is the verb (rhymes with seethe).','Take a breath · Breathe slowly'],
+ '“Nowadays” is one word':['nowadays is written as one word.','"Now a days" → "nowadays"'],
+ '"phenomenon" is the singular':['phenomenon is singular, phenomena plural (from Greek, like criterion and criteria).','one phenomenon · several phenomena'],
+ '“Phenomena” is plural':['phenomenon is singular, phenomena plural (from Greek, like criterion and criteria).','one phenomenon · several phenomena'],
+ 'Two dots':['An ellipsis has exactly three dots (or the single character …); a sentence ends with one full stop.','"as follows.." → "as follows." or "as follows…"'],
+ 'Two full stops':['A sentence ends with one full stop; an ellipsis has exactly three dots.','"It ended.." → "It ended."'],
+ '“Every day” is the time phrase':['every day (two words) means each day; everyday (one word) is an adjective meaning ordinary.','I write every day · everyday language'],
+ 'A plural takes no singular article':['a or an cannot stand before a plural noun.','"a results" → "the results" or "results"'],
+ '“Comprises” or “is composed of”':['Traditionally, the whole comprises its parts, and is composed of them; "is comprised of" is common but criticised in careful writing.','The panel comprises nine members · The panel is composed of nine members'],
+ '"comprised of" is disputed':['Traditionally, the whole comprises its parts, and is composed of them; "is comprised of" is common but criticised in careful writing.','The panel comprises nine members · The panel is composed of nine members'],
+ '“One of the':['In "one of the X who/that …", the noun X is plural, and in the traditional rule the verb of the relative clause is plural too, because it refers to X.','one of the oldest temples that have survived'],
+ 'Decades take no apostrophe':['Decades are plain plurals: no apostrophe.','"the 1990\'s" → "the 1990s"'],
+ 'The preposition after "different"':['different from is standard in British and American English; different to is also British; different than is common in American English, less so in formal British writing.','different from the earlier model'],
+ 'Missing space after a comma':['A comma is followed by a space.','"red,green" → "red, green"'],
+ 'Space after a period before the next sentence':['A full stop that ends a sentence is followed by a space.','"ended.Then" → "ended. Then"'],
+ 'Space before punctuation':['Commas, full stops, colons and semicolons attach to the word before them, with no space.','"the result , however" → "the result, however"'],
+ /* the categories of the writing models' suggestions (src/lib/gec_filter.js) */
+ 'Punctuation':['The model added, removed or changed a mark. Check the usual reasons: an introductory phrase takes a comma; two complete sentences need a full stop or semicolon, not a comma; a clause that restricts the meaning takes no commas.','"However the data…" → "However, the data…"'],
+ 'Capital letter':['Capitals begin sentences and proper names (people, places, institutions, titles of works); ordinary nouns stay lower case.','the University of Oxford · a university'],
+ 'Article: a, an or the':['a or an introduces one of many, not yet identified (a study); the points to something specific or already known (the study above); general statements with plural or uncountable nouns take no article (Studies show…).','She is a lecturer · The lecturer who taught me · Knowledge grows'],
+ 'Missing article':['A singular countable noun needs an article or another determiner (a, the, this, my) before it.','"She is lecturer" → "She is a lecturer"'],
+ 'Article not needed here':['General statements with plural or uncountable nouns take no article.','"The knowledge is power" → "Knowledge is power"'],
+ 'Preposition':['Many prepositions are fixed by the word before them; a good learner\'s dictionary shows the usual one in its examples.','interested in · depend on · responsible for · different from'],
+ 'Missing preposition':['Some verbs and adjectives need a preposition before their object.','"listen music" → "listen to music"'],
+ 'Preposition not needed here':['Some verbs take their object directly, with no preposition.','"discuss about the results" → "discuss the results"'],
+ 'Agreement: singular or plural':['After numbers above one a noun is plural; and the verb agrees with its subject in number.','three reasons · the results were · she goes'],
+ 'Verb form: agreement with the subject or tense':['The verb must agree with its subject (she has, they have) and show the right time (yesterday she was).','"We has three" → "We have three" · "The results was" → "The results were"'],
+ 'Verb form':['The verb form shows the time and follows the grammar around it: past for finished events, the base form after can, must, will, to.','"Yesterday he go" → "Yesterday he went" · "She can goes" → "She can go"'],
+ 'Pronoun form':['Pronouns change form with their role: subject (I, she, they), object (me, her, them), possessive (my, her, their).','"Her and I wrote it" → "She and I wrote it"'],
+ 'Spelling: one word or two':['Some expressions are one word, others two, and dictionaries settle which.','a lot (two) · cannot (one) · nowadays (one)'],
+ 'Spelling':['A misspelling; the dictionary form is suggested.','recieve → receive'],
+ 'Word not needed here':['The word repeats or adds nothing the sentence needs; English often drops it.','"return back" → "return"'],
+ 'Missing word':['The sentence needs a word here to be grammatical, often a small one (to, the, is).','"She wants go" → "She wants to go"']});
 function lessonFor(why){
- /* a lesson is found by exact prefix first, then by any contained key — so a
-    label drift never leaves a card teaching nothing */
- const k=Object.keys(LESSONS).find(k=>why.indexOf(k)===0);
- if(k)return LESSONS[k];
- const inner=Object.keys(LESSONS).find(k=>why.indexOf(k)>=0);
+ /* exact prefix first; then the part after a model's name ("Laptop model:
+    Verb form"); a contained key only when it is long enough not to catch an
+    unrelated rule; and if no lesson fits, the rule itself, never filler */
+ why=String(why||'');
+ const exact=w=>Object.keys(LESSONS).filter(k=>w.indexOf(k)===0).sort((a,b)=>b.length-a.length)[0];
+ let k=exact(why);if(k)return LESSONS[k];
+ const m=why.match(/^(?:Laptop model|Apple model|Pro model|Companion server|Grammar model|Pro): (.*)$/);
+ if(m){k=exact(m[1]);if(k)return LESSONS[k];}
+ const inner=Object.keys(LESSONS).filter(k=>k.length>=10&&why.indexOf(k)>=0).sort((a,b)=>b.length-a.length)[0];
  if(inner)return LESSONS[inner];
- return ['This edit removes a small disturbance so the reader\'s attention stays on your argument.','Compare before and after aloud.'];}
+ return [why||'A suggested edit.','Compare the two versions aloud, and keep the one that says what you mean.'];}
 
 /* ================= DIFF ================= */
 function diffEdits(a,b,off){
@@ -7028,6 +7137,33 @@ function inkAiModel(slot){const f=async(input,opts,onTok)=>{
   const g=Object.assign({},opts||{});delete g.streamer;
   const r=await inkAiAsk(slot,{op:'run',input:input,opts:g,stream:!!onTok},null,onTok||null,0);return r.out;};
  f.__worker=slot;return f;}
+/* 7.34: Apple's own on-device model, on iPhones and iPads with iOS 26 and
+   Apple Intelligence (the app's AppleWritingModel.swift). When it is there it
+   takes the place the in-app Pro model had: proofreading (every correction
+   through the safety filter), rewrites as alternatives, drafting. */
+const APPLEAI={checked:false,ok:false,reason:''};
+async function inkAppleInit(){
+ const N=window.InkwellNative;
+ if(!(N&&N.appleAI&&N.appleAI.status))return;
+ try{const r=await N.appleAI.status();APPLEAI.checked=true;APPLEAI.ok=!!(r&&r.available);APPLEAI.reason=(r&&r.reason)||'';}
+ catch(e){APPLEAI.checked=true;APPLEAI.ok=false;APPLEAI.reason=String(e);}
+ if(APPLEAI.ok){
+  PRO=async function(msgs,gen,onTok){
+   const sys=(msgs[0]&&msgs[0].content)||'',user=(msgs[1]&&msgs[1].content)||'';
+   const r=await window.InkwellNative.appleAI.respond(sys,user);
+   if(!r||r.error)throw new Error((r&&r.error)||'no answer');
+   if(onTok)onTok(r.text);
+   return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
+  PRO.apple=true;PRONAME='Apple on-device model';PRODEVICE=deviceName();
+  instSay('Apple\u2019s on-device model is available on this '+deviceName()+': proofreading, rewriting and drafting use it, offline.');
+ }else instSay('Apple\u2019s on-device model is not available here ('+inkAppleWhy(APPLEAI.reason)+').');
+ setPill();}
+function inkAppleWhy(r){r=String(r||'');
+ if(/deviceNotEligible/i.test(r))return 'this device does not support Apple Intelligence';
+ if(/appleIntelligenceNotEnabled/i.test(r))return 'Apple Intelligence is switched off: Settings, Apple Intelligence & Siri';
+ if(/modelNotReady/i.test(r))return 'the model is still downloading; try again later';
+ if(/iOS 26/.test(r))return 'it needs iOS 26 or later';
+ return r||'unknown reason';}
 /* 7.33: the removed models' downloaded files are deleted; Scriba's Whisper
    files (the same cache) stay */
 async function inkPurgeOldModels(){
@@ -7281,7 +7417,10 @@ async function proChat(system,user,maxTok,onTok){return aiRun(()=>proChatDo(syst
 async function proChatDo(system,user,maxTok,onTok){
  /* onTok(accumulatedText) streams generation live when provided.
     The creed rides in front of every prompt, always; nothing waives it. */
- system=CREED+"\n\nThe writer's voice and standing rules follow; you assist, you never lead."+voiceNotes()+'\n\n'+system;
+ /* 7.34: the full creed (which asks for hedges and no dashes) made models
+    add hedges and strip dashes from the writer's own text; edits get one
+    rule instead */
+ system=system+' Never invent facts, citations or statistics.'+voiceNotes();
  const gen={max_new_tokens:maxTok||420,temperature:0.35,do_sample:true};
  let acc='';
  const out=await PRO([{role:'system',content:system},{role:'user',content:user}],gen,onTok?(t=>{acc+=t;onTok(acc);}):null);
@@ -7316,7 +7455,7 @@ async function ping(){try{const r=await inkSrvFetch('/api/health');
  if(!j.ok)throw 0;S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;}catch(e){S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;}setPill();}
 function setPill(){const p=document.getElementById('enginePill');
  if(S.connected){p.className='pill on';p.innerHTML='<i></i>'+(S.serverModel?'Server · '+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');}
- else if(PRO){p.className='pill on';p.innerHTML='<i></i>Pro · '+esc(PRONAME)+(PRODEVICE?' · '+esc(PRODEVICE):'');}
+ else if(PRO){p.className='pill on';p.innerHTML='<i></i>'+(PRO.apple?esc(PRONAME):'Pro · '+esc(PRONAME)+(PRODEVICE?' · '+esc(PRODEVICE):''));}
  else if(MINI){p.className='pill mini';p.innerHTML='<i></i>Grammar · '+esc(MININAME);}
  else{p.className='pill off';p.innerHTML='<i></i>Rules engine · offline';}}
 (function loop(){ping().finally(()=>setTimeout(loop,pingFails>5?60000:15000));})();
@@ -7719,7 +7858,283 @@ function citePickIfAsked(){
  try{sessionStorage.setItem('ink_cite_asked','1');}catch(e){}
  citePickUI();
 }
-function citeInsertUI(){
+/* ===== 7.34: Cite, with the engine and styles Zotero uses =====
+   citeproc-js (vendor/citeproc.js) and the official CSL styles (vendor/csl/)
+   format every citation and bibliography. Sources live in the Fontes library
+   (the same store the Fontes room uses). The panel adds sources from a DOI,
+   an ISBN, or BibTeX, RIS or CSL-JSON (Zotero's export formats), inserts a
+   citation at the cursor (a footnote in note styles), keeps the list of
+   sources this document cites, and writes or refreshes its bibliography. */
+const CITE_FAMILY={'apa':'apa','harvard-cite-them-right':'harvard','chicago-author-date':'chicago','modern-language-association':'mla','ieee':'num','nature':'num','chicago-notes-bibliography':'chicago','oscola':'chicago','oscola-no-ibid':'chicago','mhra-notes':'chicago'};
+const CITE_CACHE={};
+function inkCslId(){if(S.cslStyle)return S.cslStyle;const c=String(S.citeStyle||'harvard').toLowerCase();
+ return {harvard:'harvard-cite-them-right',apa:'apa',mla:'modern-language-association',chicago:'chicago-author-date',num:'ieee'}[c]||'harvard-cite-them-right';}
+async function inkCslLoad(){
+ const u=f=>new URL('vendor/'+f,document.baseURI||location.href).href;
+ if(!window.CSL){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=u('citeproc.js');sc.onload=res;sc.onerror=()=>rej(new Error('vendor/citeproc.js is missing'));document.head.appendChild(sc);});}
+ const id=inkCslId(),lang=S.dialect==='us'?'en-US':'en-GB';
+ if(!CITE_CACHE[id]){const r=await fetch(u('csl/'+id+'.csl'));if(!r.ok)throw new Error('style '+id+' is missing');CITE_CACHE[id]=await r.text();}
+ if(!CITE_CACHE[lang]){const r=await fetch(u('csl/locales-'+lang+'.xml'));CITE_CACHE[lang]=await r.text();}
+ return {style:CITE_CACHE[id],locale:CITE_CACHE[lang],lang:lang};}
+/* every source keeps a permanent id of its own (a source added before 7.34,
+   or by the Fontes room's form, receives one once, and it is saved) */
+function inkLib(){
+ let raw=[];try{raw=JSON.parse(localStorage.getItem('fontes_sources')||'[]');}catch(e){raw=[];}
+ if(!Array.isArray(raw))raw=[];
+ let ch=false;const seen={};
+ raw.forEach((x,i)=>{if(!x||typeof x!=='object')return;if(!x.id||seen[x.id]){x.id='fo'+Date.now().toString(36)+i;ch=true;}x.id=String(x.id);seen[x.id]=1;});
+ if(ch)inkLibSave(raw);
+ return raw.filter(x=>x&&(x.title||x.author));}
+/* new sources into the library; a source already there (same DOI, or the
+   same title and year) is not added twice */
+function inkLibMerge(found){
+ const lib=inkLib();let added=0,dup=0;
+ for(const c of found){
+  const doi=(c.DOI||'').toLowerCase(),key=(c.title||'').toLowerCase().replace(/\W+/g,'')+'|'+FONTES.yearOf(c.issued);
+  if(lib.some(x=>(doi&&(x.doi||'').toLowerCase()===doi)||((x.title||'').toLowerCase().replace(/\W+/g,'')+'|'+(x.year||''))===key)){dup++;continue;}
+  lib.push(FONTES.fromCSL(c));added++;}
+ inkLibSave(lib);return {added:added,dup:dup};}
+function inkLibSave(list){try{localStorage.setItem('fontes_sources',JSON.stringify(list));}catch(e){toast('The library could not be saved');}}
+function inkDoc(){return S.docs.find(d=>d.id===S.active)||null;}
+async function inkCiteEngine(items,fmt){const st=await inkCslLoad();const e=FONTES.engine(window.CSL,st.style,st.locale,items,st.lang);e.setOutput(fmt||'text');return e;}
+let CITEPICK=[];
+/* a new style restyles the citations already in the document, as Zotero does */
+async function citeSetStyle(id){
+ S.cslStyle=id;SV('cslStyle',id);S.citeStyle=CITE_FAMILY[id]||'harvard';SV('citeStyle',S.citeStyle);
+ try{localStorage.setItem('cd_cite_style',citeStyleName());}catch(e){}
+ const doc=inkDoc();
+ if(doc&&(doc.citeRec||[]).length){citeUndoPoint();const n=await citeRefresh(true);if(n)toast(n+' citation'+(n===1?'':'s')+' restyled; Undo reverses it');
+  if(/^#\s*(references|bibliography|works cited)\s*$/mi.test(ed.value)){await citeBibliography();}}
+ citeInsertUI();}
+async function citeInsertUI(){
+ const b=document.getElementById('modalBody');
+ const lib=inkLib();
+ b.innerHTML='<div class="ctPanel"><h3>❝ Cite</h3>'
+  +'<div class="ctRow"><label for="ctStyle">Style</label><select id="ctStyle" onchange="citeSetStyle(this.value)">'
+  +FONTES.STYLES.map(x=>'<option value="'+x[0]+'"'+(x[0]===inkCslId()?' selected':'')+'>'+esc(x[1])+'</option>').join('')+'</select></div>'
+  +'<div class="ctHint">Add a source: paste a DOI, an ISBN, or BibTeX, RIS or CSL-JSON (Zotero exports all three), or open a file.</div>'
+  +'<div class="ctRow"><textarea id="ctAdd" rows="2" placeholder="10.1016/j.tics.2016.07.002 · 9780143036531 · @article{…}"></textarea>'
+  +'<div class="ctCol"><button class="primary" onclick="citeAdd()">Add</button><label class="lkbtn ctFile">Open a file<input type="file" accept=".bib,.ris,.json,.txt" onchange="citeAddFile(this)"></label></div></div>'
+  +'<div class="ctRow"><input id="ctFind" placeholder="Search the library: author, title, year, tag" oninput="citeList()">'
+  +'<select id="ctLab" title="What the number refers to"><option value="page">page</option><option value="chapter">chapter</option><option value="paragraph">para</option><option value="section">section</option><option value="figure">figure</option><option value="note">note</option></select>'
+  +'<input id="ctLoc" placeholder="number" title="Page or other locator, for the first ticked source"></div>'
+  +'<div id="ctList">'+(lib.length?'Formatting…':'<p class="ctHint">The library is empty. Add a source above, or in the Fontes room.</p>')+'</div>'
+  +'<div class="ctActs"><button class="primary" onclick="citeInsertPicked()">Insert citation at the cursor</button>'
+  +'<button onclick="citeBibliography()">Insert or refresh the bibliography</button><button onclick="closeModal();citeUndoPoint();citeRefresh()" title="Format every citation again, in order, in this style">Refresh citations</button></div>'
+  +'<div class="ctActs ctSmall"><span>Export the library:</span><button class="lkbtn" onclick="citeExport(\'bib\')">BibTeX</button><button class="lkbtn" onclick="citeExport(\'ris\')">RIS</button><button class="lkbtn" onclick="citeExport(\'json\')">CSL-JSON</button>'
+  +'<button class="lkbtn" style="margin-left:auto" onclick="closeModal()">Close</button></div>'
+  +'<p class="ctHint" style="margin-top:8px">Formatted by citeproc-js with the official Citation Style Language styles, the engine and styles Zotero uses. Changing the style restyles the citations already placed with Cite. Store titles as the style expects (APA wants sentence case); a lookup copies the publisher\'s own capitalisation.</p></div>';
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');
+ CITEPICK=[];citeList();}
+async function citeList(){
+ const box=document.getElementById('ctList');if(!box)return;
+ const q=((document.getElementById('ctFind')||{}).value||'').toLowerCase().trim();
+ const lib=inkLib();if(!lib.length)return;
+ const items=lib.map(FONTES.toCSL);
+ let e;try{e=await inkCiteEngine(items,'html');}catch(err){box.innerHTML='<p style="color:#b03a2e">'+esc(err.message)+'</p>';return;}
+ const rows=lib.map((x,i)=>({x:x,c:items[i]})).filter(r=>!q||[r.x.author,r.x.title,r.x.year,r.x.tags,r.x.container].join(' ').toLowerCase().indexOf(q)>=0);
+ const doc=inkDoc(),cited=(doc&&doc.cites)||[];
+ box.innerHTML=rows.map(r=>{let bib='';try{bib=e.bibliography([r.c.id])[0]||'';}catch(err){bib=esc(r.x.title||'');}
+  const on=CITEPICK.indexOf(r.c.id)>=0;
+  return '<label class="ctItem'+(on?' on':'')+'">'
+   +'<input type="checkbox" '+(on?'checked ':'')+'onchange="citePick(\''+esc(r.c.id)+'\',this.checked)">'
+   +'<span>'+FONTES.htmlFlat(bib)+(cited.indexOf(r.c.id)>=0?' <span style="font:11px sans-serif;color:var(--mut)">· cited here</span>':'')+'</span></label>';}).join('')||'<p style="color:var(--mut);font-size:13px">Nothing matches.</p>';}
+function citePick(id,on){CITEPICK=CITEPICK.filter(x=>x!==id);if(on)CITEPICK.push(id);citeList();}
+async function citeAdd(){
+ const v=((document.getElementById('ctAdd')||{}).value||'').trim();if(!v)return toast('Paste a DOI, an ISBN, or BibTeX or RIS first');
+ let found=[];
+ try{
+  if(/^[\[{@]|^TY\s{2}-/m.test(v))found=FONTES.parseAny(v);
+  else for(const piece of v.split(/[\s,;]+/).filter(Boolean)){
+   if(FONTES.cleanDOI(piece))found.push(await FONTES.lookupDOI(piece));
+   else if(/^(97[89])?\d{9}[\dXx]$/.test(piece.replace(/-/g,'')))found.push(await FONTES.lookupISBN(piece));}
+ }catch(err){return toast('Not added: '+err.message+(navigator.onLine?'':' (a DOI or ISBN lookup needs the internet)'));}
+ if(!found.length)return toast('Nothing recognised: a DOI starts with 10., an ISBN has 10 or 13 digits');
+ citeMerge(found);}
+function citeAddFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const found=FONTES.parseAny(String(r.result||''));if(!found.length)return toast('No sources found in '+f.name);citeMerge(found);}catch(err){toast('Could not read '+f.name+': '+err.message);}};r.readAsText(f);}
+function citeMerge(found){
+ const r=inkLibMerge(found),added=r.added,dup=r.dup;const a=document.getElementById('ctAdd');if(a)a.value='';
+ toast(added+' source'+(added===1?'':'s')+' added'+(dup?'; '+dup+' already in the library':''));citeList();}
+async function citeInsertPicked(){
+ if(!CITEPICK.length)return toast('Tick the source or sources to cite');
+ const doc=inkDoc();if(!doc)return;
+ const lib=inkLib(),items=lib.map(FONTES.toCSL);
+ const loc=((document.getElementById('ctLoc')||{}).value||'').trim(),lab=((document.getElementById('ctLab')||{}).value||'page');
+ /* the page (or other locator) belongs to the first ticked source */
+ const its=CITEPICK.map((id,i)=>Object.assign({id:id},(loc&&i===0)?{locator:loc,label:lab}:{}));
+ let e,out;try{e=await inkCiteEngine(items,'markdown');out=e.citeAll([{items:its}],'markdown')[0];}catch(err){return toast(err.message);}
+ const at=ed.selectionEnd;
+ closeModal();citeUndoPoint();
+ doc.citeRec=doc.citeRec||[];
+ if(e.isNote){const k=citeFootnoteAt(at,out);doc.citeRec.push({items:its,note:true,k:k,text:out});}
+ else{const t=ed.value,pre=t.slice(0,at),sp=(pre&&!/[\s(\[]$/.test(pre))?' ':'';ed.value=pre+sp+out+t.slice(at);ed.setSelectionRange(at+sp.length+out.length,at+sp.length+out.length);
+  doc.citeRec.push({items:its,note:false,text:out});}
+ /* one pass over every citation, so a later note takes the short form or
+    ibid and a numbered style numbers in order of first citation */
+ await citeRefresh(true);
+ persist();afterChange();toast('Cited · '+(FONTES.STYLES.find(x=>x[0]===inkCslId())||['',''])[1]);}
+/* a note style: the marker at the cursor (after the word, before nothing),
+   the note at the end of the # Notes section; returns the note's number */
+function citeFootnoteAt(at,noteText){
+ let t=ed.value,mx=0,m;const re=/\[\^(\d+)\]/g;while((m=re.exec(t)))mx=Math.max(mx,parseInt(m[1],10));
+ const k=mx+1,mark='[^'+k+']';
+ const r=inkNotesAppend(t,'[^'+k+']: '+noteText);
+ /* the definition shifts the cursor only when it went in before it */
+ const p=at<=r.at?at:at+(r.t.length-t.length);
+ ed.value=r.t.slice(0,p)+mark+r.t.slice(p);ed.setSelectionRange(p+mark.length,p+mark.length);
+ return k;}
+/* lines added at the end of the # Notes section (made when missing); at is
+   where they went in */
+function inkNotesAppend(t,lines){
+ const notesIx=t.search(/^#\s*Notes?\s*$/mi);
+ if(notesIx>=0){const after=t.slice(notesIx),nxt=after.search(/\n\s*#\s/),end=nxt>=0?notesIx+nxt:t.length;
+  const before=t.slice(0,end).replace(/\s*$/,'');return {t:before+'\n'+lines+t.slice(end),at:before.length};}
+ /* a new Notes section goes before the bibliography, when there is one */
+ const bib=/^#\s*(references|bibliography|works cited)\s*$/mi.exec(t);
+ if(bib){const before=t.slice(0,bib.index).replace(/\s*$/,'');return {t:before+'\n\n# Notes\n'+lines+'\n\n'+t.slice(bib.index),at:before.length};}
+ const before=t.replace(/\s*$/,'');return {t:before+'\n\n# Notes\n'+lines,at:before.length};}
+/* notes renumbered in order of their markers; the definitions in the Notes
+   section put in the same order. Keys may be numbers or @-tokens. */
+function inkNotesRenumber(t){
+ const map={};let n=0;
+ t=t.replace(/\[\^(@?\d+)\](?!:)/g,function(m,old){if(!(old in map))map[old]=++n;return '[^'+map[old]+']';});
+ t=t.replace(/^\[\^(@?\d+)\]:/gm,function(m,old){return (old in map)?'[^'+map[old]+']:':m;});
+ const ix=t.search(/^#\s*Notes?\s*$/mi);
+ if(ix>=0){const head=t.indexOf('\n',ix);
+  if(head>=0){const after=t.slice(head+1),nxt=after.search(/\n\s*#\s/),end=nxt>=0?head+1+nxt:t.length,body=t.slice(head+1,end);
+   const lead=body.match(/^\s*/)[0],blocks=body.slice(lead.length).split(/\n(?=\[\^\d+\]:)/);
+   if(blocks.length>1&&blocks.every(x=>/^\[\^\d+\]:/.test(x))){
+    blocks.sort((x,y)=>parseInt(x.slice(2),10)-parseInt(y.slice(2),10));
+    t=t.slice(0,head+1)+lead+blocks.join('\n')+t.slice(end);}}}
+ return {t:t,map:map};}
+/* a # Notes heading with nothing left under it goes */
+function inkNotesDropEmpty(t){
+ const h=/^#\s*Notes?[ \t]*$/mi.exec(t);if(!h)return t;
+ const after=t.slice(h.index+h[0].length),nxt=after.search(/\n\s*#\s/),body=nxt>=0?after.slice(0,nxt):after;
+ if(/\S/.test(body))return t;
+ return t.slice(0,h.index).replace(/\s*$/,'')+(nxt>=0?'\n\n'+after.slice(nxt).replace(/^\s*/,''):'\n');}
+/* the citations Cite planted, found again in the text: in-text ones by their
+   exact wording, notes by their number. A note whose wording was changed by
+   hand is left as it is. */
+function inkCiteScan(t,doc){
+ const recs=(doc&&doc.citeRec)||[],inst=[],hand=[],claimed=[];
+ const defs={};const reDef=/^\[\^(\d+)\]:[ \t]*(.*)$/gm;let m;
+ while((m=reDef.exec(t)))defs[m[1]]={text:m[2]};
+ for(const r of recs.filter(r=>r.note)){
+  const d=defs[r.k];if(!d)continue;
+  const mm=new RegExp('\\[\\^'+r.k+'\\](?!:)').exec(t);if(!mm)continue;
+  if(d.text.trim()!==String(r.text).trim()){hand.push(r);continue;}
+  inst.push({pos:mm.index,len:mm[0].length,rec:r,note:true});}
+ const seen={};
+ for(const r of recs.filter(r=>!r.note&&r.text).sort((x,y)=>y.text.length-x.text.length)){
+  if(seen[r.text])continue;seen[r.text]=1;
+  let i=0;while((i=t.indexOf(r.text,i))>=0){const j=i+r.text.length;
+   if(!claimed.some(c=>i<c[1]&&j>c[0])){claimed.push([i,j]);inst.push({pos:i,len:r.text.length,rec:r,note:false});}
+   i=j;}}
+ inst.sort((x,y)=>x.pos-y.pos);
+ return {inst:inst,hand:hand};}
+/* Refresh, as in Zotero: every citation Cite planted is formatted again, in
+   document order, in the chosen style. Later notes take the short form or
+   ibid, numbered styles renumber, and a change between a note style and an
+   in-text style moves each citation between the text and the notes. */
+async function citeRefresh(quiet){
+ const doc=inkDoc();
+ if(!doc||!(doc.citeRec||[]).length){if(!quiet)toast('No citations were planted with Cite in this document yet');return 0;}
+ const items=inkLib().map(FONTES.toCSL),known={};items.forEach(c=>known[c.id]=1);
+ let e;try{e=await inkCiteEngine(items,'markdown');}catch(err){toast(err.message);return 0;}
+ let t=ed.value;const sc=inkCiteScan(t,doc);
+ const inst=sc.inst.filter(x=>x.rec.items.every(it=>known[it.id]));
+ const gone=sc.inst.length-inst.length,toNote=e.isNote;
+ /* the cursor travels with the text as a private character */
+ const CUR='';let cur=Math.min(ed.selectionEnd,t.length);
+ /* never inside a heading or a note's definition, where it would hide the
+    line from the patterns below: then at the end of the line before */
+ const ls=t.lastIndexOf('\n',cur-1)+1;
+ if(/^(#|\[\^)/.test(t.slice(ls,ls+2)))cur=ls>0?ls-1:-1;
+ if(cur>=0){t=t.slice(0,cur)+CUR+t.slice(cur);inst.forEach(x=>{if(x.pos>=cur)x.pos++;});}
+ const tok=i=>''+i+'';
+ /* notes that sit side by side ("morality.[^1][^2]") move together, so both
+    citations go before the full stop */
+ const units=[];inst.forEach((x,i)=>{const u=units[units.length-1];
+  if(!toNote&&x.note&&u&&u.note&&inst[u.last].pos+inst[u.last].len===x.pos)u.last=i;else units.push({first:i,last:i,note:x.note});});
+ for(let ui=units.length-1;ui>=0;ui--){const u=units[ui],x=inst[u.first];let a=x.pos,b=inst[u.last].pos+inst[u.last].len,rep='';
+  for(let i=u.first;i<=u.last;i++)rep+=(i>u.first?' ':'')+tok(i);
+  if(toNote&&!x.note){while(a>0&&t[a-1]===' ')a--;if(/[.,;:]/.test(t[b]||'')){rep=t[b]+rep;b++;}}
+  else if(!toNote&&x.note){if(a>1&&/[.,;:]/.test(t[a-1])&&!/\s/.test(t[a-2])){rep=' '+rep+t[a-1];a--;}else if(a>0&&!/\s/.test(t[a-1]))rep=' '+rep;}
+  t=t.slice(0,a)+rep+t.slice(b);}
+ for(const x of inst)if(x.note)t=t.replace(new RegExp('^\\[\\^'+x.rec.k+'\\]:.*(?:\\n|$)','m'),'');
+ let out,map={};
+ if(toNote){
+  t=t.replace(/(\d+)/g,(m0,i)=>'[^@'+i+']');
+  if(inst.length)t=inkNotesAppend(t,inst.map((x,i)=>'[^@'+i+']: '+i+'').join('\n')).t;
+  const r=inkNotesRenumber(t);t=r.t;map=r.map;
+  try{out=e.citeAll(inst.map((x,i)=>({items:x.rec.items,noteIndex:map['@'+i]})),'markdown');}catch(err){toast('Not refreshed: '+err.message);return 0;}
+  t=t.replace(/(\d+)/g,(m0,i)=>out[+i]);
+ }else{
+  try{out=e.citeAll(inst.map(x=>({items:x.rec.items})),'markdown');}catch(err){toast('Not refreshed: '+err.message);return 0;}
+  t=t.replace(/(\d+)/g,(m0,i)=>out[+i]);
+  const r=inkNotesRenumber(t);t=r.t;map=r.map;
+  t=inkNotesDropEmpty(t);}
+ cur=t.indexOf(CUR);if(cur>=0)t=t.replace(CUR,'');
+ const keep=sc.hand.map(r=>Object.assign({},r,{k:map[r.k]||r.k}));
+ doc.citeRec=inst.map((x,i)=>({items:x.rec.items,note:toNote,k:toNote?map['@'+i]:null,text:out[i]})).concat(keep);
+ const ids=[];doc.citeRec.forEach(r=>r.items.forEach(it=>{if(ids.indexOf(it.id)<0)ids.push(it.id);}));doc.cites=ids;
+ ed.value=t;if(cur>=0)ed.setSelectionRange(cur,cur);
+ persist();afterChange();
+ if(!quiet)toast(inst.length+' citation'+(inst.length===1?'':'s')+' refreshed'+(sc.hand.length?'; '+sc.hand.length+' changed by hand and left as written':'')+(gone?'; '+gone+' whose source is no longer in the library left as written':''));
+ return inst.length;}
+async function citeBibliography(){
+ const doc=inkDoc();if(!doc)return;
+ if((doc.citeRec||[]).length){closeModal();citeUndoPoint();await citeRefresh(true);}
+ const lib=inkLib(),items=lib.map(FONTES.toCSL),ids=(doc.cites&&doc.cites.length)?doc.cites.filter(id=>items.some(c=>c.id===id)):CITEPICK.slice();
+ if(!ids.length)return toast('Cite a source first (or tick sources), then the bibliography lists them');
+ let e;try{e=await inkCiteEngine(items,'markdown');}catch(err){return toast(err.message);}
+ const entries=e.bibliography(ids).map(FONTES.htmlToText);
+ const id=inkCslId(),head=id==='modern-language-association'?'Works Cited':e.isNote?'Bibliography':'References';
+ const block='# '+head+'\n'+entries.join('\n')+'\n';
+ closeModal();if(!(doc.citeRec||[]).length)citeUndoPoint();
+ let t=ed.value;const h=/^#\s*(references|bibliography|works cited)\s*$/mi.exec(t);
+ if(h){const after=t.slice(h.index+h[0].length),nxt=after.search(/\n\s*#\s/),end=nxt>=0?h.index+h[0].length+nxt:t.length;t=t.slice(0,h.index)+block.replace(/\n$/,'')+t.slice(end);}
+ else t=t.replace(/\s*$/,'')+'\n\n'+block;
+ ed.value=t;persist();afterChange();toast(entries.length+' entr'+(entries.length===1?'y':'ies')+' in the '+head.toLowerCase());}
+/* the Fontes room (a page inside the desk) formats with the same engine and
+   styles through this; it falls back to its own formatting on its own */
+let INK_FMT={key:'',val:null};
+window.INK_FONTES={
+ styles:()=>FONTES.STYLES.slice(),
+ style:()=>inkCslId(),
+ setStyle:id=>{S.cslStyle=id;SV('cslStyle',id);S.citeStyle=CITE_FAMILY[id]||'harvard';SV('citeStyle',S.citeStyle);try{localStorage.setItem('cd_cite_style',citeStyleName());}catch(e){}},
+ /* {ids, bib:{id:html}, cite:{id:text}, note:boolean, order:[ids in the style's bibliography order]} */
+ format:async function(){const lib=inkLib();
+  let key='';try{key=inkCslId()+'|'+S.dialect+'|'+(localStorage.getItem('fontes_sources')||'');}catch(x){}
+  if(key&&INK_FMT.key===key)return INK_FMT.val;
+  const items=lib.map(FONTES.toCSL);const e=await inkCiteEngine(items,'html');
+  const ids=items.map(c=>c.id),bib={},text={},cite={};
+  /* the whole bibliography in the style's order (repeated authors as the
+     style sets them), and each source on its own for the rows of the list,
+     without a number (a number belongs to a document, not a library) */
+  const all=e.bibliographyIds(ids),full=all.map(x=>({id:x.id,html:FONTES.htmlFlat(x.text),text:FONTES.htmlToText(x.text)}));
+  const bare=h=>String(h).replace(/<div class="csl-left-margin">[\s\S]*?<\/div>/,'');
+  ids.forEach(id=>{let h='';try{h=(e.bibliographyIds([id])[0]||{}).text||'';}catch(x){}bib[id]=FONTES.htmlFlat(bare(h));text[id]=FONTES.htmlToText(bare(h));});
+  if(!e.isNumeric)ids.forEach(id=>{try{cite[id]=FONTES.htmlToText(e.citeAll([{items:[{id:id}]}],'html')[0]||'');}catch(x){cite[id]='';}});
+  const val={ids:ids,bib:bib,text:text,cite:cite,full:full,note:e.isNote,numeric:e.isNumeric};
+  INK_FMT={key:key,val:val};return val;},
+ add:async function(v){v=String(v||'').trim();let found=[];
+  if(/^[\[{@]|^TY\s{2}-/m.test(v))found=FONTES.parseAny(v);
+  else for(const piece of v.split(/[\s,;]+/).filter(Boolean)){
+   if(FONTES.cleanDOI(piece))found.push(await FONTES.lookupDOI(piece));
+   else if(/^(97[89])?\d{9}[\dXx]$/.test(piece.replace(/-/g,'')))found.push(await FONTES.lookupISBN(piece));}
+  return Object.assign({found:found.length},inkLibMerge(found));},
+ exportText:kind=>{const items=inkLib().map(FONTES.toCSL);return kind==='bib'?FONTES.toBibTeX(items):kind==='ris'?FONTES.toRIS(items):JSON.stringify(items,null,1);}
+};
+function citeExport(kind){
+ const items=inkLib().map(FONTES.toCSL);if(!items.length)return toast('The library is empty');
+ const out=kind==='bib'?FONTES.toBibTeX(items):kind==='ris'?FONTES.toRIS(items):JSON.stringify(items,null,1);
+ const name='inkwell-library.'+(kind==='bib'?'bib':kind==='ris'?'ris':'json');
+ if(typeof nativeSave==='function'&&nativeSave(name,out))return toast('Saved '+name);
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/plain'}));a.download=name;a.click();}
+function citeInsertUI_old(){
  var refs=libRefs();
  var b=document.getElementById('modalBody');
  if(!refs.length){
@@ -7908,27 +8323,49 @@ function chunkText(t,limit){
   cur+=p;off+=p.length;}
  flush();
  return chunks.length?chunks:[{text:t,off:0}];}
+/* 7.34: the rules engine answers at once; a writing model (the laptop's, or
+   Apple's on an iPhone or iPad) then reads one paragraph at a time, starting
+   where the cursor is, and its suggestions appear as they arrive. Every one
+   passes the safety filter; a paragraph changed meanwhile is skipped. */
 async function correct(){
- const t=ed.value.trim();if(!t)return toast('Write something first 🙂');
- let rules=inkRules(ed.value),ai=[];
- if(S.connected){toast('AI is reading…');
-  try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
-   ai=(r.edits||[]).filter(e=>e.fix!==undefined);}catch(e){toast('AI request failed');}}
- else if(MINI){toast('The grammar model is reading…');
-  try{ai=await runMini(t);}catch(e){toast('Grammar model error; the Engine log says why');}}
- else if(PRO){toast('Pro checking…');
-  try{const chunks=chunkText(ed.value,2400);const SYS='You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.';
-   for(let ci=0;ci<chunks.length;ci++){const ch=chunks[ci];
-    document.getElementById('stModel').textContent='Pro '+ (ci+1)+'/'+chunks.length+'…';
-    const fixed=await proChat(SYS,ch.text,Math.min(1200,wordCt(ch.text)*2+80));
-    if(fixed){await inkVerbs();ai=ai.concat(inkSafeEditsText(ch.text,fixed,ch.off,'Pro model'));}}
-   document.getElementById('stModel').textContent='';}catch(e){toast('Pro error; see console');}}
- else{/* the rules engine IS the deep pass; no nudge toward models, because none
-   is needed. AI layers on top only if the writer asks for it (Studio ▸ ⚙). */}
- ai=ai.filter(e=>e.cat!=='r');
- EDITS=rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai).sort((a,b)=>a.start-b.start);
- SOLOI=0;renderCards();updateStats();renderHL();
- toast(EDITS.length?EDITS.length+' suggestions':'✨ The page is clean');}
+ if(!ed.value.trim())return toast('Write something first 🙂');
+ const rules=inkRules(ed.value);
+ EDITS=rules.slice().sort((a,b)=>a.start-b.start);SOLOI=0;renderCards();updateStats();renderHL();
+ const PROOF_SYS='You are a careful copy editor. Correct only errors of grammar, spelling and punctuation in the user\'s text. Change as little as possible: keep every word that is already correct, keep the writer\'s meaning, register and voice, keep names, numbers, quotations and citations exactly. If the text is already correct, return it unchanged. Output only the corrected text, with no explanation.';
+ let engine=null,label='';
+ if(S.connected){
+  label=S.serverModel?'Laptop model':'Companion server';
+  engine=async p=>{const r=await api('correct',{text:p,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
+   return applyEditsText(p,(r.edits||[]).filter(e=>e.fix!=null&&typeof e.start==='number'&&e.cat!=='r'));};
+ }else if(PRO){
+  label=PRO.apple?'Apple model':'Pro model';
+  engine=async p=>await proChat(PROOF_SYS,p,Math.min(900,wordCt(p)*2+60));
+ }
+ if(!engine){toast(EDITS.length?EDITS.length+' correctness issue'+(EDITS.length===1?'':'s'):'✨ No correctness issues found');return;}
+ await inkVerbs();
+ await inkProgressiveCheck(engine,label);}
+let INKCHECK=0;
+async function inkProgressiveCheck(engine,label){
+ const run=++INKCHECK,text=ed.value,paras=[];const re=/[^\n]+/g;let m;
+ while((m=re.exec(text)))if(m[0].trim().split(/\s+/).length>=3)paras.push({s:m.index,t:m[0]});
+ const cur=(_fSel&&typeof _fSel.s==='number')?_fSel.s:0;
+ const k=paras.findIndex(p=>p.s<=cur&&cur<=p.s+p.t.length);if(k>0)paras.unshift(paras.splice(k,1)[0]);
+ const st=document.getElementById('stModel');let found=[],n=0;
+ toast(label+' is reading, paragraph by paragraph…');
+ for(const p of paras){
+  if(run!==INKCHECK)return;
+  n++;if(st)st.textContent=label+': paragraph '+n+' of '+paras.length+'…';
+  let fixed=null;try{fixed=await engine(p.t);}catch(e){continue;}
+  if(run!==INKCHECK)return;
+  if(!fixed||ed.value.slice(p.s,p.s+p.t.length)!==p.t)continue;
+  const safe=inkSafeEditsText(p.t,String(fixed).replace(/\s+$/,''),p.s,label);
+  if(!safe.length)continue;
+  found=found.concat(safe);
+  const rules=inkRules(ed.value);
+  EDITS=rules.filter(r=>!found.some(a=>a.start<r.end&&a.end>r.start)).concat(found).sort((a,b)=>a.start-b.start);
+  renderCards();updateStats();renderHL();}
+ if(st)st.textContent='';
+ toast(found.length?(found.length+' suggestion'+(found.length===1?'':'s')+' from the '+label.toLowerCase()):('The '+label.toLowerCase()+' found nothing to correct'));}
 
 /* ================= HIGHLIGHTS + CARDS ================= */
 function renderHL(){const t=ed.value;
@@ -8138,13 +8575,103 @@ async function improveAlternatives(){
    proChat(SYS_RW[mv[0]]||SYS_RW.concise,t,Math.min(900,wordCt(t)*2+120)).then(r=>{
     if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r,why:'Written by Pro; '+mv[1].split('; ')[1]});renderAlts('');}});});}
  if(!S.connected&&!PRO)setTimeout(()=>{if(ALTMODE&&!S.connected&&!PRO)renderAlts(ALTS.length?(ALTS.length+' rules-engine alternative'+(ALTS.length>1?'s':'')+'; a local model (⚙ Engine) would add more.'):'This selection is already tight; no rules-engine alternative differs from it.');},300);}
+/* ===== 7.34: rewrite with your own prompt, and a library of prompts =====
+   As in Grammarly: say how the passage should sound, or pick a prepared
+   prompt; each version comes back with its changes marked, and nothing
+   changes the page until "Use this" (which checks the text is unchanged). */
+const PROMPT_LIBRARY=[
+ ['Academic (DPhil)',[
+  ['Scholarly register','Rewrite in the register of an Oxford DPhil thesis: precise diction, formal syntax, no contractions; keep the argument and every citation exactly.'],
+  ['Sharpen the claim','Make the central claim explicit and precise, and make the link between claim and evidence clear; add no new evidence.'],
+  ['Hedge to the evidence','Adjust the strength of each claim to match the evidence the passage gives: hedge speculation, state established points plainly.'],
+  ['Synthesis, not a list','Rewrite as a synthesis of the sources: compare, contrast and relate them to one another rather than listing them; keep every citation.'],
+  ['Signpost the argument','Improve the flow of the argument with clear signposting and transitions between steps; keep every step.'],
+  ['Topic sentence','Begin with a strong topic sentence that states the paragraph\'s point; keep the rest of the content.'],
+  ['Methodology: precise','Rewrite as a precise, sequential, replicable description of method; keep every detail.'],
+  ['Abstract style','Rewrite in the style of a thesis abstract: problem, approach, finding, implication; keep every fact.']]],
+ ['Creative',[
+  ['Vivid and concrete','Make the prose vivid and concrete with precise images; keep every event and fact.'],
+  ['Show, don\'t tell','Show rather than tell: turn stated feelings into action and detail; keep what happens.'],
+  ['Tighten the pacing','Tighten the pacing: cut slack, vary sentence length; keep every event.'],
+  ['More lyrical','Make the language more lyrical and rhythmic without changing what is said.']]],
+ ['Clarity',[
+  ['Improve it','Improve the clarity and flow while keeping the meaning, the register and the writer\'s voice.'],
+  ['Simplify','Simplify for a general educated reader: plainer words, shorter sentences, the same meaning.'],
+  ['One idea per sentence','Rewrite so that each sentence carries one idea; keep every idea.'],
+  ['Active voice','Use the active voice where it helps the reader; keep the meaning.']]],
+ ['Tone',[
+  ['Confident','Make it sound confident and decisive; keep the claims as they are.'],
+  ['Diplomatic','Make it sound diplomatic and courteous; keep the substance.'],
+  ['Neutral','Make the tone neutral and impartial; keep the substance.'],
+  ['Warm','Make the tone warm and approachable; keep the substance.']]],
+ ['Length',[
+  ['Shorter by a third','Shorten by about a third; keep every key point and citation.'],
+  ['Expand, no new facts','Expand with fuller explanation and smoother transitions; add no facts, sources or examples that are not in the text.']]],
+ ['Learners of English',[
+  ['Sound natural','Make it sound natural to a native reader of English, changing as little as needed; keep the meaning.'],
+  ['Correct only','Correct only grammar, spelling and punctuation; change nothing else.']]]];
+function inkPromptsMine(){try{return JSON.parse(localStorage.getItem('ink_prompts')||'[]');}catch(e){return [];}}
+function inkPromptsSave(list){try{localStorage.setItem('ink_prompts',JSON.stringify(list.slice(0,40)));}catch(e){}}
+function openPromptRewrite(){
+ const sel=inkTargetText();
+ if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
+ if(sel.whole){toast('Select the sentences or paragraph to rewrite first.');return;}
+ inkAltsOpen(sel,'');ALTSEL.prompt=true;renderAlts('');
+ setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
+function inkPromptPanel(){
+ const mine=inkPromptsMine();
+ const chip=(label,instr)=>'<button class="bchip" title="'+esc(instr)+'" onclick="inkPromptRun(this.title)">'+esc(label)+'</button>';
+ return '<div class="pmBox" style="margin:2px 0 12px">'
+  +'<div style="font-size:12px;color:var(--mut);margin-bottom:4px">How should the selected passage sound?</div>'
+  +'<textarea id="pmIn" rows="3" style="width:100%;box-sizing:border-box;font:13px/1.5 inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" placeholder="e.g. Make it read like the opening of a DPhil chapter: confident, precise, one clear claim" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){inkPromptRun(this.value);}"></textarea>'
+  +'<div class="row" style="gap:6px;margin:6px 0"><button class="primary" onclick="inkPromptRun(document.getElementById(\'pmIn\').value)">Rewrite ▸</button>'
+  +'<button class="lkbtn" onclick="inkPromptKeep()">☆ Save this prompt</button></div>'
+  +(mine.length?'<div style="font-size:11px;color:var(--mut);margin:8px 0 3px">Your prompts</div><div>'+mine.map((m,i)=>chip(m.label,m.instr)+'<button class="lkbtn" title="Remove" onclick="inkPromptDrop('+i+')">×</button>').join('')+'</div>':'')
+  +PROMPT_LIBRARY.map(g=>'<div style="font-size:11px;color:var(--mut);margin:8px 0 3px">'+esc(g[0])+'</div><div>'+g[1].map(x=>chip(x[0],x[1])).join('')+'</div>').join('')
+  +'</div>';}
+function inkPromptKeep(){const v=(document.getElementById('pmIn')||{}).value||'';if(!v.trim())return toast('Write the prompt first');
+ const label=v.trim().split(/\s+/).slice(0,5).join(' ')+(v.trim().split(/\s+/).length>5?'…':'');
+ const L=inkPromptsMine().filter(m=>m.instr!==v.trim());L.unshift({label:label,instr:v.trim()});inkPromptsSave(L);renderAlts('');toast('Prompt saved');}
+function inkPromptDrop(i){const L=inkPromptsMine();L.splice(i,1);inkPromptsSave(L);renderAlts('');}
+/* one rewrite through the best engine there is: the laptop's model, Apple's
+   on-device model, or the in-app model */
+async function inkWrite(instr,text){
+ const rules=" Keep every claim, citation, name, number, quotation and dash unless the instruction says otherwise; add no facts, sources or examples that are not in the text. Output only the rewritten text.";
+ if(S.connected){const r=await api('rewrite_custom',{text:text,instruction:instr});
+  if(r&&r.ok&&r.text&&r.text.trim())return {text:r.text.trim(),by:S.serverModel||'the laptop\u2019s model'};
+  throw new Error((r&&r.error)||'no answer');}
+ if(PRO){const r=await proChat(instr+rules,text,Math.min(1500,wordCt(text)*3+200));
+  if(r&&r.trim())return {text:r.trim(),by:PRONAME||'the on-device model'};throw new Error('no answer');}
+ throw new Error('none');}
+async function inkPromptRun(instr){
+ instr=String(instr||'').trim();if(!instr)return toast('Write a prompt, or pick one below');
+ if(!ALTSEL||!ALTSEL.t)return toast('Select the passage again, please');
+ const box=document.getElementById('pmIn');if(box&&!box.value.trim())box.value=instr;
+ const hist=inkPromptsMine();
+ if(!S.connected&&!PRO){renderAlts('Rewriting with a prompt needs a writing model: on this device, '+(IS_TABLETAPP?'connect to your laptop\u2019s model (⚙ Engine), or use Apple\u2019s on-device model where the iPhone or iPad has it':'install the writing model (⚙ Engine)')+'. The rules engine can correct, but it cannot rewrite to a brief.');return;}
+ const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');
+ try{const r=await inkWrite(instr,ALTSEL.t);
+  if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
+  renderAlts(ALTS.length>n0?'':'The model returned the passage unchanged.');}
+ catch(e){renderAlts('The model did not answer: '+(e&&e.message||e));}}
+/* the changes between the passage and a version, marked word by word */
+function inkDiffHTML(a,b){
+ try{const A=GECFILTER.words(a),B=GECFILTER.words(b);if(A.length*B.length>400000)return esc(b);
+  const H=GECFILTER.hunks(A,B);let out='',bi=0;
+  for(const h of H){out+=esc(b.slice(bi,h.j0<B.length?B[h.j0].s:b.length));
+   const del=h.i1>h.i0?a.slice(A[h.i0].s,A[h.i1-1].e):'',ins=h.j1>h.j0?b.slice(B[h.j0].s,B[h.j1-1].e):'';
+   if(del)out+='<del style="color:#b03a2e;text-decoration:line-through;opacity:.75">'+esc(del)+'</del>'+(ins?' ':'');
+   if(ins)out+='<ins style="color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px">'+esc(ins)+'</ins>';
+   bi=h.j1>h.j0?B[h.j1-1].e:(h.j0<B.length?B[h.j0].s:b.length);}
+  return out+esc(b.slice(bi));}catch(e){return esc(b);}}
 function renderAlts(status){
  if(!ALTMODE)return;
  const c=document.getElementById('cards');
- let html='<div class="altHead">✨ Alternatives<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
- if(!ALTS.length)html+='<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
+ let html='<div class="altHead">'+(ALTSEL&&ALTSEL.prompt?'✍ Rewrite with a prompt':'✨ Alternatives')+'<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
+ if(ALTSEL&&ALTSEL.prompt)html+=inkPromptPanel();
+ if(!ALTS.length)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
  else html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
-  '<div class="at">'+esc(a.text)+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
+  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
   '<div class="row"><button class="primary" onclick="useAlt('+i+')">Use this ▸</button></div></div>').join('');
  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+(status||(ALTS.length+' alternatives; the fix list waits behind ‹ Back'))+'</div>';
  c.innerHTML=html;}
@@ -8395,10 +8922,10 @@ async function fixSelection(){
   try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    const ai=(r.edits||[]).filter(e=>e.fix!==undefined&&e.cat!=='r');
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
- if(fixed===null&&PRO){toast('Pro fixing…');
+ if(fixed===null&&PRO){toast(PRO&&PRO.apple?'Apple\u2019s model is fixing…':'Pro fixing…');
   try{const pf=await proChat('You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.',t,Math.min(1200,wordCt(t)*2+80));
    /* 7.32: only the safe edits from Pro's version, never its rewording */
-   if(pf){await inkVerbs();fixed=applyEditsText(t,inkSafeEditsText(t,pf,0,'Pro'));}}catch(e){}}
+   if(pf){await inkVerbs();fixed=applyEditsText(t,inkSafeEditsText(t,pf,0,PRO&&PRO.apple?'Apple model':'Pro'));}}catch(e){}}
  if(fixed===null&&MINI){toast('Grammar model fixing…');
   try{const ai=await runMini(t);
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
@@ -8421,6 +8948,7 @@ function updateTone(){
 let LASTTONE=0,TONEHASH='';
 function maybeAITone(t){
  if(!(PRO||S.connected))return;
+ if(PRO&&PRO.apple&&!S.connected)return;
  if(AIDEPTH>0)return;
  if(t.length<200)return;
  const h=t.length+':'+wordCt(t);if(h===TONEHASH)return;
@@ -8952,12 +9480,11 @@ function insFootnote(){
  toast('Footnote '+k+' placed; write it at the foot of the page');}
 function renumberNotes(){
  pushUndo();
- let t=ed.value;
- /* markers renumber in order of appearance; definitions follow their marker */
- const map={};let n=0;
- t=t.replace(/\[\^(\d+)\](?!:)/g,function(m,old){n++;if(!(old in map))map[old]=n;return '[^'+map[old]+']';});
- t=t.replace(/\[\^(\d+)\]:/g,function(m,old){return (old in map)?'[^'+map[old]+']:':m;});
- ed.value=t;afterChange();toast('Footnotes renumbered in order of appearance');}
+ /* markers renumber in order of appearance; definitions follow their marker
+    (7.34: in the same order, and Cite's record of its notes follows too) */
+ const r=inkNotesRenumber(ed.value),doc=inkDoc();
+ if(doc&&doc.citeRec)doc.citeRec.forEach(c=>{if(c.note&&r.map[c.k])c.k=r.map[c.k];});
+ ed.value=r.t;persist();afterChange();toast('Footnotes renumbered in order of appearance');}
 function insertTOC(){
  pushUndo();
  const heads=[];const re=/^(#{1,3})\s+(.+)$/gm;let m;
@@ -9088,7 +9615,7 @@ const WORDBANK=[['show',['demonstrate','indicate','evince','reveal','suggest']],
  ['walk through',['explain','rehearse','review']],
  ['boil down to',['reduce to','amount to','come down to']],
  ['spell out',['specify','state plainly','set out']]];
-function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');if(which==='server')setTimeout(function(){try{inkLanRefresh();}catch(e){}},0);}catch(e){
+function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');if(which==='server')setTimeout(function(){try{inkLanRefresh();}catch(e){}try{if(!IS_TABLETAPP)inkWmRefresh();}catch(e){}},0);}catch(e){
  try{var api=window.pywebview&&window.pywebview.api;if(api&&api.report_error)api.report_error('openModal '+(which||'?')+': '+String(e&&e.name||'')+': '+String(e&&e.message||e)+' | '+String(e&&e.stack||'').split('\n').slice(0,3).join(' <- '));}catch(x){}
  try{var bb=document.getElementById('modalBody');if(bb){bb.innerHTML='<div style="padding:14px;font-size:13px;color:var(--mut);line-height:1.6">This panel could not be drawn; the fault is recorded. Try again — a repeat means the detail is already with the author.</div><p style="text-align:center"><button onclick="closeModal()">Close</button></p>';document.getElementById('modal').style.display='flex';}}catch(x){}
  }}
@@ -9226,10 +9753,13 @@ function openModalDo(which){
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">On-device writing models</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Removed in 7.33. The small models that fit inside an app window (GECToR and the 0.5-billion-parameter Pro model) made writing worse, not better, so Inkwell no longer offers them, and their downloaded files were deleted from this device. Corrections come from the rules engine, which now shows only correctness unless you ask for clarity and style notes; rewriting and drafting come from a real writing model on your laptop (below).</p>'+
+ (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
  '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>'+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
  '<div class="rl" style="margin-top:8px">A model will not install? <button class="lkbtn" onclick="inkDiagnose()">🩺 Diagnose this device</button> <span id="diagBtns" style="display:none"><button class="lkbtn" onclick="inkDiagCopy()">Copy the report</button> <button class="lkbtn" onclick="inkDiagSave()">Save the report</button></span></div>'+
  '<textarea id="diagOut" readonly style="display:none;width:100%;height:190px;font:11px/1.45 ui-monospace,monospace;margin-top:4px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>'+
+ (IS_TABLETAPP?'':'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Writing model on this computer</h4>'
+  +'<div id="wmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the companion server\u2026</div>')+
 '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Your laptop\u2019s model</h4>'+
  (IS_TABLETAPP
   ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">The laptop\u2019s model is stronger than anything a tablet can hold. On the laptop: Engine \u25B8 <i>Share with my tablets on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
@@ -9633,6 +10163,7 @@ function renderPatterns(){
   S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
   try{inkAiMark('',false);}catch(e){}
   inkPurgeOldModels();
+  inkAppleInit();
   return;
   var crashed=null;try{crashed=localStorage.getItem('ink_ai_loading');}catch(e){}
   if(crashed){inkAiMark('',false);S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);

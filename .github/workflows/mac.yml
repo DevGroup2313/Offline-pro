@@ -1,0 +1,179 @@
+name: Build Inkwell for Mac
+
+# Builds Inkwell as a Mac app that needs nothing else installed: no Python, no
+# pip, no command line tools. PyInstaller puts Python, the window component
+# (pywebview), the companion server and the llama.cpp runtime for the writing
+# model inside Inkwell.app; the app is delivered as a .dmg disk image. Two
+# builds: Apple Silicon (M1 and later) and Intel.
+#
+# Files are found wherever they sit: inkwell_app.py (with server.py,
+# inkwell.icns, Info.plist and build/quiet_console.py beside it, in the folder
+# that also holds launcher/), and the first folder holding Inkwell.html
+# together with vendor/transformers.min.js.
+
+on:
+  push:
+    branches: [ main, 'claude/**' ]
+    paths-ignore:
+      - 'Inkwell-Android/app/src/main/java/**'
+      - 'Inkwell-Android/app/src/main/res/**'
+      - 'Inkwell-Android/*.gradle'
+      - 'Inkwell-iOS/**'
+      - 'Inkwell-Web/**'
+      - 'Inkwell-Windows/**'
+      - 'artwork/**'
+      - '.github/workflows/main.yml'
+      - '.github/workflows/ios.yml'
+      - '.github/workflows/web.yml'
+      - '.github/workflows/windows.yml'
+      - '.github/workflows/packages.yml'
+      - '**.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+            llama: 'bin-macos-arm64\.(zip|tar\.gz)$'
+          - arch: intel
+            runner: macos-15-intel
+            llama: 'bin-macos-x64\.(zip|tar\.gz)$'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Find the Mac launcher and the web app
+        run: |
+          set -euo pipefail
+          lc="$(find . -maxdepth 4 -path '*/launcher/inkwell_launcher.c' -not -path './.git/*' | sort | head -n 1)"
+          if [ -z "$lc" ]; then echo "::error::No launcher/inkwell_launcher.c: upload everything inside the Mac package."; exit 1; fi
+          mac="$(dirname "$(dirname "$lc")")"; mac="${mac#./}"
+          src=""
+          while IFS= read -r f; do
+            d="$(dirname "$f")"
+            if [ -f "$d/vendor/transformers.min.js" ]; then src="${d#./}"; break; fi
+          done < <(find . -maxdepth 6 -name Inkwell.html -not -path './.git/*' | sort)
+          if [ -z "$src" ]; then echo "::error::No Inkwell.html with a vendor folder beside it."; exit 1; fi
+          version="$(grep -o "const BUILD='[0-9][0-9.]*" "$src/Inkwell.html" | head -n 1 | sed "s/const BUILD='//")"
+          { echo "MAC_DIR=$mac"; echo "WEB_SOURCE=$src"; echo "INKWELL_VERSION=${version:-unknown}"; } >> "$GITHUB_ENV"
+          echo "launcher: $mac; web app: $src; version ${version:-unknown}; machine $(uname -m)"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Gather the files the app carries
+        run: |
+          set -euo pipefail
+          rm -rf stage && mkdir -p stage/bin/darwin
+          cp "$WEB_SOURCE/Inkwell.html" stage/
+          cp -R "$WEB_SOURCE/vendor" stage/vendor
+          for n in scriba_v729.html fontes_v729.html; do
+            f="$(find . -maxdepth 6 -name "$n" -not -path './.git/*' -not -path './stage/*' | sort | head -n 1)"
+            if [ -n "$f" ]; then cp "$f" stage/; fi
+          done
+          for n in inkwell_app.py server.py inkwell.png inkwell.icns; do cp "$MAC_DIR/$n" stage/; done
+
+      - name: Fetch the llama.cpp runtime for the writing model
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url="$(gh api repos/ggml-org/llama.cpp/releases/latest --jq '.assets[].browser_download_url' | grep -E '${{ matrix.llama }}' | head -n 1)"
+          if [ -z "$url" ]; then echo "::error::No llama.cpp Mac build in the latest release"; exit 1; fi
+          echo "llama.cpp: $url"
+          curl -fsSL -o llama.pkg "$url"
+          mkdir -p llama && (cd llama && { unzip -q ../llama.pkg 2>/dev/null || tar -xzf ../llama.pkg; })
+          srv="$(find llama -name llama-server -type f | head -n 1)"
+          if [ -z "$srv" ]; then echo "::error::llama-server is not in the llama.cpp download"; exit 1; fi
+          cp "$(dirname "$srv")"/* stage/bin/darwin/ 2>/dev/null || true
+          chmod +x stage/bin/darwin/llama-server
+          ls -la stage/bin/darwin | head -n 40
+          stage/bin/darwin/llama-server --version 2>&1 | tail -n 3
+
+      - name: Build Inkwell.app
+        working-directory: stage
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install pywebview pyinstaller
+          extra=""
+          [ -f scriba_v729.html ] && extra="$extra --add-data scriba_v729.html:."
+          [ -f fontes_v729.html ] && extra="$extra --add-data fontes_v729.html:."
+          python -m PyInstaller --noconfirm --clean --windowed --onedir --name Inkwell \
+            --icon inkwell.icns --osx-bundle-identifier studio.inkwell.desk \
+            --runtime-hook "../$MAC_DIR/build/quiet_console.py" \
+            --add-data "Inkwell.html:." --add-data "vendor:vendor" --add-data "bin:bin" \
+            --add-data "server.py:." --add-data "inkwell.png:." --add-data "inkwell.icns:." $extra \
+            --collect-all webview \
+            --hidden-import http.server --hidden-import hmac --hidden-import secrets --hidden-import wave \
+            --hidden-import difflib --hidden-import importlib.util --hidden-import socket --hidden-import shutil \
+            --hidden-import urllib.request --hidden-import urllib.parse --hidden-import random --hidden-import gc \
+            inkwell_app.py 2>&1 | tail -n 30
+          app=dist/Inkwell.app
+          test -d "$app"
+          pl="$app/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $INKWELL_VERSION" "$pl" || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $INKWELL_VERSION" "$pl"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string ${{ github.run_number }}" "$pl" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" "$pl"
+          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string Inkwell uses the microphone only when you press Record or Capture in Scriba, to turn your voice into text on this Mac." "$pl"
+          /usr/libexec/PlistBuddy -c "Add :NSLocalNetworkUsageDescription string Inkwell can share its writing model with your own tablets on this Wi-Fi, when you switch sharing on." "$pl"
+          /usr/libexec/PlistBuddy -c "Add :NSHighResolutionCapable bool true" "$pl" 2>/dev/null || true
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict "$app" && echo "ad-hoc signature verified"
+          plutil -p "$pl" | head -n 40
+
+      - name: Test the app without a window
+        working-directory: stage/dist/Inkwell.app/Contents/MacOS
+        run: |
+          set -uo pipefail
+          ./Inkwell --export-library "$RUNNER_TEMP/library.json"; echo "export exit code: $?"
+          sp="$(find ../ -name server.py -print -quit)"; echo "server.py at $sp"
+          rt="$(find ../ -name llama-server -print -quit)"; echo "llama-server at $rt"
+          "$rt" --version 2>&1 | tail -n 2 || { echo "::error::the bundled llama-server does not run"; exit 1; }
+          ./Inkwell --inkwell-engine "$sp" &
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -s -m 2 http://127.0.0.1:8317/api/health | grep -q '"ok"'; then ok=1; break; fi
+            sleep 1
+          done
+          curl -s -m 5 -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8317/api/model_catalog | head -c 400; echo
+          pkill -f -- "--inkwell-engine" || true
+          if [ "$ok" != 1 ]; then echo "::error::The companion server inside Inkwell.app did not answer."; exit 1; fi
+
+      - name: Make the disk image
+        run: |
+          set -euo pipefail
+          dmg="Inkwell-${INKWELL_VERSION}-Mac-${{ matrix.arch == 'arm64' && 'AppleSilicon' || 'Intel' }}.dmg"
+          rm -rf dmgroot && mkdir dmgroot
+          cp -R stage/dist/Inkwell.app dmgroot/
+          ln -s /Applications dmgroot/Applications
+          hdiutil create -volname "Inkwell ${INKWELL_VERSION}" -srcfolder dmgroot -ov -format UDZO "$dmg"
+          echo "DMG_NAME=$dmg" >> "$GITHUB_ENV"
+          ls -la "$dmg"
+
+      - name: Keep the disk image with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-Mac-${{ matrix.arch }}
+          path: ${{ env.DMG_NAME }}
+          if-no-files-found: error
+
+      - name: Publish a release you can download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="mac-build-${{ github.run_number }}"
+          title="Inkwell ${INKWELL_VERSION} for Mac (build ${{ github.run_number }})"
+          notes="Download the .dmg for your Mac under Assets: AppleSilicon for M1 and later, Intel for older Macs. Open it and drag Inkwell into Applications. Python is not needed. The app is not signed with a paid Apple certificate, so the first time macOS refuses to open it: open System Settings, Privacy & Security, and press Open Anyway beside Inkwell. Built from commit ${{ github.sha }}."
+          gh release create "$tag" "$DMG_NAME" --target "${{ github.sha }}" --title "$title" --notes "$notes" 2>/dev/null \
+            || gh release upload "$tag" "$DMG_NAME" --clobber
