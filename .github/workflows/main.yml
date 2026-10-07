@@ -59,15 +59,35 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      # 7.35: the tablet's writing model is built from llama.cpp (MIT
+      # licence) at a fixed release, the one Inkwell's tests were run against
+      - name: Fetch llama.cpp for the tablet's model
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -euo pipefail
+          dest=app/src/main/cpp/llama.cpp
+          if [ ! -f "$dest/CMakeLists.txt" ]; then
+            rm -rf "$dest"
+            git clone --depth 1 --branch b11398 https://github.com/ggml-org/llama.cpp "$dest"
+          fi
+          git -C "$dest" log -1 --format='llama.cpp %h %cd' || true
+
       - name: Build the APK
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           set -o pipefail
           gradle --no-daemon --stacktrace assembleRelease 2>&1 | tee build_log.txt
 
-      - name: Name the APK
+      - name: Name the APK, and check the model engine is inside it
         working-directory: ${{ env.PROJECT_DIR }}
-        run: cp app/build/outputs/apk/release/app-release.apk "$APK_NAME"
+        run: |
+          set -euo pipefail
+          cp app/build/outputs/apk/release/app-release.apk "$APK_NAME"
+          unzip -l "$APK_NAME" | grep -E 'lib/(arm64-v8a|x86_64)/' | awk '{print $1, $4}'
+          for f in lib/arm64-v8a/libinkllm.so lib/arm64-v8a/libllama.so lib/arm64-v8a/libggml-base.so; do
+            unzip -l "$APK_NAME" | grep -q "$f" || { echo "::error::$f is missing from the APK"; exit 1; }
+          done
+          unzip -l "$APK_NAME" | grep -q 'lib/arm64-v8a/libggml-cpu' || { echo "::error::no processor variant of the engine in the APK"; exit 1; }
 
       - name: Keep the APK with this run
         uses: actions/upload-artifact@v4
@@ -98,4 +118,75 @@ jobs:
         with:
           name: build-log
           path: ${{ env.PROJECT_DIR }}/build_log.txt
+          if-no-files-found: ignore
+
+  # 7.35: the tablet's model, tested on an Android emulator: the real model
+  # downloaded and checked, started in its own process, answering, stopping,
+  # surviving the system closing it, and Check in the page using it. About
+  # half an hour, so it runs when asked: a commit message containing
+  # [emulator], or "Run workflow".
+  emulator-test:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[emulator]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+
+      - name: Find the Android project
+        run: |
+          dir="$(find . -maxdepth 3 -name settings.gradle -not -path './.git/*' -printf '%h\n' | sort | head -n 1)"
+          echo "PROJECT_DIR=${dir#./}" >> "$GITHUB_ENV"
+
+      - name: Fetch llama.cpp for the tablet's model
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: git clone --depth 1 --branch b11398 https://github.com/ggml-org/llama.cpp app/src/main/cpp/llama.cpp
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Allow the emulator to use the processor's virtualisation
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Build the app and its tests
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest
+
+      - name: Run the tests on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: default
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          working-directory: ${{ env.PROJECT_DIR }}
+          script: |
+            adb logcat -c || true
+            gradle --no-daemon connectedDebugAndroidTest || (adb logcat -d > emulator_logcat.txt; exit 1)
+            adb logcat -d > emulator_logcat.txt
+
+      - name: Keep the test results and the device log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-test
+          path: |
+            ${{ env.PROJECT_DIR }}/app/build/reports/androidTests
+            ${{ env.PROJECT_DIR }}/app/build/outputs/androidTest-results
+            ${{ env.PROJECT_DIR }}/emulator_logcat.txt
           if-no-files-found: ignore

@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * is placed in the page, safe names and paths.
  */
 final class InkwellCore {
-    static final String BUILD = "7.34";
+    static final String BUILD = "7.35";
     /** A secure (https) origin that never touches the network: every request
      *  to it is answered from the app's own assets. Secure origins may use the
      *  microphone; the origin never changes, so the page's storage is stable. */
@@ -85,7 +85,7 @@ final class InkwellCore {
 
     static String hostInfoJson(String webview, boolean speechService, boolean micGranted) {
         return "{\"launcher\":" + jsonQuote(BUILD + "-android")
-                + ",\"platform\":\"android\",\"native_host\":true,\"mic_handler\":true"
+                + ",\"platform\":\"android\",\"native_host\":true,\"mic_handler\":true,\"local_model\":true"
                 + ",\"mic_permission\":" + micGranted
                 + ",\"speech_service\":" + speechService
                 + ",\"webview\":" + jsonQuote(webview == null ? "" : webview) + "}";
@@ -102,6 +102,25 @@ final class InkwellCore {
       + " var HQ={},HN=0;window.__inkHttpDone=function(id,st,tx){var f=HQ[id];delete HQ[id];if(f)f({status:st,text:tx});};\n"
       + " window.InkwellNative.http=function(m,u,h,b){return new Promise(function(res){var id='h'+(++HN);HQ[id]=res;\n"
       + "  try{A.httpRequest(id,String(m||'GET'),String(u),JSON.stringify(h||{}),b==null?'':String(b));}catch(e){delete HQ[id];res({status:0,text:String(e)});}});};\n"
+      // 7.35: the tablet's own writing model (MainActivity.Bridge model*, ModelHost)
+      + " if(A.modelStatus){var MC={},MP={},ML=[],MS=0,MLD=null;\n"
+      + "  window.__inkModelEvent=function(j){var e;try{e=JSON.parse(j);}catch(x){return;}\n"
+      + "   if(e.type==='piece'&&MC[e.id]){var c=MC[e.id];c.acc+=e.text;if(c.on)try{c.on(c.acc);}catch(x){}}\n"
+      + "   else if(e.type==='done'&&MC[e.id]){var d=MC[e.id];delete MC[e.id];if(e.ok)d.res({text:e.text,ms:e.ms});else d.rej(new Error(e.error||'no answer'));}\n"
+      + "   else if(e.type==='loaded'&&MLD){var l=MLD;MLD=null;if(e.state==='ready')l.res(e);else l.rej(new Error(e.error||'the model did not start'));}\n"
+      + "   else if(e.type==='stopped'){for(var k in MC){try{MC[k].rej(new Error(e.error||'the model stopped'));}catch(x){}}MC={};if(MLD){MLD.rej(new Error(e.error||'the model stopped'));MLD=null;}}\n"
+      + "   for(var i=0;i<ML.length;i++){try{ML[i](e);}catch(x){}}};\n"
+      + "  window.InkwellNative.model={\n"
+      + "   status:function(){try{return JSON.parse(A.modelStatus());}catch(x){return null;}},\n"
+      + "   download:function(u,f,b,h){return String(A.modelDownload(String(u),String(f),String(b||0),String(h||'')));},\n"
+      + "   cancelDownload:function(){A.modelCancelDownload();},\n"
+      + "   importFile:function(){A.modelImport();},\n"
+      + "   remove:function(f){return !!A.modelRemove(String(f));},\n"
+      + "   load:function(f,ctx,th){return new Promise(function(res,rej){if(MLD)MLD.rej(new Error('replaced'));MLD={res:res,rej:rej};A.modelLoad(String(f),ctx|0,th|0);});},\n"
+      + "   unload:function(){A.modelUnload();},\n"
+      + "   chat:function(sys,user,max,on){return new Promise(function(res,rej){var id='m'+(++MS);MC[id]={res:res,rej:rej,on:on||null,acc:''};A.modelChat(id,String(sys||''),String(user||''),max|0,!!on);});},\n"
+      + "   cancelAll:function(){for(var k in MC)A.modelCancel(k);},\n"
+      + "   on:function(f){ML.push(f);}};}\n"
       + " window.pywebview={api:{\n"
       + "  save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},\n"
       + "  storage_set:function(k,v){try{A.storageSet(String(k),String(v));return P(true);}catch(e){return P(false);}},\n"

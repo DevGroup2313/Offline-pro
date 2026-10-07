@@ -28,11 +28,15 @@ def version():
         return f.read().strip()
 
 
+# build outputs and the fetched llama.cpp source never go into a package
+SKIP = shutil.ignore_patterns(".gradle", "build", ".cxx", "llama.cpp", "local.properties")
+
+
 def copy(src, dst):
     src = os.path.join(ROOT, src)
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     if os.path.isdir(src):
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, ignore=SKIP)
     else:
         shutil.copy2(src, dst)
 

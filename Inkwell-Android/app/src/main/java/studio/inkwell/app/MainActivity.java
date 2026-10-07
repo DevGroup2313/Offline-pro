@@ -15,6 +15,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.OpenableColumns;
+import android.database.Cursor;
 import android.speech.SpeechRecognizer;
 import android.util.Base64;
 import android.util.Log;
@@ -55,10 +57,11 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     private static final String TAG = "Inkwell";
     private static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int REQ_MIC = 1, REQ_FILE = 2, REQ_SAVE = 3;
+    private static final int REQ_MIC = 1, REQ_FILE = 2, REQ_SAVE = 3, REQ_MODEL = 4;
 
     private WebView web;
     private Store store;
+    private ModelHost models;
     private PermissionRequest pendingPermission;
     private ValueCallback<Uri[]> fileCallback;
     private byte[] pendingSaveBytes;
@@ -68,6 +71,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         store = new Store(new File(getFilesDir(), "store"));
+        // 7.35: the tablet's own writing model (started only when the page asks)
+        models = new ModelHost(this, ev -> {
+            if (web != null) web.evaluateJavascript("window.__inkModelEvent&&window.__inkModelEvent("
+                    + InkwellCore.jsonQuote(ev.toString()) + ")", null);
+        });
         web = new WebView(this);
         setContentView(web);
 
@@ -115,11 +123,17 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (models != null) models.release();
         if (web != null) {
             web.destroy();
             web = null;
         }
         super.onDestroy();
+    }
+
+    /** For the instrumented tests: the page's web view. */
+    WebView webViewForTests() {
+        return web;
     }
 
     /** 7.30: the status bar and the navigation bar take the page's own edge
@@ -289,6 +303,13 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int code, int result, Intent data) {
+        if (code == REQ_MODEL) {
+            if (result == RESULT_OK && data != null && data.getData() != null) {
+                Uri u = data.getData();
+                models.importFrom(u, displayName(u));
+            }
+            return;
+        }
         if (code == REQ_FILE) {
             if (fileCallback != null) {
                 fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result, data));
@@ -316,6 +337,14 @@ public class MainActivity extends Activity {
             return;
         }
         super.onActivityResult(code, result, data);
+    }
+
+    private String displayName(Uri u) {
+        try (Cursor c = getContentResolver().query(u, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (c != null && c.moveToFirst()) return c.getString(0);
+        } catch (RuntimeException ignored) { }
+        String last = u.getLastPathSegment();
+        return last == null ? "model.gguf" : last;
     }
 
     private void startSave(String name, String mime, byte[] bytes) {
@@ -442,6 +471,63 @@ public class MainActivity extends Activity {
                     if (web != null) web.evaluateJavascript(js, null);
                 });
             }).start();
+        }
+
+        /* 7.35: the tablet's own writing model (ModelHost, ModelService) */
+        @JavascriptInterface
+        public String modelStatus() {
+            return models.status().toString();
+        }
+
+        @JavascriptInterface
+        public String modelDownload(String url, String file, String bytes, String sha256) {
+            long n = 0;
+            try {
+                n = Long.parseLong(bytes);
+            } catch (NumberFormatException ignored) { }
+            return models.startDownload(url, file, n, sha256);
+        }
+
+        @JavascriptInterface
+        public void modelCancelDownload() {
+            models.cancelDownload();
+        }
+
+        @JavascriptInterface
+        public void modelImport() {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
+                try {
+                    startActivityForResult(i, REQ_MODEL);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(MainActivity.this, "No file picker on this tablet", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void modelLoad(final String file, final int nCtx, final int nThreads) {
+            runOnUiThread(() -> models.load(file, nCtx, nThreads));
+        }
+
+        @JavascriptInterface
+        public void modelUnload() {
+            runOnUiThread(() -> models.unload());
+        }
+
+        @JavascriptInterface
+        public boolean modelRemove(String file) {
+            return models.remove(file);
+        }
+
+        @JavascriptInterface
+        public void modelChat(final String id, final String system, final String user, final int maxTokens, final boolean stream) {
+            runOnUiThread(() -> models.chat(id, system, user, maxTokens, stream));
+        }
+
+        @JavascriptInterface
+        public void modelCancel(final String id) {
+            runOnUiThread(() -> models.cancel(id));
         }
 
         @JavascriptInterface

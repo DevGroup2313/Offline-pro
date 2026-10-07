@@ -26,5 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- 7.35: the writing model, in a process of its own, so that if the
+             system closes it for memory the page and its documents stay open -->
+        <service
+            android:name=".ModelService"
+            android:exported="false"
+            android:process=":model" />
     </application>
 </manifest>

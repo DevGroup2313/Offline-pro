@@ -1390,7 +1390,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.34 · VI · OCTOBRIS · MMXXVI';
+const BUILD='7.35 · VII · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -1585,7 +1585,7 @@ stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -3910,7 +3910,7 @@ async function inkLanRefresh(){
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
    :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
- }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.34 on this computer.</span>';}
+ }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.35 on this computer.</span>';}
 }
 async function inkLanSet(on,newCode){
  try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}
@@ -3918,6 +3918,7 @@ async function inkLanSet(on,newCode){
  if(on)toast('Sharing on this Wi-Fi. If the computer asks whether to accept incoming connections, choose Allow.');
 }
 function engineAdvice(){
+ if(inkNative())return 'On the '+deviceName()+', the writing model runs on the tablet itself, offline, with no other device: install it once below. Corrections also come from the rules engine. Your laptop\u2019s model over the Wi-Fi is an optional second engine.';
  if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your laptop\u2019s model over the same Wi-Fi (below).';
  return 'On this computer, the companion server runs the writing model; corrections come from the rules engine, offline.';}
 
@@ -7444,7 +7445,96 @@ async function installPro(){
    rewrites dropped citations in 8 of 24 cases, so the fact guard marks every
    rewrite that loses a citation or number. Not on phones and tablets: there
    the system closes an app that takes this much memory. */
-function inkProLabel(){return PRO&&PRO.apple?'Apple\u2019s model':PRO&&PRO.writer?'the writing model ('+PRONAME+')':'the on-device model';}
+/* 7.35: the device's own model comes first (the tablet's, Apple's, or the
+   one in this window); the laptop's model is used when it is chosen first in
+   Engine, or when this device has no model running */
+function inkDeviceModel(){return !!(PRO&&(PRO.native||PRO.apple||PRO.writer));}
+function inkSrv(){return !!S.connected&&!(inkDeviceModel()&&S.engineFirst!=='laptop');}
+function inkProLabel(){return PRO&&PRO.apple?'Apple\u2019s model':PRO&&PRO.native?'the tablet\u2019s model ('+PRONAME+')':PRO&&PRO.writer?'the writing model ('+PRONAME+')':'the on-device model';}
+/* ===== 7.35: the writing model on the tablet itself =====
+   On the Fire tablet (and any Android tablet), llama.cpp runs inside the app,
+   in a process of its own (ModelService): if Fire OS needs the memory back it
+   closes that process, never the page. The model is downloaded once (or
+   imported from a file), checked (size and SHA-256), and then works with no
+   network and no other device. The laptop's model stays available, second. */
+const TABLET_MODELS=[{id:'lfm2.5-1.2b',label:'LFM2.5 1.2B Instruct (Liquid AI)',repo:'LiquidAI/LFM2.5-1.2B-Instruct-GGUF',file:'LFM2.5-1.2B-Instruct-Q4_K_M.gguf',bytes:730895168,
+ sha256:'b1b3de114215d9507409a662a501a631095a479a419584e8a2ded6304b19b4f5',licence:'LFM Open License v1.0',
+ note:'Built by Liquid AI for phones and tablets. Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 3% of correct sentences changed. Its rewrites are checked for dropped citations and numbers.'}];
+function inkNative(){return (window.InkwellNative&&window.InkwellNative.model)||null;}
+const TM={wired:false,progress:null,lastErr:''};
+function inkTabletWire(){const M=inkNative();if(!M||TM.wired)return;TM.wired=true;
+ M.on(function(e){
+  if(e.type==='progress'){TM.progress=e;inkTabletPanel();}
+  else if(e.type==='downloaded'){TM.progress=null;instSay('Model file ready: '+e.file+'. Starting it.');inkTabletStart(e.file,false);}
+  else if(e.type==='downloadError'){TM.progress=null;TM.lastErr=e.error||'';instSay('The model file did not arrive: '+(e.error||''));toast('Download stopped: '+(e.error||''));inkTabletPanel();}
+  else if(e.type==='stopped'){if(PRO&&PRO.native){PRO=null;PRONAME='';setPill();}TM.lastErr=e.error||'';
+   toast('The tablet’s model stopped: '+(e.error||'')+'. Start it again in Engine.');inkTabletPanel();}
+  else if(e.type==='status'||e.type==='loaded')inkTabletPanel();});}
+async function inkTabletStart(file,auto){
+ const M=inkNative();if(!M)return;inkTabletWire();
+ const spec=TABLET_MODELS.find(m=>m.file===file)||{label:file.replace(/\.gguf$/i,'')};
+ const pill=document.getElementById('enginePill');if(pill){pill.className='pill load';pill.innerHTML='<i></i>Starting the tablet’s model…';}
+ inkAiMark('tablet',true);
+ try{
+  const st=await M.load(file,4096,S.tmThreads|0);
+  PRO=async function(msgs,gen,onTok){
+   const sys=(msgs[0]&&msgs[0].role==='system')?msgs[0].content:'',user=(msgs[msgs.length-1]||{}).content||'';
+   let seen='';
+   const r=await M.chat(sys,user,(gen&&gen.max_new_tokens)||420,onTok?(acc=>{const d=acc.slice(seen.length);seen=acc;if(d)onTok(d);}):null);
+   return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
+  PRO.native=true;PRONAME=spec.label;PRODEVICE='this tablet';
+  S.tabletAuto=true;SV('tabletAuto',true);S.tabletFile=file;SV('tabletFile',file);
+  setPill();inkTabletPanel();
+  instSay(spec.label+' is running on this tablet ('+Math.round((st.loadMs||0)/100)/10+' s to start). It works offline and needs no other device.');
+  if(!auto)toast('The tablet’s model is ready: '+spec.label);
+ }catch(e){PRO=PRO&&PRO.native?null:PRO;setPill();TM.lastErr=(e&&e.message)||String(e);
+  instSay('The tablet’s model did not start: '+TM.lastErr);if(!auto)toast('The model did not start; Engine says why');inkTabletPanel();}
+ finally{inkAiMark('',false);}}
+function inkTabletStop(){const M=inkNative();if(!M)return;M.cancelAll();M.unload();if(PRO&&PRO.native){PRO=null;PRONAME='';}
+ S.tabletAuto=false;SV('tabletAuto',false);setPill();inkTabletPanel();toast('The tablet’s model is stopped (the file stays on the tablet)');}
+function inkTabletInstall(id){const M=inkNative();if(!M)return;inkTabletWire();
+ const m=TABLET_MODELS.find(x=>x.id===id);if(!m)return;
+ const st=M.status()||{};
+ if(st.supported===false)return toast('This tablet’s processor is not supported (it needs 64-bit ARM)');
+ const r=M.download('https://huggingface.co/'+m.repo+'/resolve/main/'+m.file,m.file,m.bytes,m.sha256);
+ if(r)return toast(r);
+ TM.lastErr='';TM.progress={done:0,total:m.bytes,file:m.file};instSay('Downloading '+m.label+' once ('+fmtMB(m.bytes)+'); it is checked before it is kept. Keep Inkwell open until it finishes; if it stops, press Install again and it resumes.');
+ inkTabletPanel();}
+function inkTabletRemove(file){const M=inkNative();if(!M)return;
+ if(!confirm('Delete the model file '+file+' from this tablet? (Your documents are not touched.)'))return;
+ if(PRO&&PRO.native&&S.tabletFile===file){PRO=null;PRONAME='';setPill();S.tabletAuto=false;SV('tabletAuto',false);}
+ M.remove(file);inkTabletPanel();}
+async function inkTabletTest(){
+ if(!(PRO&&PRO.native))return toast('Start the tablet’s model first');
+ const box=document.getElementById('tmTest');if(box)box.textContent='Testing…';
+ const t0=performance.now();let n=0;
+ try{const out=await proChat('You are a careful copy editor. Correct only errors of grammar, spelling and punctuation. Output only the corrected text.','The results of the study shows that participants was more likely to recall items.',80,()=>{n++;});
+  const s=(performance.now()-t0)/1000;
+  if(box)box.textContent='“'+out+'” — '+s.toFixed(1)+' s ('+(n?(n/s).toFixed(1)+' pieces a second':'')+').';}
+ catch(e){if(box)box.textContent='The test failed: '+((e&&e.message)||e);}}
+function setEngineFirst(v){S.engineFirst=v;SV('engineFirst',v);toast(v==='laptop'?'Your laptop’s model first, when it answers':'This device’s own model first');inkTabletPanel();}
+function inkTabletPanel(){
+ const el=document.getElementById('tmBox');const M=inkNative();if(!el||!M)return;
+ const st=M.status()||{};const models=st.models||[],dl=st.download||{},P=TM.progress;
+ let h='';
+ if(st.supported===false){el.innerHTML='<span style="color:#b03a2e">This tablet’s processor is not one the model engine supports (it needs 64-bit ARM). Your laptop’s model (below) is the way here.</span>';return;}
+ h+='<div style="color:var(--mut)">This tablet: '+(st.ramMB?Math.round(st.ramMB/1024*10)/10+' GB of memory, ':'')+(st.freeMB!=null?(st.freeMB>=1024?(Math.round(st.freeMB/102.4)/10)+' GB':Math.round(st.freeMB)+' MB')+' free storage, ':'')+(st.cores||'?')+' processor cores.</div>';
+ if(PRO&&PRO.native)h+='<div style="margin-top:6px">✓ <b>'+esc(PRONAME)+'</b> is running on this tablet. Check, Rewrite, Draft, the prompt library and the reviewers use it, offline. <button class="lkbtn" onclick="inkTabletTest()">▶ Test it</button> <button class="lkbtn" onclick="inkTabletStop()">Stop it</button><div id="tmTest" style="font-size:12px;color:var(--mut)"></div></div>';
+ else if(st.state==='loading')h+='<div style="margin-top:6px">Starting the model…</div>';
+ if(P&&dl.state!=='error'){const pc=P.total?Math.min(100,Math.round(100*P.done/P.total)):0;
+  h+='<div style="margin-top:6px">'+(dl.state==='verifying'?'Checking the file…':'Downloading '+esc(P.file||'')+': '+fmtMB(P.done)+(P.total?' of '+fmtMB(P.total)+' ('+pc+'%)':''))+' <button class="lkbtn" onclick="inkNative().cancelDownload()">Cancel</button></div>'
+   +'<div style="height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:4px 0"><div style="height:100%;width:'+pc+'%;background:var(--acc)"></div></div>';}
+ if(TM.lastErr)h+='<div style="color:#b03a2e;margin-top:4px">'+esc(TM.lastErr)+'</div>';
+ TABLET_MODELS.forEach(m=>{const have=models.find(x=>x.file===m.file),act=PRO&&PRO.native&&S.tabletFile===m.file;
+  h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--line)"><b>'+esc(m.label)+'</b> <span style="color:var(--mut)">('+esc(m.licence)+', '+fmtMB(m.bytes)+')</span><div style="color:var(--mut);font-size:12px">'+esc(m.note)+'</div>'
+   +(act?'':have?'<button class="primary" onclick="inkTabletStart(\''+esc(m.file)+'\',false)">▶ Start it</button> <button class="lkbtn" onclick="inkTabletRemove(\''+esc(m.file)+'\')">Delete the file</button>'
+    :'<button class="primary" onclick="inkTabletInstall(\''+esc(m.id)+'\')">⬇ Install ('+fmtMB(m.bytes)+', once)</button>')+'</div>';});
+ const others=models.filter(x=>!TABLET_MODELS.some(m=>m.file===x.file));
+ others.forEach(x=>{h+='<div style="margin-top:6px">'+esc(x.file)+' <span style="color:var(--mut)">('+fmtMB(x.bytes)+', imported)</span> '
+  +(PRO&&PRO.native&&S.tabletFile===x.file?'✓ running':'<button class="lkbtn" onclick="inkTabletStart(\''+esc(x.file)+'\',false)">▶ Start it</button>')+' <button class="lkbtn" onclick="inkTabletRemove(\''+esc(x.file)+'\')">Delete</button></div>';});
+ h+='<div style="margin-top:8px"><button class="lkbtn" onclick="inkNative().importFile()">\u{1F4C2} Import a model file (.gguf) from the tablet</button></div>';
+ h+='<div style="margin-top:8px">Which model first: <button class="lkbtn'+(S.engineFirst!=='laptop'?' on':'')+'" onclick="setEngineFirst(\'device\')">'+(S.engineFirst!=='laptop'?'✓ ':'')+'this tablet’s</button> <button class="lkbtn'+(S.engineFirst==='laptop'?' on':'')+'" onclick="setEngineFirst(\'laptop\')">'+(S.engineFirst==='laptop'?'✓ ':'')+'my laptop’s, when it answers</button></div>';
+ el.innerHTML=h;}
 const WRITER={id:'LiquidAI/LFM2.5-1.2B-Instruct-ONNX',name:'LFM2.5 1.2B Instruct',mb:850,licence:'LFM Open License v1.0'};
 async function inkGpuCheck(){
  if(!('gpu' in navigator))return {ok:false,why:'this browser has no WebGPU'};
@@ -7815,15 +7905,15 @@ async function reviewer(){
  const t=ed.value.trim();if(!t)return toast('Write something first 🙂');
  showTip('review');REV=[];
  let src='rules-based';
- if(S.connected){toast('Reviewer is reading…');
+ if(inkSrv()){toast('Reviewer is reading…');
   try{const r=await api('review',{text:t.slice(0,9000),style:S.profile});
    if(r.think)maybeShowThink(r.think);
    if(r.items&&r.items.length){REV=r.items;src='server';}}catch(e){toast('AI request failed');}}
- if(!REV.length&&PRO){toast('Pro reviewing…');
+ if(!REV.length&&PRO){toast('Reviewing with '+inkProLabel()+'…');
   try{const r=await proChat('You are a hostile but fair doctoral examiner. Identify the 4 strongest objections to the argument in this text: unsupported claims, overclaims, missing warrants, unaddressed counter-evidence. Output ONLY a numbered list, one objection per line, at most 25 words each.',
    t.slice(0,4000),360);
    const lines=r.split(/\n+/).map(l=>l.replace(/^\s*[\-\*\d]+[\).\s]*/,'').trim()).filter(l=>l.length>12);
-   if(lines.length){REV=lines.slice(0,5);src='Pro';}}catch(e){}}
+   if(lines.length){REV=lines.slice(0,5);src=inkProLabel();}}catch(e){}}
  if(!REV.length){REV=reviewerFallback(t);}
  const b=document.getElementById('modalBody');
  b.innerHTML='<h3>🤝 Reviewer; objections to your argument</h3>'+
@@ -7865,7 +7955,7 @@ async function readerReact(){
  const t=ed.value.trim();if(!t)return toast('Write something first 🙂');
  const aud=(S.goals&&S.goals.aud)||'Academic readers';
  REVR=[];let src='rules-based';
- if(S.connected){toast('The reader is reading…');
+ if(inkSrv()){toast('The reader is reading…');
   try{const r=await api('reader',{text:t.slice(0,9000),aud:aud,style:S.profile});
    if(r.think)maybeShowThink(r.think);
    if(r.items&&r.items.length){REVR=r.items;src='server';}}catch(e){toast('AI request failed');}}
@@ -8403,7 +8493,7 @@ async function correct(){
  EDITS=rules.slice().sort((a,b)=>a.start-b.start);SOLOI=0;renderCards();updateStats();renderHL();
  const PROOF_SYS='You are a careful copy editor. Correct only errors of grammar, spelling and punctuation in the user\'s text. Change as little as possible: keep every word that is already correct, keep the writer\'s meaning, register and voice, keep names, numbers, quotations and citations exactly. If the text is already correct, return it unchanged. Output only the corrected text, with no explanation.';
  let engine=null,label='';
- if(S.connected){
+ if(inkSrv()){
   label=S.serverModel?'Laptop model':'Companion server';
   engine=async p=>{const r=await api('correct',{text:p,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    return applyEditsText(p,(r.edits||[]).filter(e=>e.fix!=null&&typeof e.start==='number'&&e.cat!=='r'));};
@@ -8636,7 +8726,7 @@ async function improveAlternatives(){
   try{const out=DEMORW[m]?DEMORW[m](t):null;
    if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:m,text:out,why:OFFWHY[m]});}catch(e){}}
  renderAlts('');
- if(S.connected){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
+ if(inkSrv()){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
   [['concise','Server; concise'],['scholarly','Server; '+S.reg]].forEach(async mv=>{try{
    const r=await api('rewrite',{text:t,mode:mv[0],style:sysNote});
    if(r&&r.text&&r.text.trim()&&r.text.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r.text,why:'Written by '+((S.serverModel||'the local model'))+'; '+OFFWHY[mv[0]]});
@@ -8707,7 +8797,7 @@ function inkPromptDrop(i){const L=inkPromptsMine();L.splice(i,1);inkPromptsSave(
    on-device model, or the in-app model */
 async function inkWrite(instr,text){
  const rules=" Keep every claim, citation, name, number, quotation and dash unless the instruction says otherwise; add no facts, sources or examples that are not in the text. Output only the rewritten text.";
- if(S.connected){const r=await api('rewrite_custom',{text:text,instruction:instr});
+ if(inkSrv()){const r=await api('rewrite_custom',{text:text,instruction:instr});
   if(r&&r.ok&&r.text&&r.text.trim())return {text:r.text.trim(),by:S.serverModel||'the laptop\u2019s model'};
   throw new Error((r&&r.error)||'no answer');}
  if(PRO){const r=await proChat(instr+rules,text,Math.min(1500,wordCt(text)*3+200));
@@ -8718,7 +8808,7 @@ async function inkPromptRun(instr){
  if(!ALTSEL||!ALTSEL.t)return toast('Select the passage again, please');
  const box=document.getElementById('pmIn');if(box&&!box.value.trim())box.value=instr;
  const hist=inkPromptsMine();
- if(!S.connected&&!PRO){renderAlts('Rewriting with a prompt needs a writing model: on this device, '+(IS_TABLETAPP?'connect to your laptop\u2019s model (⚙ Engine), or use Apple\u2019s on-device model where the iPhone or iPad has it':'install the writing model (⚙ Engine)')+'. The rules engine can correct, but it cannot rewrite to a brief.');return;}
+ if(!S.connected&&!PRO){renderAlts('Rewriting with a prompt needs a writing model: on this device, '+(inkNative()?'start the tablet\u2019s own model (⚙ Engine), or connect to your laptop\u2019s':IS_TABLETAPP?'use Apple\u2019s on-device model where the iPhone or iPad has it, or connect to your laptop\u2019s model (⚙ Engine)':'install the writing model (⚙ Engine)')+'. The rules engine can correct, but it cannot rewrite to a brief.');return;}
  const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');
  try{const r=await inkWrite(instr,ALTSEL.t);
   if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
@@ -8869,7 +8959,7 @@ function rewrite(mode){
   if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine'});}catch(e){}
  renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
  const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
- if(S.connected){pending++;
+ if(inkSrv()){pending++;
   api('rewrite',{text:sel.t,mode:mode,style:sysNote}).then(r=>{
    if(r&&r.text&&r.text.trim()&&r.text.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')});
     if(r.think)maybeShowThink(r.think);renderAlts('');}
@@ -8900,7 +8990,7 @@ function composeRun(instr){
  const at=ed.selectionEnd;
  inkAltsOpen({s:at,e2:at,t:''},'Drafting…');
  const style=' Register: '+S.reg+'.'+voiceNotes();
- if(S.connected){
+ if(inkSrv()){
   api('compose',{instruction:instr,style:style}).then(r=>{
    if(r&&r.text&&r.text.trim()){ALTS.push({kind:'Draft',text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')+'; check every claim'});
     if(r.think)maybeShowThink(r.think);renderAlts('');}
@@ -8924,7 +9014,7 @@ function rewritePreset(preset){
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts('Rewriting with preset: '+preset+'…');
- if(S.connected){
+ if(inkSrv()){
   api('rewrite_preset',{text:t,preset:preset,context:ed.value.slice(Math.max(0,s-500),Math.min(ed.value.length,e+500))}).then(r=>{
    if(r&&r.ok&&r.text&&r.text.trim()){
     ALTS.push({kind:preset,text:r.text,why:'Preset rewrite by '+((S.serverModel||'the local model'))+(r.fallback?' (heuristic fallback)':'')});
@@ -8989,7 +9079,7 @@ function rewriteCustom(instruction){
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts('Rewriting with your instruction…');
- if(S.connected){
+ if(inkSrv()){
   api('rewrite_custom',{text:t,instruction:instruction}).then(r=>{
    if(r&&r.ok&&r.text&&r.text.trim()){
     ALTS.push({kind:'Custom',text:r.text,why:'Custom rewrite by '+((S.serverModel||'the local model'))});
@@ -9016,14 +9106,14 @@ async function fixSelection(){
  const s=tgt.s,e2=tgt.e2,t=tgt.t;hideBubble();
  let fixed=null;
  let rules=inkRules(t);
- if(S.connected){toast('AI is reading the selection…');
+ if(inkSrv()){toast('AI is reading the selection…');
   try{const r=await api('correct',{text:t,rules:S.rules.filter(x=>x.on),style:S.profile,dialect:S.dialect});
    const ai=(r.edits||[]).filter(e=>e.fix!==undefined&&e.cat!=='r');
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
- if(fixed===null&&PRO){toast(PRO&&PRO.apple?'Apple\u2019s model is fixing…':'Pro fixing…');
+ if(fixed===null&&PRO){toast('Fixing with '+inkProLabel()+'…');
   try{const pf=await proChat('You are Inkwell, a precise copyeditor. Fix grammar, spelling, punctuation and agreement. Preserve citations, meaning and voice. Output ONLY the corrected text.',t,Math.min(1200,wordCt(t)*2+80));
    /* 7.32: only the safe edits from Pro's version, never its rewording */
-   if(pf){await inkVerbs();fixed=applyEditsText(t,inkSafeEditsText(t,pf,0,PRO&&PRO.apple?'Apple model':'Pro'));}}catch(e){}}
+   if(pf){await inkVerbs();fixed=applyEditsText(t,inkSafeEditsText(t,pf,0,inkProLabel()));}}catch(e){}}
  if(fixed===null&&MINI){toast('Grammar model fixing…');
   try{const ai=await runMini(t);
    fixed=applyEditsText(t,rules.filter(re=>!ai.some(ae=>ae.start<re.end&&ae.end>re.start)).concat(ai));}catch(e){}}
@@ -9713,7 +9803,7 @@ const WORDBANK=[['show',['demonstrate','indicate','evince','reveal','suggest']],
  ['walk through',['explain','rehearse','review']],
  ['boil down to',['reduce to','amount to','come down to']],
  ['spell out',['specify','state plainly','set out']]];
-function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');if(which==='server')setTimeout(function(){try{inkLanRefresh();}catch(e){}try{if(!IS_TABLETAPP)inkWmRefresh();}catch(e){}},0);}catch(e){
+function openModal(which){try{openModalDo(which);document.body.classList.add('modalOn');if(which==='server')setTimeout(function(){try{inkLanRefresh();}catch(e){}try{if(!IS_TABLETAPP)inkWmRefresh();}catch(e){}try{inkTabletWire();inkTabletPanel();}catch(e){}},0);}catch(e){
  try{var api=window.pywebview&&window.pywebview.api;if(api&&api.report_error)api.report_error('openModal '+(which||'?')+': '+String(e&&e.name||'')+': '+String(e&&e.message||e)+' | '+String(e&&e.stack||'').split('\n').slice(0,3).join(' <- '));}catch(x){}
  try{var bb=document.getElementById('modalBody');if(bb){bb.innerHTML='<div style="padding:14px;font-size:13px;color:var(--mut);line-height:1.6">This panel could not be drawn; the fault is recorded. Try again — a repeat means the detail is already with the author.</div><p style="text-align:center"><button onclick="closeModal()">Close</button></p>';document.getElementById('modal').style.display='flex';}}catch(x){}
  }}
@@ -9847,12 +9937,13 @@ function openModalDo(which){
  '<div style="margin-top:14px;text-align:center"><button class="primary" onclick="closeModal()">Back to the page</button></div>';}
  if(which==='server'){b.innerHTML='<h3>⚙ Engine &amp; models</h3>'+
  '<p style="font-size:13px;color:var(--mut);line-height:1.65"><b>The rules engine is always on and needs nothing else.</b> It corrects spelling, grammar, punctuation, agreement, redundancy and register entirely offline, and it reads as you type. The AI below is an optional extra layer — drafting, rewording and a second grammar opinion — for writers who want it. Everything on this page lives on this device once installed; nothing is sent anywhere.</p>'+
- '<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">The shelf models (GGUF, MLX; an Import lands them there, and each stays until you swap or remove it) run through the companion server, which starts itself with the installed app and answers offline. The Mini and Pro rows need the internet once, the very first time, and are cached after.</p>'+
+ (IS_TABLETAPP?'':'<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">On this computer the companion server, which starts with Inkwell, runs the writing model below (llama.cpp, offline). A GGUF model you import also lands on its shelf and stays until you remove it.</p>')+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
- '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Writing model inside this window</h4>'+
+ '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(inkNative()?'Writing model on this tablet':'Writing model inside this window')+'</h4>'+
  (PRO_ALLOWED
   ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'
    +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 Install the writing model</button>')+'</div>'
+  :inkNative()?'<div id="tmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the tablet\u2026</div>'
   :'<p style="font-size:12.5px;color:var(--mut);line-height:1.6">No writing model runs inside the app on a phone or tablet: the useful ones need more memory than the system gives an app, and the system closes the app (which is what happened before 7.32). Here Apple\u2019s own model (iPhone and iPad with iOS 26) or your laptop\u2019s model over the Wi-Fi does this work.</p>')+
  (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
  '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>'+
@@ -10271,6 +10362,8 @@ function renderPatterns(){
   if(wcrash){inkAiMark('',false);S.writerAuto=false;SV('writerAuto',false);
    instSay('Inkwell closed while a model was loading last time, so it does not load at start. Start it again from the Engine panel if you wish.');}
   else if(S.writerAuto&&PRO_ALLOWED)setTimeout(function(){if(!PRO)installWriter(true);},1500);
+  /* 7.35: the tablet's own model starts by itself where it was started before */
+  else if(S.tabletAuto&&S.tabletFile&&inkNative())setTimeout(function(){if(!PRO)inkTabletStart(S.tabletFile,true);},2500);
   return;
   var crashed=null;try{crashed=localStorage.getItem('ink_ai_loading');}catch(e){}
   if(crashed){inkAiMark('',false);S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
