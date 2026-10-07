@@ -1,8 +1,8 @@
-INKWELL 7.34: THE HOME SCREEN WEB APP
+INKWELL 7.36: THE HOME SCREEN WEB APP
 =====================================
 THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
 any browser. It is the fallback to the iPhone and iPad app.
-THE FILE IT MAKES:   Inkwell-7.34-web-buildN.zip (a ready web site)
+THE FILE IT MAKES:   Inkwell-7.36-web-buildN.zip (a ready web site)
 It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
 only add a page to the Home Screen from a web address, not from a file.
 
@@ -31,7 +31,7 @@ PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
 
 5. Actions tab: "Build the Inkwell web app" runs by itself (or press
    "Run workflow"). When it is green, open Releases: the newest
-   "Inkwell 7.34 web app" release has the site as a .zip under Assets.
+   "Inkwell 7.36 web app" release has the site as a .zip under Assets.
 
 
 PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)
@@ -90,6 +90,33 @@ PART D2. OFFLINE, AND THE WRITING MODEL (7.34)
 - The folder "tf4" in this package carries the engine for this model
   (Transformers.js 4.3.1, Apache 2.0, and ONNX Runtime Web, MIT). Upload it
   with everything else in Part A.
+
+
+NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
+--------------------------------------------
+Scriba (the microphone room) now works on a recording the way Caption.Ed
+does. Open a recording (or "Import audio or video") and press Transcribe:
+- Playback and editing: the transcript follows the sound; a time plays from
+  there; every paragraph can be corrected in place; search; exports as
+  text, Word, SRT or WebVTT subtitles, or straight into Inkwell's document.
+- Notes and highlights: Important, Question, Action, Revisit; a note on
+  any moment; a scratchpad; slides from a PDF or photos of the board.
+- Your words: names and terms spelled your way in every transcript, and a
+  switch that removes "um", "uh" and "er".
+- Speakers: name them by hand, or press "Find the speakers". This runs on
+  the device with two small open models (about 33 MB, fetched once with
+  the internet, then offline). Measured on recorded meetings: about 85% of
+  speech lands in a paragraph naming the right person, about 95% when the
+  speakers are found before transcribing (Scriba then starts a new
+  paragraph where the speaker changes). The number of speakers is often
+  wrong on short recordings; check the names, and give two speakers the
+  same name to join them. Details: tools/speakers/README.md.
+- Summarise: a summary with chapters, action items, meeting minutes,
+  revision notes with questions, or your own prompt. These come from the
+  writing model Inkwell is running on your devices; none is sent anywhere
+  else. Any name or number the transcript does not contain is marked so
+  you can check it. With a small model the summaries are short and
+  plain, and they repeat the speech model's mishearings.
 
 
 PART E. UPDATING INKWELL LATER

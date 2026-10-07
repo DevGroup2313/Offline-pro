@@ -1,4 +1,4 @@
-INKWELL 7.34 FOR THE MAC MINI (APPLE SILICON, 16 GB)
+INKWELL 7.36 FOR THE MAC MINI (APPLE SILICON, 16 GB)
 ====================================================
 THIS PACKAGE IS FOR: the Mac mini, and any Mac with an Apple chip (M1 and
 later). For an Intel Mac (the 2019 MacBook Pro) use the Mac package and its
@@ -6,9 +6,9 @@ Intel disk image.
 
 WHAT IS INSIDE
 --------------
-- Inkwell-7.34-Mac-AppleSilicon.dmg: the ready-made app. No Python, no pip,
+- Inkwell-7.36-Mac-AppleSilicon.dmg: the ready-made app. No Python, no pip,
   no command line tools. (If the .dmg is not in this folder, download it
-  from the GitHub release "Inkwell 7.34 for Mac (build N)", under Assets.)
+  from the GitHub release "Inkwell 7.36 for Mac (build N)", under Assets.)
 - Everything GitHub needs to build it again (see the Mac READ ME).
 
 WHY THE OLD INSTALLER FAILED ON THIS MAC
@@ -26,13 +26,13 @@ Python for Inkwell.
 PART A. INSTALL
 ---------------
 1. If an older Inkwell opens: File, Export library. Keep the file.
-2. Open Inkwell-7.34-Mac-AppleSilicon.dmg. Drag Inkwell onto Applications.
+2. Open Inkwell-7.36-Mac-AppleSilicon.dmg. Drag Inkwell onto Applications.
    If asked, Replace.
 3. Open Inkwell from Applications. The first time, macOS refuses ("Apple
    could not verify..."): the app is not signed with a paid Apple
    certificate. System Settings, Privacy & Security, scroll down, "Open
    Anyway" beside Inkwell, confirm. Only once.
-4. Look for "v7.34" beside the date at the top. If your documents are not
+4. Look for "v7.36" beside the date at the top. If your documents are not
    there: File, Import library, and choose the file from step 1.
 
 
@@ -71,6 +71,34 @@ PART C. YOUR TABLETS USE THE MAC MINI'S MODEL
    model": enter the address and the code, then "Connect to my laptop".
 Only the writing tools are shared, and only with the code. Your documents
 are never reachable from the network. "Stop sharing" closes it again.
+
+
+NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
+--------------------------------------------
+Scriba (the microphone room) now works on a recording the way Caption.Ed
+does. Open a recording (or "Import audio or video") and press Transcribe:
+- Playback and editing: the transcript follows the sound; a time plays from
+  there; every paragraph can be corrected in place; search; exports as
+  text, Word, SRT or WebVTT subtitles, or straight into Inkwell's document.
+- Notes and highlights: Important, Question, Action, Revisit; a note on
+  any moment; a scratchpad; slides from a PDF or photos of the board.
+- Your words: names and terms spelled your way in every transcript, and a
+  switch that removes "um", "uh" and "er".
+- Speakers: name them by hand, or press "Find the speakers". This runs on
+  the device with two small open models (about 33 MB, fetched once with
+  the internet, then offline). Measured on recorded meetings: about 85% of
+  speech lands in a paragraph naming the right person, about 95% when the
+  speakers are found before transcribing (Scriba then starts a new
+  paragraph where the speaker changes). The number of speakers is often
+  wrong on short recordings; check the names, and give two speakers the
+  same name to join them. Details: tools/speakers/README.md.
+- Summarise: a summary with chapters, action items, meeting minutes,
+  revision notes with questions, or your own prompt. These come from the
+  writing model Inkwell is running on your devices; none is sent anywhere
+  else. Any name or number the transcript does not contain is marked so
+  you can check it. On the Mac mini the summaries come from the
+  writing model you installed in Part B; they repeat the speech model's
+  mishearings.
 
 
 PART D. IF SOMETHING GOES WRONG

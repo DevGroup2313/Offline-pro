@@ -1,0 +1,93 @@
+INKWELL v7.36: HANDOFF NOTES
+============================
+Date: 7 October 2026. Read INKWELL_HANDOFF_v7p34.txt and the earlier notes
+for everything before 7.35.
+
+Look for "v7.36" beside the date at the top. If it is not there, the device
+is not running 7.36.
+
+BEFORE YOU INSTALL
+------------------
+On every device: File, Export library, and keep the file. Each new build
+installs over the old one and keeps your documents, but uninstalling
+deletes them. Keep this repository PRIVATE: the Fire package holds the
+app's signing key.
+
+WHAT CAME IN 7.35
+-----------------
+- The Fire tablet runs a writing model of its own (LFM2.5 1.2B Instruct,
+  through llama.cpp built into the app), offline, in a separate process.
+  It comes first; the laptop's model over the Wi-Fi is second. Tested on an
+  Android emulator in CI with the real model; not yet on your Fire tablet.
+- Scriba in the web app: stronger speech models (chosen by measurement),
+  cuts at pauses, no repeated phrases.
+
+WHAT CAME IN 7.36
+-----------------
+1. The seal. Cormorant lettering; brass rim on a cream field by day,
+   midnight-blue rim by night. It is the app icon on every device (Fire,
+   iPhone and iPad, Mac, Windows, web), with the cream field kept so it is
+   not see-through on a home screen. On the door and in the header it is a
+   physical 3D push button.
+2. The house style. An elevated door; physical buttons; night mode in the
+   seal's midnight palette.
+3. Clepsydra, from Carpe Diem, exactly (its own code and every style rule it
+   applies, captured from Carpe Diem). It lives in the toolbar chip that
+   replaced "25"; the running time shows in Tabula's hourglass, a click
+   stops it, and the panel clears when the timer starts.
+4. Schedae: a quiet 44 px token in the house style; it still drags.
+5. Scriba, like Caption.Ed, offline, in four stages:
+   - Playback and editing: the transcript follows the sound; times play;
+     corrections in place; search; text, Word, SRT, WebVTT; into the
+     document.
+   - Notes and highlights: four highlight kinds, notes on moments, a
+     scratchpad, slides from a PDF (pdf.js 3.11.174, Apache 2.0) or images.
+   - Speakers and words: your word list and filler removal for every
+     transcript; speakers named by hand or found on the device; exports name
+     them (WebVTT with its voice tags).
+   - Summaries and templates: summary with chapters, action items, minutes,
+     revision notes with questions, your own prompt; from the writing model
+     Inkwell is running; every answer passes the fact guard.
+6. The companion server (Mac and Windows) has a new /api/ask for Scriba's
+   summaries. An older server still works through /api/compose.
+
+MEASURED IN 7.36
+----------------
+Finding the speakers (tools/speakers/README.md has every number):
+- AMI meetings, one room microphone, four speakers. Settings chosen on six
+  meetings, reported on six others (183.7 minutes).
+- DER 18.7%. 84.7% of one-person speech lands in a paragraph naming the
+  right person; 94.8% when the speakers are found before transcribing.
+- On 3 to 10 minute excerpts the error is similar (18 to 20%), but the
+  number of speakers was right in only 7 of 17. Given the number, it was
+  right in 15 of 17, at the cost of more speech given to the wrong person
+  (DER 26.5%).
+- Speed on this build machine: a 3 minute recording took 82 seconds in
+  Chromium, including the first download of the models. Not measured on a
+  tablet.
+
+Summaries:
+- Run end to end in Chromium with LFM2.5 1.2B (the Fire tablet's model)
+  through the companion server, on a 3 minute meeting excerpt: all five
+  templates answered (2 to 10 seconds each on this machine when it was not
+  busy), the fact guard flagged nothing wrongly after the fixes, times in a
+  summary play the recording.
+- Quality is limited by the small model and by the speech model's
+  mishearings: the summaries are short and plain, and a garbled phrase in
+  the transcript comes back garbled. No quality score was measured; I have
+  no verified benchmark for transcript summaries to report.
+
+NOT VERIFIED
+------------
+- Nothing in 7.36 has been run on your Fire tablet, iPhone, iPad, Mac or
+  Windows computer. The web build was tested in Chromium; the APK's model
+  path on an Android emulator (7.35).
+- Apple's on-device model for summaries on iPhone and iPad: compiled, never
+  run here.
+- "Find the speakers" needs the internet once, to fetch its two models.
+
+STILL TO DO
+-----------
+- Stage C: the Grammarly parity audit, measured, and closing the gaps.
+- Fire-sized model measurements: whether a better model than LFM2.5 1.2B
+  fits the Fire tablet.

@@ -1,7 +1,7 @@
-INKWELL 7.34 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.36 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.34-buildN.apk
+THE FILE IT MAKES:   Inkwell-7.36-buildN.apk
 NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
 only a white page with the file name. Use the iPhone and iPad package instead.
 
@@ -51,7 +51,7 @@ PART B. BUILD THE APK
 7. Wait for the green tick (about 2 minutes; the first run can take longer).
 
 8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.34 (build N)", has the APK under "Assets".
+   newest release, "Inkwell 7.36 (build N)", has the APK under "Assets".
 
 
 PART C. INSTALL ON THE FIRE TABLET BY USB
@@ -87,7 +87,7 @@ PART E. UPDATING INKWELL LATER
 - New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
   (replace the old one). If the vendor files changed, upload those into
   app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.34'.
+- New version number: in app/build.gradle, change versionName '7.36'.
   (versionCode rises by itself with every build, so Android accepts each
   build as an update.)
 - New icon: replace the five ic_launcher.png files in app/src/main/res/
@@ -96,26 +96,56 @@ PART E. UPDATING INKWELL LATER
 - Every commit starts a new build; install its APK as in Part C.
 
 
-CORRECTIONS AND MODELS ON THIS DEVICE (7.34)
---------------------------------------------
-- Corrections come from the rules engine, offline; it shows only
-  correctness unless you press "Show clarity and style notes".
-- No writing model runs inside the app on the Fire tablet. The ones good
-  enough to help (1 billion parameters and more) need about a gigabyte of
-  memory, and in an app window they also need WebGPU, which I could not
-  confirm the Fire's app window provides. Fire OS closes an app that takes
-  that much memory; this is what closed Inkwell before 7.32.
-- The strong path on the Fire is your Mac or laptop's model over the same
-  Wi-Fi (below): Correct, Rewrite, Draft and the prompt library use it, and
-  every rewrite is checked for dropped citations and numbers.
+CORRECTIONS AND MODELS ON THIS DEVICE (7.35 AND LATER)
+------------------------------------------------------
+- Since 7.35 the Fire tablet runs a writing model of its own, offline:
+  Engine, "Writing model on this tablet". It is LFM2.5 1.2B Instruct
+  (Liquid AI), downloaded once (about 730 MB), then kept on the tablet.
+  It runs in a separate process, so if Fire OS needs the memory back it
+  closes the model, never your page. Measured behind Inkwell's safety
+  filter: 37% of learner sentences improved, 3% made worse, 3% of correct
+  sentences changed.
+- The tablet's own model comes first everywhere; your laptop's model
+  (below) is second, unless you choose it first in Engine.
+- Without a model, corrections come from the rules engine, offline; it
+  shows only correctness unless you press "Show clarity and style notes".
+- Every rewrite is checked: one that drops a citation or number, or adds a
+  name, is marked in red with exactly what it changed.
 - Cite (Insert, Citation): the same engine and styles Zotero uses (APA,
   Harvard, Chicago, OSCOLA, MHRA, MLA, IEEE, Nature), offline. Adding a
   source by DOI or ISBN needs the internet; BibTeX, RIS and CSL-JSON do not.
 
+NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
+--------------------------------------------
+Scriba (the microphone room) now works on a recording the way Caption.Ed
+does. Open a recording (or "Import audio or video") and press Transcribe:
+- Playback and editing: the transcript follows the sound; a time plays from
+  there; every paragraph can be corrected in place; search; exports as
+  text, Word, SRT or WebVTT subtitles, or straight into Inkwell's document.
+- Notes and highlights: Important, Question, Action, Revisit; a note on
+  any moment; a scratchpad; slides from a PDF or photos of the board.
+- Your words: names and terms spelled your way in every transcript, and a
+  switch that removes "um", "uh" and "er".
+- Speakers: name them by hand, or press "Find the speakers". This runs on
+  the device with two small open models (about 33 MB, fetched once with
+  the internet, then offline). Measured on recorded meetings: about 85% of
+  speech lands in a paragraph naming the right person, about 95% when the
+  speakers are found before transcribing (Scriba then starts a new
+  paragraph where the speaker changes). The number of speakers is often
+  wrong on short recordings; check the names, and give two speakers the
+  same name to join them. Details: tools/speakers/README.md.
+- Summarise: a summary with chapters, action items, meeting minutes,
+  revision notes with questions, or your own prompt. These come from the
+  writing model Inkwell is running on your devices; none is sent anywhere
+  else. Any name or number the transcript does not contain is marked so
+  you can check it. With the small tablet model the summaries are short
+  and plain, and they repeat the speech model's mishearings.
+
+
 YOUR LAPTOP'S MODEL
 -------------------
 - Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.34 for Mac or Windows): Engine, "Share
+  Wi-Fi. On the laptop (Inkwell 7.36 for Mac or Windows): Engine, "Share
   with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
   On the tablet: Engine, "Your laptop's model": enter both, then "Connect
   to my laptop".

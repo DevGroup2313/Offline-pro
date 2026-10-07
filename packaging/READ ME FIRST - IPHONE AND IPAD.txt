@@ -1,7 +1,7 @@
-INKWELL 7.34 FOR IPHONE AND IPAD
+INKWELL 7.36 FOR IPHONE AND IPAD
 ================================
 THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
-THE FILE IT MAKES:   Inkwell-7.34-ios-buildN.ipa
+THE FILE IT MAKES:   Inkwell-7.36-ios-buildN.ipa
 NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
 
 IMPORTANT, PLEASE READ FIRST
@@ -62,7 +62,7 @@ PART B. BUILD THE .IPA
 7. Wait for the green tick.
 
 8. On the main page, open "Releases" (right-hand side). The newest release,
-   "Inkwell 7.34 for iPhone and iPad (build N)", has the .ipa under "Assets".
+   "Inkwell 7.36 for iPhone and iPad (build N)", has the .ipa under "Assets".
 
 
 PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
@@ -137,10 +137,37 @@ PART E2. CORRECTIONS AND MODELS ON THIS DEVICE (7.34)
   Harvard, Chicago, OSCOLA, MHRA, MLA, IEEE, Nature), offline. Adding a
   source by DOI or ISBN needs the internet; BibTeX, RIS and CSL-JSON do not.
 
+NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
+--------------------------------------------
+Scriba (the microphone room) now works on a recording the way Caption.Ed
+does. Open a recording (or "Import audio or video") and press Transcribe:
+- Playback and editing: the transcript follows the sound; a time plays from
+  there; every paragraph can be corrected in place; search; exports as
+  text, Word, SRT or WebVTT subtitles, or straight into Inkwell's document.
+- Notes and highlights: Important, Question, Action, Revisit; a note on
+  any moment; a scratchpad; slides from a PDF or photos of the board.
+- Your words: names and terms spelled your way in every transcript, and a
+  switch that removes "um", "uh" and "er".
+- Speakers: name them by hand, or press "Find the speakers". This runs on
+  the device with two small open models (about 33 MB, fetched once with
+  the internet, then offline). Measured on recorded meetings: about 85% of
+  speech lands in a paragraph naming the right person, about 95% when the
+  speakers are found before transcribing (Scriba then starts a new
+  paragraph where the speaker changes). The number of speakers is often
+  wrong on short recordings; check the names, and give two speakers the
+  same name to join them. Details: tools/speakers/README.md.
+- Summarise: a summary with chapters, action items, meeting minutes,
+  revision notes with questions, or your own prompt. These come from the
+  writing model Inkwell is running on your devices; none is sent anywhere
+  else. Any name or number the transcript does not contain is marked so
+  you can check it. With a small model the summaries are short and
+  plain, and they repeat the speech model's mishearings.
+
+
 YOUR LAPTOP'S MODEL
 -------------------
 - Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.34 for Mac or Windows): Engine, "Share
+  Wi-Fi. On the laptop (Inkwell 7.36 for Mac or Windows): Engine, "Share
   with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
   On the tablet: Engine, "Your laptop's model": enter both, then "Connect
   to my laptop".
@@ -150,7 +177,7 @@ PART F. UPDATING INKWELL LATER
 ------------------------------
 - New Inkwell page: upload the new Inkwell.html into web/ (replace the old
   one); new vendor files go into web/vendor/.
-- New version number: in project.yml, change MARKETING_VERSION: "7.34".
+- New version number: in project.yml, change MARKETING_VERSION: "7.36".
 - New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
   with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
   with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.
