@@ -676,17 +676,6 @@ body[data-motion=minimal] .cdfab>span,body[data-motion=minimal] #tabDockTgl{anim
 body[data-motion=calm] .cdfab>span{animation-duration:24s}
 #tabStage.cd-dock-collapsed .cdfab:not(.cdDockTgl),.appStage.cd-dock-collapsed .cdfab:not(.cdDockTgl){transform:translateX(150%) !important;opacity:0 !important;pointer-events:none !important}
 /* simple pomodoro modal */
-#pomo-modal{position:fixed;inset:0;z-index:9460;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)}
-#pomo-modal.on{display:flex}
-#pomo-box{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
-#pomo-time{font:700 56px/1 Georgia,serif;color:var(--ink);margin:0 0 16px;letter-spacing:0.02em}
-#pomo-label{font:600 13px/1 -apple-system,system-ui,sans-serif;color:var(--ink-2);margin:0 0 20px;letter-spacing:0.04em;text-transform:uppercase}
-#pomo-controls{display:flex;gap:10px;justify-content:center}
-#pomo-controls button{padding:8px 18px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);transition:transform 0.1s ease}
-#pomo-controls button:hover{transform:translateY(-1px)}
-#pomo-controls button:active{transform:translateY(0)}
-#pomo-controls .pomo-primary{background:var(--acc);color:#fff;border-color:var(--acc)}
-[data-theme=dark] #pomo-controls .pomo-primary{color:#080b10}
 
 #sticky-pins{position:fixed;inset:0;pointer-events:none;z-index:9300} /* above floating windows (9200) and all room stages; below modal-backdrop (9500) */
 /* (night inks for the notes live in the parent's chain below) *//* the Forge's button family, which the notes' menu rows use */
@@ -999,6 +988,16 @@ body.sideFolded #paper,body.panelFolded #paper{max-width:none !important}
    showed through Tabula, Scriba and Fontes */
 body.tabStageOn #footTab{display:none !important}
 </style>
+<style id="clepsydraStyle">
+@@LIBCSS_CLEPSYDRA@@
+/* Inkwell: the panel above the desk and the rooms; the corner dial in line
+   with Schedae, and hidden wherever Schedae is */
+.modal-backdrop:has(> #pomo-modal),#custodia-overlay{z-index:9460 !important}
+html body #horo-fab#horo-fab{right:23px !important;bottom:90px !important}
+/* the dock hourglasses hold the dial the way Carpe Diem's fixed #horo-fab does */
+.cdDockHoro{position:relative}
+html body:is(.doorOn,.modalOn,.tabStageOn) #horo-fab#horo-fab,html body:has(.sticky-panel-back) #horo-fab#horo-fab{display:none !important}
+</style>
 <style id="sealStyle">
 /* 7.36 THE SEAL'S HOUSE STYLE. The door and the desk take their look from the
    seal: Cormorant Garamond for display type (SIL Open Font License 1.1,
@@ -1034,12 +1033,12 @@ body.tabStageOn #footTab{display:none !important}
 body[data-motion=minimal] .primary,body[data-motion=minimal] .primary:hover,body[data-motion=minimal] .primary:active{transform:none}
 /* the same physical button for the other primary actions, and at night the
    older champagne fill gives way to the seal's midnight blue */
-[data-theme=dark] .primary,[data-theme=dark] button.primary,.tour3d,[data-theme=dark] .tour3d,.tabula-btn,[data-theme=dark] .tabula-btn,#pomo-controls .pomo-primary{
+[data-theme=dark] .primary,[data-theme=dark] button.primary,.tour3d,[data-theme=dark] .tour3d,.tabula-btn,[data-theme=dark] .tabula-btn {
  background:var(--btnFace);color:var(--btnText);border:1px solid var(--btnEdge);text-shadow:0 1px 0 rgba(0,0,0,.25);
  box-shadow:0 3px 0 var(--btnEdge),0 5px 10px rgba(6,16,24,.28),inset 0 0 0 1px var(--btnRing),inset 0 1px 0 rgba(255,255,255,.22);transition:transform .12s ease,box-shadow .12s ease}
-[data-theme=dark] .primary:hover,[data-theme=dark] button.primary:hover,.tour3d:hover,.tabula-btn:hover,#pomo-controls .pomo-primary:hover{background:var(--btnFace);transform:translateY(-1px);
+[data-theme=dark] .primary:hover,[data-theme=dark] button.primary:hover,.tour3d:hover,.tabula-btn:hover:hover{background:var(--btnFace);transform:translateY(-1px);
  box-shadow:0 4px 0 var(--btnEdge),0 8px 16px rgba(6,16,24,.30),inset 0 0 0 1px var(--btnRing),inset 0 1px 0 rgba(255,255,255,.26)}
-[data-theme=dark] .primary:active,[data-theme=dark] button.primary:active,.tour3d:active,.tabula-btn:active,#pomo-controls .pomo-primary:active{transform:translateY(3px);transition-duration:.05s;
+[data-theme=dark] .primary:active,[data-theme=dark] button.primary:active,.tour3d:active,.tabula-btn:active:active{transform:translateY(3px);transition-duration:.05s;
  box-shadow:0 0 0 var(--btnEdge),0 1px 3px rgba(6,16,24,.35),inset 0 0 0 1px var(--btnRing),inset 0 2px 4px rgba(0,0,0,.25)}
 
 /* the page at night: a midnight sheet with a faint brass edge */
@@ -1108,28 +1107,22 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
    midnight ink (midnight blue at night) with a brass ring and a champagne
    nib; it keeps its drag (handled by wireScheFabDrag) and its lift. The
    panel: the door's card, with a double brass rule. */
-#scheFab{width:54px;height:54px;font-size:0;color:#ead9ae;border:1px solid #0e2939;
- background:radial-gradient(circle at 36% 28%,#3a7397 0%,#24577a 46%,#163d55 100%);
- box-shadow:0 4px 0 #0c2230,0 6px 0 rgba(0,0,0,.08),0 9px 18px rgba(6,16,24,.34),0 18px 34px rgba(6,16,24,.18),
-  inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.28),inset 0 -5px 9px rgba(5,14,22,.45);
- transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
-#scheFab .scheNib{display:block;fill:#ead9ae;filter:drop-shadow(0 1px 0 rgba(0,0,0,.45));pointer-events:none}
-#scheFab:hover{transform:translateY(-2px);filter:none;
- box-shadow:0 6px 0 #0c2230,0 8px 0 rgba(0,0,0,.08),0 14px 24px rgba(6,16,24,.36),0 26px 44px rgba(6,16,24,.2),
-  inset 0 0 0 2px rgba(214,186,120,.75),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
-#scheFab:active{transform:translateY(3px);transition-duration:.05s;
- box-shadow:0 1px 0 #0c2230,0 2px 5px rgba(6,16,24,.4),inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 3px 6px rgba(0,0,0,.35)}
-#scheFab.dragging{transform:translateY(-5px) scale(1.04);
- box-shadow:0 7px 0 #0c2230,0 22px 38px rgba(6,16,24,.42),0 40px 64px rgba(6,16,24,.22),
-  inset 0 0 0 2px rgba(226,201,140,.85),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
-[data-theme=dark] #scheFab{color:#ead9ae;border-color:#0a1f2d;background:radial-gradient(circle at 36% 28%,#4886ab 0%,#2b6a8e 46%,#1a4560 100%);
- box-shadow:0 4px 0 #07141e,0 9px 18px rgba(0,0,0,.55),0 18px 34px rgba(0,0,0,.35),
-  inset 0 0 0 2px rgba(201,169,100,.5),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.22),inset 0 -5px 9px rgba(0,0,0,.45)}
-[data-theme=dark] #scheFab:hover{box-shadow:0 6px 0 #07141e,0 14px 24px rgba(0,0,0,.6),0 26px 44px rgba(0,0,0,.4),
-  inset 0 0 0 2px rgba(214,186,120,.7),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.26),inset 0 -5px 9px rgba(0,0,0,.45)}
-[data-theme=dark] #scheFab:active{box-shadow:0 1px 0 #07141e,0 2px 5px rgba(0,0,0,.6),inset 0 0 0 2px rgba(201,169,100,.5),inset 0 3px 6px rgba(0,0,0,.45)}
-#scheFab .fbadge{background:linear-gradient(#e2c98c,#a9803a);color:#17384c;border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px}
-body[data-motion=minimal] #scheFab,body[data-motion=minimal] #scheFab:hover,body[data-motion=minimal] #scheFab:active{transform:none}
+/* Schedae's button: the seal's sibling. The same physical construction as the
+   seal (a cast shadow, a milled edge, a face that lifts and sinks), with a
+   face struck as a small medallion: a bevelled brass rim, a midnight enamel
+   field with a champagne double rule, and the seal's dip-pen nib in relief.
+   It floats over the desk, so it has no well. Its drag (wireScheFabDrag) is
+   unchanged; while dragged it lifts instead of pressing in. */
+#scheFab.b3seal{--S:56px;--d:5px;--off:6px;--blur:8px;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
+ margin:0;padding:0;border:0;background:transparent;box-shadow:none;filter:none;font-size:0;cursor:grab;touch-action:none;transform:none}
+#scheFab.b3seal:hover,#scheFab.b3seal:active{background:transparent;box-shadow:none;filter:none;transform:none}
+#scheFab .b3-well{display:none}
+#scheFab.b3seal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.8}
+#scheFab.b3seal.down{--y:calc(var(--d) - 1px);--off:1px;--blur:3px}
+#scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-5px;--off:16px;--blur:16px;--sh:.65;cursor:grabbing;transition:none}
+#scheFab .fbadge{position:absolute;z-index:3;top:-3px;right:-3px;transform:translateY(var(--y));background:linear-gradient(#f0dca6,#b88d3e);color:#17384c;
+ border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+body[data-motion=minimal] #scheFab.b3seal{transition:none}
 .schePanel{background:radial-gradient(130% 90% at 50% 0%,#fffefa 0%,#fbf6ea 60%,#f3ead6 100%) !important;border:1px solid rgba(169,128,58,.55) !important;
  border-radius:22px !important;padding:16px 16px 12px !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
  box-shadow:inset 0 0 0 5px #fbf6ea,inset 0 0 0 6px var(--hair),0 2px 4px rgba(20,16,10,.08),0 14px 28px rgba(20,16,10,.14),0 34px 64px rgba(20,16,10,.16) !important}
@@ -1207,8 +1200,8 @@ body[data-motion=minimal] #scheFab,body[data-motion=minimal] #scheFab:hover,body
   <button onclick="rewrite('humanize')" title="Writes it as a person would; same facts, natural rhythm">Naturalise</button>
  </div>
 </div>
-<button id="scheFab" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><svg class="scheNib" width="24" height="24" viewBox="40 15 20 22" aria-hidden="true"><path fill-rule="evenodd" d="M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z"/></svg><span class="fbadge" id="fbadge" style="display:none"></span></button>
-<div id="pomo-modal" role="dialog" aria-label="Focus timer"><div id="pomo-box"><div id="pomo-time">25:00</div><div id="pomo-label">Focus</div><div id="pomo-controls"><button type="button" class="pomo-primary" onclick="inkPomoStart()">Start</button><button type="button" onclick="inkPomoPause()">Pause</button><button type="button" onclick="inkPomoReset()">Reset</button><button type="button" onclick="inkPomoClose()">Close</button></div></div></div>
+<button id="scheFab" class="b3seal" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span><span class="b3-face" id="scheFace"></span><span class="fbadge" id="fbadge" style="display:none"></span></button>
+</div>
 <div id="sticky-pins"></div>
 <div id="hovFix"></div>
 <div id="undoChip" onclick="undo();this.style.display='none'">✔ Applied; <b>Undo</b></div>
@@ -1440,14 +1433,23 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
   };
   window.addEventListener('error',window.__inkErrTrap);
  }catch(e){}
- /* Clepsydra light: the 25-minute focus timer, shared by the stage dock */
- window.inkPomoPaint=function(){var s=window.__pomoSec||1500,mm=Math.floor(s/60),ss=s%60;var el=document.getElementById('pomo-time');if(el)el.textContent=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;};
- window.inkPomoOpen=function(){var m=document.getElementById('pomo-modal');if(!m)return;m.classList.add('on');if(!window.__pomoSec)window.__pomoSec=1500;inkPomoPaint();};
- window.inkPomoStart=function(){if(window.__pomoTimer)return;var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Running';window.__pomoTimer=setInterval(function(){window.__pomoSec=(window.__pomoSec||1500)-1;if(window.__pomoSec<=0){clearInterval(window.__pomoTimer);window.__pomoTimer=null;window.__pomoSec=0;inkPomoPaint();var bb=document.querySelector('#pomo-controls .pomo-primary');if(bb)bb.textContent='Start';var lb=document.getElementById('pomo-label');if(lb)lb.textContent='Done';try{if(window.SND&&SND.timerDone)SND.timerDone();}catch(e){}return;}inkPomoPaint();},1000);};
- window.inkPomoPause=function(){if(window.__pomoTimer){clearInterval(window.__pomoTimer);window.__pomoTimer=null;var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Resume';}};
- window.inkPomoReset=function(){if(window.__pomoTimer){clearInterval(window.__pomoTimer);window.__pomoTimer=null;}window.__pomoSec=1500;inkPomoPaint();var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Start';var lb=document.getElementById('pomo-label');if(lb)lb.textContent='Focus';};
- window.inkPomoClose=function(){inkPomoPause();var m=document.getElementById('pomo-modal');if(m)m.classList.remove('on');};
- var pm=document.getElementById('pomo-modal');if(pm)pm.addEventListener('click',function(e){if(e.target===pm)inkPomoClose();});
+ /* Clepsydra: Carpe Diem's engine (src/lib/clepsydra.js). An hourglass opens the
+    panel; pressed while the timer runs, it stops it, as Carpe Diem's dial does. */
+ window.inkClepPress=function(){try{if(window.inkClep&&inkClep.running())inkClep.stop();else if(window.inkClep)inkClep.open();}catch(e){}};
+ window.inkPomoOpen=window.inkClepPress;
+ /* the hourglasses in Tabula's dock and the floating windows show the dial too:
+    the same markup as Carpe Diem's #horo-fab, with classes for its ids */
+ window.inkClepDocks=function(mode,rem,total,txt){
+  document.querySelectorAll('.cdDockHoro').forEach(function(b){
+   if(b.getAttribute('data-mode')!==mode){b.setAttribute('data-mode',mode);
+    var clock='<span style="font-size:30px;line-height:1">\u23F3</span>';
+    if(mode==='live')b.innerHTML=clock+'<svg width="46" height="46" viewBox="0 0 46 46" style="position:absolute;left:0;top:0"><circle cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="3"></circle><circle class="cdHoroArc" cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" transform="rotate(-90 23 23)" stroke-dasharray="125.66" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.95s linear"></circle></svg><span class="cdHoroNum" style="position:relative;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:currentColor;letter-spacing:0.2px"></span>';
+    else if(mode==='dot')b.innerHTML=clock+'<span style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:currentColor"></span>';
+    else b.innerHTML='<span>\u23F3</span>';}
+   b.title=mode==='idle'?'Clepsydra':'Clepsydra: '+txt+' left; press to stop';
+   if(mode==='live'){var arc=b.querySelector('.cdHoroArc'),num=b.querySelector('.cdHoroNum');
+    if(arc)arc.setAttribute('stroke-dashoffset',125.66*(1-rem/total));if(num)num.textContent=txt;}
+  });};
  /* the stage dock wire: binds the corner row inside a given container */
  window.inkDockWire=function(root){
   root=root||document;
@@ -1462,7 +1464,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
     try{localStorage.setItem('ink_mode',JSON.stringify(dark?'light':'dark'));}catch(_){} }
    setTimeout(paintTheme,60);});}
   paintTheme();
-  if(ho&&!ho._wired){ho._wired=1;ho.addEventListener('click',function(){inkPomoOpen();});}
+  if(ho&&!ho._wired){ho._wired=1;ho.addEventListener('click',function(){inkClepPress();});try{if(window.inkClep)inkClep.pill();}catch(e){}}
   if(sc&&!sc._wired){sc._wired=1;sc.addEventListener('click',function(){
    if(typeof openStickyToggle==='function')openStickyToggle();
    else if(typeof openStickyPanel==='function')openStickyPanel();});}
@@ -2983,7 +2985,7 @@ function inkFwMake(which,slot){
     try{localStorage.setItem('ink_fwdock_hidden_'+id,on?'1':'0');}catch(e){}});})(wdoc,bWd,id);
   bNote.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}
    if(typeof openStickyToggle==='function')openStickyToggle();else if(typeof openStickyPanel==='function')openStickyPanel();});
-  bHoro.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}try{inkPomoOpen();}catch(e){}});
+  bHoro.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}try{inkClepPress();}catch(e){}});try{if(window.inkClep)inkClep.pill();}catch(e){}
   bMoon.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}
    var dark=document.documentElement.getAttribute('data-theme')==='dark';
    try{if(typeof window.setMode==='function')window.setMode(dark?'light':'dark');}catch(e){}
@@ -3454,6 +3456,35 @@ function doorSealEnter(){
  setTimeout(closeDoor,S.motion==='minimal'?0:280);}
 /* paint the door's seal; rise=true replays its entrance (the door opening),
    false keeps it settled (a change of theme while the door is open) */
+/* Schedae's face: a small struck medallion with the seal's nib */
+function scheFacePaint(dark){
+ const f=document.getElementById('scheFace');if(!f)return;
+ const k='skf'+(++SEAL_N),id=s=>k+s,u=s=>'url(#'+k+s+')';
+ const P=dark?{f:['#3a7aa0','#1d4b68','#0c2232'],rim:['#c9a964','#8f6f31','#5a4419','#2f230b'],ink:['#f4e6bf','#d9c08a','#a98c52'],hair:'rgba(232,212,160,.55)',hl:.35}
+            :{f:['#346f93','#1a4561','#0d2638'],rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],ink:['#fbf0d0','#e3cb92','#b8964f'],hair:'rgba(240,220,168,.6)',hl:.6};
+ const NIB='M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
+ const nibAt='translate(50 51) scale(2.55) translate(-50 -26.4)';
+ f.innerHTML='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible;pointer-events:none"><defs>'
+  +'<radialGradient id="'+id('fl')+'" cx=".38" cy=".3" r=".78"><stop offset="0" stop-color="'+P.f[0]+'"/><stop offset=".55" stop-color="'+P.f[1]+'"/><stop offset="1" stop-color="'+P.f[2]+'"/></radialGradient>'
+  +'<linearGradient id="'+id('rm')+'" x1=".15" y1=".05" x2=".85" y2=".95"><stop offset="0" stop-color="'+P.rim[0]+'"/><stop offset=".38" stop-color="'+P.rim[1]+'"/><stop offset=".72" stop-color="'+P.rim[2]+'"/><stop offset="1" stop-color="'+P.rim[3]+'"/></linearGradient>'
+  +'<linearGradient id="'+id('hlr')+'" x1=".2" y1=".05" x2=".8" y2=".95"><stop offset="0" stop-color="#fff" stop-opacity="'+P.hl+'"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  +'<linearGradient id="'+id('nb')+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+P.ink[0]+'"/><stop offset=".5" stop-color="'+P.ink[1]+'"/><stop offset="1" stop-color="'+P.ink[2]+'"/></linearGradient>'
+  +'<linearGradient id="'+id('sh')+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="'+(dark?.16:.3)+'"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  +'<clipPath id="'+id('cl')+'"><circle cx="50" cy="50" r="49.5"/></clipPath>'
+  +'<filter id="'+id('bl')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter></defs>'
+  +'<circle cx="50" cy="50" r="46" fill="'+u('fl')+'"/>'
+  +'<circle cx="50" cy="50" r="45.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2.4" filter="'+u('bl')+'"/>'
+  +'<circle cx="50" cy="50" r="47.8" fill="none" stroke="'+u('rm')+'" stroke-width="4.4"/>'
+  +'<circle cx="50" cy="50" r="49.55" fill="none" stroke="'+u('hlr')+'" stroke-width=".9"/>'
+  +'<circle cx="50" cy="50" r="40.5" fill="none" stroke="'+P.hair+'" stroke-width="1"/>'
+  +'<circle cx="50" cy="50" r="38.2" fill="none" stroke="'+P.hair+'" stroke-width=".45"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity=".45" transform="translate(.9 1.3) '+nibAt+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.18:.35)+'" transform="translate(-.6 -.7) '+nibAt+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="'+u('nb')+'" transform="'+nibAt+'"/>'
+  +'<g clip-path="'+u('cl')+'"><g transform="rotate(24 50 50)"><rect class="s3-sheen" x="-70" y="-30" width="44" height="160" fill="'+u('sh')+'"/></g></g>'
+  +'</svg><span class="b3-glare" aria-hidden="true"></span>';
+ doorSealWire(document.getElementById('scheFab'));
+}
 function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorSeal'),88,dark,rise);}
 /* either seal, the door's or the header's: the same physical button at its own size */
 function sealButtonPaint(b,size,dark,rise){
@@ -3544,12 +3575,13 @@ function wireDoor(){
 const TMQ=matchMedia('(prefers-color-scheme: dark)');
 inkMark('theme');
 const MODEGLYPH={light:'☀',auto:'◐',dark:'☾'};
-function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);
+function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);window.__cdAppDark=dark;
  if(dark)document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');
  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  document.querySelectorAll('#doorTheme button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  if(window.__INKWELL_BOOTED&&typeof renderStickyPins==='function'&&S.notes&&S.notes.length&&S.notes.some(n=>n.pinned))renderStickyPins();
  {const bs=document.getElementById('brandSeal');sealButtonPaint(bs,36,dark,!bs.__painted);bs.__painted=true;}
+ try{scheFacePaint(dark);}catch(e){}
  if(document.getElementById('door')&&document.getElementById('door').style.display==='flex')doorSealPaint(dark,false);
  (function(){const lk=document.querySelector('link[rel=icon]');if(lk)lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark));})();
 }
@@ -11278,5 +11310,11 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
   var tries=0;
   var t=setInterval(function(){ tries++; if(mark()||tries>=25){ clearInterval(t); } }, 300);
 })();
+</script>
+<div id="modal-root"></div>
+<script>
+@@LIB_CLEPSYDRA@@
+/* the corner dial is on the desk from the start, as in Carpe Diem */
+try{if(window.inkClep)inkClep.pill();}catch(e){}
 </script>
 </body></html>

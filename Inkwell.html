@@ -676,17 +676,6 @@ body[data-motion=minimal] .cdfab>span,body[data-motion=minimal] #tabDockTgl{anim
 body[data-motion=calm] .cdfab>span{animation-duration:24s}
 #tabStage.cd-dock-collapsed .cdfab:not(.cdDockTgl),.appStage.cd-dock-collapsed .cdfab:not(.cdDockTgl){transform:translateX(150%) !important;opacity:0 !important;pointer-events:none !important}
 /* simple pomodoro modal */
-#pomo-modal{position:fixed;inset:0;z-index:9460;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px)}
-#pomo-modal.on{display:flex}
-#pomo-box{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:32px 40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
-#pomo-time{font:700 56px/1 Georgia,serif;color:var(--ink);margin:0 0 16px;letter-spacing:0.02em}
-#pomo-label{font:600 13px/1 -apple-system,system-ui,sans-serif;color:var(--ink-2);margin:0 0 20px;letter-spacing:0.04em;text-transform:uppercase}
-#pomo-controls{display:flex;gap:10px;justify-content:center}
-#pomo-controls button{padding:8px 18px;border-radius:9px;font:600 13px/1 -apple-system,system-ui,sans-serif;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);transition:transform 0.1s ease}
-#pomo-controls button:hover{transform:translateY(-1px)}
-#pomo-controls button:active{transform:translateY(0)}
-#pomo-controls .pomo-primary{background:var(--acc);color:#fff;border-color:var(--acc)}
-[data-theme=dark] #pomo-controls .pomo-primary{color:#080b10}
 
 #sticky-pins{position:fixed;inset:0;pointer-events:none;z-index:9300} /* above floating windows (9200) and all room stages; below modal-backdrop (9500) */
 /* (night inks for the notes live in the parent's chain below) *//* the Forge's button family, which the notes' menu rows use */
@@ -999,6 +988,270 @@ body.sideFolded #paper,body.panelFolded #paper{max-width:none !important}
    showed through Tabula, Scriba and Fontes */
 body.tabStageOn #footTab{display:none !important}
 </style>
+<style id="clepsydraStyle">
+/* CLEPSYDRA: the rules Carpe Diem applies to it, scoped to it. Made by
+   tools/clepsydra_css.py from tools/clepsydra/carpe_diem_rules.json; do not edit. */
+:is(#pomo-modal, .modal-backdrop:has(> #pomo-modal), #horo-fab, #custodia-overlay, .cdDockHoro){--accent:#1B6B93;--modal-backdrop:rgba(0, 0, 0, 0.25);--glass-strong:rgba(255, 255, 255, 0.85);--glass-border:rgba(0, 0, 0, 0.06);--accent-soft:rgba(27, 107, 147, 0.14);--text-primary:#1D1D1F;--text-secondary:#454549;--text-tertiary:#5a5a61;--hairline:rgba(0, 0, 0, 0.08);--hairline-soft:rgba(0, 0, 0, 0.05);--cl-solid:#ffffff;--cream-card:#f2f4f3;--cream-done-ink:#5a8c5a;--cd-serif:Georgia, "Iowan Old Style", "Times New Roman", serif}
+html[data-theme=dark] :is(#pomo-modal, .modal-backdrop:has(> #pomo-modal), #horo-fab, #custodia-overlay, .cdDockHoro){--accent:#5BAEDB;--modal-backdrop:rgba(0, 0, 0, 0.55);--glass-strong:rgba(36, 42, 50, 0.85);--glass-border:rgba(255, 255, 255, 0.08);--accent-soft:rgba(91,174,219,0.16);--text-primary:#E8E8EA;--text-secondary:#A1A1A6;--text-tertiary:#989EA4;--hairline:rgba(255, 255, 255, 0.10);--hairline-soft:rgba(255, 255, 255, 0.05);--cl-solid:#1C2026;--cream-card:#201b16;--cream-done-ink:#8fbf8f;--cd-serif:Georgia, "Iowan Old Style", "Times New Roman", serif}
+#pomo-modal,#custodia-overlay{font-family:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;font-size:16px;line-height:normal;-webkit-font-smoothing:antialiased;color:var(--text-primary)}
+#pomo-modal *,#custodia-overlay *{font-family:inherit}
+#pomo-modal svg *{font-family:inherit}
+#pomo-modal #pomo-time{font-family:var(--cd-serif)}
+#pomo-modal:is(*),
+#pomo-modal :is(*){box-sizing: border-box; margin: 0px; padding: 0px;}
+.modal-backdrop:has(> #pomo-modal):is(*){box-sizing: border-box; margin: 0px; padding: 0px;}
+#horo-fab:is(*),
+#horo-fab :is(*),
+.cdDockHoro :is(*){box-sizing: border-box; margin: 0px; padding: 0px;}
+#custodia-overlay:is(*),
+#custodia-overlay :is(*){box-sizing: border-box; margin: 0px; padding: 0px;}
+#pomo-modal :is(button){font-family: inherit; cursor: pointer;}
+#horo-fab:is(button){font-family: inherit; cursor: pointer;}
+#custodia-overlay :is(button){font-family: inherit; cursor: pointer;}
+#pomo-modal :is(input){font-family: inherit;}
+#horo-fab:is(#horo-fab){transition: transform 0.28s, opacity 0.28s;}
+#horo-fab:is(#horo-fab){position: fixed; right: 16px; bottom: 72px; z-index: 94; width: 46px; height: 46px; border-radius: 50%; border: none; background: transparent; color: var(--accent); cursor: pointer; box-shadow: none; display: flex; align-items: center; justify-content: center; padding: 0px; transition: transform 0.15s;}
+#horo-fab:is(#horo-fab){background: transparent !important; border: none !important; box-shadow: none !important; color: var(--accent) !important; animation: auto ease 0s 1 normal none running none !important;}
+#horo-fab:is(body:has(#pomo-modal) #horo-fab){opacity: 0 !important; pointer-events: none !important;}
+#horo-fab:is(#horo-fab:focus){outline: none;}
+#horo-fab:is(#horo-fab:focus-visible){outline: none;}
+#horo-fab :is(#horo-fab > span:first-child),
+.cdDockHoro :is(.cdDockHoro > span:first-child){display: inline-block; animation: 14s ease-in-out 0s infinite normal none running cdHourTurn;}
+#horo-fab:is(#horo-fab:hover){transform: translateY(-2px) scale(1.05);}
+#pomo-modal:is(*),
+#pomo-modal :is(*){scrollbar-width: thin; scrollbar-color: rgba(40, 48, 58, 0.16) transparent;}
+.modal-backdrop:has(> #pomo-modal):is(*){scrollbar-width: thin; scrollbar-color: rgba(40, 48, 58, 0.16) transparent;}
+#horo-fab:is(*),
+#horo-fab :is(*),
+.cdDockHoro :is(*){scrollbar-width: thin; scrollbar-color: rgba(40, 48, 58, 0.16) transparent;}
+#custodia-overlay:is(*),
+#custodia-overlay :is(*){scrollbar-width: thin; scrollbar-color: rgba(40, 48, 58, 0.16) transparent;}
+#pomo-modal::-webkit-scrollbar,
+#pomo-modal *::-webkit-scrollbar{width: 7px; height: 7px;}
+.modal-backdrop:has(> #pomo-modal)::-webkit-scrollbar{width: 7px; height: 7px;}
+#horo-fab::-webkit-scrollbar,
+#horo-fab *::-webkit-scrollbar,
+.cdDockHoro *::-webkit-scrollbar{width: 7px; height: 7px;}
+#custodia-overlay::-webkit-scrollbar,
+#custodia-overlay *::-webkit-scrollbar{width: 7px; height: 7px;}
+#pomo-modal::-webkit-scrollbar-track,
+#pomo-modal *::-webkit-scrollbar-track{background: transparent;}
+.modal-backdrop:has(> #pomo-modal)::-webkit-scrollbar-track{background: transparent;}
+#horo-fab::-webkit-scrollbar-track,
+#horo-fab *::-webkit-scrollbar-track,
+.cdDockHoro *::-webkit-scrollbar-track{background: transparent;}
+#custodia-overlay::-webkit-scrollbar-track,
+#custodia-overlay *::-webkit-scrollbar-track{background: transparent;}
+#pomo-modal::-webkit-scrollbar-thumb,
+#pomo-modal *::-webkit-scrollbar-thumb{background: padding-box rgba(40, 48, 58, 0.16); border-radius: 6px; border: 2px solid transparent;}
+.modal-backdrop:has(> #pomo-modal)::-webkit-scrollbar-thumb{background: padding-box rgba(40, 48, 58, 0.16); border-radius: 6px; border: 2px solid transparent;}
+#horo-fab::-webkit-scrollbar-thumb,
+#horo-fab *::-webkit-scrollbar-thumb,
+.cdDockHoro *::-webkit-scrollbar-thumb{background: padding-box rgba(40, 48, 58, 0.16); border-radius: 6px; border: 2px solid transparent;}
+#custodia-overlay::-webkit-scrollbar-thumb,
+#custodia-overlay *::-webkit-scrollbar-thumb{background: padding-box rgba(40, 48, 58, 0.16); border-radius: 6px; border: 2px solid transparent;}
+#pomo-modal::-webkit-scrollbar-thumb:hover,
+#pomo-modal *::-webkit-scrollbar-thumb:hover{background: padding-box rgba(40, 48, 58, 0.28);}
+.modal-backdrop:has(> #pomo-modal)::-webkit-scrollbar-thumb:hover{background: padding-box rgba(40, 48, 58, 0.28);}
+#horo-fab::-webkit-scrollbar-thumb:hover,
+#horo-fab *::-webkit-scrollbar-thumb:hover,
+.cdDockHoro *::-webkit-scrollbar-thumb:hover{background: padding-box rgba(40, 48, 58, 0.28);}
+#custodia-overlay::-webkit-scrollbar-thumb:hover,
+#custodia-overlay *::-webkit-scrollbar-thumb:hover{background: padding-box rgba(40, 48, 58, 0.28);}
+#pomo-modal:is(.modal-backdrop > .modal){box-shadow: rgba(27, 107, 147, 0.1) 0px 0px 0px 5px, rgba(0, 0, 0, 0.55) 0px 26px 70px !important;}
+.modal-backdrop:has(> #pomo-modal):is(.modal-backdrop){position: fixed; inset: 0px; background: var(--modal-backdrop); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px;}
+#pomo-modal:is(.modal){background: var(--glass-strong); backdrop-filter: saturate(180%) blur(24px); border: 0.5px solid var(--glass-border); border-radius: 14px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: rgba(0, 0, 0, 0.18) 0px 20px 60px;}
+#horo-fab:is(#horo-fab){bottom: 108px !important;}
+#horo-fab:is(#horo-fab){bottom: max(108px, calc(env(safe-area-inset-bottom) + 104px)) !important;}
+#horo-fab:is(#horo-fab){transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1), filter 0.18s; background: transparent !important; border: 0px !important; box-shadow: none !important;}
+#horo-fab:is(#horo-fab){font-size: 30px !important; line-height: 1 !important;}
+#horo-fab :is(#horo-fab > span),
+.cdDockHoro :is(.cdDockHoro > span){font-size: 30px !important; width: 30px !important; height: 30px !important;}
+#horo-fab :is(#horo-fab > svg),
+.cdDockHoro :is(.cdDockHoro > svg){font-size: 30px !important; width: 30px !important; height: 30px !important;}
+#horo-fab :is(#horo-fab > *),
+.cdDockHoro :is(.cdDockHoro > *){transition: filter 0.18s; filter: drop-shadow(rgba(6, 12, 20, 0.7) 0px 1px 0px) drop-shadow(rgba(6, 12, 20, 0.45) 0px 3px 3px) !important;}
+#horo-fab:is(#horo-fab:hover){transform: translateY(-6px) scale(1.06);}
+#horo-fab :is(#horo-fab:hover > *),
+.cdDockHoro :is(.cdDockHoro:hover > *){filter: drop-shadow(rgba(6, 12, 20, 0.75) 0px 2px 0px) drop-shadow(rgba(6, 12, 20, 0.48) 0px 6px 6px) !important;}
+#horo-fab:is(#horo-fab:active){transform: translateY(2px);}
+@media (prefers-reduced-motion: reduce){#horo-fab:is(#horo-fab){transition: none !important;}}
+#pomo-modal :is([data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.95) 0px 1.5px 0px inset, rgba(20, 50, 68, 0.18) 0px -3px 5px inset, rgba(16, 42, 58, 0.3) 0px 1px 1px, rgba(16, 42, 58, 0.24) 0px 3px 4px, rgba(16, 42, 58, 0.18) 0px 6px 9px, rgba(16, 42, 58, 0.12) 0px 12px 20px !important; transition: transform 0.09s cubic-bezier(0.34, 1.3, 0.64, 1), box-shadow 0.09s, filter 0.12s !important;}
+#pomo-modal :is([data-cd-lift]:hover){transform: translateY(-3px); box-shadow: rgb(255, 255, 255) 0px 1.5px 0px inset, rgba(16, 42, 58, 0.24) 0px 3px 4px, rgba(16, 42, 58, 0.18) 0px 9px 16px, rgba(16, 42, 58, 0.13) 0px 18px 32px !important;}
+#pomo-modal :is([data-cd-lift]:active){transform: translateY(1px) !important; transition-duration: 0.04s !important; box-shadow: rgba(16, 42, 58, 0.3) 0px 2px 5px inset, rgba(255, 255, 255, 0.2) 0px -1px 0px inset !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.16) 0px 1.5px 0px inset, rgba(0, 0, 0, 0.45) 0px -3px 5px inset, rgba(0, 0, 0, 0.65) 0px 1px 1px, rgba(0, 0, 0, 0.55) 0px 3px 4px, rgba(0, 0, 0, 0.45) 0px 6px 9px, rgba(0, 0, 0, 0.32) 0px 12px 20px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]:hover){box-shadow: rgba(255, 255, 255, 0.2) 0px 1.5px 0px inset, rgba(0, 0, 0, 0.6) 0px 3px 4px, rgba(0, 0, 0, 0.5) 0px 9px 16px, rgba(0, 0, 0, 0.38) 0px 18px 32px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]:active){box-shadow: rgba(0, 0, 0, 0.6) 0px 2px 5px inset, rgba(255, 255, 255, 0.1) 0px -1px 0px inset !important;}
+@media (prefers-reduced-motion: reduce){#pomo-modal :is([data-cd-lift]){transition: none !important;}}
+#horo-fab:is(body #horo-fab){filter: drop-shadow(rgba(16, 42, 58, 0.35) 0px 1px 1px) drop-shadow(rgba(16, 42, 58, 0.28) 0px 3px 4px) drop-shadow(rgba(16, 42, 58, 0.22) 0px 8px 14px); background: transparent !important; border: 0px !important; box-shadow: none !important; right: 44px !important; left: auto !important; width: 48px !important; height: 48px !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: transform 0.1s cubic-bezier(0.34, 1.3, 0.64, 1), filter 0.12s !important;}
+#horo-fab :is(body #horo-fab span),
+.cdDockHoro :is(body .cdDockHoro span){font-size: 36px !important;}
+#horo-fab:is(body #horo-fab:hover){transform: translateY(-3px) !important; filter: drop-shadow(rgba(16, 42, 58, 0.3) 0px 3px 3px) drop-shadow(rgba(16, 42, 58, 0.24) 0px 9px 16px);}
+#horo-fab:is(body #horo-fab:active){transform: translateY(1px) !important; transition-duration: 0.05s !important;}
+#horo-fab:is(body:is(html[data-theme=dark] *) #horo-fab){filter: drop-shadow(rgba(0, 0, 0, 0.6) 0px 2px 3px) drop-shadow(rgba(0, 0, 0, 0.45) 0px 6px 12px);}
+@media (prefers-reduced-motion: reduce){#horo-fab:is(body #horo-fab){transition: none !important;}}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.2) 0px 1.5px 0px inset, rgba(0, 0, 0, 0.5) 0px -3px 5px inset, rgba(0, 0, 0, 0.75) 0px 1px 1px, rgba(0, 0, 0, 0.65) 0px 3px 5px, rgba(0, 0, 0, 0.5) 0px 7px 12px, rgba(0, 0, 0, 0.4) 0px 14px 24px !important;}
+#horo-fab :is(#horo-fab > *),
+.cdDockHoro :is(.cdDockHoro > *){filter: drop-shadow(rgba(16, 42, 58, 0.4) 0px 1px 1px) drop-shadow(rgba(16, 42, 58, 0.32) 0px 3px 5px) drop-shadow(rgba(16, 42, 58, 0.26) 0px 9px 16px) drop-shadow(rgba(16, 42, 58, 0.14) 0px 16px 28px) !important;}
+#pomo-modal :is([data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.85) 0px 1px 0px inset, rgba(16, 42, 58, 0.18) 0px 1.5px 2px, rgba(16, 42, 58, 0.14) 0px 5px 9px, rgba(16, 42, 58, 0.07) 0px 10px 18px !important;}
+#pomo-modal :is([data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.9) 0px 1px 0px inset, rgba(16, 42, 58, 0.3) 0px 1px 0px, rgba(16, 42, 58, 0.2) 0px 3px 3px, rgba(16, 42, 58, 0.12) 0px 7px 9px !important;}
+#pomo-modal :is([data-cd-lift]){box-shadow: rgba(16, 42, 58, 0.16) 0px -1px 0px inset, rgba(16, 42, 58, 0.32) 0px 1px 0px, rgba(16, 42, 58, 0.2) 0px 3px 3px, rgba(16, 42, 58, 0.11) 0px 6px 8px !important;}
+#pomo-modal :is([data-cd-lift]){box-shadow: rgba(16, 42, 58, 0.18) 0px -1.5px 0px inset, rgba(16, 42, 58, 0.34) 0px 2px 0px, rgba(16, 42, 58, 0.22) 0px 4px 4px, rgba(16, 42, 58, 0.12) 0px 8px 10px !important; transition: transform 0.1s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.12s !important;}
+#pomo-modal :is([data-cd-lift]:hover){transform: translateY(-1.5px) !important;}
+#pomo-modal :is([data-cd-lift]:active){transform: translateY(1px) !important; box-shadow: rgba(16, 42, 58, 0.24) 0px 2px 5px inset, rgba(16, 42, 58, 0.25) 0px 1px 1px !important; transition-duration: 0.05s !important;}
+@media (prefers-reduced-motion: reduce){#pomo-modal:is(html body *),
+#pomo-modal :is(html body *){animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;}}
+@media (prefers-reduced-motion: reduce){.modal-backdrop:has(> #pomo-modal):is(html body *){animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;}}
+@media (prefers-reduced-motion: reduce){#horo-fab:is(html body *),
+#horo-fab :is(html body *),
+.cdDockHoro :is(html body *){animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;}}
+@media (prefers-reduced-motion: reduce){#custodia-overlay:is(html body *),
+#custodia-overlay :is(html body *){animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important;}}
+#pomo-modal:is(*),
+#pomo-modal :is(*){scrollbar-width: none !important;}
+.modal-backdrop:has(> #pomo-modal):is(*){scrollbar-width: none !important;}
+#horo-fab:is(*),
+#horo-fab :is(*),
+.cdDockHoro :is(*){scrollbar-width: none !important;}
+#pomo-modal::before,
+#pomo-modal *::before{scrollbar-width: none !important;}
+.modal-backdrop:has(> #pomo-modal)::before{scrollbar-width: none !important;}
+#horo-fab::before,
+#horo-fab *::before,
+.cdDockHoro *::before{scrollbar-width: none !important;}
+#pomo-modal::after,
+#pomo-modal *::after{scrollbar-width: none !important;}
+.modal-backdrop:has(> #pomo-modal)::after{scrollbar-width: none !important;}
+#horo-fab::after,
+#horo-fab *::after,
+.cdDockHoro *::after{scrollbar-width: none !important;}
+#custodia-overlay:is(*),
+#custodia-overlay :is(*){scrollbar-width: none !important;}
+#custodia-overlay::before,
+#custodia-overlay *::before{scrollbar-width: none !important;}
+#custodia-overlay::after,
+#custodia-overlay *::after{scrollbar-width: none !important;}
+#pomo-modal::-webkit-scrollbar,
+#pomo-modal *::-webkit-scrollbar{width: 0px !important; height: 0px !important; display: none !important;}
+.modal-backdrop:has(> #pomo-modal)::-webkit-scrollbar{width: 0px !important; height: 0px !important; display: none !important;}
+#horo-fab::-webkit-scrollbar,
+#horo-fab *::-webkit-scrollbar,
+.cdDockHoro *::-webkit-scrollbar{width: 0px !important; height: 0px !important; display: none !important;}
+#custodia-overlay::-webkit-scrollbar,
+#custodia-overlay *::-webkit-scrollbar{width: 0px !important; height: 0px !important; display: none !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.06) 0px 1px 0px inset, rgba(0, 0, 0, 0.4) 0px -1.5px 0px inset, rgba(0, 0, 0, 0.6) 0px 1px 0px, rgba(0, 0, 0, 0.45) 0px 3px 3px, rgba(0, 0, 0, 0.32) 0px 8px 10px !important;}
+#pomo-modal :is(#modal-root button[style*="cream"]){box-shadow: rgba(16, 42, 58, 0.16) 0px -1.5px 0px inset, rgba(16, 42, 58, 0.28) 0px 2px 0px, rgba(16, 42, 58, 0.18) 0px 4px 5px, rgba(16, 42, 58, 0.11) 0px 9px 14px !important; transition: transform 0.1s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.12s !important;}
+#pomo-modal :is(#modal-root button:not([class])){box-shadow: rgba(16, 42, 58, 0.16) 0px -1.5px 0px inset, rgba(16, 42, 58, 0.28) 0px 2px 0px, rgba(16, 42, 58, 0.18) 0px 4px 5px, rgba(16, 42, 58, 0.11) 0px 9px 14px !important; transition: transform 0.1s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.12s !important;}
+#pomo-modal :is(#modal-root button[style*="cream"]:hover){transform: translateY(-2px) !important; box-shadow: rgba(16, 42, 58, 0.16) 0px -1.5px 0px inset, rgba(16, 42, 58, 0.28) 0px 3px 0px, rgba(16, 42, 58, 0.2) 0px 7px 9px, rgba(16, 42, 58, 0.13) 0px 14px 20px !important;}
+#pomo-modal :is(#modal-root button:not([class]):hover){transform: translateY(-2px) !important; box-shadow: rgba(16, 42, 58, 0.16) 0px -1.5px 0px inset, rgba(16, 42, 58, 0.28) 0px 3px 0px, rgba(16, 42, 58, 0.2) 0px 7px 9px, rgba(16, 42, 58, 0.13) 0px 14px 20px !important;}
+#pomo-modal :is(#modal-root button[style*="cream"]:active){transform: translateY(1px) !important; box-shadow: rgba(16, 42, 58, 0.22) 0px 2px 5px inset !important;}
+#pomo-modal :is(#modal-root button:not([class]):active){transform: translateY(1px) !important; box-shadow: rgba(16, 42, 58, 0.22) 0px 2px 5px inset !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) #modal-root button[style*="cream"]){box-shadow: rgba(255, 255, 255, 0.08) 0px 1px 0px inset, rgba(0, 0, 0, 0.45) 0px -2px 0px inset, rgba(0, 0, 0, 0.75) 0px 2px 0px, rgba(0, 0, 0, 0.55) 0px 5px 6px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) #modal-root button:not([class])){box-shadow: rgba(255, 255, 255, 0.08) 0px 1px 0px inset, rgba(0, 0, 0, 0.45) 0px -2px 0px inset, rgba(0, 0, 0, 0.75) 0px 2px 0px, rgba(0, 0, 0, 0.55) 0px 5px 6px !important;}
+#pomo-modal :is(#modal-root [style*="cream-card"]){animation: 0.3s ease 0s 1 normal backwards running cdRoomUp; border-color: rgba(202, 162, 74, 0.34) !important; box-shadow: rgba(40, 48, 58, 0.14) 0px -1.5px 0px inset, rgba(40, 48, 58, 0.26) 0px 2px 0px, rgba(40, 48, 58, 0.18) 0px 4px 5px, rgba(40, 48, 58, 0.12) 0px 9px 14px !important; transition: transform 0.1s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.12s, border-color 0.14s !important;}
+#pomo-modal :is(#modal-root button[style*="cream-card"]:hover){transform: translateY(-2px) !important; border-color: rgba(202, 162, 74, 0.6) !important; box-shadow: rgba(40, 48, 58, 0.14) 0px -1.5px 0px inset, rgba(40, 48, 58, 0.26) 0px 3px 0px, rgba(40, 48, 58, 0.2) 0px 7px 9px, rgba(40, 48, 58, 0.14) 0px 14px 22px !important;}
+#pomo-modal :is(#modal-root button[style*="cream-card"]:active){transform: translateY(1px) !important; box-shadow: rgba(40, 48, 58, 0.22) 0px 2px 5px inset, rgba(40, 48, 58, 0.2) 0px 1px 1px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]){box-shadow: rgba(255, 255, 255, 0.09) 0px 1px 0px inset, rgba(0, 0, 0, 0.5) 0px -2px 0px inset, rgba(0, 0, 0, 0.8) 0px 2px 0px, rgba(0, 0, 0, 0.6) 0px 4px 5px, rgba(0, 0, 0, 0.45) 0px 9px 14px, rgba(0, 0, 0, 0.3) 0px 18px 28px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]:hover){box-shadow: rgba(255, 255, 255, 0.11) 0px 1px 0px inset, rgba(0, 0, 0, 0.5) 0px -2px 0px inset, rgba(0, 0, 0, 0.82) 0px 3px 0px, rgba(0, 0, 0, 0.62) 0px 6px 8px, rgba(0, 0, 0, 0.5) 0px 13px 20px, rgba(0, 0, 0, 0.32) 0px 24px 36px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]:active){box-shadow: rgba(0, 0, 0, 0.75) 0px 3px 7px inset, rgba(255, 255, 255, 0.06) 0px -1px 0px inset, rgba(0, 0, 0, 0.6) 0px 1px 0px !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]){border-color: rgba(255, 255, 255, 0.16) !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) [data-cd-lift]:hover){border-color: rgba(255, 255, 255, 0.26) !important;}
+#pomo-modal :is(#modal-root [style*="cream-card"]){color: var(--accent) !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) #modal-root [style*="cream-card"]){color: rgb(91, 174, 219) !important;}
+#pomo-modal :is(#modal-root [style*="cream-card"]){border-left-width: 3px !important; border-left-color: rgba(27, 107, 147, 0.55) !important; transition: transform 0.13s, box-shadow 0.13s, border-left-color 0.13s !important;}
+#pomo-modal :is(#modal-root [style*="cream-card"]:hover){transform: translateY(-2px) !important; border-left-color: rgba(27, 107, 147, 0.95) !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) #modal-root [style*="cream-card"]){border-left-color: rgba(91, 174, 219, 0.5) !important;}
+#pomo-modal :is(body:is(html[data-theme=dark] *) #modal-root [style*="cream-card"]:hover){border-left-color: rgba(91, 174, 219, 0.9) !important;}
+#pomo-modal :is(#modal-root [style*="cream-card"]:active){transform: translateY(1px) !important;}
+#horo-fab:is(#horo-fab){filter: none !important; text-shadow: none !important; box-shadow: none !important;}
+#horo-fab :is(#horo-fab span),
+.cdDockHoro :is(.cdDockHoro span){text-shadow: none !important; box-shadow: none !important;}
+#horo-fab:is(body #horo-fab){background: none transparent !important; border: 0px !important; box-shadow: none !important; backdrop-filter: none !important;}
+#horo-fab :is(html body #horo-fab > span),
+.cdDockHoro :is(html body .cdDockHoro > span){animation: auto ease 0s 1 normal none running none !important; will-change: transform; filter: drop-shadow(rgba(255, 255, 255, 0.92) 0px -1px 0px) drop-shadow(rgba(16, 42, 58, 0.34) 0px 3px 0px) drop-shadow(rgba(16, 42, 58, 0.22) 0px 5px 6px) drop-shadow(rgba(16, 42, 58, 0.14) 0px 10px 15px) !important; transition: transform 0.16s, filter 0.16s !important;}
+#horo-fab :is(body #horo-fab > span),
+.cdDockHoro :is(body .cdDockHoro > span){animation-delay: 0.65s;}
+#horo-fab :is(body #horo-fab:hover > span),
+.cdDockHoro :is(body .cdDockHoro:hover > span){animation-play-state: paused; transform: translateY(-3px) !important; filter: drop-shadow(rgba(255, 255, 255, 0.85) 0px -1px 0px) drop-shadow(rgba(16, 42, 58, 0.46) 0px 1px 0px) drop-shadow(rgba(16, 42, 58, 0.38) 0px 2px 0px) drop-shadow(rgba(16, 42, 58, 0.28) 0px 3px 0px) drop-shadow(rgba(16, 42, 58, 0.3) 0px 6px 8px) !important;}
+#horo-fab :is(body #horo-fab:active > span),
+.cdDockHoro :is(body .cdDockHoro:active > span){animation-play-state: paused; transform: translateY(2px) !important; filter: drop-shadow(rgba(255, 255, 255, 0.6) 0px -1px 0px) drop-shadow(rgba(16, 42, 58, 0.34) 0px 1px 0px) drop-shadow(rgba(16, 42, 58, 0.24) 0px 2px 3px) !important;}
+#horo-fab :is(body:is(html[data-theme=dark] *) #horo-fab > span),
+.cdDockHoro :is(body:is(html[data-theme=dark] *) .cdDockHoro > span){filter: drop-shadow(rgba(255, 255, 255, 0.4) 0px -1px 0px) drop-shadow(rgba(0, 0, 0, 0.78) 0px 3px 0px) drop-shadow(rgba(0, 0, 0, 0.56) 0px 6px 7px) drop-shadow(rgba(0, 0, 0, 0.38) 0px 12px 18px) !important;}
+@media (prefers-reduced-motion: reduce){#horo-fab :is(body #horo-fab > span),
+.cdDockHoro :is(body .cdDockHoro > span){animation: auto ease 0s 1 normal none running none !important;}}
+#horo-fab :is(html body #horo-fab > span),
+.cdDockHoro :is(html body .cdDockHoro > span){width: 30px !important; height: 30px !important; line-height: 30px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; box-sizing: border-box !important;}
+#horo-fab:is(html body #horo-fab){z-index: 9040 !important;}
+#horo-fab:is(html body #horo-fab){font-size: 36px !important;}
+#horo-fab :is(html body #horo-fab > span),
+.cdDockHoro :is(html body .cdDockHoro > span){font-size: 36px !important; filter: drop-shadow(rgba(255, 255, 255, 0.92) 0px -1px 0px) drop-shadow(rgba(16, 42, 58, 0.4) 0px 3px 0px) drop-shadow(rgba(16, 42, 58, 0.32) 0px 5px 6px) drop-shadow(rgba(16, 42, 58, 0.2) 0px 10px 15px) !important; box-shadow: none !important;}
+#horo-fab :is(html body:is(html[data-theme=dark] *) #horo-fab > span),
+.cdDockHoro :is(html body:is(html[data-theme=dark] *) .cdDockHoro > span){filter: drop-shadow(rgba(255, 255, 255, 0.34) 0px -1px 0px) drop-shadow(rgba(0, 0, 0, 0.7) 0px 3px 0px) drop-shadow(rgba(0, 0, 0, 0.56) 0px 5px 6px) drop-shadow(rgba(0, 0, 0, 0.38) 0px 10px 15px) !important; box-shadow: none !important;}
+#horo-fab :is(html body #horo-fab > span),
+.cdDockHoro :is(html body .cdDockHoro > span){filter: drop-shadow(rgba(255, 255, 255, 0.92) 0px -1px 0px) drop-shadow(rgba(16, 42, 58, 0.34) 0px 3px 0px) drop-shadow(rgba(16, 42, 58, 0.22) 0px 5px 6px) drop-shadow(rgba(16, 42, 58, 0.14) 0px 10px 15px) !important;}
+#horo-fab :is(html body:is(html[data-theme=dark] *) #horo-fab > span),
+.cdDockHoro :is(html body:is(html[data-theme=dark] *) .cdDockHoro > span){filter: drop-shadow(rgba(255, 255, 255, 0.16) 0px -1px 0px) drop-shadow(rgba(0, 0, 0, 0.72) 0px 3px 0px) drop-shadow(rgba(0, 0, 0, 0.52) 0px 5px 6px) drop-shadow(rgba(0, 0, 0, 0.34) 0px 10px 15px) !important;}
+#horo-fab:is(html body #horo-fab){z-index: 9150 !important;}
+#horo-fab :is(html body :is(#sticky-fab, #cd-theme-fab, #reminders-fab, #horo-fab) > span),
+.cdDockHoro :is(html body :is(#sticky-fab, #cd-theme-fab, #reminders-fab, .cdDockHoro) > span){display: inline-block; overflow: visible !important;}
+#horo-fab:is(html body #horo-fab){background: transparent !important; border: 0px !important; box-shadow: none !important; filter: drop-shadow(rgba(10, 20, 30, 0.18) 0px 1px 1px) drop-shadow(rgba(10, 20, 30, 0.13) 0px 1px 2px) drop-shadow(rgba(10, 20, 30, 0.09) 0px 2px 2px) drop-shadow(rgba(10, 20, 30, 0.06) 0px 2px 3px) drop-shadow(rgba(10, 20, 30, 0.035) 0px 3px 4px) drop-shadow(rgba(10, 20, 30, 0.02) 0px 4px 5px) contrast(1.05) saturate(1.04) brightness(1) !important; transition: transform 0.12s cubic-bezier(0.34, 1.35, 0.64, 1), filter 0.14s !important;}
+#horo-fab:is(body:is(html[data-theme=dark] *) #horo-fab){filter: drop-shadow(rgba(0, 0, 0, 0.24) 0px 1px 1px) drop-shadow(rgba(0, 0, 0, 0.18) 0px 1px 2px) drop-shadow(rgba(0, 0, 0, 0.13) 0px 2px 3px) drop-shadow(rgba(0, 0, 0, 0.09) 0px 2px 4px) drop-shadow(rgba(0, 0, 0, 0.055) 0px 3px 5px) drop-shadow(rgba(0, 0, 0, 0.03) 0px 5px 6px) contrast(1.06) saturate(1.04) brightness(1) !important;}
+#horo-fab:is(html body #horo-fab:hover){transform: translateY(-2.5px) scale(1.05) !important;}
+#horo-fab:is(html body #horo-fab:active){transform: translateY(1px) scale(0.96) !important; filter: drop-shadow(rgba(10, 20, 30, 0.55) 0px 1px 0px) drop-shadow(rgba(10, 20, 30, 0.4) 0px 2px 2px) contrast(1.1) !important;}
+#horo-fab:is(body:not([data-motion="minimal"]) #horo-fab){animation: auto ease 0s 1 normal none running none !important;}
+#horo-fab:is(body:not([data-motion="minimal"]) #horo-fab){animation-delay: 0.5s !important;}
+#horo-fab :is(body:not([data-motion="minimal"]) #horo-fab > *),
+.cdDockHoro :is(body:not([data-motion="minimal"]) .cdDockHoro > *){animation-play-state: running !important;}
+#pomo-modal:is(.modal){backdrop-filter: saturate(150%) blur(10px);}
+.modal-backdrop:has(> #pomo-modal):is(.modal-backdrop){backdrop-filter: none;}
+#pomo-modal :is(html body:is(html[data-theme=dark] *) #pomo-modal button){color: rgb(232, 232, 234) !important;}
+#pomo-modal :is(html body:is(html[data-theme=dark] *) #pomo-modal span){color: rgb(232, 232, 234) !important;}
+#pomo-modal :is(html body:is(html[data-theme=dark] *) #pomo-modal input){background: rgb(22, 26, 31) !important; color: rgb(232, 232, 234) !important; -webkit-text-fill-color: rgb(232, 232, 234) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important;}
+#pomo-modal :is(html body:is(html[data-theme=dark] *) #pomo-modal input)::placeholder{color: rgb(139, 146, 154) !important;}
+#horo-fab :is(html body #horo-fab#horo-fab #horo-num),
+.cdDockHoro :is(html body .cdDockHoro.cdDockHoro .cdHoroNum){width: 24px !important; height: 24px !important; min-width: 24px !important; box-sizing: border-box !important; border-radius: 50% !important; padding: 0px !important; font: 800 8px / 1 ui-monospace, SFMono-Regular, Menlo, monospace !important; letter-spacing: 0px !important; background: rgba(255, 255, 255, 0.96) !important; color: rgb(107, 78, 18) !important; box-shadow: rgba(16, 42, 58, 0.28) 0px 1px 3px !important; position: absolute !important; left: 50% !important; top: 50% !important; bottom: auto !important; transform: translate(-50%, -50%) !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 3 !important;}
+#horo-fab :is(html body #horo-fab#horo-fab > #horo-num),
+.cdDockHoro :is(html body .cdDockHoro.cdDockHoro > .cdHoroNum){width: 24px !important; height: 24px !important; min-width: 24px !important; box-sizing: border-box !important; border-radius: 50% !important; padding: 0px !important; font: 800 8px / 1 ui-monospace, SFMono-Regular, Menlo, monospace !important; letter-spacing: 0px !important; background: rgba(255, 255, 255, 0.96) !important; color: rgb(107, 78, 18) !important; box-shadow: rgba(16, 42, 58, 0.28) 0px 1px 3px !important; position: absolute !important; left: 50% !important; top: 50% !important; bottom: auto !important; transform: translate(-50%, -50%) !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 3 !important;}
+#horo-fab:is(body:has(#pomo-modal) #horo-fab){display: none !important;}
+#horo-fab :is(html body #horo-fab #horo-num),
+.cdDockHoro :is(html body .cdDockHoro .cdHoroNum){position: absolute !important; align-items: center !important; justify-content: center !important; letter-spacing: 0px !important; color: rgb(107, 78, 18) !important; box-shadow: none !important; z-index: 3 !important; display: flex !important; left: 50% !important; top: auto !important; bottom: 1px !important; transform: translateX(-50%) !important; font: 800 11px / 1 ui-monospace, SFMono-Regular, Menlo, monospace !important; background: rgba(255, 255, 255, 0.8) !important; padding: 0px 3px !important; border-radius: 6px !important;}
+#horo-fab :is(html body #horo-fab > #horo-num),
+.cdDockHoro :is(html body .cdDockHoro > .cdHoroNum){position: absolute !important; align-items: center !important; justify-content: center !important; letter-spacing: 0px !important; color: rgb(107, 78, 18) !important; box-shadow: none !important; z-index: 3 !important; display: flex !important; left: 50% !important; top: auto !important; bottom: 1px !important; transform: translateX(-50%) !important; font: 800 11px / 1 ui-monospace, SFMono-Regular, Menlo, monospace !important; background: rgba(255, 255, 255, 0.8) !important; padding: 0px 3px !important; border-radius: 6px !important;}
+#horo-fab :is(html body #horo-fab > svg),
+.cdDockHoro :is(html body .cdDockHoro > svg){position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important;}
+#horo-fab :is(html body #horo-fab #horo-arc),
+.cdDockHoro :is(html body .cdDockHoro .cdHoroArc){stroke: rgb(200, 149, 31) !important;}
+#horo-fab :is(html body #horo-fab svg circle:not(#horo-arc)),
+.cdDockHoro :is(html body .cdDockHoro svg circle:not(.cdHoroArc)){stroke: rgba(200, 149, 31, 0.3) !important;}
+#horo-fab:is(#horo-fab){overflow: visible !important;}
+#horo-fab :is(html body #horo-fab#horo-fab > span),
+.cdDockHoro :is(html body .cdDockHoro.cdDockHoro > span){animation: auto ease 0s 1 normal none running none !important;}
+#horo-fab :is(html body #horo-fab#horo-fab#horo-fab > span:first-child),
+.cdDockHoro :is(html body .cdDockHoro.cdDockHoro.cdDockHoro > span:first-child){animation: 14s ease-in-out 0s infinite normal none running cdHourTurn !important;}
+#horo-fab:is(html body:not(html[data-theme=dark] *) #horo-fab){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body:not(html[data-theme=dark] *) #horo-fab:hover){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body:not(html[data-theme=dark] *) #horo-fab:active){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body:is(html[data-theme=dark] *) #horo-fab){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body:is(html[data-theme=dark] *) #horo-fab:hover){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body:is(html[data-theme=dark] *) #horo-fab:active){box-shadow: none !important; filter: none !important;}
+#horo-fab:is(html body.cd-panel-open :is(#cd-theme-fab, #reminders-fab, #horo-fab, #sticky-fab, #quick-note-btn, #cd-fb-btn, #cd-float-fab)){display: none !important;}
+@keyframes cdHourTurn { 
+  0%, 89% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes cdRoomUp { 
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* Inkwell: the panel above the desk and the rooms; the corner dial in line
+   with Schedae, and hidden wherever Schedae is */
+.modal-backdrop:has(> #pomo-modal),#custodia-overlay{z-index:9460 !important}
+html body #horo-fab#horo-fab{right:23px !important;bottom:90px !important}
+/* the dock hourglasses hold the dial the way Carpe Diem's fixed #horo-fab does */
+.cdDockHoro{position:relative}
+html body:is(.doorOn,.modalOn,.tabStageOn) #horo-fab#horo-fab,html body:has(.sticky-panel-back) #horo-fab#horo-fab{display:none !important}
+</style>
 <style id="sealStyle">
 /* 7.36 THE SEAL'S HOUSE STYLE. The door and the desk take their look from the
    seal: Cormorant Garamond for display type (SIL Open Font License 1.1,
@@ -1034,12 +1287,12 @@ body.tabStageOn #footTab{display:none !important}
 body[data-motion=minimal] .primary,body[data-motion=minimal] .primary:hover,body[data-motion=minimal] .primary:active{transform:none}
 /* the same physical button for the other primary actions, and at night the
    older champagne fill gives way to the seal's midnight blue */
-[data-theme=dark] .primary,[data-theme=dark] button.primary,.tour3d,[data-theme=dark] .tour3d,.tabula-btn,[data-theme=dark] .tabula-btn,#pomo-controls .pomo-primary{
+[data-theme=dark] .primary,[data-theme=dark] button.primary,.tour3d,[data-theme=dark] .tour3d,.tabula-btn,[data-theme=dark] .tabula-btn {
  background:var(--btnFace);color:var(--btnText);border:1px solid var(--btnEdge);text-shadow:0 1px 0 rgba(0,0,0,.25);
  box-shadow:0 3px 0 var(--btnEdge),0 5px 10px rgba(6,16,24,.28),inset 0 0 0 1px var(--btnRing),inset 0 1px 0 rgba(255,255,255,.22);transition:transform .12s ease,box-shadow .12s ease}
-[data-theme=dark] .primary:hover,[data-theme=dark] button.primary:hover,.tour3d:hover,.tabula-btn:hover,#pomo-controls .pomo-primary:hover{background:var(--btnFace);transform:translateY(-1px);
+[data-theme=dark] .primary:hover,[data-theme=dark] button.primary:hover,.tour3d:hover,.tabula-btn:hover:hover{background:var(--btnFace);transform:translateY(-1px);
  box-shadow:0 4px 0 var(--btnEdge),0 8px 16px rgba(6,16,24,.30),inset 0 0 0 1px var(--btnRing),inset 0 1px 0 rgba(255,255,255,.26)}
-[data-theme=dark] .primary:active,[data-theme=dark] button.primary:active,.tour3d:active,.tabula-btn:active,#pomo-controls .pomo-primary:active{transform:translateY(3px);transition-duration:.05s;
+[data-theme=dark] .primary:active,[data-theme=dark] button.primary:active,.tour3d:active,.tabula-btn:active:active{transform:translateY(3px);transition-duration:.05s;
  box-shadow:0 0 0 var(--btnEdge),0 1px 3px rgba(6,16,24,.35),inset 0 0 0 1px var(--btnRing),inset 0 2px 4px rgba(0,0,0,.25)}
 
 /* the page at night: a midnight sheet with a faint brass edge */
@@ -1108,28 +1361,22 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
    midnight ink (midnight blue at night) with a brass ring and a champagne
    nib; it keeps its drag (handled by wireScheFabDrag) and its lift. The
    panel: the door's card, with a double brass rule. */
-#scheFab{width:54px;height:54px;font-size:0;color:#ead9ae;border:1px solid #0e2939;
- background:radial-gradient(circle at 36% 28%,#3a7397 0%,#24577a 46%,#163d55 100%);
- box-shadow:0 4px 0 #0c2230,0 6px 0 rgba(0,0,0,.08),0 9px 18px rgba(6,16,24,.34),0 18px 34px rgba(6,16,24,.18),
-  inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.28),inset 0 -5px 9px rgba(5,14,22,.45);
- transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
-#scheFab .scheNib{display:block;fill:#ead9ae;filter:drop-shadow(0 1px 0 rgba(0,0,0,.45));pointer-events:none}
-#scheFab:hover{transform:translateY(-2px);filter:none;
- box-shadow:0 6px 0 #0c2230,0 8px 0 rgba(0,0,0,.08),0 14px 24px rgba(6,16,24,.36),0 26px 44px rgba(6,16,24,.2),
-  inset 0 0 0 2px rgba(214,186,120,.75),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
-#scheFab:active{transform:translateY(3px);transition-duration:.05s;
- box-shadow:0 1px 0 #0c2230,0 2px 5px rgba(6,16,24,.4),inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 3px 6px rgba(0,0,0,.35)}
-#scheFab.dragging{transform:translateY(-5px) scale(1.04);
- box-shadow:0 7px 0 #0c2230,0 22px 38px rgba(6,16,24,.42),0 40px 64px rgba(6,16,24,.22),
-  inset 0 0 0 2px rgba(226,201,140,.85),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
-[data-theme=dark] #scheFab{color:#ead9ae;border-color:#0a1f2d;background:radial-gradient(circle at 36% 28%,#4886ab 0%,#2b6a8e 46%,#1a4560 100%);
- box-shadow:0 4px 0 #07141e,0 9px 18px rgba(0,0,0,.55),0 18px 34px rgba(0,0,0,.35),
-  inset 0 0 0 2px rgba(201,169,100,.5),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.22),inset 0 -5px 9px rgba(0,0,0,.45)}
-[data-theme=dark] #scheFab:hover{box-shadow:0 6px 0 #07141e,0 14px 24px rgba(0,0,0,.6),0 26px 44px rgba(0,0,0,.4),
-  inset 0 0 0 2px rgba(214,186,120,.7),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.26),inset 0 -5px 9px rgba(0,0,0,.45)}
-[data-theme=dark] #scheFab:active{box-shadow:0 1px 0 #07141e,0 2px 5px rgba(0,0,0,.6),inset 0 0 0 2px rgba(201,169,100,.5),inset 0 3px 6px rgba(0,0,0,.45)}
-#scheFab .fbadge{background:linear-gradient(#e2c98c,#a9803a);color:#17384c;border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px}
-body[data-motion=minimal] #scheFab,body[data-motion=minimal] #scheFab:hover,body[data-motion=minimal] #scheFab:active{transform:none}
+/* Schedae's button: the seal's sibling. The same physical construction as the
+   seal (a cast shadow, a milled edge, a face that lifts and sinks), with a
+   face struck as a small medallion: a bevelled brass rim, a midnight enamel
+   field with a champagne double rule, and the seal's dip-pen nib in relief.
+   It floats over the desk, so it has no well. Its drag (wireScheFabDrag) is
+   unchanged; while dragged it lifts instead of pressing in. */
+#scheFab.b3seal{--S:56px;--d:5px;--off:6px;--blur:8px;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
+ margin:0;padding:0;border:0;background:transparent;box-shadow:none;filter:none;font-size:0;cursor:grab;touch-action:none;transform:none}
+#scheFab.b3seal:hover,#scheFab.b3seal:active{background:transparent;box-shadow:none;filter:none;transform:none}
+#scheFab .b3-well{display:none}
+#scheFab.b3seal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.8}
+#scheFab.b3seal.down{--y:calc(var(--d) - 1px);--off:1px;--blur:3px}
+#scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-5px;--off:16px;--blur:16px;--sh:.65;cursor:grabbing;transition:none}
+#scheFab .fbadge{position:absolute;z-index:3;top:-3px;right:-3px;transform:translateY(var(--y));background:linear-gradient(#f0dca6,#b88d3e);color:#17384c;
+ border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.35)}
+body[data-motion=minimal] #scheFab.b3seal{transition:none}
 .schePanel{background:radial-gradient(130% 90% at 50% 0%,#fffefa 0%,#fbf6ea 60%,#f3ead6 100%) !important;border:1px solid rgba(169,128,58,.55) !important;
  border-radius:22px !important;padding:16px 16px 12px !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
  box-shadow:inset 0 0 0 5px #fbf6ea,inset 0 0 0 6px var(--hair),0 2px 4px rgba(20,16,10,.08),0 14px 28px rgba(20,16,10,.14),0 34px 64px rgba(20,16,10,.16) !important}
@@ -1207,8 +1454,8 @@ body[data-motion=minimal] #scheFab,body[data-motion=minimal] #scheFab:hover,body
   <button onclick="rewrite('humanize')" title="Writes it as a person would; same facts, natural rhythm">Naturalise</button>
  </div>
 </div>
-<button id="scheFab" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><svg class="scheNib" width="24" height="24" viewBox="40 15 20 22" aria-hidden="true"><path fill-rule="evenodd" d="M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z"/></svg><span class="fbadge" id="fbadge" style="display:none"></span></button>
-<div id="pomo-modal" role="dialog" aria-label="Focus timer"><div id="pomo-box"><div id="pomo-time">25:00</div><div id="pomo-label">Focus</div><div id="pomo-controls"><button type="button" class="pomo-primary" onclick="inkPomoStart()">Start</button><button type="button" onclick="inkPomoPause()">Pause</button><button type="button" onclick="inkPomoReset()">Reset</button><button type="button" onclick="inkPomoClose()">Close</button></div></div></div>
+<button id="scheFab" class="b3seal" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span><span class="b3-face" id="scheFace"></span><span class="fbadge" id="fbadge" style="display:none"></span></button>
+</div>
 <div id="sticky-pins"></div>
 <div id="hovFix"></div>
 <div id="undoChip" onclick="undo();this.style.display='none'">✔ Applied; <b>Undo</b></div>
@@ -1922,14 +2169,23 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
   };
   window.addEventListener('error',window.__inkErrTrap);
  }catch(e){}
- /* Clepsydra light: the 25-minute focus timer, shared by the stage dock */
- window.inkPomoPaint=function(){var s=window.__pomoSec||1500,mm=Math.floor(s/60),ss=s%60;var el=document.getElementById('pomo-time');if(el)el.textContent=(mm<10?'0':'')+mm+':'+(ss<10?'0':'')+ss;};
- window.inkPomoOpen=function(){var m=document.getElementById('pomo-modal');if(!m)return;m.classList.add('on');if(!window.__pomoSec)window.__pomoSec=1500;inkPomoPaint();};
- window.inkPomoStart=function(){if(window.__pomoTimer)return;var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Running';window.__pomoTimer=setInterval(function(){window.__pomoSec=(window.__pomoSec||1500)-1;if(window.__pomoSec<=0){clearInterval(window.__pomoTimer);window.__pomoTimer=null;window.__pomoSec=0;inkPomoPaint();var bb=document.querySelector('#pomo-controls .pomo-primary');if(bb)bb.textContent='Start';var lb=document.getElementById('pomo-label');if(lb)lb.textContent='Done';try{if(window.SND&&SND.timerDone)SND.timerDone();}catch(e){}return;}inkPomoPaint();},1000);};
- window.inkPomoPause=function(){if(window.__pomoTimer){clearInterval(window.__pomoTimer);window.__pomoTimer=null;var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Resume';}};
- window.inkPomoReset=function(){if(window.__pomoTimer){clearInterval(window.__pomoTimer);window.__pomoTimer=null;}window.__pomoSec=1500;inkPomoPaint();var b=document.querySelector('#pomo-controls .pomo-primary');if(b)b.textContent='Start';var lb=document.getElementById('pomo-label');if(lb)lb.textContent='Focus';};
- window.inkPomoClose=function(){inkPomoPause();var m=document.getElementById('pomo-modal');if(m)m.classList.remove('on');};
- var pm=document.getElementById('pomo-modal');if(pm)pm.addEventListener('click',function(e){if(e.target===pm)inkPomoClose();});
+ /* Clepsydra: Carpe Diem's engine (src/lib/clepsydra.js). An hourglass opens the
+    panel; pressed while the timer runs, it stops it, as Carpe Diem's dial does. */
+ window.inkClepPress=function(){try{if(window.inkClep&&inkClep.running())inkClep.stop();else if(window.inkClep)inkClep.open();}catch(e){}};
+ window.inkPomoOpen=window.inkClepPress;
+ /* the hourglasses in Tabula's dock and the floating windows show the dial too:
+    the same markup as Carpe Diem's #horo-fab, with classes for its ids */
+ window.inkClepDocks=function(mode,rem,total,txt){
+  document.querySelectorAll('.cdDockHoro').forEach(function(b){
+   if(b.getAttribute('data-mode')!==mode){b.setAttribute('data-mode',mode);
+    var clock='<span style="font-size:30px;line-height:1">\u23F3</span>';
+    if(mode==='live')b.innerHTML=clock+'<svg width="46" height="46" viewBox="0 0 46 46" style="position:absolute;left:0;top:0"><circle cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="3"></circle><circle class="cdHoroArc" cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" transform="rotate(-90 23 23)" stroke-dasharray="125.66" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.95s linear"></circle></svg><span class="cdHoroNum" style="position:relative;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:currentColor;letter-spacing:0.2px"></span>';
+    else if(mode==='dot')b.innerHTML=clock+'<span style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:currentColor"></span>';
+    else b.innerHTML='<span>\u23F3</span>';}
+   b.title=mode==='idle'?'Clepsydra':'Clepsydra: '+txt+' left; press to stop';
+   if(mode==='live'){var arc=b.querySelector('.cdHoroArc'),num=b.querySelector('.cdHoroNum');
+    if(arc)arc.setAttribute('stroke-dashoffset',125.66*(1-rem/total));if(num)num.textContent=txt;}
+  });};
  /* the stage dock wire: binds the corner row inside a given container */
  window.inkDockWire=function(root){
   root=root||document;
@@ -1944,7 +2200,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
     try{localStorage.setItem('ink_mode',JSON.stringify(dark?'light':'dark'));}catch(_){} }
    setTimeout(paintTheme,60);});}
   paintTheme();
-  if(ho&&!ho._wired){ho._wired=1;ho.addEventListener('click',function(){inkPomoOpen();});}
+  if(ho&&!ho._wired){ho._wired=1;ho.addEventListener('click',function(){inkClepPress();});try{if(window.inkClep)inkClep.pill();}catch(e){}}
   if(sc&&!sc._wired){sc._wired=1;sc.addEventListener('click',function(){
    if(typeof openStickyToggle==='function')openStickyToggle();
    else if(typeof openStickyPanel==='function')openStickyPanel();});}
@@ -3465,7 +3721,7 @@ function inkFwMake(which,slot){
     try{localStorage.setItem('ink_fwdock_hidden_'+id,on?'1':'0');}catch(e){}});})(wdoc,bWd,id);
   bNote.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}
    if(typeof openStickyToggle==='function')openStickyToggle();else if(typeof openStickyPanel==='function')openStickyPanel();});
-  bHoro.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}try{inkPomoOpen();}catch(e){}});
+  bHoro.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}try{inkClepPress();}catch(e){}});try{if(window.inkClep)inkClep.pill();}catch(e){}
   bMoon.addEventListener('click',function(ev){try{ev.stopPropagation();}catch(e){}try{if(window.SND&&SND.dockClick)SND.dockClick();}catch(e){}
    var dark=document.documentElement.getAttribute('data-theme')==='dark';
    try{if(typeof window.setMode==='function')window.setMode(dark?'light':'dark');}catch(e){}
@@ -3936,6 +4192,35 @@ function doorSealEnter(){
  setTimeout(closeDoor,S.motion==='minimal'?0:280);}
 /* paint the door's seal; rise=true replays its entrance (the door opening),
    false keeps it settled (a change of theme while the door is open) */
+/* Schedae's face: a small struck medallion with the seal's nib */
+function scheFacePaint(dark){
+ const f=document.getElementById('scheFace');if(!f)return;
+ const k='skf'+(++SEAL_N),id=s=>k+s,u=s=>'url(#'+k+s+')';
+ const P=dark?{f:['#3a7aa0','#1d4b68','#0c2232'],rim:['#c9a964','#8f6f31','#5a4419','#2f230b'],ink:['#f4e6bf','#d9c08a','#a98c52'],hair:'rgba(232,212,160,.55)',hl:.35}
+            :{f:['#346f93','#1a4561','#0d2638'],rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],ink:['#fbf0d0','#e3cb92','#b8964f'],hair:'rgba(240,220,168,.6)',hl:.6};
+ const NIB='M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
+ const nibAt='translate(50 51) scale(2.55) translate(-50 -26.4)';
+ f.innerHTML='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible;pointer-events:none"><defs>'
+  +'<radialGradient id="'+id('fl')+'" cx=".38" cy=".3" r=".78"><stop offset="0" stop-color="'+P.f[0]+'"/><stop offset=".55" stop-color="'+P.f[1]+'"/><stop offset="1" stop-color="'+P.f[2]+'"/></radialGradient>'
+  +'<linearGradient id="'+id('rm')+'" x1=".15" y1=".05" x2=".85" y2=".95"><stop offset="0" stop-color="'+P.rim[0]+'"/><stop offset=".38" stop-color="'+P.rim[1]+'"/><stop offset=".72" stop-color="'+P.rim[2]+'"/><stop offset="1" stop-color="'+P.rim[3]+'"/></linearGradient>'
+  +'<linearGradient id="'+id('hlr')+'" x1=".2" y1=".05" x2=".8" y2=".95"><stop offset="0" stop-color="#fff" stop-opacity="'+P.hl+'"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  +'<linearGradient id="'+id('nb')+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+P.ink[0]+'"/><stop offset=".5" stop-color="'+P.ink[1]+'"/><stop offset="1" stop-color="'+P.ink[2]+'"/></linearGradient>'
+  +'<linearGradient id="'+id('sh')+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="'+(dark?.16:.3)+'"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  +'<clipPath id="'+id('cl')+'"><circle cx="50" cy="50" r="49.5"/></clipPath>'
+  +'<filter id="'+id('bl')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter></defs>'
+  +'<circle cx="50" cy="50" r="46" fill="'+u('fl')+'"/>'
+  +'<circle cx="50" cy="50" r="45.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2.4" filter="'+u('bl')+'"/>'
+  +'<circle cx="50" cy="50" r="47.8" fill="none" stroke="'+u('rm')+'" stroke-width="4.4"/>'
+  +'<circle cx="50" cy="50" r="49.55" fill="none" stroke="'+u('hlr')+'" stroke-width=".9"/>'
+  +'<circle cx="50" cy="50" r="40.5" fill="none" stroke="'+P.hair+'" stroke-width="1"/>'
+  +'<circle cx="50" cy="50" r="38.2" fill="none" stroke="'+P.hair+'" stroke-width=".45"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity=".45" transform="translate(.9 1.3) '+nibAt+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.18:.35)+'" transform="translate(-.6 -.7) '+nibAt+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="'+u('nb')+'" transform="'+nibAt+'"/>'
+  +'<g clip-path="'+u('cl')+'"><g transform="rotate(24 50 50)"><rect class="s3-sheen" x="-70" y="-30" width="44" height="160" fill="'+u('sh')+'"/></g></g>'
+  +'</svg><span class="b3-glare" aria-hidden="true"></span>';
+ doorSealWire(document.getElementById('scheFab'));
+}
 function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorSeal'),88,dark,rise);}
 /* either seal, the door's or the header's: the same physical button at its own size */
 function sealButtonPaint(b,size,dark,rise){
@@ -4026,12 +4311,13 @@ function wireDoor(){
 const TMQ=matchMedia('(prefers-color-scheme: dark)');
 inkMark('theme');
 const MODEGLYPH={light:'☀',auto:'◐',dark:'☾'};
-function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);
+function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);window.__cdAppDark=dark;
  if(dark)document.documentElement.setAttribute('data-theme','dark');else document.documentElement.removeAttribute('data-theme');
  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  document.querySelectorAll('#doorTheme button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  if(window.__INKWELL_BOOTED&&typeof renderStickyPins==='function'&&S.notes&&S.notes.length&&S.notes.some(n=>n.pinned))renderStickyPins();
  {const bs=document.getElementById('brandSeal');sealButtonPaint(bs,36,dark,!bs.__painted);bs.__painted=true;}
+ try{scheFacePaint(dark);}catch(e){}
  if(document.getElementById('door')&&document.getElementById('door').style.display==='flex')doorSealPaint(dark,false);
  (function(){const lk=document.querySelector('link[rel=icon]');if(lk)lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark));})();
 }
@@ -11760,5 +12046,241 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
   var tries=0;
   var t=setInterval(function(){ tries++; if(mark()||tries>=25){ clearInterval(t); } }, 300);
 })();
+</script>
+<div id="modal-root"></div>
+<script>
+/* CLEPSYDRA, carried from Carpe Diem (carpe_diem.html, <script id="cd-mod-pomo">,
+   "the REAL extracted engine"), unchanged except four lines marked here:
+   1. Custodia's two settings are kept in localStorage (ink_custodia_v1), and
+      the audio context the chime needs is declared (Carpe Diem's main app
+      declares it; the module assumed it).
+   2. Carpe Diem's own loader of the saved timer settings (cd_pomo_v1).
+   3. pomoPill tells Inkwell's hourglasses (Tabula's dock, the floating
+      windows) the dial's state: window.inkClepDocks.
+   4. window.inkClep: open, stop, pill, running. */
+(function(){
+'use strict';
+var $=function(s,r){try{return (r||document).querySelector(s);}catch(e){return null;}};var $$=function(s,r){try{return [].slice.call((r||document).querySelectorAll(s));}catch(e){return [];}};var state=(function(){var s={lang:(window.__cdSelfLang||'en')};try{var o=JSON.parse(localStorage.getItem('ink_custodia_v1')||'{}');if(typeof o.custodiaOn==='boolean')s.custodiaOn=o.custodiaOn;if(typeof o.custodiaLimit==='number')s.custodiaLimit=o.custodiaLimit;}catch(e){}return s;})();function saveState(){try{localStorage.setItem('ink_custodia_v1',JSON.stringify({custodiaOn:state.custodiaOn,custodiaLimit:state.custodiaLimit}));}catch(e){}} function loadState(){return state;}var __cdAC=null;function tr(key,en){return en;}function pomoPresenceEnter(){} function pomoPresenceLeave(){} function pomoSyncToPresence(){}
+var pomo = { running:false, phase:"focus", remaining:25*60,
+  focusLen:25, shortLen:5, longLen:15, perSet:4,
+  done:0, totalDone:0, timer:null, sound:true, autostart:true, fabLive:true };
+(function(){ try{ var r=localStorage.getItem("cd_pomo_v1"); if(r){ var o=JSON.parse(r);
+  ["focusLen","shortLen","longLen","perSet","sound","autostart","fabLive"].forEach(function(k){ if(o[k]!=null) pomo[k]=o[k]; });
+  pomo.remaining=pomoPhaseLen(pomo.phase); } }catch(e){} })();
+function openPomodoro(){ var root=$("#modal-root"); if(!root) return; clear(root);
+  var backdrop=el("div",{class:"modal-backdrop", onclick:function(e){ if(e.target===backdrop) closeModal(); }});
+  if(window.__cdAppDark){try{backdrop.setAttribute("data-theme","night");}catch(e){}}
+  var modal=el("div",{class:"modal", style:{maxWidth:"400px"}}); modal.id="pomo-modal";
+  var head=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 22px 6px"}});
+  head.appendChild(el("div",{style:{fontFamily:"var(--cd-serif)",fontSize:"19px",fontWeight:"600",color:"var(--text-primary)"},text:tr("pomo.title","Clepsydra")}));
+  var x=el("button",{style:{border:"1px solid rgba(16,42,58,.16)",background:"var(--cream-card,#fff)",cursor:"pointer",fontSize:"16px",lineHeight:"1",color:"var(--text-secondary,#5a5a61)",borderRadius:"10px",padding:"5px 10px",boxShadow:"0 1px 2px rgba(16,42,58,.12)"},text:"\u00d7"}); x.onclick=closeModal; /* cd-761: X gets the Carpe Diem curved-button look */ head.appendChild(x); modal.appendChild(head);
+  modal.appendChild(el("div",{style:{padding:"0 22px 4px",fontSize:"12.5px",color:"var(--text-tertiary)"},text:tr("pomo.tagline","Work in focused sprints, with breaks between.")}));
+  var body=el("div",{style:{padding:"6px 22px 22px"}});
+  var ringWrap=el("div",{style:{display:"flex",justifyContent:"center",margin:"6px 0 2px"}}); ringWrap.id="pomo-ring"; ringWrap.innerHTML=pomoRingSVG(); body.appendChild(ringWrap);
+  body.appendChild(el("div",{id:"pomo-dots",style:{textAlign:"center",margin:"2px 0 12px"}}));
+  var ctl=el("div",{style:{display:"flex",gap:"8px",alignItems:"center"}}); ctl.id="pomo-controls";
+  var toggle=pomoBtn("pomo-toggle", pomo.running?tr("pomo.pause","Pause"):tr("pomo.start","Start"), "primary"); toggle.onclick=function(){ pomoToggleRun(); if(pomo.running){try{closeModal();}catch(e){}} };
+  var reset=pomoBtn(null, tr("pomo.reset","Reset")); reset.onclick=pomoReset;
+  var skip=pomoBtn(null, tr("pomo.skip","Skip")); skip.onclick=pomoSkip;
+  ctl.appendChild(toggle); ctl.appendChild(reset); ctl.appendChild(skip); body.appendChild(ctl);
+  body.appendChild(el("div",{id:"pomo-today",style:{textAlign:"center",fontSize:"12px",color:"var(--text-tertiary)",margin:"12px 0 2px"},text:pomoTodayText()}));
+  body.appendChild(el("div",{style:{height:"0.5px",background:"var(--hairline-soft)",margin:"12px 0 6px"}}));
+  body.appendChild(el("div",{style:{fontSize:"12px",fontWeight:"600",letterSpacing:"0.4px",textTransform:"uppercase",color:"var(--text-tertiary)",margin:"2px 0 2px"},text:tr("pomo.settings","Settings")}));
+  body.appendChild(pomoNum("focusLen","pomo.focus","Focus",1,90));
+  body.appendChild(pomoNum("shortLen","pomo.short","Short break",1,30));
+  body.appendChild(pomoNum("longLen","pomo.long","Long break",1,60));
+  body.appendChild(pomoNum("perSet","pomo.perSet","Sessions before a long break",1,8));
+  body.appendChild(pomoToggleOpt("sound","pomo.sound","Chime"));
+  body.appendChild(pomoToggleOpt("autostart","pomo.autostart","Auto-start next"));
+  body.appendChild(pomoToggleOpt("fabLive","pomo.fabLive","Live countdown"));
+  body.appendChild(el("div",{style:{height:"0.5px",background:"var(--hairline-soft)",margin:"10px 0 6px"}}));
+  var custWrap = el("div",{id:"pomo-custodia"});
+  custWrap.appendChild(el("div",{style:{fontSize:"12px",fontWeight:"600",letterSpacing:"0.4px",textTransform:"uppercase",color:"var(--text-tertiary)",margin:"2px 0 2px"},text:tr("custodia.head","Custodia \u00b7 break guard")}));
+  body.appendChild(custWrap);
+  (function(){
+    var r1=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 0"}});
+    r1.appendChild(el("span",{style:{fontSize:"13px",color:"var(--text-secondary)"},text:tr("custodia.on","Guard my focus stretches")}));
+    var cbtn=el("button",{}); function paintCust(){ cbtn.textContent=custodiaOn()?tr("ctl.on","On"):tr("ctl.off","Off"); cbtn.setAttribute("style","border:0.5px solid var(--hairline);border-radius:7px;padding:6px 14px;cursor:pointer;font:600 12.5px/1 -apple-system,system-ui,sans-serif;color:var(--text-secondary);background:"+(custodiaOn()?"var(--accent-soft)":"transparent")); }
+    paintCust(); cbtn.onclick=function(){ state.custodiaOn = !custodiaOn(); saveState(); paintCust(); };
+    r1.appendChild(cbtn); custWrap.appendChild(r1);
+    var r2=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 0"}});
+    r2.appendChild(el("span",{style:{fontSize:"13px",color:"var(--text-secondary)"},text:tr("custodia.limit","Break prompt after (minutes of focus)")}));
+    var num=el("input",{}); num.type="number"; num.min="5"; num.max="240"; num.value=String(custodiaLimitMin());
+    num.setAttribute("style","width:60px;text-align:center;border:0.5px solid var(--hairline);border-radius:7px;padding:6px;font:13px -apple-system,system-ui,sans-serif;background:var(--cl-solid);color:var(--text-primary)");
+    num.onchange=function(){ var v=parseInt(num.value,10); if(!isNaN(v)&&v>=5&&v<=240){ state.custodiaLimit=v; saveState(); } else { num.value=String(custodiaLimitMin()); } };
+    r2.appendChild(num); custWrap.appendChild(r2);
+  })();
+  modal.appendChild(body); backdrop.appendChild(modal); root.appendChild(backdrop);
+  pomoRender(); }
+function el(tag, attrs, children) {
+  const node = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(k => {
+      if (k === "class") node.className = attrs[k];
+      else if (k === "html") node.innerHTML = attrs[k];
+      else if (k === "text") node.textContent = attrs[k];
+      else if (k === "style" && typeof attrs[k] === "object") Object.assign(node.style, attrs[k]);
+      else if (k.startsWith("on") && typeof attrs[k] === "function") node.addEventListener(k.slice(2), attrs[k]);
+      else node.setAttribute(k, attrs[k]);
+    });
+  }
+  if (children) {
+    (Array.isArray(children) ? children : [children]).forEach(c => {
+      if (c == null || c === false) return;
+      if (typeof c === "string" || typeof c === "number") node.appendChild(document.createTextNode(String(c)));
+      else node.appendChild(c);
+    });
+  }
+  return node;
+}
+function custodiaLimitMin(){ try { var n = state.custodiaLimit; return (typeof n === "number" && n >= 5 && n <= 240) ? n : 50; } catch(e){ return 50; } }
+function pomoReset(){ pomoStop(); pomo.phase="focus"; pomo.done=0; try{ if(typeof custodiaBreakReset==="function") custodiaBreakReset(); }catch(e){} pomo.remaining=pomoPhaseLen("focus"); pomoRender(); pomoPill(); }
+function pomoStop(){ pomo.running=false; if(pomo.timer){ clearInterval(pomo.timer); pomo.timer=null; } pomoPresenceLeave(); pomoRender(); pomoPill(); }
+function pomoRender(){
+  var t=document.getElementById("pomo-time"); if(t) t.textContent=pomoFmt(pomo.remaining);
+  var ph=document.getElementById("pomo-phase"); if(ph) ph.textContent=pomoPhaseLabel();
+  var fg=document.getElementById("pomo-ring-fg");
+  if(fg){ var C=565.48, total=pomoPhaseLen(pomo.phase)||1; fg.setAttribute("stroke-dashoffset", C*(1-pomo.remaining/total)); fg.style.stroke=(pomo.phase==="focus")?"var(--accent)":"var(--cream-done-ink)"; }
+  var tg=document.getElementById("pomo-toggle"); if(tg) tg.textContent=pomo.running?tr("pomo.pause","Pause"):tr("pomo.start","Start");
+  var dd=document.getElementById("pomo-dots"); if(dd) dd.innerHTML=pomoDotsHTML();
+  var td=document.getElementById("pomo-today"); if(td) td.textContent=pomoTodayText();
+}
+function pomoDotsHTML(){ var h=""; for(var i=0;i<pomo.perSet;i++){ h+='<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 3px;background:'+(i<pomo.done?"var(--accent)":"var(--accent-soft)")+'"></span>'; } return h; }
+function pomoPhaseLabel(){ return pomo.phase==="focus"?tr("pomo.focus","Focus"):(pomo.phase==="long"?tr("pomo.long","Long break"):tr("pomo.short","Short break")); }
+function pomoTodayText(){ return pomo.totalDone+" "+tr("pomo.today","focus sessions today"); }
+function ring() {
+    var t = null; try { t = document.querySelector(sel); } catch (e) { return false; }
+    if (!t) return false;
+    var r; try { r = t.getBoundingClientRect(); } catch (e) { return false; }
+    if (!(r.width > 4 && r.height > 4)) {
+      /* cd-721: the corner fabs (moon, bell, Schedae, Clepsydra, chevron) are
+         display:none on the Home hero, so the ring had nothing to land on. When
+         the subject is hidden, reveal it just for the tour and record it so it is
+         put back afterwards. */
+      try { var __n = t; var __guard = 0; while (__n && __n.nodeType === 1 && __guard++ < 8) { try { if (getComputedStyle(__n).display === "none") { __n.setAttribute("data-cd-forced", __n.style.cssText || " "); __n.style.setProperty("display", "flex", "important"); (window.__cdForcedFabs = window.__cdForcedFabs || []).push(__n); } } catch (e) {} __n = __n.parentElement; } if (typeof window.__cdDockPos === "function") window.__cdDockPos(); r = t.getBoundingClientRect(); } catch (e) {} /* cd-722: reveal the subject AND any hidden ancestor, so a button inside a hidden container (the dock) can show */
+      if (!(r.width > 4 && r.height > 4)) return false;
+    }
+    t.classList.add("demo-tour-spot-strong"); if (demoTourLively()) t.classList.add("demo-tour-pulse-strong");
+    return true;
+  }
+function demoTourLively() { try { return (state.motion || "full") === "full"; } catch (e) { return true; } }
+function pomoFmt(s){ s=Math.max(0,s|0); var m=Math.floor(s/60), ss=s%60; return m+":"+(ss<10?"0":"")+ss; }
+function pomoPhaseLen(p){ return (p==="focus"?pomo.focusLen:(p==="long"?pomo.longLen:pomo.shortLen))*60; }
+function pomoPill(){ var fab=document.getElementById("horo-fab");
+  if(!fab){ fab=el("button",{}); fab.id="horo-fab"; fab.onclick=function(){ if(pomo && pomo.running){ try{pomoReset();}catch(e){ try{openPomodoro();}catch(_){} } } else { openPomodoro(); } }; /* cd-762: tap the running dial to STOP the Clepsydra (pomoReset), else open the panel */ document.body.appendChild(fab);
+    var sf=document.getElementById("sticky-fab"); if(sf&&sf.classList.contains("qn-gilt")) fab.classList.add("qn-gilt"); }
+  fab.setAttribute("title", tr("pomo.title","Clepsydra")); fab.setAttribute("aria-label", tr("pomo.title","Clepsydra"));
+  var mode=(pomo.running&&pomo.fabLive)?"live":(pomo.running?"dot":"idle");
+  if(fab.getAttribute("data-mode")!==mode){ fab.setAttribute("data-mode",mode);
+    var clock='<span style="font-size:30px;line-height:1">⏳</span>';
+    if(mode==="live"){ fab.innerHTML=clock+'<svg width="46" height="46" viewBox="0 0 46 46" style="position:absolute;left:0;top:0"><circle cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="3"></circle><circle id="horo-arc" cx="23" cy="23" r="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" transform="rotate(-90 23 23)" stroke-dasharray="125.66" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.95s linear"></circle></svg><span id="horo-num" style="position:relative;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:currentColor;letter-spacing:0.2px"></span>'; }
+    else if(mode==="dot"){ fab.innerHTML=clock+'<span style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:currentColor"></span>'; }
+    else { fab.innerHTML=clock; } }
+  if(mode==="live"){ var total=pomoPhaseLen(pomo.phase)||1, arc=document.getElementById("horo-arc"), num=document.getElementById("horo-num");
+    if(arc) arc.setAttribute("stroke-dashoffset", 125.66*(1-pomo.remaining/total)); if(num) num.textContent=pomoFmt(pomo.remaining); /* cd-759: fab dial shows MM:SS small in a circle */ }
+  try{ if(window.inkClepDocks) window.inkClepDocks(mode, pomo.remaining, pomoPhaseLen(pomo.phase)||1, pomoFmt(pomo.remaining)); }catch(e){} }
+function custodiaBreakReset(){ var w=custodiaW(); w.acc=0; w.snoozed=false; w.extended=false; }
+function custodiaW(){ if(!window.__cust) window.__cust = { acc:0, lastMs:0, snoozed:false, extended:false, open:false, count:0 }; return window.__cust; }
+function pomoBtn(id,label,kind){ var b=el("button",{}); if(id)b.id=id; b.textContent=label; b.setAttribute("data-cd-lift","1");
+  var base="border-radius:9px;cursor:pointer;font:600 13.5px/1 -apple-system,system-ui,sans-serif;padding:11px 14px;";
+  if(kind==="primary") b.setAttribute("style",base+"border:none;color:#fff;background:var(--accent);flex:1");
+  else b.setAttribute("style",base+"border:0.5px solid var(--hairline);background:transparent;color:var(--text-secondary)");
+  return b; }
+function lift(sel) { try { var n = document.querySelector(sel); if (n) n.style.zIndex = String(z); } catch (e) {} }
+function pomoNum(key,labelKey,labelEn,min,max){ var wrap=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 0"}}); wrap.id="pomo-set-"+key;
+  wrap.appendChild(el("span",{style:{fontSize:"13px",color:"var(--text-secondary)"},text:tr(labelKey,labelEn)}));
+  var inp=el("input",{}); inp.type="number"; inp.value=String(pomo[key]); inp.min=min; inp.max=max;
+  inp.setAttribute("style","width:60px;text-align:center;border:0.5px solid var(--hairline);border-radius:7px;padding:6px;font:13px -apple-system,system-ui,sans-serif;background:var(--cl-solid);color:var(--text-primary)");
+  inp.onchange=function(){ var v=parseInt(inp.value,10); if(isNaN(v))v=pomo[key]; v=Math.max(min,Math.min(max,v)); pomo[key]=v; inp.value=String(v); pomoSave(); if(!pomo.running) pomo.remaining=pomoPhaseLen(pomo.phase); pomoRender(); };
+  wrap.appendChild(inp); return wrap; }
+function pomoSave(){ try{ localStorage.setItem("cd_pomo_v1", JSON.stringify({focusLen:pomo.focusLen,shortLen:pomo.shortLen,longLen:pomo.longLen,perSet:pomo.perSet,sound:pomo.sound,autostart:pomo.autostart,fabLive:pomo.fabLive})); }catch(e){} }
+function pomoToggleOpt(key,labelKey,labelEn){ var wrap=el("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 0"}}); wrap.id="pomo-set-"+key;
+  wrap.appendChild(el("span",{style:{fontSize:"13px",color:"var(--text-secondary)"},text:tr(labelKey,labelEn)}));
+  var b=el("button",{}); function paint(){ b.textContent=pomo[key]?tr("ctl.on","On"):tr("ctl.off","Off"); b.setAttribute("style","border:0.5px solid var(--hairline);border-radius:7px;padding:6px 14px;cursor:pointer;font:600 12.5px/1 -apple-system,system-ui,sans-serif;color:var(--text-secondary);background:"+(pomo[key]?"var(--accent-soft)":"transparent")); }
+  paint(); b.onclick=function(){ pomo[key]=!pomo[key]; pomoSave(); paint(); try{pomoPill();}catch(e){} if(key==="sound"&&pomo.sound){ try{ pomoChime(); }catch(e){} } }; wrap.appendChild(b); return wrap; }
+function paint(){ b.textContent=pomo[key]?tr("ctl.on","On"):tr("ctl.off","Off"); b.setAttribute("style","border:0.5px solid var(--hairline);border-radius:7px;padding:6px 14px;cursor:pointer;font:600 12.5px/1 -apple-system,system-ui,sans-serif;color:var(--text-secondary);background:"+(pomo[key]?"var(--accent-soft)":"transparent")); }
+function pomoChime(){ if(!pomo.sound) return; try{ var ac=cdAudioCtx(); if(!ac) return; if(ac.state==="suspended"){ try{ ac.resume(); }catch(e){} } [660,880].forEach(function(f,i){ var o=ac.createOscillator(), g=ac.createGain(); o.type="sine"; o.frequency.value=f; o.connect(g); g.connect(ac.destination); var t=ac.currentTime+i*0.18; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.34); o.start(t); o.stop(t+0.36); }); window.__cdChimeRang=Date.now(); }catch(e){} }
+function cdAudioCtx(){ if(__cdAC) return __cdAC; try{ var C=window.AudioContext||window.webkitAudioContext; if(!C) return null; __cdAC=new C(); }catch(e){ return null; } return __cdAC; }
+function paintCust(){ cbtn.textContent=custodiaOn()?tr("ctl.on","On"):tr("ctl.off","Off"); cbtn.setAttribute("style","border:0.5px solid var(--hairline);border-radius:7px;padding:6px 14px;cursor:pointer;font:600 12.5px/1 -apple-system,system-ui,sans-serif;color:var(--text-secondary);background:"+(custodiaOn()?"var(--accent-soft)":"transparent")); }
+function custodiaOn(){ try { return state.custodiaOn !== false; } catch(e){ return true; } }
+function closeModal() { clear($("#modal-root")); }
+function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function pomoToggleRun(){ if(pomo.running) pomoStop(); else pomoStart(); }
+function pomoStart(){ if(pomo.running) return; pomo.running=true; if(pomo.timer) clearInterval(pomo.timer); pomo.timer=setInterval(pomoTick,1000); pomoPresenceEnter(); pomoRender(); pomoPill(); }
+function pomoTick(){ try{ if(typeof custodiaTick==="function") custodiaTick(); }catch(e){} pomo.remaining--; if(pomo.remaining<=0){ pomoAdvance(true); return; } pomoRender(); pomoPill(); }
+function custodiaTick(){
+  try {
+    if (!custodiaOn()) return;
+    var w = custodiaW();
+    if (pomo.phase !== "focus" || !pomo.running) { if (pomo.phase !== "focus") custodiaBreakReset(); return; }
+    var now = Date.now();
+    if (w.lastMs && (now - w.lastMs) > 5*60000) custodiaBreakReset();
+    w.lastMs = now;
+    w.acc++;
+    if (w.acc >= custodiaLimitMin()*60 && !w.open) custodiaPrompt();
+  } catch(e){}
+}
+function custodiaPrompt(){
+  try {
+    var w = custodiaW(); if (w.open) return; w.open = true; w.count++;
+    var m = custodiaMsg();
+    var back = el("div",{style:{position:"fixed",inset:"0",background:"rgba(10,8,5,0.55)",zIndex:"9990",display:"flex",alignItems:"center",justifyContent:"center",padding:"22px"}});
+    back.id = "custodia-overlay";
+    var card = el("div",{className:"glass",style:{maxWidth:"430px",width:"100%",borderRadius:"14px",padding:"22px 24px"}});
+    card.appendChild(el("div",{style:{fontSize:"26px",textAlign:"center",marginBottom:"4px"},text:m[0]}));
+    card.appendChild(el("div",{style:{fontFamily:"var(--cd-serif)",fontSize:"17px",fontWeight:"600",textAlign:"center",marginBottom:"8px"},text:tr("custodia.title","A pause, earned")}));
+    card.appendChild(el("div",{style:{fontSize:"13.5px",color:"var(--text-secondary)",lineHeight:"1.55",textAlign:"center",marginBottom:"14px"},text:m[1]}));
+    var row = el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",justifyContent:"center"}});
+    function bb(label,primary,fn){ var x=el("button",{className: primary?"btn btn-primary":"btn btn-ghost",style:{fontSize:"12.5px"},text:label}); x.onclick=fn; return x; }
+    row.appendChild(bb(tr("pomo.short","Short break")+" \u00b7 "+Math.round(pomoPhaseLen("short")/60)+" min", true, function(){ custodiaTakeBreak("short"); }));
+    row.appendChild(bb(tr("pomo.long","Long break")+" \u00b7 "+Math.round(pomoPhaseLen("long")/60)+" min", true, function(){ custodiaTakeBreak("long"); }));
+    card.appendChild(row);
+    var row2 = el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",justifyContent:"center",marginTop:"8px"}});
+    if (!w.snoozed) row2.appendChild(bb(tr("custodia.snooze","Ten more minutes, then ask again"), false, function(){ var ww=custodiaW(); ww.snoozed=true; ww.acc=Math.max(0, custodiaLimitMin()*60-600); custodiaClose(); }));
+    if (!w.extended) row2.appendChild(bb(tr("custodia.extend","Two minutes to finish the thought"), false, function(){ var ww=custodiaW(); ww.extended=true; ww.acc=custodiaLimitMin()*60-120; custodiaClose(); }));
+    if (row2.childNodes.length) card.appendChild(row2);
+    card.appendChild(el("div",{style:{fontSize:"11px",color:"var(--text-tertiary)",textAlign:"center",marginTop:"12px"},text:tr("custodia.foot","Custodia watches the clock so you can forget it.")}));
+    back.appendChild(card);
+    document.body.appendChild(back);
+  } catch(e){ try{ custodiaW().open=false; }catch(e2){} }
+}
+function bb(label,primary,fn){ var x=el("button",{className: primary?"btn btn-primary":"btn btn-ghost",style:{fontSize:"12.5px"},text:label}); x.onclick=fn; return x; }
+function custodiaTakeBreak(kind){
+  try { pomo.phase = kind; pomo.remaining = pomoPhaseLen(kind); custodiaBreakReset(); custodiaClose(); if(!pomo.running) pomoStart(); pomoRender(); pomoPill(); } catch(e){}
+}
+function custodiaClose(){ var w=custodiaW(); w.open=false; try { var n=document.getElementById("custodia-overlay"); if(n&&n.parentNode) n.parentNode.removeChild(n); } catch(e){} }
+function custodiaMsg(){
+  var M = [
+    ["\ud83e\udd38", tr("custodia.msg.0","A long stretch of honest focus. Stand, roll the shoulders, and let the spine remember it is not furniture.")],
+    ["\ud83d\udca7", tr("custodia.msg.1","The work will hold. Fetch a glass of water; hydration is scholarship maintenance.")],
+    ["\ud83d\udc40", tr("custodia.msg.2","Give your eyes twenty seconds on something twenty feet away. They keep their own ledger.")],
+    ["\ud83c\udf5e", tr("custodia.msg.3","Minds run on meals as surely as on method. Eat something real before the next stretch.")],
+    ["\ud83d\udeb6", tr("custodia.msg.4","You have earned a pause. Walk to a window and back; thought travels better on moving legs.")],
+    ["\ud83d\udca7", tr("custodia.msg.5","Pause the page, not the progress. Water first; the paragraph will wait faithfully.")],
+    ["\ud83c\udf05", tr("custodia.msg.6","Blink, look far, breathe once slowly. The screen has no claim on the horizon.")],
+    ["\ud83c\udf72", tr("custodia.msg.7","It is the body that carries the scholar. A proper bite now buys a clearer hour later.")]
+  ];
+  var w = custodiaW(); var hh = new Date().getHours();
+  var idx;
+  if (hh >= 11 && hh < 14 && (w.count % 2 === 1)) idx = (w.count % 4 === 1) ? 3 : 7; else idx = (w.count + new Date().getDate()) % M.length;
+  return M[idx];
+}
+function pomoAdvance(auto){ pomoChime();
+  if(pomo.phase==="focus"){ pomo.done++; pomo.totalDone++; try{ if(typeof custodiaBreakReset==="function") custodiaBreakReset(); }catch(e){} pomo.phase=(pomo.done>=pomo.perSet)?"long":"short"; }
+  else { if(pomo.phase==="long") pomo.done=0; pomo.phase="focus"; }
+  pomo.remaining=pomoPhaseLen(pomo.phase);
+  if(!(pomo.autostart && auto)) pomoStop();
+  pomoRender(); pomoPill(); }
+function pomoSkip(){ if(pomo.phase==="focus"){ pomo.done++; try{ if(typeof custodiaBreakReset==="function") custodiaBreakReset(); }catch(e){} pomo.phase=(pomo.done>=pomo.perSet)?"long":"short"; } else { if(pomo.phase==="long") pomo.done=0; pomo.phase="focus"; } pomo.remaining=pomoPhaseLen(pomo.phase); pomoRender(); pomoPill(); }
+function pomoRingSVG(){ var C=565.48; return '<svg viewBox="0 0 200 200" width="188" height="188" style="display:block">'
+  +'<circle cx="100" cy="100" r="90" fill="none" style="stroke:var(--accent-soft)" stroke-width="9"/>'
+  +'<circle id="pomo-ring-fg" cx="100" cy="100" r="90" fill="none" style="stroke:var(--accent)" stroke-width="9" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="'+C+'" stroke-dashoffset="0"/>'
+  +'<text id="pomo-time" x="100" y="98" text-anchor="middle" dominant-baseline="central" style="fill:var(--text-primary)" font-size="42" font-family="var(--cd-serif)">'+pomoFmt(pomo.remaining)+'</text>'
+  +'<text id="pomo-phase" x="100" y="134" text-anchor="middle" style="fill:var(--text-tertiary)" font-size="12.5" letter-spacing="0.4">'+pomoPhaseLabel()+'</text></svg>'; }
+try{window.__cdEng=window.__cdEng||{};window.__cdEng.pomo=openPomodoro;}catch(e){}
+try{window.inkClep={open:openPomodoro,stop:pomoReset,pill:pomoPill,running:function(){return !!pomo.running;}};}catch(e){}
+})();
+/* the corner dial is on the desk from the start, as in Carpe Diem */
+try{if(window.inkClep)inkClep.pill();}catch(e){}
 </script>
 </body></html>

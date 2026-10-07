@@ -39,11 +39,17 @@ def build():
         page = page.replace(marker, base64.b64encode(raw).decode("ascii"))
     # 7.32: shared scripts (the grammar model's decoder and the safety filter)
     # are written once in src/lib and placed in the page where it names them
-    for name in ("gector_core", "gec_filter", "fontes_core"):
+    for name in ("gector_core", "gec_filter", "fontes_core", "clepsydra"):
         marker = "@@LIB_%s@@" % name.upper()
         if page.count(marker) != 1:
             sys.exit("src/inkwell.html must hold %s exactly once" % marker)
         page = page.replace(marker, read(os.path.join(SRC, "lib", name + ".js")).decode("utf-8"))
+    # Clepsydra's stylesheet, made from Carpe Diem's own rules (tools/clepsydra_css.py)
+    for name in ("clepsydra",):
+        marker = "@@LIBCSS_%s@@" % name.upper()
+        if page.count(marker) != 1:
+            sys.exit("src/inkwell.html must hold %s exactly once" % marker)
+        page = page.replace(marker, read(os.path.join(SRC, "lib", name + ".css")).decode("utf-8"))
     outputs = {
         os.path.join("Inkwell-Android", "app", "src", "main", "assets", "Inkwell.html"): page.encode("utf-8"),
         "Inkwell.html": page.encode("utf-8"),
