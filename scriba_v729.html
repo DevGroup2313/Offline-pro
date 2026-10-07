@@ -233,6 +233,16 @@ function punctuate(t) {
 function appendText(t) {
   t = punctuate(t.trim());
   if (!t) return;
+  /* 7.35: a phrase that continues the last sentence joins it */
+  var last = pad.lastChild, lead = false;
+  if (last && last.nodeType === 3 && last.nodeValue.trim()) {
+    var lines = t.split("\n"), prev = last.nodeValue.replace(/\s+$/, ""), joined = scribaJoinInto(prev, lines[0]);
+    if (lines[0] && joined !== prev + " " + lines[0]) {
+      last.nodeValue = joined; lines.shift(); t = lines.join("\n"); lead = lines.length > 0;
+      if (!t && !lead) { try { localStorage.setItem(KEY, pad.innerHTML); } catch (e) {} return; }
+    }
+  }
+  if (lead) pad.appendChild(document.createElement("br"));
   var parts = t.split("\n");
   for (var i = 0; i < parts.length; i++) {
     if (i > 0) pad.appendChild(document.createElement("br"));
@@ -300,6 +310,22 @@ function scribaBegin() {
   try { rec.start(); } catch (e) { stopUI(); say(L.nomic); }
 }
 
+/* 7.35: a transcript as subtitles (SubRip .srt), from its timed paragraphs */
+function scribaSrt(cues){
+  function t(sec){ var ms=Math.round(sec*1000), h=Math.floor(ms/3600000), m=Math.floor(ms%3600000/60000), s2=Math.floor(ms%60000/1000), r=ms%1000;
+    return (h<10?"0":"")+h+":"+(m<10?"0":"")+m+":"+(s2<10?"0":"")+s2+","+(r<100?(r<10?"00":"0"):"")+r; }
+  return cues.map(function(c,i){ return (i+1)+"\n"+t(c.from)+" --> "+t(c.to)+"\n"+c.text+"\n"; }).join("\n");
+}
+function scribaOfferSrt(rec){
+  if(!rec.cues||!rec.cues.length) return;
+  var b=document.createElement("button"); b.type="button"; b.className="srtBtn";
+  b.style.cssText="font-size:12px;padding:5px 10px;margin:4px 0 8px";
+  b.textContent=T("Save as subtitles (.srt)","Enregistrer en sous-titres (.srt)");
+  b.onclick=function(){ var name=(rec.name||"transcript").replace(/[^\w\- ]+/g,"_")+".srt", txt=scribaSrt(rec.cues);
+    try{ if(window.parent&&window.parent.inkSaveString){ window.parent.inkSaveString(name,"application/x-subrip",txt); return; } }catch(e){}
+    var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); };
+  pad.appendChild(b);
+}
 function cdTranscribe(rec){
   /* 7.26: a saved recording is decoded in the page, turned into 16 kHz WAV and
      sent to Inkwell's local Whisper in pieces of up to five minutes, so no
@@ -312,6 +338,7 @@ function cdTranscribe(rec){
     head.textContent=(FR?"Transcription \u00b7 ":"Transcript \u00b7 ")+(rec.name||"");
     pad.appendChild(head);
     var body=document.createElement("div");
+    body.style.whiteSpace="pre-wrap";
     body.textContent=text||(FR?"(rien n\u2019a \u00e9t\u00e9 reconnu)":"(nothing was recognised)");
     pad.appendChild(body);
     try{ localStorage.setItem(KEY, pad.innerHTML); }catch(e){}
@@ -321,15 +348,27 @@ function cdTranscribe(rec){
   function tryLocal(){
     scribaBlobTo16k(rec.blob,function(f32,err){
       if(!f32){ if(SR){ tryWebSpeech(); } else { say(T("This recording could not be decoded here: ","Cet enregistrement n\u2019a pas pu \u00eatre d\u00e9cod\u00e9 ici : ")+(err||"?")); } return; }
-      var step=16000*300, parts=[], i;
-      for(i=0;i<f32.length;i+=step) parts.push(f32.subarray(i,Math.min(f32.length,i+step)));
-      var out=[], k=0;
+      /* 7.35: pieces of at most 24 s, each ending at a pause, never a blind
+         cut through a word; every paragraph carries its time */
+      var segs=scribaSegments(f32,16000,24), out=[], cues=[], k=0;
+      function stamp(sec){ var m=Math.floor(sec/60), s2=Math.floor(sec%60); return (m<10?"0":"")+m+":"+(s2<10?"0":"")+s2; }
       (function next(){
-        if(k>=parts.length){ appendResult(out.join(" ").trim()); return; }
-        say(T("Transcribing part ","Transcription de la partie ")+(k+1)+" / "+parts.length+"\u2026");
-        scribaTranscribe16k(parts[k],function(text,e2){
+        if(k>=segs.length){
+          appendResult(out.join("\n").trim());
+          rec.cues=cues; try{ scribaOfferSrt(rec); }catch(e){}
+          return;
+        }
+        say(T("Transcribing ","Transcription ")+(k+1)+" / "+segs.length+"\u2026");
+        var g=segs[k], piece=f32.slice(g.from,g.to);
+        if(scribaPeakRms(piece,16000)<0.006){ k++; next(); return; }
+        scribaTranscribe16k(piece,function(text,e2){
           if(e2){ say(e2); if(!out.length){ return; } }
-          if(text) out.push(text);
+          if(text){
+            var prev=cues.length?cues[cues.length-1]:null;
+            /* a piece that continues the sentence joins its paragraph */
+            if(prev&&/^[a-z\u00E0-\u00FF]/.test(text)){ prev.text=scribaJoinInto(prev.text,text); prev.to=g.to/16000; out[out.length-1]="["+stamp(prev.from)+"] "+prev.text; }
+            else { cues.push({from:g.from/16000, to:g.to/16000, text:text}); out.push("["+stamp(g.from/16000)+"] "+text); }
+          }
           k++; next();
         });
       })();
@@ -398,14 +437,14 @@ function scribaStatus(){
       }else if(STT.available){
         say(T("Local Whisper is ready ("+STT.model+"). Dictation stays on this computer.","Whisper local est pr\u00eat ("+STT.model+"). La dict\u00e9e reste sur cet ordinateur."));
       }else{
-        say(scribaPageOk()?T("Local Whisper is not installed, so Scriba will use on-device Whisper. The first Record fetches the model once.","Whisper local n\u2019est pas install\u00e9 ; Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois.")
+        say(scribaPageOk()?T("Local Whisper is not installed, so Scriba will use the on-device speech model. The first Record fetches it once.","Whisper local n\u2019est pas install\u00e9 ; Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois.")
            :(SR?T("Local Whisper is not installed, so Scriba uses this browser's dictation engine.","Whisper local n\u2019est pas install\u00e9 ; Scriba utilise le moteur de dict\u00e9e du navigateur.")
               :scribaNoEngineMsg()));
       }
     }catch(e){}
   };
   function noServer(){ STT.checked=true;
-    if(scribaPageOk()) say(T("Scriba will use on-device Whisper. The first Record fetches the model once; after that it works offline.","Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois ; ensuite il fonctionne hors ligne.")); }
+    if(scribaPageOk()) say(T("Scriba will use the on-device speech model. The first Record fetches it once; after that it works offline.","Scriba utilisera Whisper sur l\u2019appareil. Le premier enregistrement t\u00e9l\u00e9charge le mod\u00e8le une fois ; ensuite il fonctionne hors ligne.")); }
   xh.onerror=noServer;
   xh.ontimeout=noServer;
   try{ xh.send(); }catch(e){ STT.checked=true; }
@@ -536,18 +575,29 @@ function scribaBlobTo16k(blob,cb){
    microphone capture never stall while it thinks. The model is fetched once,
    on the first Record press, and kept by the browser for offline use. */
 var PAGE={worker:null, ready:false, loading:false, error:null, model:null, seq:0, waits:{}, mb:0, onReady:[]};
-var SCRIBA_PAGE_MODELS=["onnx-community/whisper-tiny","Xenova/whisper-tiny"];
+/* 7.35: the speech models, chosen by measurement (73 LibriSpeech clips,
+   1,150 words; word error rate): Whisper tiny, used until 7.34, 46.5% (and
+   one clip ran away into a loop of 443 words); Whisper base 10.8%; Moonshine
+   base 7.4%, and the fastest of all. English uses Moonshine base (64 MB);
+   other languages Whisper base (78 MB), which knows them. */
+function scribaModelsFor(lang){
+  return (lang||"en")==="en" ? ["onnx-community/moonshine-base-ONNX","onnx-community/whisper-base.en","onnx-community/whisper-base"]
+                             : ["onnx-community/whisper-base","onnx-community/whisper-tiny"];
+}
+var SCRIBA_PAGE_MODELS=scribaModelsFor("en");
 var SCRIBA_WORKER_SRC=[
- "let TF=null, pipe=null, loading=null;",
+ "let TF=null, pipe=null, pipeKey='', pipeId='', loading=null, loadingKey='';",
  "async function load(urls, models){",
- "  if(pipe) return pipe;",
+ "  const key=models.join('|');",
+ "  if(pipe&&pipeKey===key) return pipe;",
+ "  if(pipe){ try{ await pipe.dispose(); }catch(e){} pipe=null; }",
  "  let lastErr=null;",
  "  for (const u of urls){ try { TF=await import(u.module); if(u.wasm){ TF.env.backends.onnx.wasm.wasmPaths=u.wasm; } break; } catch(e){ lastErr=e; TF=null; } }",
  "  if(!TF) throw new Error('the speech library could not be loaded ('+String(lastErr&&lastErr.message||lastErr)+')');",
  "  if(typeof TF.pipeline!=='function') throw new Error('the speech library has no pipeline function');",
  "  for (const id of models){",
- "    try { pipe=await TF.pipeline('automatic-speech-recognition', id, { progress_callback:(p)=>postMessage({type:'progress', file:p.file||'', loaded:p.loaded||0, total:p.total||0, status:p.status||''}) });",
- "      postMessage({type:'model', id:id}); return pipe; }",
+ "    try { pipe=await TF.pipeline('automatic-speech-recognition', id, { dtype:'q8', progress_callback:(p)=>postMessage({type:'progress', file:p.file||'', loaded:p.loaded||0, total:p.total||0, status:p.status||''}) });",
+ "      pipeKey=key; pipeId=id; postMessage({type:'model', id:id}); return pipe; }",
  "    catch(e){ lastErr=e; }",
  "  }",
  "  throw new Error('the Whisper model could not be fetched ('+String(lastErr&&lastErr.message||lastErr)+')');",
@@ -555,10 +605,16 @@ var SCRIBA_WORKER_SRC=[
  "onmessage=async(ev)=>{ const m=ev.data||{};",
  "  try {",
  "    if(m.type==='probe'){ let ok=false, v=''; for(const u of m.urls){ try{ const t=await import(u.module); ok=typeof t.pipeline==='function'; v=(t.env&&t.env.version)||''; break; }catch(e){} } postMessage({type:'probe', ok:ok, version:v}); return; }",
- "    loading=loading||load(m.urls, m.models);",
+ "    const key=(m.models||[]).join('|');",
+ "    if(!loading||loadingKey!==key){ loadingKey=key; loading=load(m.urls, m.models); }",
  "    const p=await loading;",
  "    if(m.type==='load'){ postMessage({type:'ready'}); return; }",
- "    if(m.type==='run'){ const out=await p(m.audio, m.opts); postMessage({type:'result', id:m.id, text:String((out&&out.text)||'').trim()}); }",
+ "    if(m.type==='run'){",
+ "      const sec=m.audio.length/16000, cap=Math.min(440, Math.ceil(sec*6.5)+12);",
+ "      const o=m.opts||{};",
+ "      const opts=/moonshine/.test(pipeId) ? { max_new_tokens:cap }",
+ "        : Object.assign({ max_new_tokens:cap, chunk_length_s:30, stride_length_s:5 }, /\\.en$/.test(pipeId) ? {} : { language:o.language||'en', task:'transcribe' });",
+ "      const out=await p(m.audio, opts); postMessage({type:'result', id:m.id, text:String((out&&out.text)||'').trim(), model:pipeId}); }",
  "  } catch(e){ loading=null; pipe=null; postMessage({type:'error', id:m.id, message:String(e&&e.message||e)}); }",
  "};"].join("\n");
 function scribaPageOk(){
@@ -593,17 +649,17 @@ function scribaPageWorker(){
       if(m.file){ files[m.file]=m.loaded||files[m.file]||0; }
       var tot=0; for(var k in files) tot+=files[k];
       var mb=Math.round(tot/1048576);
-      if(PAGE.loading&&mb!==PAGE.mb){ PAGE.mb=mb; say(T("Fetching on-device Whisper, once: ","T\u00e9l\u00e9chargement de Whisper sur l\u2019appareil, une seule fois : ")+mb+" MB\u2026"); }
+      if(PAGE.loading&&mb!==PAGE.mb){ PAGE.mb=mb; say(T("Fetching the on-device speech model, once: ","T\u00e9l\u00e9chargement de Whisper sur l\u2019appareil, une seule fois : ")+mb+" MB\u2026"); }
       return;
     }
     if(m.type==="model"){ PAGE.model=m.id; return; }
-    if(m.type==="ready"){ if(PAGE.loading){ say(T("On-device Whisper is ready. Speak; each phrase appears a moment after you pause.","Whisper sur l\u2019appareil est pr\u00eat. Parlez ; chaque phrase appara\u00eet un instant apr\u00e8s une pause.")); } PAGE.ready=true; PAGE.loading=false; PAGE.error=null; var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(null);}catch(e){}}); return; }
+    if(m.type==="ready"){ if(PAGE.loading){ say(T("The on-device speech model is ready. Speak; each phrase appears a moment after you pause.","Whisper sur l\u2019appareil est pr\u00eat. Parlez ; chaque phrase appara\u00eet un instant apr\u00e8s une pause.")); } PAGE.ready=true; PAGE.loading=false; PAGE.error=null; var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(null);}catch(e){}}); return; }
     if(m.type==="probe"){ var pr=PAGE.waits.probe; delete PAGE.waits.probe; if(pr) pr(m); return; }
     if(m.type==="result"||m.type==="error"){
       var cb=PAGE.waits[m.id]; delete PAGE.waits[m.id];
       if(m.type==="error"){ PAGE.loading=false; PAGE.ready=false; PAGE.error=m.message;
         var r2=PAGE.onReady; PAGE.onReady=[]; r2.forEach(function(f){try{f(m.message);}catch(e){}}); }
-      if(cb) cb(m.type==="result"?m.text:"", m.type==="error"?m.message:null);
+      if(cb) cb(m.type==="result"?scribaClean(m.text):"", m.type==="error"?m.message:null);
     }
   };
   w.onerror=function(e){ PAGE.error=String((e&&e.message)||"worker error"); PAGE.loading=false; };
@@ -615,10 +671,10 @@ function scribaPageLoad(cb){
   PAGE.onReady.push(cb);
   if(PAGE.loading) return;
   PAGE.loading=true; PAGE.mb=-1;
-  say(T("Preparing on-device Whisper. The first time, the model is downloaded once (a few tens of megabytes); after that it works offline.",
+  say(T("Preparing the on-device speech model. The first time it is downloaded once (64 MB for English, 78 MB for other languages); after that it works offline.",
         "Pr\u00e9paration de Whisper sur l\u2019appareil. La premi\u00e8re fois, le mod\u00e8le est t\u00e9l\u00e9charg\u00e9 une fois (quelques dizaines de m\u00e9gaoctets) ; ensuite il fonctionne hors ligne."));
   scribaBlobUrls(function(){
-    try{ scribaPageWorker().postMessage({type:"load", urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS}); }
+    try{ scribaPageWorker().postMessage({type:"load", urls:scribaPageUrls(), models:scribaModelsFor(scribaLangCode())}); }
     catch(e){ PAGE.loading=false; PAGE.error=String(e); var r=PAGE.onReady; PAGE.onReady=[]; r.forEach(function(f){try{f(PAGE.error);}catch(e2){}}); }
   });
 }
@@ -628,13 +684,13 @@ function scribaPageTranscribe(f32,cb){
   scribaPageLoad(function(err){
     if(err){ cb("", scribaPageErrMsg(err)); return; }
     var id=++PAGE.seq; PAGE.waits[id]=cb;
-    try{ scribaPageWorker().postMessage({type:"run", id:id, audio:f32, urls:scribaPageUrls(), models:SCRIBA_PAGE_MODELS,
-           opts:{language:scribaLangCode(), task:"transcribe", chunk_length_s:30, stride_length_s:5}}, [f32.buffer]); }
+    try{ scribaPageWorker().postMessage({type:"run", id:id, audio:f32, urls:scribaPageUrls(), models:scribaModelsFor(scribaLangCode()),
+           opts:{language:scribaLangCode()}}, [f32.buffer]); }
     catch(e){ delete PAGE.waits[id]; cb("", String(e)); }
   });
 }
 function scribaPageErrMsg(err){
-  return T("On-device Whisper could not start: ","Whisper sur l\u2019appareil n\u2019a pas pu d\u00e9marrer : ")+err+
+  return T("The on-device speech model could not start: ","Whisper sur l\u2019appareil n\u2019a pas pu d\u00e9marrer : ")+err+
          T(". The first use needs the internet, to fetch the model once.",". La premi\u00e8re utilisation demande internet, pour t\u00e9l\u00e9charger le mod\u00e8le une fois.");
 }
 /* the one door every transcription goes through: local server first, then the page */
@@ -644,6 +700,83 @@ function scribaTranscribe16k(f32,cb){
 }
 function scribaCanTranscribe(){ return STT.available || scribaPageOk(); }
 
+/* 7.35: where speech pauses. Frames of 20 ms; the room's own noise floor
+   (the quiet end of the recording) and the voice's level (the loud end) set
+   what counts as quiet; a pause is at least minPause seconds of it. A cut
+   at a single quiet frame (as before 7.35) could fall between two words of a
+   sentence, which is where "readily. to the mind." came from. */
+function scribaFrames(a,rate){
+  var f=Math.max(1,Math.round(rate*0.02)), out=[];
+  for(var i=0;i+f<=a.length;i+=f) out.push(scribaFrameRms(a,i,i+f));
+  return {rms:out, f:f};
+}
+function scribaQuietLevel(rms){
+  if(!rms.length) return 0.006;
+  var s2=rms.slice().sort(function(x,y){return x-y;});
+  var floor=s2[Math.floor(s2.length*0.15)], loud=s2[Math.floor(s2.length*0.9)];
+  return Math.max(0.004, floor*2.5, floor+(loud-floor)*0.12);
+}
+/* the pauses in a: [{from, to}] in samples, each at least minPause seconds */
+function scribaPauses(a,rate,minPause){
+  var F=scribaFrames(a,rate), q=scribaQuietLevel(F.rms), need=Math.max(1,Math.round(minPause/0.02)), out=[], run=-1;
+  for(var i=0;i<=F.rms.length;i++){
+    var quiet=i<F.rms.length&&F.rms[i]<q;
+    if(quiet&&run<0) run=i;
+    if(!quiet&&run>=0){ if(i-run>=need) out.push({from:run*F.f, to:i*F.f}); run=-1; }
+  }
+  return out;
+}
+/* a long recording -> pieces of at most maxSec seconds, each ending in the
+   longest pause available, so no sentence is cut where it can be avoided */
+function scribaSegments(a,rate,maxSec){
+  var segs=[], start=0, maxN=Math.round(rate*maxSec), minN=Math.round(rate*3);
+  var pauses=scribaPauses(a,rate,0.3);
+  while(a.length-start>maxN){
+    var best=null;
+    for(var i=0;i<pauses.length;i++){ var p=pauses[i], mid=(p.from+p.to)>>1;
+      if(mid>start+minN&&mid<=start+maxN&&(!best||(p.to-p.from)>=(best.to-best.from)*0.8)) best=p; }
+    var cut;
+    if(best) cut=(best.from+best.to)>>1;
+    else { var win=a.subarray(start+maxN-Math.round(rate*3),start+maxN); cut=start+maxN-Math.round(rate*3)+scribaQuietCut(win,rate,true); }
+    segs.push({from:start, to:cut}); start=cut;
+  }
+  if(a.length-start>rate*0.3) segs.push({from:start, to:a.length});
+  return segs;
+}
+/* a model's answer, without the ways small speech models go wrong: a phrase
+   or a syllable repeated over and over, and the stock lines Whisper
+   invents for near-silence */
+function scribaClean(t){
+  t=String(t||"").replace(/\s+/g," ").trim();
+  for(var u=2;u<=8;u++) t=t.replace(new RegExp("([A-Za-z\u00C0-\u024F']{"+u+"})\\1{3,}","g"),"$1");
+  for(var n=8;n>=1;n--){
+    var re=new RegExp("((?:\\b[\\wÀ-ɏ'’-]+\\b[\\s,.;:]*){"+n+"})(?:\\1){2,}","gi");
+    t=t.replace(re,"$1");
+  }
+  if(/^(thank you( (so much|very much))?( for watching)?|thanks for watching|subtitles by.*|you|\.+)[.!]?$/i.test(t)) return "";
+  return t.trim();
+}
+/* a phrase that continues the sentence before it: no full stop between, no
+   capital in mid-sentence. Each piece comes back from the model as if it
+   were a sentence of its own, so a cut inside a sentence shows as "of. Up"
+   or "year, With"; a sentence cannot end on "of", "the" or "a", and after a
+   comma a common word continues the sentence. */
+var SCRIBA_FW=/^(and|but|or|nor|with|up|to|of|in|the|a|an|for|on|at|by|as|so|that|which|who|whom|whose|when|while|if|then|because|from|into|over|under|it|its|he|she|they|we|you|his|her|their|this|these|those|there|not|no|more|most|all|some|any|each|every|than|like|before|after|is|are|was|were|be|been|has|have|had)$/i;
+var SCRIBA_NOEND=/\b(of|the|a|an|to|and|with|for|in|on|at|by|from|his|her|their|its|my|your|our|this|these|those|that|as|than|or|but|into|onto|upon)$/i;
+function scribaJoinInto(prev,next){
+  if(!prev) return next;
+  var first=(next.match(/^[A-Za-zÀ-ɏ']+/)||[""])[0];
+  var lowerFirst=function(x){ return first&&SCRIBA_FW.test(first)&&first!=="I"?x.charAt(0).toLowerCase()+x.slice(1):x; };
+  var abbrev=/\b(Mr|Mrs|Ms|Dr|St|Prof|etc|e\.g|i\.e|vs)\.$/i.test(prev);
+  if(/[^.]\.$/.test(prev)&&!abbrev){
+    var body=prev.slice(0,-1);
+    if(/^[a-zà-ÿ]/.test(next)) return body+" "+next;
+    if(SCRIBA_NOEND.test(body)) return body+" "+lowerFirst(next);
+    return prev+" "+next;
+  }
+  if(/[,;:]$|[A-Za-zÀ-ɏ0-9]$/.test(prev)) return prev+" "+lowerFirst(next);
+  return prev+" "+next;
+}
 var inkLiveStream=null, inkLiveTimer=null, inkPcm=null, inkLiveActive=false, inkQ=[], inkQBusy=false;
 function inkQueue(f32,rate){
   if(!f32||f32.length<rate*0.4) return;
@@ -663,9 +796,13 @@ function inkQPump(){
 }
 function inkLiveTick(){
   var p=inkPcm; if(!p) return;
-  var sec=p.len/p.rate; if(sec<6) return;
-  var cutAt=scribaQuietCut(p.all(),p.rate,sec>=12);
-  if(cutAt>0) inkQueue(p.take(cutAt),p.rate);
+  var sec=p.len/p.rate; if(sec<3) return;
+  var a=p.all(), rate=p.rate;
+  /* the latest pause of at least 0.4 s that has ended, after the first 2 s */
+  var ps=scribaPauses(a,rate,0.4), cut=0;
+  for(var i=ps.length-1;i>=0;i--){ var q=ps[i]; if(q.to<a.length-Math.round(rate*0.1)&&q.from>rate*2){ cut=(q.from+q.to)>>1; break; } }
+  if(!cut&&sec>=25){ var sg=scribaSegments(a,rate,24); cut=sg.length>1?sg[0].to:0; }
+  if(cut>0) inkQueue(p.take(cut),p.rate);
 }
 function inkLiveStart(){
   if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ scribaExplainMic(null); return; }
@@ -679,8 +816,8 @@ function inkLiveStart(){
     try{ cdMeterStart(stream); }catch(e){}
     inkLiveActive=true; live=true; recBtn.classList.add("live"); recLbl.textContent=L.stop;
     say(STT.available?T("Listening. Local Whisper writes each phrase after a short pause.","\u00c9coute. Whisper local \u00e9crit chaque phrase apr\u00e8s une courte pause.")
-                     :T("Listening. On-device Whisper writes each phrase after a short pause.","\u00c9coute. Whisper sur l\u2019appareil \u00e9crit chaque phrase apr\u00e8s une courte pause.")); cdPostLive();
-    if(!STT.available) scribaPageLoad(function(err){ if(err) say(scribaPageErrMsg(err)); else if(live) say(T("On-device Whisper is ready. Listening.","Whisper sur l\u2019appareil est pr\u00eat. \u00c9coute.")); });
+                     :T("Listening. The on-device speech model writes each phrase after a short pause.","\u00c9coute. Whisper sur l\u2019appareil \u00e9crit chaque phrase apr\u00e8s une courte pause.")); cdPostLive();
+    if(!STT.available) scribaPageLoad(function(err){ if(err) say(scribaPageErrMsg(err)); else if(live) say(T("The on-device speech model is ready. Listening.","Whisper sur l\u2019appareil est pr\u00eat. \u00c9coute.")); });
     inkLiveTimer=setInterval(inkLiveTick,500);
   }).catch(function(err){ recBtn.classList.remove("wait"); stopUI(); scribaExplainMic(err); });
 }
@@ -903,11 +1040,11 @@ try{
     recAll(function(list){
       if(!list.length){ say(FR?"Aucun enregistrement.":"No recordings."); return; }
       var idx=0;
-      taBtn.disabled=true; taBtn.textContent=FR?"Transcription en cours\\u2026 (0/"+list.length+")":"Transcribing\\u2026 (0/"+list.length+")";
+      taBtn.disabled=true; taBtn.textContent=FR?"Transcription en cours\u2026 (0/"+list.length+")":"Transcribing\u2026 (0/"+list.length+")";
       function next(){
-        if(idx>=list.length){ taBtn.disabled=false; taBtn.textContent=FR?"Tout transcrire":"Transcribe all"; say(FR?"Toutes les transcriptions ajout\\u00e9es.":"All transcripts added."); return; }
+        if(idx>=list.length){ taBtn.disabled=false; taBtn.textContent=FR?"Tout transcrire":"Transcribe all"; say(FR?"Toutes les transcriptions ajout\u00e9es.":"All transcripts added."); return; }
         var r=list[idx]; idx++;
-        taBtn.textContent=FR?"Transcription en cours\\u2026 ("+idx+"/"+list.length+")":"Transcribing\\u2026 ("+idx+"/"+list.length+")";
+        taBtn.textContent=FR?"Transcription en cours\u2026 ("+idx+"/"+list.length+")":"Transcribing\u2026 ("+idx+"/"+list.length+")";
         cdTranscribe({
           blob:r.blob, name:r.name, dur:r.dur,
           _after:function(){
