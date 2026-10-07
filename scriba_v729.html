@@ -122,6 +122,50 @@ html.cd-dark #recSearch::placeholder,html.cd-sdark #recSearch::placeholder{color
 *{scrollbar-width:none!important;-ms-overflow-style:none!important;}
 ::-webkit-scrollbar,*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important;}
 </style>
+<style id="scribaSession">
+/* CE1: a recording's session: the audio or video, the transcript as timed
+   paragraphs that follow the playback, search, corrections, exports */
+.recTools{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.recTools button{font-size:12px;padding:6px 12px}
+#sess{display:none;margin-top:6px}
+#sess.on{display:block}
+.sessHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.sessHead .sessBack{font-size:12px;padding:5px 10px}
+.sessName{font-family:var(--serif);font-size:19px;font-weight:600;outline:none;border-bottom:1px dashed transparent;min-width:60px}
+.sessName:focus{border-bottom-color:var(--line)}
+.sessMeta{font-size:11.5px;color:var(--ink-2)}
+.sessMedia audio,.sessMedia video{width:100%;display:block;border-radius:10px}
+.sessMedia video{max-height:46vh;background:#000}
+.sessCtl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 6px}
+.sessCtl button,.sessCtl select{font-size:12px;padding:5px 10px}
+.sessCtl select{border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font-family:var(--ui)}
+.sessCtl .sp{flex:1}
+.sessCtl input[type=search]{font-family:var(--ui);font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:var(--paper);color:var(--ink);width:min(220px,46%)}
+.sessFind{font-size:11.5px;color:var(--ink-2);min-width:52px}
+.sessFollow.on{background:#22304A!important;color:#fff!important}
+.sessStatus{font-size:12px;color:var(--ink-2);font-style:italic;font-family:var(--serif);min-height:16px;margin:2px 2px 8px}
+.sessCues{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 6px;max-height:52vh;overflow:auto}
+.cue{display:flex;gap:10px;align-items:flex-start;padding:7px 8px;border-radius:9px;transition:background-color .2s}
+.cue+.cue{margin-top:2px}
+.cue.now{background:rgba(27,107,147,.12)}
+.cueT{flex:0 0 auto;font:600 11.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace!important;padding:5px 7px!important;margin-top:2px;color:#1B6B93}
+.cueX{flex:1;font-family:var(--serif);font-size:15.5px;line-height:1.6;outline:none;border-radius:6px;padding:1px 4px;min-width:0;overflow-wrap:anywhere}
+.cueX:focus{background:rgba(255,255,255,.7);box-shadow:0 0 0 1px var(--line)}
+.cueX mark{background:#f3dc8b;color:inherit;border-radius:3px;padding:0 1px}
+.cueX mark.cur{background:#e9b949}
+.cueEmpty{font-family:var(--serif);font-style:italic;color:var(--ink-2);padding:14px 10px}
+.sessMenu{position:relative;display:inline-block}
+.sessMenu .menu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;min-width:230px;box-shadow:0 10px 28px rgba(20,30,45,.22)}
+.sessMenu.open .menu{display:block}
+.sessMenu .menu button{display:block;width:100%;text-align:left;margin:2px 0;font-size:12.5px;padding:7px 10px}
+html.cd-dark .sessMeta,html.cd-dark .sessFind,html.cd-dark .sessStatus,html.cd-dark .cueEmpty{color:#9fb0c6}
+html.cd-dark .sessCues,html.cd-dark .sessMenu .menu,html.cd-dark .sessCtl select,html.cd-dark .sessCtl input[type=search]{background:#171d28;border-color:rgba(255,255,255,.10);color:#e4e9f1}
+html.cd-dark .cue.now{background:rgba(91,174,219,.16)}
+html.cd-dark .cueT{color:#7fbde0}
+html.cd-dark .cueX:focus{background:rgba(255,255,255,.06)}
+html.cd-dark .cueX mark{background:#7a6326;color:#fff}
+html.cd-dark .cueX mark.cur{background:#a8862f}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -165,9 +209,11 @@ html.cd-dark #recSearch::placeholder,html.cd-sdark #recSearch::placeholder{color
       <div id="recTitle" style="font-family:var(--serif);font-size:15px;font-weight:600"></div>
       <input id="recSearch" type="text" style="margin-left:auto;font-family:var(--ui);font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:var(--paper);color:var(--ink);max-width:52%">
     </div>
+    <div class="recTools"><button id="recImportBtn" type="button"></button><input id="recImportFile" type="file" accept="audio/*,video/*" multiple hidden></div>
     <div id="recList"></div>
     <div style="margin-top:10px"><button id="transcribeAllBtn" type="button" style="font-size:12px;padding:6px 12px;display:none"></button></div>
   </div>
+  <div id="sess"></div>
   <p class="hint" id="hintLine">Everything here saves itself as you go, and stays on this device.</p>
 </div>
 <script>
@@ -326,6 +372,33 @@ function scribaOfferSrt(rec){
     var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); };
   pad.appendChild(b);
 }
+/* CE1: the transcription core shared by the Dictate tab and the session view.
+   The recording is decoded here, cut into pieces of at most 24 s that end at
+   a pause, and each piece goes to the on-device speech model; a piece that
+   continues the sentence joins its paragraph. done(cues, err, undecodable):
+   cues are [{from, to, text}] in seconds. */
+function scribaStamp(sec){ var m=Math.floor(sec/60), s2=Math.floor(sec%60); return (m<10?"0":"")+m+":"+(s2<10?"0":"")+s2; }
+function scribaTranscribeCues(blob,progress,done){
+  scribaBlobTo16k(blob,function(f32,err){
+    if(!f32){ done(null,err||"?",true); return; }
+    var segs=scribaSegments(f32,16000,24), cues=[], k=0, lastErr=null;
+    (function next(){
+      if(k>=segs.length){ done(cues,lastErr,false); return; }
+      try{ progress&&progress(k+1,segs.length); }catch(e){}
+      var g=segs[k], piece=f32.slice(g.from,g.to);
+      if(scribaPeakRms(piece,16000)<0.006){ k++; next(); return; }
+      scribaTranscribe16k(piece,function(text,e2){
+        if(e2){ lastErr=e2; if(!cues.length){ done(cues,e2,false); return; } }
+        if(text){
+          var prev=cues.length?cues[cues.length-1]:null;
+          if(prev&&/^[a-z\u00E0-\u00FF]/.test(text)){ prev.text=scribaJoinInto(prev.text,text); prev.to=g.to/16000; }
+          else cues.push({from:g.from/16000, to:g.to/16000, text:text});
+        }
+        k++; next();
+      });
+    })();
+  });
+}
 function cdTranscribe(rec){
   /* 7.26: a saved recording is decoded in the page, turned into 16 kHz WAV and
      sent to Inkwell's local Whisper in pieces of up to five minutes, so no
@@ -346,32 +419,13 @@ function cdTranscribe(rec){
     if(typeof rec._after==="function") try{ rec._after(); }catch(e){}
   }
   function tryLocal(){
-    scribaBlobTo16k(rec.blob,function(f32,err){
-      if(!f32){ if(SR){ tryWebSpeech(); } else { say(T("This recording could not be decoded here: ","Cet enregistrement n\u2019a pas pu \u00eatre d\u00e9cod\u00e9 ici : ")+(err||"?")); } return; }
-      /* 7.35: pieces of at most 24 s, each ending at a pause, never a blind
-         cut through a word; every paragraph carries its time */
-      var segs=scribaSegments(f32,16000,24), out=[], cues=[], k=0;
-      function stamp(sec){ var m=Math.floor(sec/60), s2=Math.floor(sec%60); return (m<10?"0":"")+m+":"+(s2<10?"0":"")+s2; }
-      (function next(){
-        if(k>=segs.length){
-          appendResult(out.join("\n").trim());
-          rec.cues=cues; try{ scribaOfferSrt(rec); }catch(e){}
-          return;
-        }
-        say(T("Transcribing ","Transcription ")+(k+1)+" / "+segs.length+"\u2026");
-        var g=segs[k], piece=f32.slice(g.from,g.to);
-        if(scribaPeakRms(piece,16000)<0.006){ k++; next(); return; }
-        scribaTranscribe16k(piece,function(text,e2){
-          if(e2){ say(e2); if(!out.length){ return; } }
-          if(text){
-            var prev=cues.length?cues[cues.length-1]:null;
-            /* a piece that continues the sentence joins its paragraph */
-            if(prev&&/^[a-z\u00E0-\u00FF]/.test(text)){ prev.text=scribaJoinInto(prev.text,text); prev.to=g.to/16000; out[out.length-1]="["+stamp(prev.from)+"] "+prev.text; }
-            else { cues.push({from:g.from/16000, to:g.to/16000, text:text}); out.push("["+stamp(g.from/16000)+"] "+text); }
-          }
-          k++; next();
-        });
-      })();
+    scribaTranscribeCues(rec.blob,function(k,n){ say(T("Transcribing ","Transcription ")+k+" / "+n+"\u2026"); },function(cues,err,undecodable){
+      if(undecodable){ if(SR){ tryWebSpeech(); } else { say(T("This recording could not be decoded here: ","Cet enregistrement n\u2019a pas pu \u00eatre d\u00e9cod\u00e9 ici : ")+(err||"?")); } return; }
+      if(err&&(!cues||!cues.length)){ say(err); return; }
+      appendResult(cues.map(function(c){ return "["+scribaStamp(c.from)+"] "+c.text; }).join("\n").trim());
+      rec.cues=cues; try{ scribaOfferSrt(rec); }catch(e){}
+      /* CE1: the timed paragraphs are kept with the recording, for its session view */
+      if(rec.id){ try{ recAll(function(list){ var r0=list.filter(function(x){ return x.id===rec.id; })[0]; if(r0){ r0.cues=cues; recPut(r0); } }); }catch(e){} }
     });
   }
   function tryWebSpeech(){
@@ -1030,7 +1084,7 @@ function recAll(cb) { sdbOpen(function (db) { if (!db) { cb(memRecs.slice()); re
 function recPut(r, cb) { sdbOpen(function (db) { if (!db) { var f = false; for (var i = 0; i < memRecs.length; i++) { if (memRecs[i].id === r.id) { memRecs[i] = r; f = true; break; } } if (!f) memRecs.push(r); cb && cb(); return; } try { var tx = db.transaction("recordings", "readwrite"); tx.objectStore("recordings").put(r); tx.oncomplete = function () { cb && cb(); }; tx.onerror = function () { cb && cb(); }; } catch (e) { cb && cb(); } }); }
 function recDel(id, cb) { sdbOpen(function (db) { if (!db) { memRecs = memRecs.filter(function (x) { return x.id !== id; }); cb && cb(); return; } try { var tx = db.transaction("recordings", "readwrite"); tx.objectStore("recordings").delete(id); tx.oncomplete = function () { cb && cb(); }; tx.onerror = function () { cb && cb(); }; } catch (e) { cb && cb(); } }); }
 function fmtDur(ms) { var s = Math.round((ms || 0) / 1000); var mm = Math.floor(s / 60); s = s % 60; return mm + ":" + (s < 10 ? "0" : "") + s; }
-function renderRecordings() { var host = document.getElementById("recList"); if (!host) return; var q = (document.getElementById("recSearch").value || "").toLowerCase(); recAll(function (list) { list.sort(function (a, b) { return b.ts - a.ts; }); var shown = list.filter(function (r) { return !q || (r.name || "").toLowerCase().indexOf(q) >= 0; }); host.innerHTML = ""; if (!shown.length) { var e = document.createElement("div"); e.style.cssText = "font-size:12.5px;color:var(--ink-2);font-style:italic;padding:6px 0"; e.textContent = L.recEmpty; host.appendChild(e); return; } shown.forEach(function (r) { var row = document.createElement("div"); row.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)"; var nm = document.createElement("div"); nm.style.cssText = "font-size:13px;font-weight:600;flex:1;min-width:120px;font-family:var(--serif)"; nm.textContent = r.name; var meta = document.createElement("div"); meta.style.cssText = "font-size:11px;color:var(--ink-2)"; var dt = new Date(r.ts); meta.textContent = dt.toLocaleDateString() + " \u00b7 " + fmtDur(r.dur); function mkBtn(label, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.style.cssText = "font-size:11.5px;padding:5px 9px"; b.onclick = fn; return b; } row.appendChild(nm); row.appendChild(meta); row.appendChild(mkBtn(L.playLbl, function () { try { capAudio.src = URL.createObjectURL(r.blob); capAudio.style.display = "block"; capAudio.play(); } catch (e) {} })); row.appendChild(mkBtn(L.renameLbl, function () { var nn = prompt(L.renamePrompt, r.name); if (nn != null && nn.trim()) { r.name = nn.trim(); recPut(r, renderRecordings); } })); row.appendChild(mkBtn(L.exportLbl, function () { try { var a = document.createElement("a"); a.href = URL.createObjectURL(r.blob); a.download = (r.name || "recording").replace(/[^\w\- ]+/g, "") + ".webm"; document.body.appendChild(a); a.click(); document.body.removeChild(a); } catch (e) {} })); row.appendChild(mkBtn(L.transcribeLbl, function () { cdTranscribe(r); })); row.appendChild(mkBtn(L.deleteLbl, function () { recDel(r.id, renderRecordings); })); host.appendChild(row); }); }); }
+function renderRecordings() { var host = document.getElementById("recList"); if (!host) return; var q = (document.getElementById("recSearch").value || "").toLowerCase(); recAll(function (list) { list.sort(function (a, b) { return b.ts - a.ts; }); var shown = list.filter(function (r) { return !q || (r.name || "").toLowerCase().indexOf(q) >= 0; }); host.innerHTML = ""; if (!shown.length) { var e = document.createElement("div"); e.style.cssText = "font-size:12.5px;color:var(--ink-2);font-style:italic;padding:6px 0"; e.textContent = L.recEmpty; host.appendChild(e); return; } shown.forEach(function (r) { var row = document.createElement("div"); row.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)"; var nm = document.createElement("div"); nm.style.cssText = "font-size:13px;font-weight:600;flex:1;min-width:120px;font-family:var(--serif)"; nm.textContent = r.name; nm.style.cursor = "pointer"; nm.title = sessT("Open the session", "Ouvrir la s\u00e9ance"); nm.onclick = function () { sessOpen(r); }; if (r.cues && r.cues.length) { var tg = document.createElement("span"); tg.style.cssText = "font-size:11px;color:var(--ink-2);margin-left:6px;font-weight:400;font-style:italic"; tg.textContent = sessT("transcribed", "transcrit"); nm.appendChild(tg); } var meta = document.createElement("div"); meta.style.cssText = "font-size:11px;color:var(--ink-2)"; var dt = new Date(r.ts); meta.textContent = dt.toLocaleDateString() + " \u00b7 " + fmtDur(r.dur); function mkBtn(label, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.style.cssText = "font-size:11.5px;padding:5px 9px"; b.onclick = fn; return b; } row.appendChild(nm); row.appendChild(meta); row.appendChild(mkBtn(sessT("Open", "Ouvrir"), function () { sessOpen(r); })); row.appendChild(mkBtn(L.playLbl, function () { try { capAudio.src = URL.createObjectURL(r.blob); capAudio.style.display = "block"; capAudio.play(); } catch (e) {} })); row.appendChild(mkBtn(L.renameLbl, function () { var nn = prompt(L.renamePrompt, r.name); if (nn != null && nn.trim()) { r.name = nn.trim(); recPut(r, renderRecordings); } })); row.appendChild(mkBtn(L.exportLbl, function () { try { var a = document.createElement("a"); a.href = URL.createObjectURL(r.blob); a.download = (r.name || "recording").replace(/[^\w\- ]+/g, "") + ".webm"; document.body.appendChild(a); a.click(); document.body.removeChild(a); } catch (e) {} })); row.appendChild(mkBtn(L.transcribeLbl, function () { cdTranscribe(r); })); row.appendChild(mkBtn(L.deleteLbl, function () { recDel(r.id, renderRecordings); })); host.appendChild(row); }); }); }
 try { document.getElementById("recTitle").textContent = L.recTitle; document.getElementById("recSearch").setAttribute("placeholder", L.recSearch); document.getElementById("recSearch").addEventListener("input", renderRecordings); renderRecordings(); } catch (e) {}
 /* Transcribe all recordings */
 try{
@@ -1046,7 +1100,7 @@ try{
         var r=list[idx]; idx++;
         taBtn.textContent=FR?"Transcription en cours\u2026 ("+idx+"/"+list.length+")":"Transcribing\u2026 ("+idx+"/"+list.length+")";
         cdTranscribe({
-          blob:r.blob, name:r.name, dur:r.dur,
+          blob:r.blob, name:r.name, dur:r.dur, id:r.id,
           _after:function(){
             setTimeout(next,300);
           }
@@ -1069,7 +1123,9 @@ function scribaTab(which) {
   sh(document.getElementById("status"), dict);
   sh(document.getElementById("pad"), dict);
   sh(document.getElementById("hintLine"), dict);
-  sh(document.getElementById("recWrap"), !dict);
+  var sessOn = !!(window.SESS && SESS.rec);
+  sh(document.getElementById("recWrap"), !dict && !sessOn);
+  sh(document.getElementById("sess"), !dict && sessOn);
   var ca = document.getElementById("capAudio");
   if (ca) { if (dict) ca.style.display = "none"; else if (ca.getAttribute("src")) ca.style.display = "block"; }
   var db = document.getElementById("tabDictateBtn"), rb = document.getElementById("tabRecBtn");
@@ -1150,5 +1206,225 @@ try { document.getElementById("tabDictateBtn").onclick = function () {
   });
   cdBoostApply();
 }catch(e){}})();</script>
+<script>
+/* ==================== CE1: A RECORDING'S SESSION ====================
+   Caption.Ed's playback and editing, offline. A recording (made here or
+   imported, audio or video) opens as a session: the media, and beneath it the
+   transcript as timed paragraphs. The paragraph being spoken is marked and
+   followed; a time jumps there; every paragraph can be corrected in place and
+   is saved with the recording; search marks every match and Enter steps
+   through them; the transcript leaves as text, SRT or WebVTT subtitles, a
+   Word document, or straight into Inkwell's document. */
+"use strict";
+var SESS = { rec: null, media: null, cur: -1, follow: true, hits: [], hit: -1, saveT: 0 };
+function sessT(en, fr) { return FR ? fr : en; }
+function sessEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function sessFmt(sec) { sec = Math.max(0, sec || 0); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s2 = Math.floor(sec % 60);
+  return (h ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s2 < 10 ? "0" : "") + s2; }
+function sessIsVideo(r) { return !!(r && r.blob && /^video\//.test(r.blob.type || "")); }
+
+/* ---- the transcript as files ---- */
+function sessTime(sec, sep) { var ms = Math.round(sec * 1000), h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), s2 = Math.floor(ms % 60000 / 1000), r = ms % 1000;
+  return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s2 < 10 ? "0" : "") + s2 + sep + (r < 100 ? (r < 10 ? "00" : "0") : "") + r; }
+function sessVtt(cues) { return "WEBVTT\n\n" + cues.map(function (c, i) { return (i + 1) + "\n" + sessTime(c.from, ".") + " --> " + sessTime(c.to, ".") + "\n" + c.text + "\n"; }).join("\n"); }
+function sessTxt(r, timed) { var head = (r.name || "Transcript") + "\n" + new Date(r.ts).toLocaleString() + "\n\n";
+  return head + (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + c.text; }).join(timed ? "\n" : "\n\n") + "\n"; }
+/* a Word document: a real .docx (a stored ZIP of OOXML parts), built here */
+var SESS_CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function sessCrc(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = SESS_CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function sessZip(files) {
+  var enc = new TextEncoder(), parts = [], central = [], off = 0;
+  files.forEach(function (f) { var n = enc.encode(f.name), d = f.data, crc = sessCrc(d);
+    var lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint32(14, crc, true); lh.setUint32(18, d.length, true); lh.setUint32(22, d.length, true); lh.setUint16(26, n.length, true);
+    parts.push(new Uint8Array(lh.buffer), n, d);
+    var ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint32(16, crc, true); ch.setUint32(20, d.length, true); ch.setUint32(24, d.length, true); ch.setUint16(28, n.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), n); off += 30 + n.length + d.length; });
+  var cdSize = central.reduce(function (a, c) { return a + c.length; }, 0);
+  var end = new DataView(new ArrayBuffer(22)); end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  var all = parts.concat(central, [new Uint8Array(end.buffer)]), out = new Uint8Array(all.reduce(function (a, c) { return a + c.length; }, 0)), p = 0;
+  all.forEach(function (c) { out.set(c, p); p += c.length; }); return out;
+}
+function sessDocx(r) {
+  var enc = new TextEncoder(), W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  function para(text, opts) { opts = opts || {}; var rp = (opts.b ? "<w:b/>" : "") + (opts.sz ? '<w:sz w:val="' + opts.sz + '"/>' : "") + (opts.col ? '<w:color w:val="' + opts.col + '"/>' : "");
+    return "<w:p>" + (opts.after != null ? '<w:pPr><w:spacing w:after="' + opts.after + '"/></w:pPr>' : "") + (opts.time ? '<w:r><w:rPr><w:color w:val="6B7A90"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">[' + sessEsc(opts.time) + "]  </w:t></w:r>" : "") + '<w:r>' + (rp ? "<w:rPr>" + rp + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + sessEsc(text) + "</w:t></w:r></w:p>"; }
+  var body = para(r.name || "Transcript", { b: true, sz: 32, after: 60 }) + para(new Date(r.ts).toLocaleString() + " · " + fmtDur(r.dur), { col: "6B7A90", sz: 18, after: 240 })
+    + (r.cues || []).map(function (c) { return para(c.text, { time: sessFmt(c.from), after: 120 }); }).join("");
+  var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + W + "><w:body>" + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>';
+  var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+  var rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  return sessZip([{ name: "[Content_Types].xml", data: enc.encode(ct) }, { name: "_rels/.rels", data: enc.encode(rels) }, { name: "word/document.xml", data: enc.encode(doc) }]);
+}
+function sessSave(name, mime, text, bytes) {
+  /* inside Inkwell, the app saves it (Fire, iPad, Mac, Windows); here, a download */
+  try {
+    if (window.parent && window.parent !== window) {
+      if (bytes && window.parent.inkSaveBase64) { var b = ""; for (var i = 0; i < bytes.length; i += 32768) b += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768)); window.parent.inkSaveBase64(name, mime, btoa(b)); return; }
+      if (!bytes && window.parent.inkSaveString) { window.parent.inkSaveString(name, mime, text); return; }
+    }
+  } catch (e) {}
+  var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes || text], { type: mime })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function sessBase(r) { return (r.name || "transcript").replace(/[^\w\- ]+/g, "_").trim() || "transcript"; }
+
+/* ---- the view ---- */
+function sessOpen(r) {
+  SESS.rec = r; SESS.cur = -1; SESS.hits = []; SESS.hit = -1;
+  var host = document.getElementById("sess"), list = document.getElementById("recWrap");
+  if (list) list.style.display = "none";
+  try { var ca = document.getElementById("capAudio"); ca.pause(); ca.style.display = "none"; } catch (e) {}
+  /* Boost amplifies the list's own player; a session has its own */
+  try { var bb = document.getElementById("cdBoostBtn"); if (bb) { SESS.boostWas = bb.style.display; bb.style.display = "none"; } } catch (e) {}
+  var vid = sessIsVideo(r);
+  host.innerHTML = '<div class="sessHead"><button type="button" class="sessBack">‹ ' + sessEsc(sessT("Recordings", "Enregistrements")) + '</button>'
+    + '<div class="sessName" contenteditable="true" spellcheck="false" title="' + sessEsc(sessT("Rename", "Renommer")) + '"></div><span class="sessMeta"></span></div>'
+    + '<div class="sessMedia">' + (vid ? '<video controls playsinline preload="metadata"></video>' : '<audio controls preload="metadata"></audio>') + '</div>'
+    + '<div class="sessCtl"><button type="button" data-k="back5" title="' + sessEsc(sessT("Back 5 seconds", "Reculer de 5 secondes")) + '">− 5 s</button><button type="button" data-k="fwd5" title="' + sessEsc(sessT("Forward 5 seconds", "Avancer de 5 secondes")) + '">+ 5 s</button>'
+    + '<select data-k="speed" aria-label="' + sessEsc(sessT("Playback speed", "Vitesse de lecture")) + '"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>'
+    + '<button type="button" class="sessFollow on" data-k="follow" title="' + sessEsc(sessT("Keep the paragraph being spoken in view", "Garder en vue le paragraphe en cours")) + '">' + sessEsc(sessT("Follow", "Suivre")) + '</button>'
+    + '<span class="sp"></span><input type="search" data-k="find" placeholder="' + sessEsc(sessT("Search the transcript", "Chercher dans la transcription")) + '"><span class="sessFind"></span>'
+    + '<button type="button" data-k="tx"></button>'
+    + '<span class="sessMenu"><button type="button" data-k="exp">' + sessEsc(sessT("Export ▾", "Exporter ▾")) + '</button><span class="menu" role="menu"></span></span></div>'
+    + '<div class="sessStatus" aria-live="polite"></div><div class="sessCues"></div>';
+  var nm = host.querySelector(".sessName"); nm.textContent = r.name || "";
+  host.querySelector(".sessMeta").textContent = new Date(r.ts).toLocaleDateString() + " · " + fmtDur(r.dur);
+  nm.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); nm.blur(); } });
+  nm.addEventListener("blur", function () { var v = (nm.textContent || "").trim(); if (v && v !== r.name) { r.name = v; recPut(r); } else nm.textContent = r.name || ""; });
+  var media = host.querySelector(vid ? "video" : "audio"); SESS.media = media;
+  try { media.src = URL.createObjectURL(r.blob); } catch (e) {}
+  media.addEventListener("loadedmetadata", function () { if (isFinite(media.duration) && (!r.dur || Math.abs(r.dur - media.duration * 1000) > 1500)) { r.dur = Math.round(media.duration * 1000); recPut(r); host.querySelector(".sessMeta").textContent = new Date(r.ts).toLocaleDateString() + " · " + fmtDur(r.dur); } });
+  media.addEventListener("timeupdate", sessTick);
+  host.querySelector(".sessBack").onclick = sessClose;
+  host.querySelector('[data-k="back5"]').onclick = function () { media.currentTime = Math.max(0, media.currentTime - 5); };
+  host.querySelector('[data-k="fwd5"]').onclick = function () { media.currentTime = Math.min(media.duration || 1e9, media.currentTime + 5); };
+  host.querySelector('[data-k="speed"]').onchange = function () { media.playbackRate = parseFloat(this.value) || 1; };
+  var fb = host.querySelector('[data-k="follow"]'); fb.onclick = function () { SESS.follow = !SESS.follow; fb.classList.toggle("on", SESS.follow); };
+  var find = host.querySelector('[data-k="find"]');
+  find.addEventListener("input", function () { sessFind(find.value); });
+  find.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); sessFindStep(e.shiftKey ? -1 : 1); } });
+  host.querySelector('[data-k="tx"]').onclick = sessTranscribe;
+  var menu = host.querySelector(".sessMenu");
+  host.querySelector('[data-k="exp"]').onclick = function (e) { e.stopPropagation(); sessMenuFill(menu.querySelector(".menu")); menu.classList.toggle("open"); };
+  document.addEventListener("click", function () { menu.classList.remove("open"); });
+  host.classList.add("on"); host.style.display = "";
+  sessRender();
+  if (!(r.cues && r.cues.length) && r._autoTx) { r._autoTx = false; sessTranscribe(); }
+}
+function sessClose() {
+  try { SESS.media && SESS.media.pause(); } catch (e) {}
+  sessFlush();
+  var host = document.getElementById("sess"); host.classList.remove("on"); host.style.display = "none"; host.innerHTML = "";
+  SESS.rec = null; SESS.media = null;
+  try { var bb = document.getElementById("cdBoostBtn"); if (bb && SESS.boostWas != null) bb.style.display = SESS.boostWas; } catch (e) {}
+  var list = document.getElementById("recWrap"); if (list) list.style.display = "";
+  renderRecordings();
+}
+function sessMenuFill(m) {
+  var r = SESS.rec, has = !!(r.cues && r.cues.length), base = sessBase(r);
+  var items = [
+    [sessT("Text, with times (.txt)", "Texte, avec les temps (.txt)"), function () { sessSave(base + ".txt", "text/plain", sessTxt(r, true)); }],
+    [sessT("Text, plain (.txt)", "Texte seul (.txt)"), function () { sessSave(base + ".txt", "text/plain", sessTxt(r, false)); }],
+    [sessT("Subtitles (.srt)", "Sous-titres (.srt)"), function () { sessSave(base + ".srt", "application/x-subrip", scribaSrt(r.cues)); }],
+    [sessT("Web subtitles (.vtt)", "Sous-titres web (.vtt)"), function () { sessSave(base + ".vtt", "text/vtt", sessVtt(r.cues)); }],
+    [sessT("Word document (.docx)", "Document Word (.docx)"), function () { sessSave(base + ".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", null, sessDocx(r)); }],
+    [sessT("Copy the transcript", "Copier la transcription"), function () { var t = sessTxt(r, true); try { navigator.clipboard.writeText(t).then(function () { sessSay(sessT("Copied.", "Copié.")); }); } catch (e) {} }]
+  ];
+  if (window.parent !== window && window.__CD_NOCLOSE && !window.__INK_SCRIBA_RELAY) items.push([sessT("Into Inkwell's document", "Dans le document d’Inkwell"), function () {
+    try { parent.postMessage({ kind: "ink-scriba-to-desk", text: (r.cues || []).map(function (c) { return c.text; }).join("\n\n") }, "*"); sessSay(sessT("In the document.", "Dans le document.")); } catch (e) {} }]);
+  m.innerHTML = "";
+  items.forEach(function (it) { var b = document.createElement("button"); b.type = "button"; b.textContent = it[0]; b.disabled = !has; b.onclick = function (e) { e.stopPropagation(); m.parentNode.classList.remove("open"); it[1](); }; m.appendChild(b); });
+  if (!has) { var p = document.createElement("div"); p.className = "cueEmpty"; p.style.padding = "6px 8px"; p.textContent = sessT("Transcribe first.", "Transcrivez d’abord."); m.appendChild(p); }
+}
+function sessSay(t) { var s = document.querySelector("#sess .sessStatus"); if (s) s.textContent = t || ""; }
+function sessRender() {
+  var r = SESS.rec, box = document.querySelector("#sess .sessCues"), tx = document.querySelector('#sess [data-k="tx"]'); if (!box) return;
+  var cues = r.cues || [];
+  tx.textContent = cues.length ? sessT("Transcribe again", "Transcrire à nouveau") : sessT("Transcribe", "Transcrire");
+  box.innerHTML = "";
+  if (!cues.length) { var e = document.createElement("div"); e.className = "cueEmpty"; e.textContent = sessT("No transcript yet. Press Transcribe: the on-device speech model writes it, offline.", "Pas encore de transcription. Appuyez sur Transcrire : le modèle vocal de l’appareil l’écrit, hors ligne."); box.appendChild(e); return; }
+  cues.forEach(function (c, i) {
+    var row = document.createElement("div"); row.className = "cue"; row.dataset.i = i;
+    var t = document.createElement("button"); t.type = "button"; t.className = "cueT"; t.textContent = sessFmt(c.from); t.title = sessT("Play from here", "Lire à partir d’ici");
+    t.onclick = function () { var m = SESS.media; if (!m) return; m.currentTime = c.from + 0.01; m.play().catch(function () {}); };
+    var x = document.createElement("div"); x.className = "cueX"; x.contentEditable = "true"; x.spellcheck = true; x.textContent = c.text;
+    x.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); x.blur(); } });
+    x.addEventListener("focus", function () { if (x.querySelector("mark")) x.textContent = c.text; });
+    x.addEventListener("input", function () { c.text = (x.innerText || "").replace(/\s+/g, " ").trim(); clearTimeout(SESS.saveT); SESS.saveT = setTimeout(sessFlush, 700); });
+    x.addEventListener("blur", function () { sessFlush(); var q = document.querySelector('#sess [data-k="find"]'); if (q && q.value) sessFind(q.value, true); });
+    row.appendChild(t); row.appendChild(x); box.appendChild(row);
+  });
+  SESS.cur = -1; sessTick();
+}
+function sessFlush() { clearTimeout(SESS.saveT); if (SESS.rec) recPut(SESS.rec); }
+function sessTick() {
+  var m = SESS.media, r = SESS.rec; if (!m || !r || !r.cues || !r.cues.length) return;
+  var t = m.currentTime, i = -1;
+  for (var k = 0; k < r.cues.length; k++) { if (r.cues[k].from <= t + 0.05) i = k; else break; }
+  if (i === SESS.cur) return;
+  var rows = document.querySelectorAll("#sess .cue");
+  if (SESS.cur >= 0 && rows[SESS.cur]) rows[SESS.cur].classList.remove("now");
+  SESS.cur = i;
+  if (i >= 0 && rows[i]) { rows[i].classList.add("now");
+    if (SESS.follow && !(document.activeElement && document.activeElement.classList && document.activeElement.classList.contains("cueX"))) sessScrollTo(rows[i]); }
+}
+function sessScrollTo(row) { var box = row.parentNode; var top = row.offsetTop - box.clientHeight / 2 + row.clientHeight / 2; try { box.scrollTo({ top: Math.max(0, top), behavior: "smooth" }); } catch (e) { box.scrollTop = top; } }
+function sessFind(q, quiet) {
+  var r = SESS.rec, rows = document.querySelectorAll("#sess .cue"); q = (q || "").trim(); SESS.hits = []; SESS.hit = -1;
+  var re = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi") : null;
+  rows.forEach(function (row, i) { var x = row.querySelector(".cueX"); if (x === document.activeElement) return; var c = r.cues[i];
+    if (!re) { x.textContent = c.text; return; }
+    var n = 0; x.innerHTML = sessEsc(c.text).replace(new RegExp(sessEsc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), function (mm) { SESS.hits.push({ i: i, n: n }); return '<mark data-n="' + (n++) + '">' + mm + "</mark>"; }); });
+  var f = document.querySelector("#sess .sessFind");
+  if (f) f.textContent = q ? (SESS.hits.length ? SESS.hits.length + " " + sessT(SESS.hits.length === 1 ? "match" : "matches", SESS.hits.length === 1 ? "résultat" : "résultats") : sessT("none", "aucun")) : "";
+  if (!quiet && SESS.hits.length) sessFindStep(1);
+}
+function sessFindStep(dir) {
+  if (!SESS.hits.length) return; SESS.hit = (SESS.hit + dir + SESS.hits.length) % SESS.hits.length;
+  var h = SESS.hits[SESS.hit], rows = document.querySelectorAll("#sess .cue");
+  document.querySelectorAll("#sess mark.cur").forEach(function (m) { m.classList.remove("cur"); });
+  var mk = rows[h.i] && rows[h.i].querySelector('mark[data-n="' + h.n + '"]'); if (mk) mk.classList.add("cur");
+  if (rows[h.i]) sessScrollTo(rows[h.i]);
+  var c = SESS.rec.cues[h.i]; if (SESS.media && c) { SESS.media.currentTime = c.from + 0.01; }
+  var f = document.querySelector("#sess .sessFind"); if (f) f.textContent = (SESS.hit + 1) + " / " + SESS.hits.length;
+}
+function sessTranscribe() {
+  var r = SESS.rec; if (!r) return;
+  if (!scribaCanTranscribe()) { sessSay(scribaNoEngineMsg()); return; }
+  var tx = document.querySelector('#sess [data-k="tx"]'); if (tx) tx.disabled = true;
+  sessSay(sessT("Preparing the recording…", "Préparation de l’enregistrement…"));
+  scribaTranscribeCues(r.blob, function (k, n) { sessSay(sessT("Transcribing ", "Transcription ") + k + " / " + n + "…"); }, function (cues, err, undecodable) {
+    if (tx) tx.disabled = false;
+    if (undecodable) { sessSay(sessT("This file's sound could not be decoded on this device: ", "Le son de ce fichier n’a pas pu être décodé sur cet appareil : ") + (err || "?")); return; }
+    if (err && (!cues || !cues.length)) { sessSay(err); return; }
+    if (SESS.rec !== r) { r.cues = cues; recPut(r); return; }
+    r.cues = cues; recPut(r); sessRender();
+    sessSay(cues.length ? sessT("Transcribed: ", "Transcrit : ") + cues.length + " " + sessT(cues.length === 1 ? "paragraph" : "paragraphs", cues.length === 1 ? "paragraphe" : "paragraphes") + "." : sessT("Nothing was recognised.", "Rien n’a été reconnu."));
+  });
+}
+
+/* ---- the recordings list: open, and import ---- */
+(function () {
+  var ib = document.getElementById("recImportBtn"), inp = document.getElementById("recImportFile");
+  if (ib && inp) {
+    ib.textContent = sessT("Import audio or video", "Importer un audio ou une vidéo");
+    ib.title = sessT("Add a recording or a video from this device; it is transcribed on the device", "Ajouter un enregistrement ou une vidéo de cet appareil ; transcription sur l’appareil");
+    ib.onclick = function () { inp.value = ""; inp.click(); };
+    inp.onchange = function () {
+      var files = [].slice.call(inp.files || []); if (!files.length) return;
+      var made = [];
+      (function next() {
+        if (!files.length) { renderRecordings(); if (made.length) { made[0]._autoTx = true; sessOpen(made[0]); } return; }
+        var f = files.shift(), r = { id: "imp" + Date.now() + Math.random().toString(36).slice(2, 7), name: f.name.replace(/\.[^.]+$/, ""), ts: Date.now(), dur: 0, blob: f, imported: true };
+        var probe = document.createElement(/^video\//.test(f.type) ? "video" : "audio"); probe.preload = "metadata";
+        var settled = false; function put() { if (settled) return; settled = true; try { URL.revokeObjectURL(probe.src); } catch (e) {} recPut(r, function () { made.push(r); next(); }); }
+        probe.onloadedmetadata = function () { if (isFinite(probe.duration)) r.dur = Math.round(probe.duration * 1000); put(); };
+        probe.onerror = put; setTimeout(put, 4000);
+        try { probe.src = URL.createObjectURL(f); } catch (e) { put(); }
+      })();
+    };
+  }
+})();
+</script>
+
 </body>
 </html>

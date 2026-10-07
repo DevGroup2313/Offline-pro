@@ -2573,6 +2573,14 @@ function openFontesStage(){openAppStage('fontes');}
    The choice menu is a faithful transplant of Carpe Diem's cd-export-choice:
    the same card, the same options, the same voice. The save path is the desk's
    own native relay. */
+/* CE1: binary files (a Word transcript from Scriba) by the same road as text */
+function inkSaveBase64(name,mime,data){
+ if(!data){toast('Nothing to save.');return;}
+ function flb(){try{var a=document.createElement('a');a.href='data:'+(mime||'application/octet-stream')+';base64,'+data;a.download=name||'file';document.body.appendChild(a);a.click();a.remove();toast('Saved '+name);}catch(y){toast('The save did not land.')}}
+ try{var api=window.pywebview&&window.pywebview.api;
+  if(api&&api.save_file){Promise.resolve(api.save_file(name,mime,data)).then(function(p){if(p)toast('Saved '+name);}).catch(flb);}else flb();
+ }catch(x){flb();}}
+window.inkSaveBase64=inkSaveBase64;window.inkSaveString=inkSaveString;
 function inkSaveString(name,mime,text){
  var data='';try{data=btoa(unescape(encodeURIComponent(String(text))));}catch(e){try{data=btoa(String(text));}catch(e2){}}
  if(!data){toast('Nothing to save.');return;}
