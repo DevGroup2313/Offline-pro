@@ -134,6 +134,15 @@ jobs:
       - name: Check out the project
         uses: actions/checkout@v4
 
+      # The emulator needs about 1.2 times its disk size free. After the native
+      # build the machine had 4.8 GB, so the emulator refused to start. These
+      # preinstalled toolchains are not used by this job.
+      - name: Make room on the build machine for the emulator
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
       - name: Find the Android project
         run: |
           dir="$(find . -maxdepth 3 -name settings.gradle -not -path './.git/*' -printf '%h\n' | sort | head -n 1)"
@@ -171,7 +180,7 @@ jobs:
           arch: x86_64
           target: default
           ram-size: 4096M
-          disk-size: 6000M
+          disk-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: ${{ env.PROJECT_DIR }}
