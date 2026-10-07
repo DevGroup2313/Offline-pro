@@ -7377,10 +7377,21 @@ function diffEdits(a,b,off){
    the correct sentences a suggestion (on 200 sentences in October it had
    been 1.5%). At 0.7 it finds 21%, 70% matching, and touches 7.6% of the
    correct sentences, many of them real slips in Wikipedia ("During 17th
-   century"). It stays removed (7.33, at the writer's request); the setting
-   is 0.7 for the day it is offered again, and it would then read live. */
+   century"). For the careful form now used, see GEC_KEEP below. */
 const GEC_MODEL={id:'Meyssa/gector-base-2020',kind:'gector',name:'GECToR base'};
-const GEC_TUNING={keepBias:0.5,minErrorProb:0.7,minProb:0.7};
+const GEC_TUNING={keepBias:0.5,minErrorProb:0.7,minProb:0.8};
+/* 7.36, the careful form, at the writer's request ("only if it works well"):
+   at 0.8, and only the kinds of suggestion measured reliable on learner
+   essays (each 72% to 87% matching a human corrector): agreement, articles,
+   prepositions, spelling, verb forms. Left out: capital letters (50%), words
+   to add or remove (54% to 58%), general grammar (65%), and commas (71%, but
+   the most suggestions on correct text). Held-out results: 80% (Write &
+   Improve) and 86% (CoNLL-2014) of its suggestions match a human
+   corrector's; 2.6% of correct Wikipedia sentences get one; on the writer's
+   own 5,486-word thesis it suggested nothing, and with one error planted in
+   each of 163 of its sentences it restored 64 exactly and changed none
+   wrongly. tools/grammar/README.md. */
+const GEC_KEEP=/^(Agreement|Article|Missing article|Preposition|Missing preposition|Spelling|Verb form)/;
 const CANDIDATES=[GEC_MODEL];
 /* 7.32: the runtime now starts only inside the model workers (below) */
 
@@ -7559,7 +7570,7 @@ async function inkPurgeOldModels(){
   const names=await caches.keys();let n=0;
   for(const nm of names){const c=await caches.open(nm);
    for(const req of await c.keys()){
-    if(/gector|Qwen2\.5|flan-t5|LaMini|grammar-synthesis|grammar_error|t5-base-grammar/i.test(req.url)&&!/whisper/i.test(req.url)){
+    if(/Qwen2\.5|flan-t5|LaMini|grammar-synthesis|grammar_error|t5-base-grammar/i.test(req.url)&&!/whisper|gector/i.test(req.url)){
      await c.delete(req);n++;}}}
   if(n)instSay('Removed '+n+' downloaded files of the old in-app models.');
  }catch(e){}}
@@ -7666,11 +7677,9 @@ function inkDiagCopy(){const t=(document.getElementById('diagOut')||{}).value||'
 function inkDiagSave(){const t=(document.getElementById('diagOut')||{}).value||'',name='inkwell-diagnostic.txt';
  if(nativeSave(name,t))return toast('Saved '+name+' via the system dialog');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));a.download=name;a.click();}
-/* 7.33: the in-app models are removed (see the Engine panel); the install
-   entry points remain only to say so, for old buttons and settings */
+/* 7.36: the grammar model returns, opt-in, in its careful form only (see
+   GEC_TUNING and GEC_KEEP); the Pro model stays removed */
 async function installMini(){
- S.miniAuto=false;SV('miniAuto',false);
- return toast('The in-app grammar model was removed in 7.33: it made writing worse. The rules engine and your laptop\u2019s model do this work.');
  if(MINI){toast('Grammar model active: '+MININAME);return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('miniBtn')||{textContent:''};
  pill.className='pill load';pill.innerHTML='<i></i>Preparing the grammar model…';btn.textContent='…';
@@ -7718,7 +7727,7 @@ async function runMiniDo(t){
   try{
    if(MINI.kind==='gector'){
     const r=await MINI(x.s);
-    for(const e of (r&&r.edits)||[])all.push({start:e.start+x.i,end:e.end+x.i,orig:e.orig,fix:e.fix,why:e.why||'Grammar',cat:'ai'});
+    for(const e of (r&&r.edits)||[])if(GEC_KEEP.test(e.why||''))all.push({start:e.start+x.i,end:e.end+x.i,orig:e.orig,fix:e.fix,why:e.why||'Grammar',cat:'ai'});
    }else{
     const out=await MINI(MINIPREFIX+x.s,{max_new_tokens:Math.min(200,Math.ceil(x.s.split(/\s+/).length*1.6)+16),num_beams:1});
     const gen=(Array.isArray(out)?out[0]&&out[0].generated_text:(out&&out.generated_text))||'';
@@ -10439,6 +10448,9 @@ function openModalDo(which){
  '<p style="font-size:13px;color:var(--mut);line-height:1.65"><b>The rules engine is always on and needs nothing else.</b> It corrects spelling, grammar, punctuation, agreement, redundancy and register entirely offline, and it reads as you type. The AI below is an optional extra layer — drafting, rewording and a second grammar opinion — for writers who want it. Everything on this page lives on this device once installed; nothing is sent anywhere.</p>'+
  (IS_TABLETAPP?'':'<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">On this computer the companion server, which starts with Inkwell, runs the writing model below (llama.cpp, offline). A GGUF model you import also lands on its shelf and stays until you remove it.</p>')+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
+ '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Careful grammar model (optional)</h4>'+
+ '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">GECToR base, about 124 MB, downloaded once, then offline on this device. It reads each paragraph as you pause and adds suggestions to the list; nothing changes unless you accept. Only its reliable kinds are shown: agreement, articles, prepositions, spelling and verb forms. Measured on held-out learner essays, 80% to 86% of its suggestions match a human corrector\u2019s; on your thesis it suggested nothing, and it put back 64 of 163 errors planted in it without ever changing your wording into something else.</p>'+
+ '<div class="row">'+(MINI?'<span style="font-size:12.5px">\u2713 On ('+esc(MININAME)+')</span> <button class="lkbtn" onclick="testEngine(\'mini\')">\u25B6 Test it</button> <button class="lkbtn" onclick="ejectMini();closeModal()">Turn it off</button>':'<button id="miniBtn" class="primary" onclick="installMini()">\u2B07 Turn on the grammar model</button>')+'</div>'+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(inkNative()?'Writing model on this tablet':'Writing model inside this window')+'</h4>'+
  (PRO_ALLOWED
   ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'

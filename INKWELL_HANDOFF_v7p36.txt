@@ -109,8 +109,14 @@ settings were chosen on one half and reported on data never used.
   7.32 app), many of them real slips. The Fire's writing model corrects less
   well (0.356 and 0.460). It stays removed until you decide.
 
+- Your decision: bring it back, only if it works well. Done, as an opt-in
+  "careful grammar model" (Engine): only its reliable kinds of suggestion,
+  at the stricter setting. Held out: 80% (learner essays) and 86%
+  (CoNLL-2014) of its suggestions match a human corrector's; your thesis got
+  no suggestion; errors planted in your sentences were put back without
+  ever rewording you. tools/grammar/README.md.
+
 STILL TO DO
 -----------
-- Your decision on the grammar model (above).
 - The laptop model (Qwen3 4B) and LFM2.5 2.6B for the Fire, measured the
   same way (running).

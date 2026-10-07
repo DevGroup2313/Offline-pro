@@ -148,4 +148,4 @@
   }
   const api = { load, known, suggest, check, level };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKSPELL = api;
-})(this);
+})(typeof self !== 'undefined' ? self : this);

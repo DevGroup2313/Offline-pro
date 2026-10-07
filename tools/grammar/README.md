@@ -149,3 +149,39 @@ with one request at a time, queues the rest, and starts the runtime again
 once if it has stopped. Tested: four requests at once all answered (1.5 s in
 all); after the runtime was killed, the next request started it again and was
 answered.
+
+## The grammar model returns, in a careful form (opt-in)
+
+At the writer's request ("only if it works well"), GECToR returns as an
+opt-in download, only in a careful form chosen on the tuning half:
+- the stricter setting (0.8);
+- only the kinds of suggestion measured reliable (each 72% to 87% matching a
+  human corrector on the tuning half): agreement, articles, prepositions,
+  spelling, verb forms. Left out: capital letters (50%), words to add or
+  remove (54% to 58%), general grammar (65%), commas (71%, and the most
+  suggestions on correct text).
+
+Held-out results:
+
+| | P | R | F0.5 |
+|---|---|---|---|
+| W&I report half, careful model alone | 80.2% | 10.3% | 0.341 |
+| W&I report half, with rules and spelling | 75.7% | 13.2% | 0.388 |
+| CoNLL-2014, careful model alone | 85.7% | 17.5% | 0.482 |
+| CoNLL-2014, with rules and spelling | 84.1% | 20.4% | 0.517 |
+
+Correct Wikipedia sentences given a suggestion: 2.6% by the careful model
+(5.9% with rules and spelling). The writer's own 5,486-word thesis: no
+suggestion at all. With one error planted in each of 163 of its sentences
+("is" for "are", "a" for "the" and so on), it restored 64 exactly and never
+changed a sentence into anything but the original.
+
+In the app (tested in Chromium): Engine, "Turn on the grammar model"; it
+reads each paragraph when the writer pauses (about one second for a short
+paragraph here) and adds its suggestions to the list; an unchanged
+paragraph is never read again.
+
+A fault found and fixed on the way: the shared script block the model's
+worker loads now includes the spelling library, which assumed a global the
+worker lacks; it stopped the worker (and would have stopped the in-window
+writing model too) until fixed.

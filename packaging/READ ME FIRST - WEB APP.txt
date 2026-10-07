@@ -92,6 +92,19 @@ PART D2. OFFLINE, AND THE WRITING MODEL (7.34)
   with everything else in Part A.
 
 
+NEW IN 7.36: SPELLING, AND A CAREFUL GRAMMAR MODEL (OPTIONAL)
+-------------------------------------------------------------
+- A dictionary spelling checker now runs on this device, offline, with
+  suggestions and "Add to dictionary" (switch: Studio, Rules).
+- Engine, "Turn on the grammar model" (about 124 MB, once): it reads each
+  paragraph as you pause and adds suggestions; nothing changes unless you
+  accept. Only its reliable kinds are shown (agreement, articles,
+  prepositions, spelling, verb forms). Measured: 80% to 86% of its
+  suggestions match a human corrector's; on a 5,486-word thesis it
+  suggested nothing.
+- Coach menu: an authorship report, and "Grade against a rubric".
+
+
 NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
 --------------------------------------------
 Scriba (the microphone room) now works on a recording the way Caption.Ed
