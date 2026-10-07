@@ -165,6 +165,64 @@ html.cd-dark .cueT{color:#7fbde0}
 html.cd-dark .cueX:focus{background:rgba(255,255,255,.06)}
 html.cd-dark .cueX mark{background:#7a6326;color:#fff}
 html.cd-dark .cueX mark.cur{background:#a8862f}
+
+/* CE2: highlights, notes, the scratchpad and slides */
+.sessBody{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:860px){.sessBody{grid-template-columns:1fr}}
+.cue{position:relative}
+.cueMain{flex:1;min-width:0}
+.cueAct{flex:0 0 auto;opacity:.5;font-size:16px!important;line-height:1!important;padding:3px 8px!important;margin-top:1px}
+.cue:hover .cueAct,.cueAct:focus-visible{opacity:1}
+.cue.hl-imp{box-shadow:inset 4px 0 0 #d9a93a;background:rgba(233,196,106,.17)}
+.cue.hl-q{box-shadow:inset 4px 0 0 #5c9bd0;background:rgba(111,168,214,.15)}
+.cue.hl-act{box-shadow:inset 4px 0 0 #63a860;background:rgba(125,187,122,.16)}
+.cue.hl-rev{box-shadow:inset 4px 0 0 #d47a91;background:rgba(224,143,163,.16)}
+.cue.now[class*="hl-"]{filter:brightness(.97);outline:1px solid rgba(27,107,147,.35)}
+.cueNote{margin:6px 0 2px 4px;padding:6px 10px;border-left:2px solid #c9a964;background:rgba(201,169,100,.09);border-radius:0 8px 8px 0}
+.noteLab{display:block;font:600 10.5px/1.4 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:#8a6526}
+.noteX{font-family:var(--serif);font-style:italic;font-size:14.5px;line-height:1.5;outline:none;min-height:1.4em}
+.noteX:empty:before,.scratch:empty:before{content:attr(data-ph);color:var(--ink-2);opacity:.75;font-style:italic}
+.hlPop{position:absolute;right:8px;top:calc(100% - 6px);z-index:30;display:flex;flex-direction:column;min-width:200px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 28px rgba(20,30,45,.24)}
+.hlSw{display:flex!important;align-items:center;gap:9px;text-align:left;font-size:12.5px!important;padding:7px 10px!important;margin:2px 0!important}
+.hlSw .dot,.markItem .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;background:#b9c3cf;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.sw-imp .dot{background:#e0b445}.sw-q .dot{background:#6fa8d6}.sw-act .dot{background:#7dbb7a}.sw-rev .dot{background:#e08fa3}
+.hlSw.on{box-shadow:inset 0 0 0 2px rgba(27,107,147,.45)!important}
+.sessCtl [data-k="hlOnly"].on{background:#22304A!important;color:#fff!important}
+.sessSide{position:sticky;top:8px}
+.sideSec{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin-bottom:10px}
+.sideSec h3{font-family:var(--serif);font-size:14.5px;font-weight:600;margin:0 0 8px}
+.sideEmpty{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-2)}
+.sideMarks{max-height:30vh;overflow:auto}
+.markItem{display:grid!important;grid-template-columns:auto minmax(0,1fr);gap:2px 8px;width:100%;text-align:left;padding:7px 9px!important;margin:3px 0!important;font-size:12.5px!important}
+.markItem .dot{grid-row:1/span 3;margin-top:3px}
+.markItem .mt{font-weight:600}
+.markItem .mx{grid-column:2;font-family:var(--serif);font-weight:400}
+.markItem .mn{grid-column:2;font-family:var(--serif);font-style:italic;font-weight:400;color:#8a6526}
+.padBar{display:flex;gap:4px;margin:0 0 6px}
+.padBar button{font-size:12px!important;padding:4px 9px!important;min-width:30px}
+.scratch{min-height:96px;max-height:30vh;overflow:auto;outline:none;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-family:var(--serif);font-size:14.5px;line-height:1.55;background:rgba(255,255,255,.55)}
+.scratch h3{font-size:15.5px;margin:6px 0 2px}
+.scratch ul,.scratch ol{margin:4px 0;padding-left:22px}
+.slideBar{margin:0 0 8px}
+.slideBar button{font-size:12px!important;padding:5px 10px!important}
+.slides{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.slideTh{position:relative;padding:0!important;overflow:hidden;border-radius:8px!important;line-height:0}
+.slideTh img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.slideTh span{position:absolute;right:4px;bottom:4px;line-height:1;background:rgba(10,14,20,.66);color:#fff;font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 5px;border-radius:5px}
+.slideView{position:fixed;inset:0;z-index:100;background:rgba(10,14,20,.9);display:flex;flex-direction:column}
+.svBar{display:flex;gap:8px;align-items:center;padding:10px 14px;color:#fff;font-family:var(--serif)}
+.svBar .sp{flex:1}
+.svBar button{font-size:12.5px;padding:6px 11px}
+.svImg{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 10px 14px;min-height:0}
+.svImg img{max-width:calc(100% - 120px);max-height:100%;object-fit:contain;border-radius:6px;background:#fff}
+.svImg button{font-size:26px;padding:8px 14px}
+html.cd-dark .wrap .sessFollow.on,html.cd-dark .wrap .sessCtl [data-k="hlOnly"].on,html.cd-sdark .wrap .sessFollow.on,html.cd-sdark .wrap .sessCtl [data-k="hlOnly"].on{background:#6ba3d6!important;color:#0d1520!important;border-color:#8fbce6!important}
+html.cd-dark .sideSec,html.cd-dark .hlPop{background:#171d28;border-color:rgba(255,255,255,.10)}
+html.cd-dark .scratch{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);color:#e4e9f1}
+html.cd-dark .cueNote{background:rgba(201,169,100,.10)}
+html.cd-dark .noteLab,html.cd-dark .markItem .mn{color:#d6bc85}
+html.cd-dark .sideEmpty{color:#9fb0c6}
+html.cd-dark .cue.hl-imp{background:rgba(224,180,69,.13)}html.cd-dark .cue.hl-q{background:rgba(111,168,214,.13)}html.cd-dark .cue.hl-act{background:rgba(125,187,122,.12)}html.cd-dark .cue.hl-rev{background:rgba(224,143,163,.12)}
 </style>
 </head>
 <body>
@@ -1227,8 +1285,15 @@ function sessIsVideo(r) { return !!(r && r.blob && /^video\//.test(r.blob.type |
 function sessTime(sec, sep) { var ms = Math.round(sec * 1000), h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), s2 = Math.floor(ms % 60000 / 1000), r = ms % 1000;
   return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s2 < 10 ? "0" : "") + s2 + sep + (r < 100 ? (r < 10 ? "00" : "0") : "") + r; }
 function sessVtt(cues) { return "WEBVTT\n\n" + cues.map(function (c, i) { return (i + 1) + "\n" + sessTime(c.from, ".") + " --> " + sessTime(c.to, ".") + "\n" + c.text + "\n"; }).join("\n"); }
+function sessScratchText(html) { var d = document.createElement("div"); d.innerHTML = sessCleanHtml(html || "");
+  d.querySelectorAll("li").forEach(function (li) { li.insertBefore(document.createTextNode("\u2022 "), li.firstChild); });
+  d.querySelectorAll("li,h3,p,div,br").forEach(function (n) { if (n.tagName === "BR") n.replaceWith("\n"); else n.appendChild(document.createTextNode("\n")); });
+  return (d.textContent || "").replace(/\n{3,}/g, "\n\n").trim(); }
 function sessTxt(r, timed) { var head = (r.name || "Transcript") + "\n" + new Date(r.ts).toLocaleString() + "\n\n";
-  return head + (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + c.text; }).join(timed ? "\n" : "\n\n") + "\n"; }
+  var body = (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + (c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text
+    + (c.note && c.note.trim() ? "\n    " + sessT("Note: ", "Note : ") + c.note.trim().replace(/\n/g, "\n    ") : ""); }).join(timed ? "\n" : "\n\n");
+  var sc = sessScratchText(r.scratch);
+  return head + body + "\n" + (sc ? "\n" + sessT("NOTES", "NOTES") + "\n" + sc + "\n" : ""); }
 /* a Word document: a real .docx (a stored ZIP of OOXML parts), built here */
 var SESS_CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function sessCrc(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = SESS_CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
@@ -1246,10 +1311,14 @@ function sessZip(files) {
 }
 function sessDocx(r) {
   var enc = new TextEncoder(), W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
-  function para(text, opts) { opts = opts || {}; var rp = (opts.b ? "<w:b/>" : "") + (opts.sz ? '<w:sz w:val="' + opts.sz + '"/>' : "") + (opts.col ? '<w:color w:val="' + opts.col + '"/>' : "");
-    return "<w:p>" + (opts.after != null ? '<w:pPr><w:spacing w:after="' + opts.after + '"/></w:pPr>' : "") + (opts.time ? '<w:r><w:rPr><w:color w:val="6B7A90"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">[' + sessEsc(opts.time) + "]  </w:t></w:r>" : "") + '<w:r>' + (rp ? "<w:rPr>" + rp + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + sessEsc(text) + "</w:t></w:r></w:p>"; }
+  var SHADE = { imp: "FBEFC7", q: "DCEBF7", act: "DDF0DB", rev: "F8DDE4" };
+  function para(text, opts) { opts = opts || {}; var rp = (opts.b ? "<w:b/>" : "") + (opts.sz ? '<w:sz w:val="' + opts.sz + '"/>' : "") + (opts.col ? '<w:color w:val="' + opts.col + '"/>' : "") + (opts.it ? "<w:i/>" : "");
+    var ppr = (opts.after != null ? '<w:spacing w:after="' + opts.after + '"/>' : "") + (opts.shade ? '<w:shd w:val="clear" w:color="auto" w:fill="' + opts.shade + '"/>' : "") + (opts.ind ? '<w:ind w:left="' + opts.ind + '"/>' : "");
+    return "<w:p>" + (ppr ? "<w:pPr>" + ppr + "</w:pPr>" : "") + (opts.time ? '<w:r><w:rPr><w:color w:val="6B7A90"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">[' + sessEsc(opts.time) + "]  </w:t></w:r>" : "") + '<w:r>' + (rp ? "<w:rPr>" + rp + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + sessEsc(text) + "</w:t></w:r></w:p>"; }
   var body = para(r.name || "Transcript", { b: true, sz: 32, after: 60 }) + para(new Date(r.ts).toLocaleString() + " · " + fmtDur(r.dur), { col: "6B7A90", sz: 18, after: 240 })
-    + (r.cues || []).map(function (c) { return para(c.text, { time: sessFmt(c.from), after: 120 }); }).join("");
+    + (r.cues || []).map(function (c) { return para((c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text, { time: sessFmt(c.from), after: c.note && c.note.trim() ? 40 : 120, shade: c.hl ? SHADE[c.hl] : null })
+        + (c.note && c.note.trim() ? para(sessT("Note: ", "Note : ") + c.note.trim(), { it: true, col: "8A6526", ind: 360, after: 120 }) : ""); }).join("")
+    + (sessScratchText(r.scratch) ? para(sessT("Notes", "Notes"), { b: true, sz: 26, after: 80 }) + sessScratchText(r.scratch).split("\n").map(function (l) { return para(l, { after: 60 }); }).join("") : "");
   var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + W + "><w:body>" + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>';
   var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
   var rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
@@ -1283,9 +1352,18 @@ function sessOpen(r) {
     + '<select data-k="speed" aria-label="' + sessEsc(sessT("Playback speed", "Vitesse de lecture")) + '"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>'
     + '<button type="button" class="sessFollow on" data-k="follow" title="' + sessEsc(sessT("Keep the paragraph being spoken in view", "Garder en vue le paragraphe en cours")) + '">' + sessEsc(sessT("Follow", "Suivre")) + '</button>'
     + '<span class="sp"></span><input type="search" data-k="find" placeholder="' + sessEsc(sessT("Search the transcript", "Chercher dans la transcription")) + '"><span class="sessFind"></span>'
+    + '<button type="button" data-k="noteNow" title="' + sessEsc(sessT("Write a note on the paragraph being spoken", "\u00c9crire une note sur le paragraphe en cours")) + '">' + sessEsc(sessT("Note here", "Note ici")) + '</button><button type="button" data-k="hlOnly" title="' + sessEsc(sessT("Show only highlighted or annotated paragraphs", "N\u2019afficher que les paragraphes surlign\u00e9s ou annot\u00e9s")) + '">' + sessEsc(sessT("Highlights only", "Surlignages seuls")) + '</button>'
     + '<button type="button" data-k="tx"></button>'
     + '<span class="sessMenu"><button type="button" data-k="exp">' + sessEsc(sessT("Export ▾", "Exporter ▾")) + '</button><span class="menu" role="menu"></span></span></div>'
-    + '<div class="sessStatus" aria-live="polite"></div><div class="sessCues"></div>';
+    + '<div class="sessStatus" aria-live="polite"></div>'
+    + '<div class="sessBody"><div class="sessCues"></div><aside class="sessSide">'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Highlights and notes", "Surlignages et notes")) + '</h3><div class="sideMarks"></div></section>'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Scratchpad", "Bloc-notes")) + '</h3><div class="padBar">'
+    + '<button type="button" data-cmd="bold" title="' + sessEsc(sessT("Bold", "Gras")) + '"><b>B</b></button><button type="button" data-cmd="italic" title="' + sessEsc(sessT("Italic", "Italique")) + '"><i>I</i></button><button type="button" data-cmd="underline" title="' + sessEsc(sessT("Underline", "Soulign\u00e9")) + '"><u>U</u></button>'
+    + '<button type="button" data-cmd="h3" title="' + sessEsc(sessT("Heading", "Titre")) + '">H</button><button type="button" data-cmd="insertUnorderedList" title="' + sessEsc(sessT("Bullets", "Puces")) + '">\u2022</button><button type="button" data-cmd="insertOrderedList" title="' + sessEsc(sessT("Numbered", "Num\u00e9rot\u00e9e")) + '">1.</button></div>'
+    + '<div class="scratch" contenteditable="true" data-ph="' + sessEsc(sessT("General notes about this lecture or meeting.", "Notes g\u00e9n\u00e9rales sur ce cours ou cette r\u00e9union.")) + '"></div></section>'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Slides and images", "Diapositives et images")) + '</h3><div class="slideBar"><button type="button" data-k="addSlides">' + sessEsc(sessT("Add slides or images", "Ajouter des diapositives ou images")) + '</button><input type="file" data-k="slideFile" accept="image/*,application/pdf" multiple hidden></div><div class="slides"></div></section>'
+    + '</aside></div>';
   var nm = host.querySelector(".sessName"); nm.textContent = r.name || "";
   host.querySelector(".sessMeta").textContent = new Date(r.ts).toLocaleDateString() + " · " + fmtDur(r.dur);
   nm.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); nm.blur(); } });
@@ -1303,6 +1381,14 @@ function sessOpen(r) {
   find.addEventListener("input", function () { sessFind(find.value); });
   find.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); sessFindStep(e.shiftKey ? -1 : 1); } });
   host.querySelector('[data-k="tx"]').onclick = sessTranscribe;
+  host.querySelector('[data-k="noteNow"]').onclick = function () { var i = SESS.cur >= 0 ? SESS.cur : 0; if (r.cues && r.cues[i]) sessNote(i, true); };
+  var ho = host.querySelector('[data-k="hlOnly"]'); ho.onclick = function () { SESS.hlOnly = !SESS.hlOnly; ho.classList.toggle("on", SESS.hlOnly); sessApplyFilter(); };
+  SESS.hlOnly = false;
+  sessScratchWire(host.querySelector(".scratch"), host.querySelector(".padBar"));
+  var sb = host.querySelector('[data-k="addSlides"]'), sf = host.querySelector('[data-k="slideFile"]');
+  sb.onclick = function () { sf.value = ""; sf.click(); };
+  sf.onchange = function () { sessAddSlides([].slice.call(sf.files || [])); };
+  sessSlidesRender();
   var menu = host.querySelector(".sessMenu");
   host.querySelector('[data-k="exp"]').onclick = function (e) { e.stopPropagation(); sessMenuFill(menu.querySelector(".menu")); menu.classList.toggle("open"); };
   document.addEventListener("click", function () { menu.classList.remove("open"); });
@@ -1351,9 +1437,14 @@ function sessRender() {
     x.addEventListener("focus", function () { if (x.querySelector("mark")) x.textContent = c.text; });
     x.addEventListener("input", function () { c.text = (x.innerText || "").replace(/\s+/g, " ").trim(); clearTimeout(SESS.saveT); SESS.saveT = setTimeout(sessFlush, 700); });
     x.addEventListener("blur", function () { sessFlush(); var q = document.querySelector('#sess [data-k="find"]'); if (q && q.value) sessFind(q.value, true); });
-    row.appendChild(t); row.appendChild(x); box.appendChild(row);
+    var main = document.createElement("div"); main.className = "cueMain"; main.appendChild(x);
+    if (c.note != null) main.appendChild(sessNoteBox(i));
+    var act = document.createElement("button"); act.type = "button"; act.className = "cueAct"; act.textContent = "\u22ef"; act.title = sessT("Highlight or add a note", "Surligner ou ajouter une note");
+    act.setAttribute("aria-label", act.title); act.onclick = function (e) { e.stopPropagation(); sessHlMenu(row, i); };
+    if (c.hl) row.classList.add("hl-" + c.hl);
+    row.appendChild(t); row.appendChild(main); row.appendChild(act); box.appendChild(row);
   });
-  SESS.cur = -1; sessTick();
+  SESS.cur = -1; sessTick(); sessApplyFilter(); sessSideRender();
 }
 function sessFlush() { clearTimeout(SESS.saveT); if (SESS.rec) recPut(SESS.rec); }
 function sessTick() {
@@ -1402,6 +1493,162 @@ function sessTranscribe() {
   });
 }
 
+/* ---- CE2: highlights and notes ---- */
+var SESS_HL = [
+  ["imp", function () { return sessT("Important", "Important"); }],
+  ["q", function () { return sessT("Question", "Question"); }],
+  ["act", function () { return sessT("Action", "Action"); }],
+  ["rev", function () { return sessT("Revisit", "À revoir"); }]
+];
+function sessHlName(k) { for (var i = 0; i < SESS_HL.length; i++) if (SESS_HL[i][0] === k) return SESS_HL[i][1](); return ""; }
+function sessHlMenu(row, i) {
+  document.querySelectorAll("#sess .hlPop").forEach(function (p) { p.remove(); });
+  var c = SESS.rec.cues[i], pop = document.createElement("div"); pop.className = "hlPop"; pop.setAttribute("role", "menu");
+  SESS_HL.forEach(function (h) { var b = document.createElement("button"); b.type = "button"; b.className = "hlSw sw-" + h[0] + (c.hl === h[0] ? " on" : ""); b.innerHTML = '<span class="dot"></span>' + sessEsc(h[1]());
+    b.onclick = function (e) { e.stopPropagation(); sessSetHl(i, c.hl === h[0] ? null : h[0]); pop.remove(); }; pop.appendChild(b); });
+  if (c.hl) { var nb = document.createElement("button"); nb.type = "button"; nb.className = "hlSw"; nb.textContent = sessT("No highlight", "Sans surlignage"); nb.onclick = function (e) { e.stopPropagation(); sessSetHl(i, null); pop.remove(); }; pop.appendChild(nb); }
+  var ab = document.createElement("button"); ab.type = "button"; ab.className = "hlSw"; ab.textContent = c.note != null ? sessT("Go to the note", "Aller à la note") : sessT("Add a note", "Ajouter une note");
+  ab.onclick = function (e) { e.stopPropagation(); pop.remove(); sessNote(i, true); }; pop.appendChild(ab);
+  row.appendChild(pop);
+  setTimeout(function () { document.addEventListener("click", function off() { pop.remove(); document.removeEventListener("click", off); }); }, 0);
+}
+function sessSetHl(i, k) {
+  var c = SESS.rec.cues[i], row = document.querySelectorAll("#sess .cue")[i]; if (!c) return;
+  if (k) c.hl = k; else delete c.hl;
+  if (row) { SESS_HL.forEach(function (h) { row.classList.remove("hl-" + h[0]); }); if (k) row.classList.add("hl-" + k); }
+  sessFlush(); sessSideRender(); sessApplyFilter();
+}
+function sessNoteBox(i) {
+  var c = SESS.rec.cues[i], box = document.createElement("div"); box.className = "cueNote";
+  var lab = document.createElement("span"); lab.className = "noteLab"; lab.textContent = sessT("Note", "Note") + " · " + sessFmt(c.from);
+  var ed = document.createElement("div"); ed.className = "noteX"; ed.contentEditable = "true"; ed.textContent = c.note || "";
+  ed.setAttribute("data-ph", sessT("Your note on this moment", "Votre note sur ce moment"));
+  ed.addEventListener("input", function () { c.note = (ed.innerText || "").replace(/\s+$/, ""); clearTimeout(SESS.saveT); SESS.saveT = setTimeout(function () { sessFlush(); sessSideRender(); }, 700); });
+  ed.addEventListener("blur", function () { if (!(c.note || "").trim()) { delete c.note; box.remove(); } sessFlush(); sessSideRender(); sessApplyFilter(); });
+  box.appendChild(lab); box.appendChild(ed); return box;
+}
+function sessNote(i, focus) {
+  var c = SESS.rec.cues[i], row = document.querySelectorAll("#sess .cue")[i]; if (!c || !row) return;
+  var box = row.querySelector(".cueNote");
+  if (!box) { if (c.note == null) c.note = ""; box = sessNoteBox(i); row.querySelector(".cueMain").appendChild(box); }
+  row.style.display = ""; sessScrollTo(row);
+  if (focus) setTimeout(function () { var e = box.querySelector(".noteX"); e.focus(); try { var rg = document.createRange(); rg.selectNodeContents(e); rg.collapse(false); var sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); } catch (x) {} }, 30);
+}
+function sessApplyFilter() {
+  var r = SESS.rec; if (!r || !r.cues) return;
+  document.querySelectorAll("#sess .cue").forEach(function (row, i) { var c = r.cues[i]; row.style.display = (!SESS.hlOnly || (c && (c.hl || (c.note != null)))) ? "" : "none"; });
+}
+function sessSideRender() {
+  var host = document.querySelector("#sess .sideMarks"), r = SESS.rec; if (!host || !r) return;
+  var items = (r.cues || []).map(function (c, i) { return { c: c, i: i }; }).filter(function (o) { return o.c.hl || (o.c.note && o.c.note.trim()); });
+  host.innerHTML = "";
+  if (!items.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("Highlight a paragraph or add a note with ⋯ beside it.", "Surlignez un paragraphe ou ajoutez une note avec ⋯ à côté."); host.appendChild(e); return; }
+  items.forEach(function (o) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "markItem" + (o.c.hl ? " sw-" + o.c.hl : "");
+    b.innerHTML = '<span class="dot"></span><span class="mt">' + sessFmt(o.c.from) + (o.c.hl ? " · " + sessEsc(sessHlName(o.c.hl)) : "") + '</span><span class="mx">' + sessEsc(o.c.text.slice(0, 110)) + (o.c.text.length > 110 ? "…" : "") + "</span>"
+      + (o.c.note && o.c.note.trim() ? '<span class="mn">' + sessEsc(o.c.note.trim().slice(0, 140)) + "</span>" : "");
+    b.onclick = function () { var m = SESS.media; if (m) { m.currentTime = o.c.from + 0.01; } var row = document.querySelectorAll("#sess .cue")[o.i]; if (row) { row.style.display = ""; sessScrollTo(row); } };
+    host.appendChild(b);
+  });
+}
+/* the scratchpad: a little formatting, kept as clean HTML with the recording */
+function sessCleanHtml(html) {
+  var d = document.createElement("div"); d.innerHTML = html || "";
+  var ok = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, H3: 1, UL: 1, OL: 1, LI: 1, P: 1, BR: 1, DIV: 1 };
+  (function walk(n) { [].slice.call(n.childNodes).forEach(function (k) {
+    if (k.nodeType === 1) { walk(k); if (!ok[k.tagName]) { while (k.firstChild) n.insertBefore(k.firstChild, k); n.removeChild(k); } else { [].slice.call(k.attributes).forEach(function (a) { k.removeAttribute(a.name); }); } }
+    else if (k.nodeType !== 3) n.removeChild(k); }); })(d);
+  return d.innerHTML;
+}
+function sessScratchWire(pad, bar) {
+  var r = SESS.rec; pad.innerHTML = sessCleanHtml(r.scratch || "");
+  var t = 0; pad.addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () { r.scratch = sessCleanHtml(pad.innerHTML); recPut(r); }, 700); });
+  pad.addEventListener("blur", function () { r.scratch = sessCleanHtml(pad.innerHTML); recPut(r); });
+  bar.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    b.onclick = function () { pad.focus(); var cmd = b.getAttribute("data-cmd");
+      try { if (cmd === "h3") document.execCommand("formatBlock", false, document.queryCommandValue("formatBlock").toLowerCase() === "h3" ? "div" : "h3"); else document.execCommand(cmd, false, null); } catch (e) {}
+      r.scratch = sessCleanHtml(pad.innerHTML); recPut(r); };
+  });
+}
+/* slides and images: a PDF becomes one image per page (pdf.js, on the device) */
+var SESS_PDF = null;
+function sessPdfLib(cb) {
+  if (SESS_PDF) { cb(SESS_PDF); return; }
+  var base = document.baseURI || location.href;
+  function blobOf(f) { return fetch(new URL("vendor/" + f, base).href).then(function (r) { if (!r.ok) throw new Error(f); return r.blob(); }); }
+  Promise.all([blobOf("pdf.min.js"), blobOf("pdf.worker.min.js")]).then(function (b) {
+    var sc = document.createElement("script"); sc.src = URL.createObjectURL(new Blob([b[0]], { type: "text/javascript" }));
+    sc.onload = function () { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([b[1]], { type: "text/javascript" })); SESS_PDF = window.pdfjsLib; cb(SESS_PDF); } catch (e) { cb(null, e); } };
+    sc.onerror = function () { cb(null, new Error("pdf.js")); }; document.head.appendChild(sc);
+  }, function (e) { cb(null, e); });
+}
+function sessAddSlides(files) {
+  var r = SESS.rec; if (!r || !files.length) return; r.slides = r.slides || [];
+  var at = SESS.media ? Math.round(SESS.media.currentTime * 10) / 10 : 0, added = 0;
+  (function next() {
+    if (!files.length) { recPut(r); sessSlidesRender(); sessSay(added ? sessT("Added ", "Ajouté : ") + added + " " + sessT(added === 1 ? "slide" : "slides", added === 1 ? "diapositive" : "diapositives") + "." : sessT("Nothing could be added.", "Rien n’a pu être ajouté.")); return; }
+    var f = files.shift();
+    if (/^image\//.test(f.type)) { r.slides.push({ id: "sl" + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name, at: at, blob: f }); added++; next(); return; }
+    if (f.type === "application/pdf" || /\.pdf$/i.test(f.name)) {
+      sessSay(sessT("Reading the PDF…", "Lecture du PDF…"));
+      sessPdfLib(function (lib, err) {
+        if (!lib) { sessSay(sessT("PDF slides could not be read on this device.", "Les diapositives PDF n’ont pas pu être lues sur cet appareil.")); next(); return; }
+        f.arrayBuffer().then(function (buf) { return lib.getDocument({ data: buf }).promise; }).then(function (pdf) {
+          var n = 1;
+          (function page() {
+            if (n > pdf.numPages) { next(); return; }
+            sessSay(sessT("Page ", "Page ") + n + " / " + pdf.numPages + "…");
+            pdf.getPage(n).then(function (pg) {
+              var v = pg.getViewport({ scale: 1 }), sc = Math.min(2, 1400 / v.width), vp = pg.getViewport({ scale: sc });
+              var cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+              return pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise.then(function () {
+                return new Promise(function (res) { cv.toBlob(function (b) { res(b); }, "image/jpeg", 0.86); });
+              });
+            }).then(function (b) { if (b) { r.slides.push({ id: "sl" + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name.replace(/\.pdf$/i, "") + " · " + n, at: at, blob: b }); added++; } n++; page(); },
+              function () { n++; page(); });
+          })();
+        }, function () { sessSay(sessT("This PDF could not be read.", "Ce PDF n’a pas pu être lu.")); next(); });
+      });
+      return;
+    }
+    next();
+  })();
+}
+function sessSlidesRender() {
+  var host = document.querySelector("#sess .slides"), r = SESS.rec; if (!host || !r) return;
+  (SESS.slideUrls || []).forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} }); SESS.slideUrls = [];
+  host.innerHTML = "";
+  var list = (r.slides || []).slice().sort(function (a, b) { return (a.at || 0) - (b.at || 0); });
+  if (!list.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("Slides from a PDF, or photos of the board, sit here beside the transcript.", "Les diapositives d’un PDF, ou des photos du tableau, se rangent ici à côté de la transcription."); host.appendChild(e); return; }
+  list.forEach(function (sl, k) {
+    var u = URL.createObjectURL(sl.blob); SESS.slideUrls.push(u);
+    var b = document.createElement("button"); b.type = "button"; b.className = "slideTh"; b.title = sl.name + (sl.at != null ? " · " + sessFmt(sl.at) : "");
+    b.innerHTML = '<img alt="" src="' + u + '"><span>' + (sl.at != null ? sessFmt(sl.at) : "") + "</span>";
+    b.onclick = function () { sessSlideView(list, k); }; host.appendChild(b);
+  });
+}
+function sessSlideView(list, k) {
+  var r = SESS.rec, ov = document.createElement("div"); ov.className = "slideView"; ov.setAttribute("role", "dialog");
+  var url = null;
+  function show() {
+    if (url) URL.revokeObjectURL(url); var sl = list[k]; url = URL.createObjectURL(sl.blob);
+    ov.innerHTML = '<div class="svBar"><span class="svName"></span><span class="sp"></span>'
+      + (sl.at != null ? '<button type="button" data-v="jump">' + sessEsc(sessT("Play from ", "Lire à ") + sessFmt(sl.at)) + "</button>" : "")
+      + '<button type="button" data-v="here">' + sessEsc(sessT("Tie to this moment", "Lier à ce moment")) + '</button><button type="button" data-v="del">' + sessEsc(sessT("Remove", "Retirer")) + '</button><button type="button" data-v="x">×</button></div>'
+      + '<div class="svImg"><button type="button" data-v="prev" aria-label="' + sessEsc(sessT("Previous", "Précédente")) + '">‹</button><img alt=""><button type="button" data-v="next" aria-label="' + sessEsc(sessT("Next", "Suivante")) + '">›</button></div>';
+    ov.querySelector(".svName").textContent = sl.name + "  (" + (k + 1) + " / " + list.length + ")";
+    ov.querySelector("img").src = url;
+    ov.querySelectorAll("[data-v]").forEach(function (b) { b.onclick = function () { var v = b.getAttribute("data-v");
+      if (v === "x") close(); else if (v === "prev") { k = (k - 1 + list.length) % list.length; show(); } else if (v === "next") { k = (k + 1) % list.length; show(); }
+      else if (v === "jump" && SESS.media) { SESS.media.currentTime = sl.at + 0.01; close(); }
+      else if (v === "here" && SESS.media) { sl.at = Math.round(SESS.media.currentTime * 10) / 10; recPut(r); sessSlidesRender(); show(); }
+      else if (v === "del") { r.slides = (r.slides || []).filter(function (x) { return x.id !== sl.id; }); recPut(r); sessSlidesRender(); close(); } }; });
+  }
+  function close() { if (url) URL.revokeObjectURL(url); ov.remove(); document.removeEventListener("keydown", key); }
+  function key(e) { if (e.key === "Escape") close(); else if (e.key === "ArrowLeft") { k = (k - 1 + list.length) % list.length; show(); } else if (e.key === "ArrowRight") { k = (k + 1) % list.length; show(); } }
+  document.addEventListener("keydown", key); show(); document.body.appendChild(ov);
+}
 /* ---- the recordings list: open, and import ---- */
 (function () {
   var ib = document.getElementById("recImportBtn"), inp = document.getElementById("recImportFile");
