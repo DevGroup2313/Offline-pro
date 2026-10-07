@@ -95,7 +95,6 @@ header{display:flex;align-items:center;gap:10px;padding:9px 18px;
 .hdr button,.hdr .seg{min-height:var(--ctlh,34px)}
 .hdr button{padding:0 15px;font-size:12.5px}
 .hdr .seg button{min-height:0}
-.brandSeal{width:36px;height:36px;flex-shrink:0;filter:drop-shadow(0 1px 1px #14100a44) drop-shadow(0 3px 6px #14100a33)}
 .brand{display:flex;flex-direction:column;line-height:1.05}
 .brand b{font-family:Georgia,'Iowan Old Style',serif;font-size:22px;letter-spacing:.02em}
 .brand small{font-size:9px;letter-spacing:.28em;color:var(--mut);margin-top:3px}
@@ -491,24 +490,15 @@ body[data-motion=calm] .meter:after,body[data-motion=calm] .doc,body[data-motion
 /* warmth: the seal breathes, and primaries gleam when approached */
 @keyframes sealBreathe{0%,100%{filter:drop-shadow(0 2px 3px #14100a33) drop-shadow(0 5px 10px #14100a22)}
  50%{filter:drop-shadow(0 2px 4px #1f4f6833) drop-shadow(0 6px 14px #1f4f6833) drop-shadow(0 0 10px #a97e2c18)}}
-.brandSeal{animation:sealBreathe 3.6s ease-in-out infinite}
 /* the seal is a real button that opens the welcome door. The ID beats the base
    button rule, so the seal shows no chrome; the breathe animates only filter,
    which leaves transform free for a hover lift and a press. */
-#brandSeal{border:none;background:none;padding:0;box-shadow:none;cursor:pointer;border-radius:50%;line-height:0;transition:transform .22s var(--pop)}
-#brandSeal:hover{transform:translateY(-1px) scale(1.07)}
-#brandSeal:active{transform:scale(.9)}
-#brandSeal.knock{animation:sealKnock .5s var(--pop)}
-#brandSeal:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
-#brandSeal svg{display:block;pointer-events:none}
 @keyframes sealKnock{0%{transform:scale(.9)}45%{transform:scale(1.12) rotate(-4deg)}100%{transform:scale(1) rotate(0)}}
-body[data-motion=minimal] #brandSeal.knock{animation:none}
 .primary{position:relative;overflow:hidden}
 .primary:after{content:'';position:absolute;top:-60%;left:-60%;width:50%;height:220%;transform:rotate(18deg) translateX(-220%);
  background:linear-gradient(90deg,transparent,#ffffff55,transparent);transition:none;pointer-events:none}
 .primary:hover:after{transform:rotate(18deg) translateX(320%);transition:transform .6s ease}
 .doc:hover{transform:translateY(-2px) rotate(-.15deg)}
-body[data-motion=minimal] .brandSeal{animation:none}
 body[data-motion=minimal] .primary:after{display:none}
 body[data-motion=minimal] *,body[data-motion=minimal] *:before,body[data-motion=minimal] *:after{
  animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;
@@ -566,42 +556,47 @@ body[data-motion=minimal] .doorCard{animation:none}
    and the edge together, so no edge ever shows above a pressed face. */
 @property --y{syntax:'<length>';inherits:true;initial-value:0px}
 .doorSeal{display:flex;justify-content:center}
-#doorSeal{--S:88px;--d:7px;--y:0px;--sh:.9;--blur:9px;--off:7px;
+.b3seal{--S:88px;--d:7px;--y:0px;--sh:.9;--blur:9px;--off:7px;
  --b3-side:linear-gradient(90deg,#4a3511 0%,#8a6526 18%,#d8bd7c 38%,#a77d34 62%,#5e4417 86%,#3d2b0c 100%);--b3-cast:rgba(40,28,8,.42);
  --b3-well:radial-gradient(circle at 50% 40%,#f3ecdb,#e9e0ca);--b3-wellSh:rgba(60,45,20,.28);--b3-wellHi:rgba(255,255,255,.85);--b3-glare:.32;
  position:relative;display:block;width:var(--S);height:calc(var(--S) + var(--d));margin:0 auto;padding:0;border:0;background:transparent;box-shadow:none;
  cursor:pointer;line-height:0;-webkit-tap-highlight-color:transparent;transition:--y .3s cubic-bezier(.25,1.5,.4,1)}
-[data-theme=dark] #doorSeal{--b3-side:linear-gradient(90deg,#06121b 0%,#123247 18%,#3b7aa0 38%,#1d4b68 62%,#0d2433 86%,#050d14 100%);--b3-cast:rgba(0,0,0,.85);
+[data-theme=dark] .b3seal{--b3-side:linear-gradient(90deg,#06121b 0%,#123247 18%,#3b7aa0 38%,#1d4b68 62%,#0d2433 86%,#050d14 100%);--b3-cast:rgba(0,0,0,.85);
  --b3-well:radial-gradient(circle at 50% 40%,#111a24,#0b1219);--b3-wellSh:rgba(0,0,0,.75);--b3-wellHi:rgba(255,255,255,.06);--b3-glare:.14}
-#doorSeal:hover,#doorSeal:active{background:transparent;transform:none}
-#doorSeal:focus{outline:none}
-#doorSeal:focus-visible .b3-face{outline:1.5px solid var(--brass,#a9803a);outline-offset:5px;border-radius:50%}
-#doorSeal .b3-well{position:absolute;left:calc(var(--S) * -.06);width:calc(var(--S) * 1.12);height:calc(var(--S) * 1.12);top:calc(var(--d) - var(--S) * .06);border-radius:50%;
+.b3seal:hover,.b3seal:active{background:transparent;transform:none}
+.b3seal:focus{outline:none}
+.b3seal:focus-visible .b3-face{outline:1.5px solid var(--brass,#a9803a);outline-offset:5px;border-radius:50%}
+.b3seal .b3-well{position:absolute;left:calc(var(--S) * -.06);width:calc(var(--S) * 1.12);height:calc(var(--S) * 1.12);top:calc(var(--d) - var(--S) * .06);border-radius:50%;
  background:var(--b3-well);box-shadow:inset 0 2px 5px var(--b3-wellSh),inset 0 -1px 0 var(--b3-wellHi),0 1px 0 var(--b3-wellHi)}
-#doorSeal .b3-cast{position:absolute;left:4%;width:92%;height:var(--S);top:var(--d);border-radius:50%;background:var(--b3-cast);filter:blur(var(--blur));
+.b3seal .b3-cast{position:absolute;left:4%;width:92%;height:var(--S);top:var(--d);border-radius:50%;background:var(--b3-cast);filter:blur(var(--blur));
  transform:translateY(calc(var(--off) - var(--y) * .5));opacity:var(--sh);transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s ease,filter .3s ease}
-#doorSeal .b3-side{position:absolute;left:0;top:var(--y);width:var(--S);height:calc(var(--S) + var(--d) - var(--y));border-radius:calc(var(--S) / 2);
+.b3seal .b3-side{position:absolute;left:0;top:var(--y);width:var(--S);height:calc(var(--S) + var(--d) - var(--y));border-radius:calc(var(--S) / 2);
  background:repeating-linear-gradient(90deg,rgba(255,255,255,.10) 0 1px,rgba(0,0,0,.10) 1px 2px),var(--b3-side);box-shadow:inset 0 -1px 1px rgba(0,0,0,.35)}
-#doorSeal .b3-face{position:absolute;left:0;top:0;width:var(--S);height:var(--S);border-radius:50%;transform:translateY(var(--y))}
-#doorSeal .b3-face svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
-#doorSeal .b3-glare{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
+.b3seal .b3-face{position:absolute;left:0;top:0;width:var(--S);height:var(--S);border-radius:50%;transform:translateY(var(--y))}
+.b3seal .b3-face svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
+.b3seal .b3-glare{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
  background:radial-gradient(circle at var(--gx,40%) var(--gy,30%),rgba(255,255,255,var(--b3-glare)) 0%,rgba(255,255,255,0) 50%);mix-blend-mode:soft-light;transition:opacity .3s ease}
-#doorSeal .s3-sheen{animation:b3Sheen 8s cubic-bezier(.45,0,.25,1) 1.4s infinite}
-#doorSeal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.75}
-#doorSeal.hover .b3-glare{opacity:1}
-#doorSeal.down{--y:calc(var(--d) - 1.5px);--off:2px;--blur:3px;--sh:1;transition-duration:.07s;transition-timing-function:ease-out}
-#doorSeal.down .b3-cast{transition-duration:.07s}
-#doorSeal.rise{animation:b3Rise .9s cubic-bezier(.2,.9,.25,1) both}
-#doorSeal.rise .b3-cast{animation:b3CastIn .9s ease both}
-#doorSeal.knock{animation:b3Knock .5s cubic-bezier(.3,.7,.3,1)}
-#doorSeal.knock .s3-sheen{animation:b3Sheen1 .8s cubic-bezier(.45,0,.25,1)}
+.b3seal .s3-sheen{animation:b3Sheen 8s cubic-bezier(.45,0,.25,1) 1.4s infinite}
+.b3seal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.75}
+.b3seal.hover .b3-glare{opacity:1}
+.b3seal.down{--y:calc(var(--d) - 1.5px);--off:2px;--blur:3px;--sh:1;transition-duration:.07s;transition-timing-function:ease-out}
+.b3seal.down .b3-cast{transition-duration:.07s}
+.b3seal.rise{animation:b3Rise .9s cubic-bezier(.2,.9,.25,1) both}
+.b3seal.rise .b3-cast{animation:b3CastIn .9s ease both}
+.b3seal.knock{animation:b3Knock .5s cubic-bezier(.3,.7,.3,1)}
+.b3seal.knock .s3-sheen{animation:b3Sheen1 .8s cubic-bezier(.45,0,.25,1)}
 @keyframes b3Rise{0%{--y:var(--d)}55%{--y:-2.5px}78%{--y:.6px}100%{--y:0px}}
 @keyframes b3CastIn{0%{opacity:0}100%{opacity:var(--sh)}}
 @keyframes b3Knock{0%{--y:calc(var(--d) - 1.5px)}45%{--y:-2.5px}75%{--y:.5px}100%{--y:0px}}
 @keyframes b3Sheen{0%{transform:translateX(0)}18%{transform:translateX(196px)}100%{transform:translateX(196px)}}
 @keyframes b3Sheen1{0%{transform:translateX(0)}100%{transform:translateX(196px)}}
-body[data-motion=minimal] #doorSeal,body[data-motion=minimal] #doorSeal .b3-cast,body[data-motion=minimal] #doorSeal .s3-sheen{animation:none !important;transition:none}
-@media (prefers-reduced-motion:reduce){#doorSeal,#doorSeal .b3-cast,#doorSeal .s3-sheen{animation:none !important;transition:none}}
+body[data-motion=minimal] .b3seal,body[data-motion=minimal] .b3seal .b3-cast,body[data-motion=minimal] .b3seal .s3-sheen{animation:none !important;transition:none}
+@media (prefers-reduced-motion:reduce){.b3seal,.b3seal .b3-cast,.b3seal .s3-sheen{animation:none !important;transition:none}}
+#brandSeal{--S:36px;--d:3px;--off:3px;--blur:4px;flex-shrink:0;margin:0}
+#brandSeal.hover{--y:-1px;--off:5px;--blur:6px}
+#brandSeal.down{--y:calc(var(--d) - .8px);--off:1px;--blur:2px}
+#brandSeal .b3-well{box-shadow:inset 0 1px 3px var(--b3-wellSh),inset 0 -1px 0 var(--b3-wellHi)}
+#brandSeal .b3-side{background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,rgba(0,0,0,.12) 1px 2px),var(--b3-side)}
 .doorName{font:700 40px Georgia,'Iowan Old Style',serif;letter-spacing:.03em;margin-top:10px}
 .doorRule{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}
 .doorRule span{width:58px;height:1px;background:var(--acc);opacity:.5}
@@ -1108,6 +1103,65 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
 [data-theme=dark] .doorFoot .byline{color:#d8c28e}
 /* the theme switch in the corner: small brass-edged pills */
 .doorTheme{border:1px solid var(--hairSoft)}
+
+/* SCHEDAE in the house style. The button: a physical round button in
+   midnight ink (midnight blue at night) with a brass ring and a champagne
+   nib; it keeps its drag (handled by wireScheFabDrag) and its lift. The
+   panel: the door's card, with a double brass rule. */
+#scheFab{width:54px;height:54px;font-size:0;color:#ead9ae;border:1px solid #0e2939;
+ background:radial-gradient(circle at 36% 28%,#3a7397 0%,#24577a 46%,#163d55 100%);
+ box-shadow:0 4px 0 #0c2230,0 6px 0 rgba(0,0,0,.08),0 9px 18px rgba(6,16,24,.34),0 18px 34px rgba(6,16,24,.18),
+  inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.28),inset 0 -5px 9px rgba(5,14,22,.45);
+ transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+#scheFab .scheNib{display:block;fill:#ead9ae;filter:drop-shadow(0 1px 0 rgba(0,0,0,.45));pointer-events:none}
+#scheFab:hover{transform:translateY(-2px);filter:none;
+ box-shadow:0 6px 0 #0c2230,0 8px 0 rgba(0,0,0,.08),0 14px 24px rgba(6,16,24,.36),0 26px 44px rgba(6,16,24,.2),
+  inset 0 0 0 2px rgba(214,186,120,.75),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
+#scheFab:active{transform:translateY(3px);transition-duration:.05s;
+ box-shadow:0 1px 0 #0c2230,0 2px 5px rgba(6,16,24,.4),inset 0 0 0 2px rgba(201,169,100,.55),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 3px 6px rgba(0,0,0,.35)}
+#scheFab.dragging{transform:translateY(-5px) scale(1.04);
+ box-shadow:0 7px 0 #0c2230,0 22px 38px rgba(6,16,24,.42),0 40px 64px rgba(6,16,24,.22),
+  inset 0 0 0 2px rgba(226,201,140,.85),inset 0 0 0 3px rgba(9,26,38,.6),inset 0 2px 1px rgba(255,255,255,.32),inset 0 -5px 9px rgba(5,14,22,.45)}
+[data-theme=dark] #scheFab{color:#ead9ae;border-color:#0a1f2d;background:radial-gradient(circle at 36% 28%,#4886ab 0%,#2b6a8e 46%,#1a4560 100%);
+ box-shadow:0 4px 0 #07141e,0 9px 18px rgba(0,0,0,.55),0 18px 34px rgba(0,0,0,.35),
+  inset 0 0 0 2px rgba(201,169,100,.5),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.22),inset 0 -5px 9px rgba(0,0,0,.45)}
+[data-theme=dark] #scheFab:hover{box-shadow:0 6px 0 #07141e,0 14px 24px rgba(0,0,0,.6),0 26px 44px rgba(0,0,0,.4),
+  inset 0 0 0 2px rgba(214,186,120,.7),inset 0 0 0 3px rgba(5,16,24,.6),inset 0 2px 1px rgba(255,255,255,.26),inset 0 -5px 9px rgba(0,0,0,.45)}
+[data-theme=dark] #scheFab:active{box-shadow:0 1px 0 #07141e,0 2px 5px rgba(0,0,0,.6),inset 0 0 0 2px rgba(201,169,100,.5),inset 0 3px 6px rgba(0,0,0,.45)}
+#scheFab .fbadge{background:linear-gradient(#e2c98c,#a9803a);color:#17384c;border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px}
+body[data-motion=minimal] #scheFab,body[data-motion=minimal] #scheFab:hover,body[data-motion=minimal] #scheFab:active{transform:none}
+.schePanel{background:radial-gradient(130% 90% at 50% 0%,#fffefa 0%,#fbf6ea 60%,#f3ead6 100%) !important;border:1px solid rgba(169,128,58,.55) !important;
+ border-radius:22px !important;padding:16px 16px 12px !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+ box-shadow:inset 0 0 0 5px #fbf6ea,inset 0 0 0 6px var(--hair),0 2px 4px rgba(20,16,10,.08),0 14px 28px rgba(20,16,10,.14),0 34px 64px rgba(20,16,10,.16) !important}
+[data-theme=dark] .schePanel{background:radial-gradient(130% 90% at 50% 0%,#162231 0%,#0e161f 60%,#090e14 100%) !important;border-color:rgba(63,127,163,.55) !important;
+ box-shadow:inset 0 0 0 5px #0e161f,inset 0 0 0 6px rgba(201,169,100,.26),0 2px 4px #000b,0 14px 28px #000a,0 34px 64px #000c !important}
+.schePanel .scheHead{border-bottom:0 !important;position:relative;padding:2px 4px 12px !important;margin-bottom:10px !important}
+.schePanel .scheHead:after{content:'';position:absolute;left:4px;right:4px;bottom:0;height:1px;background:linear-gradient(90deg,var(--hair),transparent)}
+.scheTitle{display:flex;flex-direction:column;line-height:1.05}
+.scheTitle b{font-family:var(--disp);font-weight:700;font-size:24px;letter-spacing:.02em;color:#17384c}
+.scheTitle small{font-family:var(--disp);font-style:italic;font-weight:500;font-size:14px;color:#8a6526;margin-top:2px}
+[data-theme=dark] .scheTitle b{color:#e2cf9f}
+[data-theme=dark] .scheTitle small{color:#c9a964}
+.schePanel .scheNew{font-family:var(--disp);font-weight:700;font-size:15px;padding:7px 16px 8px}
+.schePanel .scheNew.primary,[data-theme=dark] .schePanel .scheNew.primary{background:var(--btnFace) !important;color:var(--btnText) !important;border:1px solid var(--btnEdge) !important;
+ box-shadow:0 3px 0 var(--btnEdge),0 5px 10px rgba(6,16,24,.28),inset 0 0 0 1px var(--btnRing),inset 0 1px 0 rgba(255,255,255,.22) !important}
+.schePanel .scheNew.primary:active{transform:translateY(3px);box-shadow:0 0 0 var(--btnEdge),inset 0 2px 4px rgba(0,0,0,.25) !important}
+.schePanel .scheSearch{font-family:var(--disp) !important;font-size:15px !important;padding:8px 12px !important;border-radius:999px !important;
+ border:1px solid var(--hair) !important;background:rgba(255,255,255,.6) !important;box-shadow:inset 0 1px 3px rgba(60,44,14,.12)}
+[data-theme=dark] .schePanel .scheSearch{background:rgba(5,9,13,.55) !important;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.schePanel .scheEmpty{font-family:var(--disp);font-size:16px !important;line-height:1.55 !important;color:#5c5444 !important;padding:6px 6px 10px !important}
+[data-theme=dark] .schePanel .scheEmpty{color:#b5a888 !important}
+.schePanel .scheRow{border-top:0 !important;margin:8px 0 0;padding:10px 12px !important;border-radius:14px;background:rgba(255,255,255,.55);
+ border:1px solid var(--hairSoft);box-shadow:0 2px 0 rgba(169,128,58,.18),0 4px 10px rgba(60,44,14,.08)}
+[data-theme=dark] .schePanel .scheRow{background:rgba(255,255,255,.03);box-shadow:0 2px 0 rgba(0,0,0,.45),0 4px 10px rgba(0,0,0,.35)}
+.schePanel .scheText{font-family:var(--disp);font-size:15.5px !important;color:var(--ink) !important}
+.schePanel .scheRow .btn{font-family:var(--disp);font-weight:700;font-size:13.5px;border-radius:999px;border:1px solid var(--hair);background:linear-gradient(#fffdf7,#f1e8d4);color:#17384c;
+ box-shadow:0 2px 0 #c7ab72,0 3px 6px rgba(60,44,14,.12);transition:transform .1s ease,box-shadow .1s ease}
+.schePanel .scheRow .btn:hover{transform:translateY(-1px);box-shadow:0 3px 0 #c7ab72,0 6px 10px rgba(60,44,14,.14)}
+.schePanel .scheRow .btn:active{transform:translateY(2px);box-shadow:0 0 0 #c7ab72,0 1px 2px rgba(60,44,14,.2)}
+[data-theme=dark] .schePanel .scheRow .btn{background:linear-gradient(#19242f,#0f1820);color:#e2cf9f;box-shadow:0 2px 0 #04080c,0 3px 6px rgba(0,0,0,.5)}
+[data-theme=dark] .schePanel .scheRow .btn:hover{box-shadow:0 3px 0 #04080c,0 6px 10px rgba(0,0,0,.55)}
+[data-theme=dark] .schePanel .scheRow .btn:active{box-shadow:0 0 0 #04080c,0 1px 2px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -1118,7 +1172,7 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
   <button data-m="dark" aria-label="Dark theme" onclick="setMode('dark')">☾</button>
  </div></div>
  <div class="doorGrab" id="doorGrab">
- <button type="button" class="doorSeal" id="doorSeal" title="Knock, and the desk opens" aria-label="Knock to open the desk" onclick="doorSealEnter()"><span class="b3-face"><svg width="88" height="88" viewBox="0 0 100 100" aria-hidden="true"></svg></span></button>
+ <button type="button" class="doorSeal b3seal" id="doorSeal" title="Knock, and the desk opens" aria-label="Knock to open the desk" onclick="doorSealEnter()"><span class="b3-face"><svg width="88" height="88" viewBox="0 0 100 100" aria-hidden="true"></svg></span></button>
  <div class="doorName">Inkwell</div>
  <div class="doorRule"><span></span><em>An offline writing studio</em><span></span></div>
  </div>
@@ -1153,7 +1207,7 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
   <button onclick="rewrite('humanize')" title="Writes it as a person would; same facts, natural rhythm">Naturalise</button>
  </div>
 </div>
-<button id="scheFab" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><span style="font-size:22px;line-height:1">✏️</span><span class="fbadge" id="fbadge" style="display:none"></span></button>
+<button id="scheFab" onclick="openStickyToggle()" title="Schedae; pin a thought to the desk" aria-label="Schedae"><svg class="scheNib" width="24" height="24" viewBox="40 15 20 22" aria-hidden="true"><path fill-rule="evenodd" d="M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z"/></svg><span class="fbadge" id="fbadge" style="display:none"></span></button>
 <div id="pomo-modal" role="dialog" aria-label="Focus timer"><div id="pomo-box"><div id="pomo-time">25:00</div><div id="pomo-label">Focus</div><div id="pomo-controls"><button type="button" class="pomo-primary" onclick="inkPomoStart()">Start</button><button type="button" onclick="inkPomoPause()">Pause</button><button type="button" onclick="inkPomoReset()">Reset</button><button type="button" onclick="inkPomoClose()">Close</button></div></div></div>
 <div id="sticky-pins"></div>
 <div id="hovFix"></div>
@@ -1163,7 +1217,7 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
  <div class="row"><button class="lkbtn" onclick="nextTip()">Next ▸</button><button class="lkbtn" onclick="hideTips()">Hide tips</button></div></div></div>
 <header>
  <div class="brandline">
-  <button type="button" id="brandSeal" class="brandSeal" onclick="openDoorFromSeal()" aria-label="Open the Inkwell welcome door" title="Open the welcome door"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"></svg></button>
+  <button type="button" id="brandSeal" class="brandSeal b3seal" onclick="openDoorFromSeal()" aria-label="Open the Inkwell welcome door" title="Open the welcome door"><span class="b3-face"><svg width="36" height="36" viewBox="0 0 100 100" aria-hidden="true"></svg></span></button>
   <div class="brand"><b>Inkwell</b><small id="brandDate"></small></div>
  </div>
  <span id="enginePill" class="pill off" onclick="openModal('server')" title="Engine &amp; models"><i></i>Rules engine</span>
@@ -3386,7 +3440,7 @@ function tipOpen(e,id){showTip(id);const c=document.getElementById('tipCard');c.
 function openDoorFromSeal(){
  try{if(S.sound&&window.SND&&SND.door)SND.door();}catch(e){}
  const s=document.getElementById('brandSeal');
- if(s){s.classList.remove('knock');void s.offsetWidth;s.classList.add('knock');
+ if(s&&S.motion!=='minimal'){s.classList.remove('knock','down');void s.offsetWidth;s.classList.add('knock');
   setTimeout(function(){s.classList.remove('knock');},560);}
  showDoor();
 }
@@ -3400,10 +3454,12 @@ function doorSealEnter(){
  setTimeout(closeDoor,S.motion==='minimal'?0:280);}
 /* paint the door's seal; rise=true replays its entrance (the door opening),
    false keeps it settled (a change of theme while the door is open) */
-function doorSealPaint(dark,rise){
- const b=document.getElementById('doorSeal');if(!b)return;
+function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorSeal'),88,dark,rise);}
+/* either seal, the door's or the header's: the same physical button at its own size */
+function sealButtonPaint(b,size,dark,rise){
+ if(!b)return;
  b.innerHTML='<span class="b3-well" aria-hidden="true"></span><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span>'
-  +'<span class="b3-face">'+inkwellSeal(88,dark,{sheen:true})+'<span class="b3-glare" aria-hidden="true"></span></span>';
+  +'<span class="b3-face">'+inkwellSeal(size,dark,{sheen:true})+'<span class="b3-glare" aria-hidden="true"></span></span>';
  b.classList.remove('knock','hover','down');
  if(rise){b.classList.remove('rise');void b.offsetWidth;b.classList.add('rise');clearTimeout(b.__rise);b.__rise=setTimeout(function(){b.classList.remove('rise');},950);}
  doorSealWire(b);}
@@ -3493,7 +3549,7 @@ function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);
  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  document.querySelectorAll('#doorTheme button').forEach(b=>b.classList.toggle('active',b.dataset.m===S.mode));
  if(window.__INKWELL_BOOTED&&typeof renderStickyPins==='function'&&S.notes&&S.notes.length&&S.notes.some(n=>n.pinned))renderStickyPins();
- document.getElementById('brandSeal').innerHTML=inkwellSeal(36,dark);
+ {const bs=document.getElementById('brandSeal');sealButtonPaint(bs,36,dark,!bs.__painted);bs.__painted=true;}
  if(document.getElementById('door')&&document.getElementById('door').style.display==='flex')doorSealPaint(dark,false);
  (function(){const lk=document.querySelector('link[rel=icon]');if(lk)lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark));})();
 }
@@ -3834,32 +3890,32 @@ function openStickyPanel() {SND.panel();
     } catch (e) {}
     return 128;
   }
-const panel = el("div", { class: "popAnim", style: { position: "fixed", zIndex: String(topZ() + 50), right: "16px", bottom: String(inkPadBottom()) + "px", width: "300px", maxHeight: "70vh", overflowY: "auto", background: "var(--glassStrong)", border: "0.5px solid var(--glassBorder)", borderRadius: "14px", boxShadow: "0 14px 44px rgba(0,0,0,0.26)", padding: "12px", backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)" } });
-  const top = el("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "9px", paddingBottom: "8px", borderBottom: "1px solid var(--glassBorder)" } });
-  top.appendChild(el("div", { style: { fontSize: "13px", fontWeight: "700", color: "var(--acc)", letterSpacing: ".04em" }, text: "Schedae" }));
-  const add = el("button", { class: "btn scheNew btn-sm", text: "New note" });
+const panel = el("div", { class: "popAnim schePanel", style: { position: "fixed", zIndex: String(topZ() + 50), right: "16px", bottom: String(inkPadBottom()) + "px", width: "300px", maxHeight: "70vh", overflowY: "auto", background: "var(--glassStrong)", border: "0.5px solid var(--glassBorder)", borderRadius: "14px", boxShadow: "0 14px 44px rgba(0,0,0,0.26)", padding: "12px", backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)" } });
+  const top = el("div", { class: "scheHead", style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "9px", paddingBottom: "8px", borderBottom: "1px solid var(--glassBorder)" } });
+  const ttl = el("div", { class: "scheTitle" }); ttl.appendChild(el("b", { text: "Schedae" })); ttl.appendChild(el("small", { text: "thoughts pinned to the desk" })); top.appendChild(ttl);
+  const add = el("button", { class: "btn scheNew btn-sm primary", text: "New note" });
   add.onclick = () => { newStickyNote(); openStickyPanel(); };
   top.appendChild(add);
   panel.appendChild(top);
   const notes = state.stickyNotes || [];
   let _listWrap;
   if (notes.length > 0) {
-    const search = el("input", { style: { width: "100%", boxSizing: "border-box", marginBottom: "8px", fontSize: "12px", padding: "6px 8px", border: "0.5px solid var(--line)", borderRadius: "8px", background: "var(--paper)", color: "var(--ink)" } });
+    const search = el("input", { class: "scheSearch", style: { width: "100%", boxSizing: "border-box", marginBottom: "8px", fontSize: "12px", padding: "6px 8px", border: "0.5px solid var(--line)", borderRadius: "8px", background: "var(--paper)", color: "var(--ink)" } });
     search.setAttribute("placeholder", "Search notes\u2026");
     search.oninput = () => { const q = search.value.toLowerCase(); if (!_listWrap) return; _listWrap.querySelectorAll("[data-pv]").forEach(r => { r.style.display = (r.getAttribute("data-pv").indexOf(q) >= 0) ? "" : "none"; }); };
     panel.appendChild(search);
   }
   if (notes.length === 0) {
-    panel.appendChild(el("div", { style: { fontSize: "12px", color: "var(--mut)", padding: "10px 2px", lineHeight: "1.5" }, text: "No notes yet. A new note floats on the desk until you unpin it, and it can be sent to the page when it ripens." }));
+    panel.appendChild(el("div", { class: "scheEmpty", style: { fontSize: "12px", color: "var(--mut)", padding: "10px 2px", lineHeight: "1.5" }, text: "No notes yet. A new note floats on the desk until you unpin it, and it can be sent to the page when it ripens." }));
   }
   _listWrap = el("div", {});
   panel.appendChild(_listWrap);
   notes.forEach(n => {
-    const row = el("div", { style: { borderTop: "0.5px solid var(--line)", padding: "9px 2px" } });
+    const row = el("div", { class: "scheRow", style: { borderTop: "0.5px solid var(--line)", padding: "9px 2px" } });
     row.setAttribute("data-pv", (stickyPreview(n) || "").toLowerCase());
     const pvRow = el("div", { style: { display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" } });
     pvRow.appendChild(el("div", { style: { width: "10px", height: "10px", borderRadius: "50%", flex: "0 0 auto", background: stickyColorBg(n.color), border: "1px solid rgba(0,0,0,0.15)" } }));
-    pvRow.appendChild(el("div", { style: { fontSize: "12px", color: "var(--mut)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, text: stickyPreview(n) }));
+    pvRow.appendChild(el("div", { class: "scheText", style: { fontSize: "12px", color: "var(--mut)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, text: stickyPreview(n) }));
     row.appendChild(pvRow);
     const acts = el("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" } });
     const pin = el("button", { class: "btn btn-soft btn-xs", text: n.pinned ? "Unpin" : "Pin" });
