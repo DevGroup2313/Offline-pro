@@ -89,6 +89,20 @@ For the record, the engines the app does not run by default:
 
 On CoNLL-2014 the Fire's writing model scores 67.1% / 20.4% / 0.460.
 
+The same 600 randomly chosen sentences of the W&I report half, every model
+through the app's safety filter, with the app's proofreading prompt:
+
+| Engine | P | R | F0.5 |
+|---|---|---|---|
+| GECToR at 0.7 | 74.0% | 21.1% | 0.493 |
+| Qwen3 4B Instruct 2507 (the laptop's measured model) | 59.7% | 23.2% | 0.454 |
+| LFM2.5 1.2B (the Fire's model) | 54.5% | 13.5% | 0.339 |
+| GECToR, Qwen3 4B, rules and spelling together | 62.4% | 31.7% | 0.522 |
+
+The laptop's "Correct" goes through the companion server's own /api/correct,
+whose prompt differs from the one measured here; these rows measure the
+models, not that endpoint.
+
 On CoNLL-2014, GECToR at 0.7 with rules and spelling: precision 76.7%,
 recall 28.9%, F0.5 0.576 (the 7.32 app: 81.7%, 21.8%, 0.527).
 
