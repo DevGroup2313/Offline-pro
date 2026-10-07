@@ -127,7 +127,7 @@ function pomoPill(){ var fab=document.getElementById("horo-fab");
     else { fab.innerHTML=clock; } }
   if(mode==="live"){ var total=pomoPhaseLen(pomo.phase)||1, arc=document.getElementById("horo-arc"), num=document.getElementById("horo-num");
     if(arc) arc.setAttribute("stroke-dashoffset", 125.66*(1-pomo.remaining/total)); if(num) num.textContent=pomoFmt(pomo.remaining); /* cd-759: fab dial shows MM:SS small in a circle */ }
-  try{ if(window.inkClepDocks) window.inkClepDocks(mode, pomo.remaining, pomoPhaseLen(pomo.phase)||1, pomoFmt(pomo.remaining)); }catch(e){} }
+  try{ if(window.inkClepDocks) window.inkClepDocks(mode, pomo.remaining, pomoPhaseLen(pomo.phase)||1, pomoFmt(pomo.remaining), pomo.phase); }catch(e){} }
 function custodiaBreakReset(){ var w=custodiaW(); w.acc=0; w.snoozed=false; w.extended=false; }
 function custodiaW(){ if(!window.__cust) window.__cust = { acc:0, lastMs:0, snoozed:false, extended:false, open:false, count:0 }; return window.__cust; }
 function pomoBtn(id,label,kind){ var b=el("button",{}); if(id)b.id=id; b.textContent=label; b.setAttribute("data-cd-lift","1");

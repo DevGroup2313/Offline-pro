@@ -287,7 +287,6 @@ body.readable #editor,body.readable #hli{font:19px/2.05 Tahoma,Verdana,Georgia,s
 #dropVeil{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;background:rgba(20,14,6,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #dropVeil.on{display:flex}
 .dropCard{background:var(--card);border:2px dashed var(--acc);border-radius:24px;padding:30px 42px;text-align:center;box-shadow:var(--sh-lg);animation:pup .3s var(--pop);pointer-events:none}
-#sprintT{color:var(--acc);font-weight:700;display:none}
 #stGain{color:var(--green)}
 #right{width:352px;min-width:250px;overflow:auto;padding:14px 14px 150px} /* a floor of empty space under the last card: the resting jewel floats over padding, never over a suggestion */
 #right.hidden{display:none}
@@ -993,10 +992,16 @@ body.tabStageOn #footTab{display:none !important}
 /* Inkwell: the panel above the desk and the rooms; the corner dial in line
    with Schedae, and hidden wherever Schedae is */
 .modal-backdrop:has(> #pomo-modal),#custodia-overlay{z-index:9460 !important}
-html body #horo-fab#horo-fab{right:23px !important;bottom:90px !important}
+/* the desk has no corner dial: Clepsydra lives in the toolbar chip and in Tabula's dock */
+html body #horo-fab#horo-fab#horo-fab{display:none !important}
+#clepBtn{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+#clepBtn .clepIc{display:inline-block;font-size:14px;line-height:1}
+#clepBtn.on{color:var(--btnText);background:var(--btnFace);border-color:var(--btnEdge);box-shadow:0 2px 0 var(--btnEdge),inset 0 0 0 1px var(--btnRing)}
+#clepBtn.on .clepIc{animation:cdHourTurn 14s ease-in-out infinite}
+#clepBtn.on.rest{color:#17384c;background:linear-gradient(#e6cd92,#b8924a);border-color:#7a5a1f;box-shadow:0 2px 0 #7a5a1f,inset 0 1px 0 rgba(255,255,255,.4)}
+body[data-motion=minimal] #clepBtn.on .clepIc{animation:none}
 /* the dock hourglasses hold the dial the way Carpe Diem's fixed #horo-fab does */
 .cdDockHoro{position:relative}
-html body:is(.doorOn,.modalOn,.tabStageOn) #horo-fab#horo-fab,html body:has(.sticky-panel-back) #horo-fab#horo-fab{display:none !important}
 </style>
 <style id="sealStyle">
 /* 7.36 THE SEAL'S HOUSE STYLE. The door and the desk take their look from the
@@ -1113,13 +1118,14 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
    field with a champagne double rule, and the seal's dip-pen nib in relief.
    It floats over the desk, so it has no well. Its drag (wireScheFabDrag) is
    unchanged; while dragged it lifts instead of pressing in. */
-#scheFab.b3seal{--S:56px;--d:5px;--off:6px;--blur:8px;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
+#scheFab.b3seal{--S:44px;--d:3px;--off:4px;--blur:6px;--sh:.7;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
  margin:0;padding:0;border:0;background:transparent;box-shadow:none;filter:none;font-size:0;cursor:grab;touch-action:none;transform:none}
 #scheFab.b3seal:hover,#scheFab.b3seal:active{background:transparent;box-shadow:none;filter:none;transform:none}
 #scheFab .b3-well{display:none}
-#scheFab.b3seal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.8}
-#scheFab.b3seal.down{--y:calc(var(--d) - 1px);--off:1px;--blur:3px}
-#scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-5px;--off:16px;--blur:16px;--sh:.65;cursor:grabbing;transition:none}
+#scheFab .b3-side{background:var(--b3-side)}
+#scheFab.b3seal.hover{--y:-2px;--off:7px;--blur:9px;--sh:.6}
+#scheFab.b3seal.down{--y:calc(var(--d) - .6px);--off:1px;--blur:2px}
+#scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-4px;--off:12px;--blur:12px;--sh:.55;cursor:grabbing;transition:none}
 #scheFab .fbadge{position:absolute;z-index:3;top:-3px;right:-3px;transform:translateY(var(--y));background:linear-gradient(#f0dca6,#b88d3e);color:#17384c;
  border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.35)}
 body[data-motion=minimal] #scheFab.b3seal{transition:none}
@@ -1274,7 +1280,7 @@ body[data-motion=minimal] #scheFab.b3seal{transition:none}
    </div>
    <div class="tray">
     <button onclick="undo()" title="Undo">↺</button>
-    <button id="sprintBtn" onclick="toggleSprint()" title="25-minute writing sprint">⏱ 25</button>
+    <button id="clepBtn" class="clepChip" onclick="inkClepPress()" title="Clepsydra: focus sprints with breaks" aria-label="Clepsydra"><span class="clepIc" aria-hidden="true">⏳</span><span id="clepT">25:00</span></button>
     <button onclick="toggleRight()" title="Suggestions &amp; instruments panel">☰ Panel</button>
    </div>
 
@@ -1288,7 +1294,6 @@ body[data-motion=minimal] #scheFab.b3seal{transition:none}
    </div>
   </div>
   <div id="status">
-   <span id="sprintT">⏱ 25:00</span>
    <span id="stWords">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
    <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="Overall clarity score: correctness, readability, register and rhythm">· score</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
    <span id="stSel"></span><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
@@ -1439,7 +1444,11 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
  window.inkPomoOpen=window.inkClepPress;
  /* the hourglasses in Tabula's dock and the floating windows show the dial too:
     the same markup as Carpe Diem's #horo-fab, with classes for its ids */
- window.inkClepDocks=function(mode,rem,total,txt){
+ window.inkClepDocks=function(mode,rem,total,txt,phase){
+  var cb=document.getElementById('clepBtn'),ct=document.getElementById('clepT');
+  if(cb&&ct){var on=mode!=='idle';ct.textContent=txt;cb.classList.toggle('on',on);cb.classList.toggle('rest',on&&phase!=='focus');
+   cb.title=on?'Clepsydra: '+txt+' left; press to stop':'Clepsydra: focus sprints with breaks';}
+  document.body.classList.toggle('sprinting',mode!=='idle'&&phase==='focus');
   document.querySelectorAll('.cdDockHoro').forEach(function(b){
    if(b.getAttribute('data-mode')!==mode){b.setAttribute('data-mode',mode);
     var clock='<span style="font-size:30px;line-height:1">\u23F3</span>';
@@ -3331,17 +3340,9 @@ window.addEventListener('message',function(e){
 });
 
 /* ================= SPRINT ================= */
-function toggleSprint(){
- if(SPRINT){clearInterval(SPRINT.iv);SPRINT=null;document.body.classList.remove('sprinting');
-  document.getElementById('sprintBtn').classList.remove('on');document.getElementById('sprintT').style.display='none';
-  toast('Sprint ended; well done. Stretch, look far away.');return;}
- SPRINT={left:1500,iv:setInterval(sprintTick,1000)};
- document.body.classList.add('sprinting');document.getElementById('sprintBtn').classList.add('on');
- document.getElementById('sprintT').style.display='inline';ed.focus();toast('Sprint on; only the page matters.');}
-function sprintTick(){SPRINT.left--;
- const m=Math.floor(SPRINT.left/60),s=SPRINT.left%60;
- document.getElementById('sprintT').textContent='⏱ '+m+':'+(s<10?'0':'')+s;
- if(SPRINT.left<=0)toggleSprint();}
+/* 7.36: the 25-minute sprint is Clepsydra now (Carpe Diem's timer). Its chip in
+   the toolbar shows the time; a focus period still quiets the side panels. */
+function toggleSprint(){inkClepPress();}
 
 /* ================= SEAL ================= */
 /* INKWELL and the date as drawn outlines (Cormorant Garamond Bold, SIL Open
@@ -3460,26 +3461,25 @@ function doorSealEnter(){
 function scheFacePaint(dark){
  const f=document.getElementById('scheFace');if(!f)return;
  const k='skf'+(++SEAL_N),id=s=>k+s,u=s=>'url(#'+k+s+')';
- const P=dark?{f:['#3a7aa0','#1d4b68','#0c2232'],rim:['#c9a964','#8f6f31','#5a4419','#2f230b'],ink:['#f4e6bf','#d9c08a','#a98c52'],hair:'rgba(232,212,160,.55)',hl:.35}
-            :{f:['#346f93','#1a4561','#0d2638'],rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],ink:['#fbf0d0','#e3cb92','#b8964f'],hair:'rgba(240,220,168,.6)',hl:.6};
+ const P=dark?{f:['#1d2a38','#121b26','#0a1017'],rim:['#c9a964','#8f6f31','#5a4419','#2f230b'],ink:['#f4e6bf','#d9c08a','#a98c52'],hair:'rgba(201,169,100,.45)',hl:.3,sh:.55}
+            :{f:['#fffefa','#f7f1e2','#e9dec4'],rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],ink:['#2f6889','#17384c','#0d2638'],hair:'rgba(169,128,58,.55)',hl:.8,sh:.22};
  const NIB='M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
- const nibAt='translate(50 51) scale(2.55) translate(-50 -26.4)';
+ const nibAt='translate(50 51) scale(2.3) translate(-50 -26.4)';
  f.innerHTML='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible;pointer-events:none"><defs>'
   +'<radialGradient id="'+id('fl')+'" cx=".38" cy=".3" r=".78"><stop offset="0" stop-color="'+P.f[0]+'"/><stop offset=".55" stop-color="'+P.f[1]+'"/><stop offset="1" stop-color="'+P.f[2]+'"/></radialGradient>'
   +'<linearGradient id="'+id('rm')+'" x1=".15" y1=".05" x2=".85" y2=".95"><stop offset="0" stop-color="'+P.rim[0]+'"/><stop offset=".38" stop-color="'+P.rim[1]+'"/><stop offset=".72" stop-color="'+P.rim[2]+'"/><stop offset="1" stop-color="'+P.rim[3]+'"/></linearGradient>'
   +'<linearGradient id="'+id('hlr')+'" x1=".2" y1=".05" x2=".8" y2=".95"><stop offset="0" stop-color="#fff" stop-opacity="'+P.hl+'"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>'
   +'<linearGradient id="'+id('nb')+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+P.ink[0]+'"/><stop offset=".5" stop-color="'+P.ink[1]+'"/><stop offset="1" stop-color="'+P.ink[2]+'"/></linearGradient>'
-  +'<linearGradient id="'+id('sh')+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="'+(dark?.16:.3)+'"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+  +'<linearGradient id="'+id('sh')+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="'+(dark?.14:.5)+'"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
   +'<clipPath id="'+id('cl')+'"><circle cx="50" cy="50" r="49.5"/></clipPath>'
   +'<filter id="'+id('bl')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter></defs>'
   +'<circle cx="50" cy="50" r="46" fill="'+u('fl')+'"/>'
-  +'<circle cx="50" cy="50" r="45.6" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2.4" filter="'+u('bl')+'"/>'
-  +'<circle cx="50" cy="50" r="47.8" fill="none" stroke="'+u('rm')+'" stroke-width="4.4"/>'
+  +'<circle cx="50" cy="50" r="46" fill="none" stroke="#000" stroke-opacity="'+(dark?.45:.16)+'" stroke-width="2" filter="'+u('bl')+'"/>'
+  +'<circle cx="50" cy="50" r="48.3" fill="none" stroke="'+u('rm')+'" stroke-width="3.2"/>'
   +'<circle cx="50" cy="50" r="49.55" fill="none" stroke="'+u('hlr')+'" stroke-width=".9"/>'
-  +'<circle cx="50" cy="50" r="40.5" fill="none" stroke="'+P.hair+'" stroke-width="1"/>'
-  +'<circle cx="50" cy="50" r="38.2" fill="none" stroke="'+P.hair+'" stroke-width=".45"/>'
-  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity=".45" transform="translate(.9 1.3) '+nibAt+'"/>'
-  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.18:.35)+'" transform="translate(-.6 -.7) '+nibAt+'"/>'
+  +'<circle cx="50" cy="50" r="41" fill="none" stroke="'+P.hair+'" stroke-width=".8"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity="'+P.sh+'" transform="translate(.8 1.1) '+nibAt+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.14:.9)+'" transform="translate(-.5 -.6) '+nibAt+'"/>'
   +'<path d="'+NIB+'" fill-rule="evenodd" fill="'+u('nb')+'" transform="'+nibAt+'"/>'
   +'<g clip-path="'+u('cl')+'"><g transform="rotate(24 50 50)"><rect class="s3-sheen" x="-70" y="-30" width="44" height="160" fill="'+u('sh')+'"/></g></g>'
   +'</svg><span class="b3-glare" aria-hidden="true"></span>';
