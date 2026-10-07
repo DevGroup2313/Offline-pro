@@ -3989,6 +3989,7 @@ const MENUS={
   ['🤝 Reviewer; hostile objections',()=>reviewer()],
   ['🍃 Reader reactions; how the page will land',()=>readerReact()],
   ['📜 Authorship; how this page came to be',()=>openModal('authorship')],
+  ['🏛 Grade against a rubric',()=>openGrader()],
   ['⌾ Citation help; from your own library',()=>citAid()],
   ['🔬 Deep read; structure pass',()=>deepRead()],
   ['✒ Editor’s memo; the whole page read back as a letter',()=>openModal('memo')],
@@ -8338,6 +8339,69 @@ function appendAllRevR(){if(!REVR.length)return;
  ed.value=ed.value.replace(/\s*$/,'')+'\n\n'+REVR.map(o=>'⟦Reader; '+o+'⟧').join('\n\n')+'\n';
  afterChange();closeModal();
  document.getElementById('editWrap').scrollTop=1e9;toast(REVR.length+' reader notes appended');}
+
+/* ================= 7.36: GRADE AGAINST A RUBRIC =================
+   Grammarly offers an "AI grader". Here a page is marked against a rubric,
+   one criterion at a time, by the writing model Inkwell is running (the
+   laptop's, Apple's, the tablet's own, or the one in the window). The model
+   must quote the essay; a quotation that is not in the essay is marked, and
+   so is any name or number the essay does not contain. Mechanics is not
+   asked of the model: it is counted from Inkwell's own correctness checks.
+   A small model's marks are rough; this is feedback, not a predicted grade. */
+const RUBRICS={
+ 'University essay':'Argument: a clear thesis, held and developed throughout\nEvidence: claims supported with specific, relevant evidence and sources\nAnalysis: evidence interpreted, not only reported; counter-arguments weighed\nStructure: paragraphs ordered so each step follows from the last\nStyle: clear, precise, appropriately formal prose\nMechanics: grammar, spelling and punctuation',
+ 'Thesis chapter':'Contribution: what the chapter adds to the field is stated and earned\nLiterature: engagement with the relevant scholarship, not a list of it\nMethod: the approach is explained and fits the question\nArgument: each section advances the chapter\u2019s claim\nStyle: clear, precise scholarly prose\nMechanics: grammar, spelling and punctuation',
+ 'School essay':'Position: a clear answer to the question\nReasons: reasons and examples that support it\nOrganisation: an introduction, body and conclusion that connect\nLanguage: clear sentences and well-chosen words\nMechanics: grammar, spelling and punctuation'};
+let GRADE=null;
+function openGrader(){
+ const keys=Object.keys(RUBRICS),cur=S.rubric||RUBRICS[keys[0]];
+ document.getElementById('modalBody').innerHTML='<h3>🏛 Grade against a rubric</h3>'+
+  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6;margin:0 0 8px">One criterion per line, as <b>Name: what it asks</b>. Start from a template or paste your own marking criteria. Each is marked 1 to 5 by your writing model, with feedback that quotes your page; Mechanics is counted by Inkwell itself.</p>'+
+  '<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 6px">'+keys.map(k=>'<button class="lkbtn" onclick="document.getElementById(\'rubricIn\').value=RUBRICS[\''+k+'\']">'+esc(k)+'</button>').join('')+'</div>'+
+  '<textarea id="rubricIn" rows="8" style="width:100%;box-sizing:border-box;font:13px/1.5 Georgia,serif;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)">'+esc(cur)+'</textarea>'+
+  '<div class="row" style="margin-top:8px"><button class="primary" onclick="gradeRun()">Grade this page</button></div><div id="gradeOut" style="margin-top:12px"></div>';
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}
+function gradeMechanics(t){
+ const words=wordCt(t)||1,E=inkRules(t).filter(e=>e.cat==='g'),per=100*E.length/words;
+ const mark=per<=0.5?5:per<=1.5?4:per<=3?3:per<=5?2:1,by={};E.forEach(e=>{const k=String(e.why||'').split(':')[0].slice(0,40);by[k]=(by[k]||0)+1;});
+ const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,n])=>k+' ('+n+')').join(', ');
+ return {mark:mark,fb:E.length+' correctness issue'+(E.length===1?'':'s')+' in '+words+' words ('+per.toFixed(1)+' per 100 words)'+(top?'; most often: '+top:'')+'. Counted by Inkwell\u2019s checks, not by the model.',by:'Inkwell'};}
+async function gradeRun(){
+ const t=ed.value.trim(),out=document.getElementById('gradeOut');if(!t)return toast('Write something first 🙂');
+ const rub=(document.getElementById('rubricIn').value||'').trim();S.rubric=rub;SV('rubric',rub);
+ const crit=rub.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf(':');return i>0?{name:l.slice(0,i).trim(),desc:l.slice(i+1).trim()}:{name:l,desc:l};}).slice(0,10);
+ if(!crit.length)return toast('Write at least one criterion');
+ const ai=window.inkScribaAI,st=ai&&ai.status();
+ const words=t.split(/\s+/),essay=words.length>2400?words.slice(0,2400).join(' '):t,cut=words.length>2400;
+ GRADE={rows:[],cut:cut,by:st&&st.ok?st.by:''};
+ const draw=()=>{const done=GRADE.rows.filter(r=>r.mark);const avg=done.length?(done.reduce((a,r)=>a+r.mark,0)/done.length):0;
+  out.innerHTML=(cut?'<p style="font-size:12px;color:var(--gold)">The model read the first 2,400 words; the page is longer.</p>':'')+
+   GRADE.rows.map(r=>'<div class="para" style="align-items:flex-start"><div class="pn" style="min-width:42px">'+(r.mark?r.mark+'/5':'…')+'</div><div class="pt"><b>'+esc(r.name)+'</b><div style="font-size:13px;line-height:1.55;margin-top:3px">'+r.html+'</div>'+(r.warn?'<div style="font-size:11.5px;color:#b03a2e;margin-top:3px">'+esc(r.warn)+'</div>':'')+'</div></div>').join('')+
+   (done.length?'<p style="font-size:13px;margin-top:10px">Average: <b>'+avg.toFixed(1)+' / 5</b>'+(GRADE.by?' · marked by '+esc(GRADE.by):'')+'. Rough feedback from a model on your own device, not a predicted grade.'+
+    (done.filter(r=>r.mark===5).length>=Math.max(3,done.length-1)?' Small models tend to give top marks to most writing (in testing, the tablet\u2019s model gave 5 out of 5 to every criterion); read the feedback, not the numbers.':'')+'</p>':'');};
+ for(const c of crit){
+  const row={name:c.name,mark:0,html:'Marking…'};GRADE.rows.push(row);draw();
+  if(/mechanic|grammar|spelling|punctuation|accuracy/i.test(c.name+' '+c.desc)&&c.desc.length<80){const m=gradeMechanics(t);row.mark=m.mark;row.html=esc(m.fb);draw();continue;}
+  if(!st||!st.ok){row.html='Needs a writing model: start one in ⚙ Engine (the tablet\u2019s own, Apple\u2019s, or your laptop\u2019s).';draw();continue;}
+  try{
+   const sys='You are an experienced, fair examiner. Mark the essay on ONE criterion only. Criterion: '+c.name+': '+c.desc+'. Reply in exactly this form:\nMARK: a whole number from 1 (poor) to 5 (excellent)\nFEEDBACK: two or three sentences that say what works and what to improve, quoting the essay\u2019s own words in double quotation marks.\nJudge only what the essay contains; invent nothing.';
+   const r=await ai.ask(sys,essay,340);
+   const mm=/MARK\s*:\s*([1-5])/i.exec(r);row.mark=mm?+mm[1]:0;
+   let fb=(/FEEDBACK\s*:\s*([\s\S]*)/i.exec(r)||[0,r.replace(/MARK\s*:\s*\d+\s*/i,'')])[1].trim();
+   if(!fb){row.html='The model gave a mark but no feedback.';row.warn='';draw();continue;}
+   /* every quotation is looked for in the essay */
+   const norm=s=>s.toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/\s+/g,' ').replace(/[^\w' ]/g,'');
+   const E=norm(t);let bad=0;
+   let html=esc(fb).replace(/(&quot;|\u201c)([^&\u201d]{3,200})(&quot;|\u201d)/g,(m0,a,q)=>{const ok=E.indexOf(norm(q.replace(/&amp;/g,'&').replace(/&#39;/g,"'")))>=0;if(!ok)bad++;
+    return ok?'\u201c'+q+'\u201d':'<span style="background:rgba(176,58,46,.12);border-radius:3px" title="Not found in your page">\u201c'+q+'\u201d \u26a0</span>';});
+   row.html=html;
+   const plain=s=>String(s).replace(/[\u2018\u2019]/g,"'").replace(/(\w)'s\b/g,'$1');
+   const f=ai.facts(plain(t),plain(fb));const warn=[];if(bad)warn.push(bad+' quotation'+(bad===1?' is':'s are')+' not in your page');
+   if(f.added&&f.added.length)warn.push('it names '+f.added.slice(0,4).map(x=>'\u201c'+x+'\u201d').join(', ')+', which your page does not contain');
+   row.warn=warn.length?'\u26a0 Check: '+warn.join('; ')+'.':'';
+   if(!row.mark)row.warn=(row.warn?row.warn+' ':'')+'The model gave no mark.';
+  }catch(e){row.html='The model did not answer: '+esc(String(e&&e.message||e));}
+  draw();}}
 
 /* ================= CITATION HELP (the queue's last item) ================= */
 /* Inkwell invents nothing it cannot see. The only index here is your own library:

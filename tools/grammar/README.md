@@ -87,6 +87,8 @@ For the record, the engines the app does not run by default:
 | GECToR at 0.7, rules and spelling | 69.3% | 23.4% | 0.498 | 9.9% |
 | LFM2.5 1.2B (the Fire's writing model), filtered | 56.6% | 14.3% | 0.356 | not measured |
 
+On CoNLL-2014 the Fire's writing model scores 67.1% / 20.4% / 0.460.
+
 On CoNLL-2014, GECToR at 0.7 with rules and spelling: precision 76.7%,
 recall 28.9%, F0.5 0.576 (the 7.32 app: 81.7%, 21.8%, 0.527).
 
@@ -98,7 +100,7 @@ rewriting with your own prompt and a prompt library, drafting, reader
 reactions, a reviewer that raises objections, citations in Zotero's styles,
 British and American variants, lessons on every card.
 
-Added in Stage C: the spelling checker; an authorship report (how much of a
+Added in Stage C: the spelling checker; the rubric grader (below); an authorship report (how much of a
 page was typed, pasted, written by a model, accepted from suggestions,
 dictated or inserted by Inkwell, with a list of the pasted, dictated and
 model-written passages, and a report to save).
@@ -108,7 +110,14 @@ Not offered, and why:
   Inkwell compares a page with your own library only.
 - An AI-text detector: Inkwell explains why no detector can prove
   authorship; the authorship report records how the text was written instead.
-- An essay grader with a rubric: not yet built.
+- An essay grader: built in Stage C (Coach, "Grade against a rubric").
+  Templates or your own criteria; each criterion is marked 1 to 5 with
+  feedback by the writing model Inkwell is running; Mechanics is counted by
+  Inkwell's own checks; a quotation not found in the page, or a name or
+  number the page lacks, is marked. In testing, the Fire's small model gave
+  every criterion 5 out of 5 on a thesis excerpt, and often gave a mark with
+  no feedback; the page says so. No measurement of grading accuracy was
+  possible here (no marked essays to compare with).
 
 ## Reproducing
 
@@ -116,3 +125,13 @@ Not offered, and why:
 page), `runspell.js`, `rungector.mjs`, `runllm.py` (llama-server), `combine.js`
 (the sources together, as the app combines them), `cleanrate.js`. Paths in
 the scripts point at the measurement folder used on 7 October 2026.
+
+## A fault found on the way: the laptop server's model died under two requests
+
+While testing the grader through the companion server, its model runtime
+(llama-server) stopped when two requests overlapped; every later request
+failed until the server was restarted. From 7.36 the server runs the model
+with one request at a time, queues the rest, and starts the runtime again
+once if it has stopped. Tested: four requests at once all answered (1.5 s in
+all); after the runtime was killed, the next request started it again and was
+answered.

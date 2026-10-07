@@ -2050,7 +2050,8 @@ function sessSumRun(kind, prompt) {
       if (/^\s*TITLE\s*:/i.test(l)) return (l.match(/\d[\d,.]*/g) || []).join(" ");
       return l.replace(/^\s*(?:SUMMARY|KEY POINTS|TERMS|DECISIONS|ACTIONS|NONE)\s*:?\s*/i, "").replace(/^\s*(?:Person|Someone|Somebody|Speaker|Name)\s*:\s*/i, "");
     }).filter(function (l) { return l.trim(); });
-    try { var f = ai.facts(src, lines.join(".\n")); (f.added || []).forEach(function (w) { if (/^(What|Where|When|Why|How|Who|Which|Whose|Is|Are|Does|Do|Can|Could|Should|Would|Will|Did|Was|Were|Person|None|Speaker|Overview|Introduction|Conclusion|Summary|Discussion)$/.test(w)) return; if (warn.indexOf(w) < 0) warn.push(w); }); } catch (e) {}
+    var plain = function (x) { return String(x).replace(/[\u2018\u2019]/g, "'").replace(/(\w)'s\b/g, "$1"); };
+    try { var f = ai.facts(plain(src), plain(lines.join(".\n"))); (f.added || []).forEach(function (w) { if (/^(What|Where|When|Why|How|Who|Which|Whose|Is|Are|Does|Do|Can|Could|Should|Would|Will|Did|Was|Were|Person|None|Speaker|Overview|Introduction|Conclusion|Summary|Discussion)$/.test(w)) return; if (warn.indexOf(w) < 0) warn.push(w); }); } catch (e) {}
     return out; }
   function ask(system, user, n) { return ai.ask(system, user, n).then(function (t) { return guard(user, String(t || "")); }); }
   var P = {

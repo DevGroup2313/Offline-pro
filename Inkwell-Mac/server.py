@@ -238,7 +238,10 @@ def spawn_llama(model_path):
         # for the model's whole trained context, more than a 16 GB computer
         # has); the model's own chat template; no hidden "thinking" pass, so
         # answers start at once (the same settings as Inkwell's measurements)
-        [binp, "-m", model_path, "--port", str(port), "-ngl", "999",
+        # 7.36: one request at a time ("-np 1"). With several parallel slots the
+        # runtime was seen to die when two requests overlapped (a tablet and
+        # the laptop asking together); queued requests are safe
+        [binp, "-m", model_path, "--port", str(port), "-ngl", "999", "-np", "1",
          "-c", os.environ.get("INKWELL_CTX", "8192"), "--jinja", "--reasoning-budget", "0"],
         stdout=subprocess.DEVNULL, stderr=errfh,
         cwd=os.path.dirname(binp), start_new_session=True)
@@ -265,7 +268,35 @@ def spawn_llama(model_path):
     return None
 
 
+LLAMA_LOCK = threading.Lock()
+
+
 def llama_chat(prompt, max_tokens, system=None, temperature=0.2):
+    """7.36: one call at a time; if the runtime has died, it is started again
+    once and the call repeated."""
+    with LLAMA_LOCK:
+        try:
+            return _llama_chat(prompt, max_tokens, system, temperature)
+        except Exception as e:
+            proc = AI["local"][0] if AI.get("local") else None
+            path = AI.get("local_path")
+            if not path or (proc is not None and proc.poll() is None and "refused" not in str(e)
+                            and "closed" not in str(e).lower()):
+                raise
+            print(f"[inkwell] the runtime stopped ({e}); starting it again")
+            try:
+                if proc is not None and proc.poll() is None:
+                    proc.kill()
+            except Exception:
+                pass
+            spawned = spawn_llama(path)
+            if not spawned:
+                raise
+            AI["local"] = spawned
+            return _llama_chat(prompt, max_tokens, system, temperature)
+
+
+def _llama_chat(prompt, max_tokens, system=None, temperature=0.2):
     import urllib.request
     proc, base = AI["local"]
     req = urllib.request.Request(
@@ -331,6 +362,7 @@ def load_local_path(cand):
             print("[inkwell]", AI["load_error"])
         if spawned:
             AI["local"] = spawned
+            AI["local_path"] = cand["path"]
             AI["local_kind"], AI["local_name"] = "gguf-bundled", cand["name"]
             print(f"[inkwell] running local GGUF through the bundled runtime: {cand['name']}")
             return True
