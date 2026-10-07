@@ -86,8 +86,31 @@ NOT VERIFIED
   run here.
 - "Find the speakers" needs the internet once, to fetch its two models.
 
+STAGE C: GRAMMARLY PARITY, MEASURED (tools/grammar/README.md)
+-------------------------------------------------------------
+Grammarly itself could not be run here, so there is no side-by-side score.
+Inkwell's engines were measured with ERRANT, the standard scorer, on
+learner essays (Write & Improve), CoNLL-2014 and correct Wikipedia text;
+settings were chosen on one half and reported on data never used.
+- Added: a dictionary spelling checker (SCOWL word lists, offline, every
+  device) with suggestions, "Add to dictionary" and an on/off switch.
+  Inkwell's checking went from F0.5 0.061 to 0.140 on Write & Improve and
+  from 0.015 to 0.199 on CoNLL-2014; correct Wikipedia sentences given a
+  suggestion went from 1.6% to 3.5%.
+- Added: an authorship report (Coach): typed, pasted, model-written,
+  suggestions accepted, dictated, inserted; a report to save.
+- Added: grade against a rubric (Coach), with quotations checked against
+  the page. Small models give top marks too readily; the page says so.
+- Fixed: the companion server's model died when two requests overlapped.
+- Found: the grammar model GECToR (removed in 7.33 at your request) is the
+  strongest corrector measured: with rules and spelling, F0.5 0.498 on
+  Write & Improve and 0.576 on CoNLL-2014, against 0.140 and 0.199 without
+  it; it would change about 10% of correct Wikipedia sentences (5.6% in the
+  7.32 app), many of them real slips. The Fire's writing model corrects less
+  well (0.356 and 0.460). It stays removed until you decide.
+
 STILL TO DO
 -----------
-- Stage C: the Grammarly parity audit, measured, and closing the gaps.
-- Fire-sized model measurements: whether a better model than LFM2.5 1.2B
-  fits the Fire tablet.
+- Your decision on the grammar model (above).
+- The laptop model (Qwen3 4B) and LFM2.5 2.6B for the Fire, measured the
+  same way (running).
