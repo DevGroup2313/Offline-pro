@@ -8176,6 +8176,7 @@ window.INK_FONTES={
  setStyle:id=>{S.cslStyle=id;SV('cslStyle',id);S.citeStyle=CITE_FAMILY[id]||'harvard';SV('citeStyle',S.citeStyle);try{localStorage.setItem('cd_cite_style',citeStyleName());}catch(e){}},
  /* {ids, bib:{id:html}, cite:{id:text}, note:boolean, order:[ids in the style's bibliography order]} */
  format:async function(){const lib=inkLib();
+  if(!lib.length)return {ids:[],bib:{},text:{},cite:{},full:[],note:false,numeric:false};
   let key='';try{key=inkCslId()+'|'+S.dialect+'|'+(localStorage.getItem('fontes_sources')||'');}catch(x){}
   if(key&&INK_FMT.key===key)return INK_FMT.val;
   const items=lib.map(FONTES.toCSL);const e=await inkCiteEngine(items,'html');
