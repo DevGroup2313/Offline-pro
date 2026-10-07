@@ -34,7 +34,8 @@ PART A. INSTALL (OR UPDATE) INKWELL
 
 PART B. THE WRITING MODEL ON THIS MAC
 -------------------------------------
-Engine, "Writing model on this computer": press Install. It downloads the
+Engine, "Writing model on this computer": the panel marks the model
+recommended for this Mac's memory; press Install. It downloads the
 model once (a few gigabytes) and runs it on this Mac, offline, with Apple's
 Metal graphics acceleration on Apple Silicon. Correct, Rewrite and Draft
 use it; your tablets use it over the Wi-Fi when sharing is on (Part D).

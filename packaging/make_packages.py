@@ -96,6 +96,17 @@ def mac(pkg):
     desktop_page(legacy)
 
 
+def mac_mini(pkg):
+    """Mac mini (Apple Silicon): the Mac package with its own READ ME and,
+    when INKWELL_MAC_DMG names the Apple Silicon disk image GitHub built,
+    the ready-made app itself."""
+    mac(pkg)
+    copy(os.path.join("packaging", "READ ME FIRST - MAC MINI.txt"), os.path.join(pkg, "READ ME FIRST - MAC MINI.txt"))
+    dmg = os.environ.get("INKWELL_MAC_DMG")
+    if dmg and os.path.isfile(dmg):
+        shutil.copy2(dmg, os.path.join(pkg, os.path.basename(dmg)))
+
+
 def windows(pkg):
     """Windows 7.32: a standalone program built on GitHub (PyInstaller and
     Inno Setup, no Python needed on the computer). The package holds the READ
@@ -126,7 +137,7 @@ def main():
     out = os.path.abspath(sys.argv[1])
     os.makedirs(out, exist_ok=True)
     tag = "v" + version().replace(".", "p")
-    for label, build in (("Mac", mac), ("Windows", windows),
+    for label, build in (("Mac", mac), ("Mac_mini", mac_mini), ("Windows", windows),
                          ("Fire_Tablet", fire), ("iPhone_iPad", ios), ("Web_App", web)):
         name = "Inkwell_%s_%s" % (label, tag)
         folder = os.path.join(out, name)

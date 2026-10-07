@@ -1,0 +1,82 @@
+INKWELL 7.34 FOR THE MAC MINI (APPLE SILICON, 16 GB)
+====================================================
+THIS PACKAGE IS FOR: the Mac mini, and any Mac with an Apple chip (M1 and
+later). For an Intel Mac (the 2019 MacBook Pro) use the Mac package and its
+Intel disk image.
+
+WHAT IS INSIDE
+--------------
+- Inkwell-7.34-Mac-AppleSilicon.dmg: the ready-made app. No Python, no pip,
+  no command line tools. (If the .dmg is not in this folder, download it
+  from the GitHub release "Inkwell 7.34 for Mac (build N)", under Assets.)
+- Everything GitHub needs to build it again (see the Mac READ ME).
+
+WHY THE OLD INSTALLER FAILED ON THIS MAC
+---------------------------------------
+"Inkwell has opened in your browser, because the component that draws its
+own window is not installed": the old installer built Inkwell from Python
+on the Mac. A new Mac offers Apple's own Python 3.9 with an old pip, which
+can no longer install the current window component (pywebview and PyObjC),
+so the terminal asked for updates the instructions never fetched. The app
+in the .dmg carries its own Python and window component inside it, so
+none of that is needed any more. You do not need to install or update
+Python for Inkwell.
+
+
+PART A. INSTALL
+---------------
+1. If an older Inkwell opens: File, Export library. Keep the file.
+2. Open Inkwell-7.34-Mac-AppleSilicon.dmg. Drag Inkwell onto Applications.
+   If asked, Replace.
+3. Open Inkwell from Applications. The first time, macOS refuses ("Apple
+   could not verify..."): the app is not signed with a paid Apple
+   certificate. System Settings, Privacy & Security, scroll down, "Open
+   Anyway" beside Inkwell, confirm. Only once.
+4. Look for "v7.34" beside the date at the top. If your documents are not
+   there: File, Import library, and choose the file from step 1.
+
+
+PART B. THE WRITING MODEL ON THE MAC MINI
+-----------------------------------------
+Engine, "Writing model on this computer": the panel marks the model
+recommended for this Mac's memory. Press Install. It downloads once (about
+2.5 GB of your 256 GB), then runs on the Mac mini's graphics cores (Metal),
+offline. Correct, Rewrite, Draft, Rewrite with a prompt and the prompt
+library use it; so do your tablets over the Wi-Fi (Part C).
+
+Which model, and why not a bigger one: on 6 October 2026 I measured the
+candidates that fit in 16 GB, including Ministral 3 (3B and 14B), Qwen3.5
+(4B and 9B), LFM2.5 and Llama 3.2. The best careful editor was Qwen3 4B
+Instruct 2507: behind Inkwell's safety filter it improved 40% of learner
+sentences, made 9% worse, changed only 8% of sentences that were already
+correct, and kept every citation in every rewrite. The larger models
+changed far more correct text (Qwen3.5 9B a third, Ministral 3 14B half)
+and dropped citations, which is the "rewrites my paragraph and adds things"
+problem you reported. So the Mac mini runs the same measured model as the
+laptops; what it adds is speed and room for long documents. Its speed on
+the Mac mini could not be measured here (no Apple hardware in this
+sandbox).
+
+Every rewrite, from any engine, is checked: one that drops a citation or a
+number, or adds a name or number your text does not contain, is marked in
+red with exactly what changed, and its button reads "Use anyway".
+
+
+PART C. YOUR TABLETS USE THE MAC MINI'S MODEL
+---------------------------------------------
+1. On the Mac mini: Engine, "Share with my tablets on this Wi-Fi". It shows
+   an address and a 6-digit code. If macOS asks to allow Inkwell on the
+   local network, choose Allow.
+2. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
+   model": enter the address and the code, then "Connect to my laptop".
+Only the writing tools are shared, and only with the code. Your documents
+are never reachable from the network. "Stop sharing" closes it again.
+
+
+PART D. IF SOMETHING GOES WRONG
+-------------------------------
+- The writing model will not start: Engine shows the reason in words; the
+  runtime's own log is in ~/Library/Application Support/Inkwell/
+  inkwell_runtime.log.
+- Scriba: the first time you press Record, allow the microphone.
+- Before reinstalling anything: File, Export library.

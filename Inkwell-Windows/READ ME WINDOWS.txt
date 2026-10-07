@@ -77,11 +77,19 @@ SCRIBA AND THE MICROPHONE
 If Scriba says Windows refused the microphone: Settings, Privacy and
 security, Microphone. Switch on "Microphone access" and "Let desktop apps
 access your microphone". In this program Scriba transcribes with on-device
-Whisper inside the page (downloaded once, then offline). The separate Python
-Whisper of the old installer is not part of it, and neither are the "shelf"
-models (GGUF, run through Python libraries): the companion server inside
-Inkwell.exe answers with its built-in writing engine. (The in-app GECToR
-grammar model was removed in 7.33.)
+Whisper inside the page (downloaded once, then offline).
+
+
+THE WRITING MODEL ON THIS COMPUTER (NEW IN 7.34)
+------------------------------------------------
+Engine, "Writing model on this computer": the panel marks the model
+recommended for this computer's memory; press Install. It downloads once
+(about 2.5 GB) and runs offline with the llama.cpp runtime inside
+Inkwell.exe. Correct, Rewrite, Draft, Rewrite with a prompt and the prompt
+library use it. The model is Qwen3 4B Instruct 2507, the best careful editor
+measured on 6 October 2026 (details in INKWELL_HANDOFF_v7p34.txt). It needs
+8 GB of memory or more. Every rewrite is checked: one that drops a citation
+or number, or adds a name or number, is marked in red ("Use anyway").
 
 
 YOUR TABLETS CAN USE THIS COMPUTER'S MODEL

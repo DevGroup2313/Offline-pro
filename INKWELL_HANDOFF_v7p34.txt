@@ -53,11 +53,26 @@ nothing about your devices.
   Qwen3.5 4B               46%     12%        22%             16/16
   Ministral 3 14B          36%     30%        50%             10/16
   Llama 3.2 3B             39%     21%        47%             15/16
-  (more rows to follow: see the end of this file)
+  Qwen3.5 9B               42%     20%        34%             16/16
+  Ministral 3 3B           36%     20%        46%             16/16
+  Qwen3 4B 2507, 8-bit     36%     12%         8%             16/16
+  Gemma 4 E4B and 12B: not measured validly. With this runtime Gemma 4
+  wrote out its reasoning instead of the corrected text (E4B), and the 12B
+  run stopped when the runtime closed during the rewrites. Not offered.
+  (Rows marked by size were measured on 50 sentences of each kind; Qwen3 4B
+  2507 at 4-bit, LFM2.5, Qwen3.5 4B and Llama on 100. On the same first 50
+  correct sentences, Qwen3 4B 2507 changed 6% at 4-bit and 8% at 8-bit:
+  the 8-bit copy is not measurably better.)
 
 Findings:
 - Bigger is not better at this task. Ministral 3 14B changed half of the
-  correct sentences; it rewrites where it should leave alone.
+  correct sentences and Qwen3.5 9B a third; they rewrite where an editor
+  should leave alone.
+- For the Mac mini (16 GB) this means the measured choice is the same
+  Qwen3 4B Instruct 2507, not a larger model. What the Mac mini adds is
+  speed and room: Apple Silicon runs it on its graphics cores (Metal),
+  with memory to spare for long documents. Its speed there could not be
+  measured here (no Apple hardware in this sandbox).
 - Qwen3 4B Instruct 2507 is the best balance measured: it kept every
   citation in every rewrite and changed few correct sentences.
 - LFM2.5 1.2B is the most careful proofreader (3% made worse), but its
