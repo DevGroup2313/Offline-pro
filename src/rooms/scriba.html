@@ -222,6 +222,38 @@ html.cd-dark .scratch{background:rgba(255,255,255,.04);border-color:rgba(255,255
 html.cd-dark .cueNote{background:rgba(201,169,100,.10)}
 html.cd-dark .noteLab,html.cd-dark .markItem .mn{color:#d6bc85}
 html.cd-dark .sideEmpty{color:#9fb0c6}
+
+/* CE3: your words, and speakers */
+#wordsBtn{font-size:13px;padding:8px 13px}
+#wordsPanel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:-6px 0 16px;box-shadow:0 10px 26px -12px rgba(20,30,45,.35)}
+#wordsPanel h3{font-family:var(--serif);font-size:16px;font-weight:600;margin:0 0 4px}
+.wpHint{font-family:var(--serif);font-size:13.5px;color:var(--ink-2);margin:0 0 8px;line-height:1.45}
+#wordsList{width:100%;box-sizing:border-box;font-family:var(--serif);font-size:15px;line-height:1.5;border:1px solid var(--line);border-radius:9px;padding:8px 11px;background:rgba(255,255,255,.6);color:var(--ink);resize:vertical}
+.wpFill{display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0 4px;cursor:pointer}
+.wpFill input{width:16px;height:16px;margin:0}
+.wpBar{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.wpBar button{font-size:12.5px;padding:6px 12px}
+#wordsSay{flex:1;font-size:12px;font-style:italic;font-family:var(--serif);color:var(--ink-2)}
+.spkChip{display:inline-flex!important;align-items:center;gap:6px;font:700 11px/1 var(--ui)!important;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px 4px 7px!important;margin:0 0 4px 3px!important;border-radius:999px!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spkChip .dot,.spkItem .dot,.spkSw .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:currentColor}
+.spk-c0{color:#1B6B93}.spk-c1{color:#9a5b2e}.spk-c2{color:#4f7a33}.spk-c3{color:#7a4f8f}.spk-c4{color:#a03f55}.spk-c5{color:#2f7a74}
+.spkMode{display:flex;gap:4px;margin:0 0 4px}
+.spkMode button{flex:1;font-size:11.5px!important;padding:5px 8px!important}
+.spkMode button.on{background:#22304A!important;color:#fff!important}
+.spkSw{display:flex!important;align-items:center;gap:9px;text-align:left;font-size:12.5px!important;padding:7px 10px!important;margin:2px 0!important}
+.spkSw.on{box-shadow:inset 0 0 0 2px rgba(27,107,147,.45)!important}
+.spkNew{display:flex;gap:4px;margin:4px 0 2px}
+.spkNew input,.spkItem input{flex:1;min-width:0;font-family:var(--ui);font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--paper);color:var(--ink)}
+.spkNew button{font-size:12px!important;padding:5px 10px!important}
+.spkItem{display:flex;align-items:center;gap:8px;margin:4px 0}
+.spkItem .n{font-size:11.5px;color:var(--ink-2);white-space:nowrap}
+.spkItem button{font-size:12px!important;padding:3px 8px!important}
+html.cd-dark #wordsPanel,html.cd-sdark #wordsPanel{background:#171d28;border-color:rgba(255,255,255,.10)}
+html.cd-dark #wordsList,html.cd-sdark #wordsList,html.cd-dark .spkNew input,html.cd-dark .spkItem input{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);color:#e4e9f1}
+html.cd-dark .wpHint,html.cd-dark #wordsSay,html.cd-dark .spkItem .n{color:#9fb0c6}
+html.cd-dark .spk-c0{color:#7fbde0}html.cd-dark .spk-c1{color:#e0a676}html.cd-dark .spk-c2{color:#9fcf7f}html.cd-dark .spk-c3{color:#c6a0dc}html.cd-dark .spk-c4{color:#ec98aa}html.cd-dark .spk-c5{color:#86d2c8}
+#wordsBtn.on{background:#22304A!important;color:#fff!important}
+html.cd-dark .wrap #wordsBtn.on,html.cd-sdark .wrap #wordsBtn.on,html.cd-dark .wrap .spkMode button.on,html.cd-sdark .wrap .spkMode button.on{background:#6ba3d6!important;color:#0d1520!important;border-color:#8fbce6!important}
 html.cd-dark .cue.hl-imp{background:rgba(224,180,69,.13)}html.cd-dark .cue.hl-q{background:rgba(111,168,214,.13)}html.cd-dark .cue.hl-act{background:rgba(125,187,122,.12)}html.cd-dark .cue.hl-rev{background:rgba(224,143,163,.12)}
 </style>
 </head>
@@ -251,6 +283,14 @@ html.cd-dark .cue.hl-imp{background:rgba(224,180,69,.13)}html.cd-dark .cue.hl-q{
       <option value="ru-RU">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</option>
     </select>
     </label>
+    <button id="wordsBtn" type="button" aria-expanded="false" aria-controls="wordsPanel"></button>
+  </div>
+  <div id="wordsPanel" hidden>
+    <h3 id="wpTitle"></h3>
+    <p class="wpHint" id="wpHint"></p>
+    <textarea id="wordsList" rows="6" spellcheck="false" autocomplete="off"></textarea>
+    <label class="wpFill"><input type="checkbox" id="fillersChk"> <span id="fillersLbl"></span></label>
+    <div class="wpBar"><button id="wordsApply" type="button"></button><span id="wordsSay" aria-live="polite"></span><button id="wordsDone" type="button"></button></div>
   </div>
   <div class="bar">
     <button id="recBtn" type="button"><span class="dot"></span><span id="recLbl">Record</span></button>
@@ -336,6 +376,7 @@ function punctuate(t) {
 }
 function appendText(t) {
   t = punctuate(t.trim());
+  try { t = scribaPost(t); } catch (e) {}
   if (!t) return;
   /* 7.35: a phrase that continues the last sentence joins it */
   var last = pad.lastChild, lead = false;
@@ -807,9 +848,70 @@ function scribaPageErrMsg(err){
 }
 /* the one door every transcription goes through: local server first, then the page */
 function scribaTranscribe16k(f32,cb){
-  if(STT.available){ scribaPostWav(scribaWav16(f32),cb); return; }
-  scribaPageTranscribe(f32,cb);
+  /* CE3: every transcription, live or from a file, passes the word list and
+     the filler setting here */
+  var cb2=function(text,err){ try{ text=scribaPost(text); }catch(e){} cb(text,err); };
+  if(STT.available){ scribaPostWav(scribaWav16(f32),cb2); return; }
+  scribaPageTranscribe(f32,cb2);
 }
+/* ---- CE3: your words, and the fillers ---- */
+function scribaWords(){ try{ var a=JSON.parse(localStorage.getItem("scriba_words_v1")||"[]"); return Array.isArray(a)?a.filter(function(x){ return typeof x==="string"&&x.trim(); }):[]; }catch(e){ return []; } }
+function scribaFillersOn(){ try{ return localStorage.getItem("scriba_fillers_v1")==="1"; }catch(e){ return false; } }
+/* a sound key: letters that sound alike share a key ("Layton", "Leighton": LTN) */
+function scribaPhon(w){
+  w=String(w||"").toLowerCase().replace(/[^a-z]/g,""); if(!w) return "";
+  w=w.replace(/^kn|^gn|^pn|^wr|^ps/,function(m){ return m.slice(1); }).replace(/^x/,"s").replace(/^wh/,"w");
+  w=w.replace(/dge/g,"j").replace(/tch/g,"ch").replace(/sch/g,"sk").replace(/ph/g,"f").replace(/gh(?=[^aeiou]|$)/g,"").replace(/gh/g,"g")
+     .replace(/ck/g,"k").replace(/c(?=[eiy])/g,"s").replace(/c/g,"k").replace(/q/g,"k").replace(/x/g,"ks").replace(/z/g,"s").replace(/v/g,"f")
+     .replace(/sh|ch/g,"x").replace(/th/g,"0").replace(/d/g,"t").replace(/b/g,"p").replace(/g/g,"k");
+  var first=w[0], rest=w.slice(1).replace(/[aeiouyhw]/g,"");
+  var k=((/[aeiou]/.test(first))?"A":first.toUpperCase())+rest.toUpperCase();
+  return k.replace(/(.)\1+/g,"$1");
+}
+function scribaLev(a,b){ var m=a.length,n=b.length; if(!m) return n; if(!n) return m; var d=[],i,j; for(i=0;i<=n;i++) d[i]=i;
+  for(i=1;i<=m;i++){ var prev=d[0]; d[0]=i; for(j=1;j<=n;j++){ var t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,prev+(a[i-1]===b[j-1]?0:1)); prev=t; } } return d[n]; }
+var SCRIBA_COMMON=/^(the|a|an|and|or|but|of|to|in|on|at|by|for|with|from|as|is|was|are|were|be|been|it|its|this|that|these|those|he|she|they|we|you|i|his|her|their|our|your|my|me|him|them|us|not|no|so|if|then|than|there|here|what|which|who|whom|when|where|why|how|all|any|some|one|two|can|will|would|could|should|may|might|must|do|does|did|have|has|had|out|up|down|over|under|more|most|very|also|just|only|about|into|after|before|because|while|like|well|time|year|years|day|days|way|man|men|work|life|world|part|place|case|point|fact|good|great|new|old|first|last|long|little|own|other|same|such|make|made|know|known|see|seen|say|said|think|thought|take|taken|come|came|give|given|look|use|used|find|found|tell|told|ask|asked|seem|feel|try|leave|call|called)$/i;
+function scribaApplyWords(text){
+  var words=scribaWords(); if(!words.length||!text) return text;
+  var toks=String(text).split(/(\s+)/);
+  var idx=[]; toks.forEach(function(t,i){ if(/\S/.test(t)) idx.push(i); });
+  function core(t){ var m=t.match(/^([^A-Za-z\u00C0-\u024F0-9]*)([A-Za-z\u00C0-\u024F0-9][A-Za-z\u00C0-\u024F0-9'\u2019.-]*?)(['\u2019]s)?([^A-Za-z\u00C0-\u024F0-9]*)$/); return m?{pre:m[1],w:m[2],pos:m[3]||"",post:m[4]}:null; }
+  words.forEach(function(entry){
+    var ew=entry.trim().split(/\s+/), n=ew.length, ekey=ew.join(" ").toLowerCase(), ephon=ew.map(scribaPhon).join(" ");
+    for(var k=0;k+n<=idx.length;k++){
+      var parts=[], ok=true;
+      for(var q=0;q<n;q++){ var c=core(toks[idx[k+q]]); if(!c){ ok=false; break; } parts.push(c); }
+      if(!ok) continue;
+      if(n>1&&parts.some(function(c,q){ return q<n-1&&(c.post||c.pos); })) continue;
+      var heard=parts.map(function(c){ return c.w; }).join(" "), hkey=heard.toLowerCase();
+      if(heard===ew.join(" ")) continue;
+      var replace=false;
+      if(hkey===ekey) replace=true;
+      else if(n===1&&SCRIBA_COMMON.test(heard)) replace=false;
+      else {
+        var hphon=parts.map(function(c){ return scribaPhon(c.w); }).join(" "), sim=1-scribaLev(hkey,ekey)/Math.max(hkey.length,ekey.length);
+        var pd=scribaLev(hphon,ephon);
+        replace=(hphon===ephon&&sim>=0.5)||(pd<=1&&ephon.length>=4&&sim>=0.7);
+      }
+      if(!replace) continue;
+      var first=parts[0], last=parts[n-1];
+      toks[idx[k]]=first.pre+ew.join(" ")+last.pos+last.post;
+      for(var z=1;z<n;z++) toks[idx[k+z]]="";
+      for(var z2=1;z2<n;z2++) toks[idx[k+z2]-1]="";
+    }
+  });
+  return toks.join("").replace(/\s{2,}/g," ").trim();
+}
+function scribaRemoveFillers(text){
+  if(!text) return text;
+  var F="(?:u+m+|u+h+|e+r+m*|a+h+|h+m+|m+h*m+)";
+  /* a sentence that opened with one keeps its capital ("Um, so we" > "So we") */
+  var t=String(text).replace(new RegExp("(^|[.!?]\\s+)("+F+")[,.]?\\s+([a-z])","gi"),function(m,a,f,b){ return a+(f.charAt(0)!==f.charAt(0).toLowerCase()?b.toUpperCase():b); });
+  /* elsewhere it goes with its commas ("I, um, think" > "I think") */
+  t=t.replace(new RegExp("(^|,?\\s+)"+F+",?(?=\\s|[.;:!?]|$)","gi"),"");
+  return t.replace(/\s{2,}/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/(^|[.!?]\s+),\s*/g,"$1").trim();
+}
+function scribaPost(text){ if(!text) return text; if(scribaFillersOn()) text=scribaRemoveFillers(text); return scribaApplyWords(text); }
 function scribaCanTranscribe(){ return STT.available || scribaPageOk(); }
 
 /* 7.35: where speech pauses. Frames of 20 ms; the room's own noise floor
@@ -1284,13 +1386,13 @@ function sessIsVideo(r) { return !!(r && r.blob && /^video\//.test(r.blob.type |
 /* ---- the transcript as files ---- */
 function sessTime(sec, sep) { var ms = Math.round(sec * 1000), h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000), s2 = Math.floor(ms % 60000 / 1000), r = ms % 1000;
   return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m + ":" + (s2 < 10 ? "0" : "") + s2 + sep + (r < 100 ? (r < 10 ? "00" : "0") : "") + r; }
-function sessVtt(cues) { return "WEBVTT\n\n" + cues.map(function (c, i) { return (i + 1) + "\n" + sessTime(c.from, ".") + " --> " + sessTime(c.to, ".") + "\n" + c.text + "\n"; }).join("\n"); }
+function sessVtt(cues) { cues = sessSpkCues(cues, true); return "WEBVTT\n\n" + cues.map(function (c, i) { return (i + 1) + "\n" + sessTime(c.from, ".") + " --> " + sessTime(c.to, ".") + "\n" + c.text + "\n"; }).join("\n"); }
 function sessScratchText(html) { var d = document.createElement("div"); d.innerHTML = sessCleanHtml(html || "");
   d.querySelectorAll("li").forEach(function (li) { li.insertBefore(document.createTextNode("\u2022 "), li.firstChild); });
   d.querySelectorAll("li,h3,p,div,br").forEach(function (n) { if (n.tagName === "BR") n.replaceWith("\n"); else n.appendChild(document.createTextNode("\n")); });
   return (d.textContent || "").replace(/\n{3,}/g, "\n\n").trim(); }
 function sessTxt(r, timed) { var head = (r.name || "Transcript") + "\n" + new Date(r.ts).toLocaleString() + "\n\n";
-  var body = (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + (c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text
+  var body = (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + (sessSpkName(c) ? sessSpkName(c) + ": " : "") + (c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text
     + (c.note && c.note.trim() ? "\n    " + sessT("Note: ", "Note : ") + c.note.trim().replace(/\n/g, "\n    ") : ""); }).join(timed ? "\n" : "\n\n");
   var sc = sessScratchText(r.scratch);
   return head + body + "\n" + (sc ? "\n" + sessT("NOTES", "NOTES") + "\n" + sc + "\n" : ""); }
@@ -1314,9 +1416,9 @@ function sessDocx(r) {
   var SHADE = { imp: "FBEFC7", q: "DCEBF7", act: "DDF0DB", rev: "F8DDE4" };
   function para(text, opts) { opts = opts || {}; var rp = (opts.b ? "<w:b/>" : "") + (opts.sz ? '<w:sz w:val="' + opts.sz + '"/>' : "") + (opts.col ? '<w:color w:val="' + opts.col + '"/>' : "") + (opts.it ? "<w:i/>" : "");
     var ppr = (opts.after != null ? '<w:spacing w:after="' + opts.after + '"/>' : "") + (opts.shade ? '<w:shd w:val="clear" w:color="auto" w:fill="' + opts.shade + '"/>' : "") + (opts.ind ? '<w:ind w:left="' + opts.ind + '"/>' : "");
-    return "<w:p>" + (ppr ? "<w:pPr>" + ppr + "</w:pPr>" : "") + (opts.time ? '<w:r><w:rPr><w:color w:val="6B7A90"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">[' + sessEsc(opts.time) + "]  </w:t></w:r>" : "") + '<w:r>' + (rp ? "<w:rPr>" + rp + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + sessEsc(text) + "</w:t></w:r></w:p>"; }
+    return "<w:p>" + (ppr ? "<w:pPr>" + ppr + "</w:pPr>" : "") + (opts.time ? '<w:r><w:rPr><w:color w:val="6B7A90"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">[' + sessEsc(opts.time) + "]  </w:t></w:r>" : "") + (opts.spk ? '<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">' + sessEsc(opts.spk) + ": </w:t></w:r>" : "") + '<w:r>' + (rp ? "<w:rPr>" + rp + "</w:rPr>" : "") + '<w:t xml:space="preserve">' + sessEsc(text) + "</w:t></w:r></w:p>"; }
   var body = para(r.name || "Transcript", { b: true, sz: 32, after: 60 }) + para(new Date(r.ts).toLocaleString() + " · " + fmtDur(r.dur), { col: "6B7A90", sz: 18, after: 240 })
-    + (r.cues || []).map(function (c) { return para((c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text, { time: sessFmt(c.from), after: c.note && c.note.trim() ? 40 : 120, shade: c.hl ? SHADE[c.hl] : null })
+    + (r.cues || []).map(function (c) { return para((c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text, { time: sessFmt(c.from), spk: sessSpkName(c), after: c.note && c.note.trim() ? 40 : 120, shade: c.hl ? SHADE[c.hl] : null })
         + (c.note && c.note.trim() ? para(sessT("Note: ", "Note : ") + c.note.trim(), { it: true, col: "8A6526", ind: 360, after: 120 }) : ""); }).join("")
     + (sessScratchText(r.scratch) ? para(sessT("Notes", "Notes"), { b: true, sz: 26, after: 80 }) + sessScratchText(r.scratch).split("\n").map(function (l) { return para(l, { after: 60 }); }).join("") : "");
   var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + W + "><w:body>" + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>';
@@ -1358,6 +1460,7 @@ function sessOpen(r) {
     + '<div class="sessStatus" aria-live="polite"></div>'
     + '<div class="sessBody"><div class="sessCues"></div><aside class="sessSide">'
     + '<section class="sideSec"><h3>' + sessEsc(sessT("Highlights and notes", "Surlignages et notes")) + '</h3><div class="sideMarks"></div></section>'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Speakers", "Intervenants")) + '</h3><div class="sideSpk"></div></section>'
     + '<section class="sideSec"><h3>' + sessEsc(sessT("Scratchpad", "Bloc-notes")) + '</h3><div class="padBar">'
     + '<button type="button" data-cmd="bold" title="' + sessEsc(sessT("Bold", "Gras")) + '"><b>B</b></button><button type="button" data-cmd="italic" title="' + sessEsc(sessT("Italic", "Italique")) + '"><i>I</i></button><button type="button" data-cmd="underline" title="' + sessEsc(sessT("Underline", "Soulign\u00e9")) + '"><u>U</u></button>'
     + '<button type="button" data-cmd="h3" title="' + sessEsc(sessT("Heading", "Titre")) + '">H</button><button type="button" data-cmd="insertUnorderedList" title="' + sessEsc(sessT("Bullets", "Puces")) + '">\u2022</button><button type="button" data-cmd="insertOrderedList" title="' + sessEsc(sessT("Numbered", "Num\u00e9rot\u00e9e")) + '">1.</button></div>'
@@ -1401,6 +1504,7 @@ function sessClose() {
   sessFlush();
   var host = document.getElementById("sess"); host.classList.remove("on"); host.style.display = "none"; host.innerHTML = "";
   SESS.rec = null; SESS.media = null;
+  if (window.scribaWordsSync) scribaWordsSync();
   try { var bb = document.getElementById("cdBoostBtn"); if (bb && SESS.boostWas != null) bb.style.display = SESS.boostWas; } catch (e) {}
   var list = document.getElementById("recWrap"); if (list) list.style.display = "";
   renderRecordings();
@@ -1410,13 +1514,13 @@ function sessMenuFill(m) {
   var items = [
     [sessT("Text, with times (.txt)", "Texte, avec les temps (.txt)"), function () { sessSave(base + ".txt", "text/plain", sessTxt(r, true)); }],
     [sessT("Text, plain (.txt)", "Texte seul (.txt)"), function () { sessSave(base + ".txt", "text/plain", sessTxt(r, false)); }],
-    [sessT("Subtitles (.srt)", "Sous-titres (.srt)"), function () { sessSave(base + ".srt", "application/x-subrip", scribaSrt(r.cues)); }],
+    [sessT("Subtitles (.srt)", "Sous-titres (.srt)"), function () { sessSave(base + ".srt", "application/x-subrip", scribaSrt(sessSpkCues(r.cues))); }],
     [sessT("Web subtitles (.vtt)", "Sous-titres web (.vtt)"), function () { sessSave(base + ".vtt", "text/vtt", sessVtt(r.cues)); }],
     [sessT("Word document (.docx)", "Document Word (.docx)"), function () { sessSave(base + ".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", null, sessDocx(r)); }],
     [sessT("Copy the transcript", "Copier la transcription"), function () { var t = sessTxt(r, true); try { navigator.clipboard.writeText(t).then(function () { sessSay(sessT("Copied.", "Copié.")); }); } catch (e) {} }]
   ];
   if (window.parent !== window && window.__CD_NOCLOSE && !window.__INK_SCRIBA_RELAY) items.push([sessT("Into Inkwell's document", "Dans le document d’Inkwell"), function () {
-    try { parent.postMessage({ kind: "ink-scriba-to-desk", text: (r.cues || []).map(function (c) { return c.text; }).join("\n\n") }, "*"); sessSay(sessT("In the document.", "Dans le document.")); } catch (e) {} }]);
+    try { parent.postMessage({ kind: "ink-scriba-to-desk", text: sessSpkCues(r.cues).map(function (c) { return c.text; }).join("\n\n") }, "*"); sessSay(sessT("In the document.", "Dans le document.")); } catch (e) {} }]);
   m.innerHTML = "";
   items.forEach(function (it) { var b = document.createElement("button"); b.type = "button"; b.textContent = it[0]; b.disabled = !has; b.onclick = function (e) { e.stopPropagation(); m.parentNode.classList.remove("open"); it[1](); }; m.appendChild(b); });
   if (!has) { var p = document.createElement("div"); p.className = "cueEmpty"; p.style.padding = "6px 8px"; p.textContent = sessT("Transcribe first.", "Transcrivez d’abord."); m.appendChild(p); }
@@ -1442,9 +1546,11 @@ function sessRender() {
     var act = document.createElement("button"); act.type = "button"; act.className = "cueAct"; act.textContent = "\u22ef"; act.title = sessT("Highlight or add a note", "Surligner ou ajouter une note");
     act.setAttribute("aria-label", act.title); act.onclick = function (e) { e.stopPropagation(); sessHlMenu(row, i); };
     if (c.hl) row.classList.add("hl-" + c.hl);
+    if (c.spk) row.dataset.spk = c.spk;
     row.appendChild(t); row.appendChild(main); row.appendChild(act); box.appendChild(row);
   });
-  SESS.cur = -1; sessTick(); sessApplyFilter(); sessSideRender();
+  SESS.cur = -1; sessSpkChips(); sessTick(); sessApplyFilter(); sessSideRender();
+  if (window.scribaWordsSync) scribaWordsSync();
 }
 function sessFlush() { clearTimeout(SESS.saveT); if (SESS.rec) recPut(SESS.rec); }
 function sessTick() {
@@ -1509,6 +1615,8 @@ function sessHlMenu(row, i) {
   if (c.hl) { var nb = document.createElement("button"); nb.type = "button"; nb.className = "hlSw"; nb.textContent = sessT("No highlight", "Sans surlignage"); nb.onclick = function (e) { e.stopPropagation(); sessSetHl(i, null); pop.remove(); }; pop.appendChild(nb); }
   var ab = document.createElement("button"); ab.type = "button"; ab.className = "hlSw"; ab.textContent = c.note != null ? sessT("Go to the note", "Aller à la note") : sessT("Add a note", "Ajouter une note");
   ab.onclick = function (e) { e.stopPropagation(); pop.remove(); sessNote(i, true); }; pop.appendChild(ab);
+  var sb = document.createElement("button"); sb.type = "button"; sb.className = "hlSw"; sb.textContent = sessT("Speaker…", "Intervenant…");
+  sb.onclick = function (e) { e.stopPropagation(); pop.remove(); sessSpkMenu(row, i); }; pop.appendChild(sb);
   row.appendChild(pop);
   setTimeout(function () { document.addEventListener("click", function off() { pop.remove(); document.removeEventListener("click", off); }); }, 0);
 }
@@ -1539,6 +1647,7 @@ function sessApplyFilter() {
   document.querySelectorAll("#sess .cue").forEach(function (row, i) { var c = r.cues[i]; row.style.display = (!SESS.hlOnly || (c && (c.hl || (c.note != null)))) ? "" : "none"; });
 }
 function sessSideRender() {
+  sessSpkSide();
   var host = document.querySelector("#sess .sideMarks"), r = SESS.rec; if (!host || !r) return;
   var items = (r.cues || []).map(function (c, i) { return { c: c, i: i }; }).filter(function (o) { return o.c.hl || (o.c.note && o.c.note.trim()); });
   host.innerHTML = "";
@@ -1551,6 +1660,99 @@ function sessSideRender() {
     host.appendChild(b);
   });
 }
+/* ---- CE3: speakers. A recording keeps its speakers ({id, name, col}); a
+   paragraph names one by id, so renaming a speaker renames it everywhere. A
+   name shows where the speaker changes, as in a script. ---- */
+function sessSpk(id) { var l = (SESS.rec && SESS.rec.speakers) || []; for (var k = 0; k < l.length; k++) if (l[k].id === id) return l[k]; return null; }
+function sessSpkName(c) { var s = c && c.spk ? sessSpk(c.spk) : null; return s ? s.name : ""; }
+function sessAddSpk(name) {
+  var r = SESS.rec; r.speakers = r.speakers || [];
+  var used = r.speakers.map(function (s) { return s.col; }), col = 0; while (used.indexOf(col) >= 0 && col < 6) col++; if (col >= 6) col = r.speakers.length % 6;
+  var s = { id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: (name || "").trim() || sessT("Speaker ", "Intervenant ") + (r.speakers.length + 1), col: col };
+  r.speakers.push(s); return s;
+}
+function sessSpkChips() {
+  var r = SESS.rec; if (!r) return; var rows = document.querySelectorAll("#sess .cue"), prev = null;
+  rows.forEach(function (row, i) {
+    var c = r.cues[i], main = row.querySelector(".cueMain"), chip = main && main.querySelector(".spkChip"), s = c && c.spk ? sessSpk(c.spk) : null;
+    if (c && c.spk && !s) delete c.spk;
+    var want = s && (!prev || prev !== s.id);
+    if (!want) { if (chip) chip.remove(); }
+    else {
+      if (!chip) { chip = document.createElement("button"); chip.type = "button"; main.insertBefore(chip, main.firstChild);
+        chip.onclick = function (e) { e.stopPropagation(); sessSpkMenu(row, +row.dataset.i); }; }
+      chip.className = "spkChip spk-c" + (s.col || 0); chip.innerHTML = '<span class="dot"></span>' + sessEsc(s.name);
+      chip.title = sessT("Change the speaker", "Changer d’intervenant");
+    }
+    if (c && c.spk) row.dataset.spk = c.spk; else delete row.dataset.spk;
+    prev = c && c.spk ? c.spk : null;
+  });
+}
+/* "From here on" runs to the next change of speaker; "This paragraph" is one */
+function sessSetSpk(i, id, mode) {
+  var r = SESS.rec, cues = r.cues || [], c = cues[i]; if (!c) return;
+  var old = c.spk || null;
+  for (var j = i; j < cues.length; j++) {
+    if (j > i && (mode === "one" || (cues[j].spk || null) !== old)) break;
+    if (id) cues[j].spk = id; else delete cues[j].spk;
+  }
+  sessFlush(); sessSpkChips(); sessSpkSide();
+}
+function sessSpkMenu(row, i) {
+  document.querySelectorAll("#sess .hlPop").forEach(function (p) { p.remove(); });
+  var r = SESS.rec, c = r.cues[i], pop = document.createElement("div"); pop.className = "hlPop spkPop"; pop.setAttribute("role", "menu");
+  pop.addEventListener("click", function (e) { e.stopPropagation(); });
+  var mode = SESS.spkMode || "here";
+  var mb = document.createElement("div"); mb.className = "spkMode";
+  [["here", sessT("From here on", "À partir d’ici"), sessT("This paragraph and the ones after it, up to the next change of speaker", "Ce paragraphe et les suivants, jusqu’au prochain changement d’intervenant")],
+   ["one", sessT("This paragraph", "Ce paragraphe"), sessT("Only this paragraph", "Seulement ce paragraphe")]].forEach(function (m) {
+    var b = document.createElement("button"); b.type = "button"; b.textContent = m[1]; b.title = m[2]; b.className = mode === m[0] ? "on" : "";
+    b.onclick = function () { mode = SESS.spkMode = m[0]; mb.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); }); };
+    mb.appendChild(b); });
+  pop.appendChild(mb);
+  (r.speakers || []).forEach(function (s) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "spkSw spk-c" + (s.col || 0) + (c.spk === s.id ? " on" : "");
+    b.innerHTML = '<span class="dot"></span><span style="color:var(--ink)">' + sessEsc(s.name) + "</span>";
+    b.onclick = function () { sessSetSpk(i, s.id, mode); pop.remove(); }; pop.appendChild(b); });
+  var nw = document.createElement("div"); nw.className = "spkNew";
+  nw.innerHTML = '<input type="text" maxlength="60"><button type="button"></button>';
+  var ni = nw.querySelector("input"), nb = nw.querySelector("button");
+  ni.placeholder = sessT("New speaker’s name", "Nom du nouvel intervenant"); nb.textContent = sessT("Add", "Ajouter");
+  function add() { var s = sessAddSpk(ni.value); sessSetSpk(i, s.id, mode); pop.remove(); }
+  nb.onclick = add; ni.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); add(); } else if (e.key === "Escape") pop.remove(); });
+  pop.appendChild(nw);
+  if (c.spk) { var xb = document.createElement("button"); xb.type = "button"; xb.className = "hlSw"; xb.textContent = sessT("No speaker", "Sans intervenant");
+    xb.onclick = function () { sessSetSpk(i, null, mode); pop.remove(); }; pop.appendChild(xb); }
+  row.appendChild(pop);
+  if (!(r.speakers && r.speakers.length)) setTimeout(function () { ni.focus(); }, 20);
+  setTimeout(function () { document.addEventListener("click", function off() { pop.remove(); document.removeEventListener("click", off); }); }, 0);
+}
+function sessSpkSide() {
+  var host = document.querySelector("#sess .sideSpk"), r = SESS.rec; if (!host || !r) return;
+  if (host.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
+  host.innerHTML = "";
+  var list = r.speakers || [];
+  if (!list.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("Name who speaks with ⋯ beside a paragraph, then Speaker. Rename a speaker here and every paragraph follows.", "Nommez qui parle avec ⋯ à côté d’un paragraphe, puis Intervenant. Renommez un intervenant ici et tous ses paragraphes suivent."); host.appendChild(e); return; }
+  list.forEach(function (s) {
+    var n = (r.cues || []).filter(function (c) { return c.spk === s.id; }).length;
+    var it = document.createElement("div"); it.className = "spkItem spk-c" + (s.col || 0);
+    it.innerHTML = '<span class="dot"></span><input type="text" maxlength="60"><span class="n"></span><button type="button" data-a="go"></button><button type="button" data-a="x">×</button>';
+    var inp = it.querySelector("input"); inp.value = s.name; inp.setAttribute("aria-label", sessT("Speaker’s name", "Nom de l’intervenant"));
+    it.querySelector(".n").textContent = n + " " + sessT(n === 1 ? "paragraph" : "paragraphs", n === 1 ? "paragraphe" : "paragraphes");
+    var go = it.querySelector('[data-a="go"]'); go.textContent = sessT("First", "Premier"); go.title = sessT("Go to this speaker’s first paragraph", "Aller au premier paragraphe de cet intervenant"); go.disabled = !n;
+    go.onclick = function () { var i = (r.cues || []).findIndex(function (c) { return c.spk === s.id; }); var row = document.querySelectorAll("#sess .cue")[i];
+      if (SESS.media && r.cues[i]) SESS.media.currentTime = r.cues[i].from + 0.01; if (row) { row.style.display = ""; sessScrollTo(row); } };
+    var del = it.querySelector('[data-a="x"]'); del.title = sessT("Remove this speaker (the paragraphs stay)", "Retirer cet intervenant (les paragraphes restent)"); del.setAttribute("aria-label", del.title);
+    del.onclick = function () { r.speakers = list.filter(function (x) { return x !== s; }); (r.cues || []).forEach(function (c) { if (c.spk === s.id) delete c.spk; }); sessFlush(); sessSpkChips(); sessSpkSide(); };
+    inp.addEventListener("input", function () { var v = inp.value.trim(); if (v) { s.name = v; sessSpkChips(); clearTimeout(SESS.saveT); SESS.saveT = setTimeout(sessFlush, 600); } });
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
+    inp.addEventListener("blur", function () { if (!inp.value.trim()) inp.value = s.name; sessFlush(); setTimeout(sessSpkSide, 0); });
+    host.appendChild(it);
+  });
+}
+/* the transcript with its speakers named, for the files that leave */
+function sessSpkCues(cues, vtt) { return (cues || []).map(function (c) { var n = sessSpkName(c); if (!n) return c;
+  return { from: c.from, to: c.to, text: vtt ? "<v " + n.replace(/[<>&]/g, "") + ">" + c.text.replace(/</g, "&lt;") : n + ": " + c.text }; }); }
 /* the scratchpad: a little formatting, kept as clean HTML with the recording */
 function sessCleanHtml(html) {
   var d = document.createElement("div"); d.innerHTML = html || "";
@@ -1649,6 +1851,37 @@ function sessSlideView(list, k) {
   function key(e) { if (e.key === "Escape") close(); else if (e.key === "ArrowLeft") { k = (k - 1 + list.length) % list.length; show(); } else if (e.key === "ArrowRight") { k = (k + 1) % list.length; show(); } }
   document.addEventListener("keydown", key); show(); document.body.appendChild(ov);
 }
+/* ---- CE3: the Words panel: your names and terms, and the fillers ---- */
+(function () {
+  var btn = document.getElementById("wordsBtn"), pan = document.getElementById("wordsPanel"); if (!btn || !pan) return;
+  var ta = document.getElementById("wordsList"), fc = document.getElementById("fillersChk"), ap = document.getElementById("wordsApply"), say = document.getElementById("wordsSay");
+  btn.textContent = sessT("Your words", "Vos mots");
+  btn.title = sessT("Names and terms to spell your way; remove um and uh", "Noms et termes à écrire à votre façon ; retirer euh et hum");
+  document.getElementById("wpTitle").textContent = sessT("Your words", "Vos mots");
+  document.getElementById("wpHint").textContent = sessT("Names and terms the speech model should spell your way, one per line. A word that sounds like one of these is written as you wrote it. This applies to every new transcript.",
+    "Les noms et termes que le modèle vocal doit écrire à votre façon, un par ligne. Un mot qui sonne comme l’un d’eux est écrit comme vous l’avez écrit. Cela s’applique à chaque nouvelle transcription.");
+  ta.placeholder = sessT("Leighton\nLinnell\nphotosynthesis", "Leighton\nLinnell\nphotosynthèse");
+  document.getElementById("fillersLbl").textContent = sessT("Remove “um”, “uh” and “er”", "Retirer « um », « uh » et « er »");
+  ap.textContent = sessT("Apply to the open session", "Appliquer à la session ouverte");
+  ap.title = sessT("Correct a transcript made before these words were added", "Corriger une transcription faite avant l’ajout de ces mots");
+  document.getElementById("wordsDone").textContent = sessT("Done", "Fermer");
+  function load() { ta.value = scribaWords().join("\n"); fc.checked = scribaFillersOn(); }
+  function save() { var l = [], seen = {}; ta.value.split("\n").forEach(function (w) { w = w.trim().replace(/\s+/g, " "); if (w && !seen[w.toLowerCase()]) { seen[w.toLowerCase()] = 1; l.push(w); } });
+    try { localStorage.setItem("scriba_words_v1", JSON.stringify(l)); localStorage.setItem("scriba_fillers_v1", fc.checked ? "1" : "0"); } catch (e) {} }
+  function sync() { ap.disabled = !(SESS.rec && SESS.rec.cues && SESS.rec.cues.length); }
+  function show(on) { pan.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false"); btn.classList.toggle("on", on); if (on) { load(); sync(); say.textContent = ""; } else save(); }
+  btn.onclick = function () { show(pan.hidden); };
+  document.getElementById("wordsDone").onclick = function () { show(false); };
+  var t = 0; ta.addEventListener("input", function () { clearTimeout(t); t = setTimeout(save, 500); });
+  ta.addEventListener("blur", save); fc.addEventListener("change", save);
+  ap.onclick = function () {
+    save(); var r = SESS.rec; if (!r || !r.cues || !r.cues.length) { sync(); return; }
+    var n = 0; r.cues.forEach(function (c) { var v = scribaPost(c.text); if (v !== c.text) { c.text = v; n++; } });
+    if (n) { recPut(r); sessRender(); }
+    say.textContent = n ? sessT("Corrected ", "Corrigé : ") + n + " " + sessT(n === 1 ? "paragraph" : "paragraphs", n === 1 ? "paragraphe" : "paragraphes") + "." : sessT("Nothing to correct.", "Rien à corriger.");
+  };
+  window.scribaWordsSync = sync;
+})();
 /* ---- the recordings list: open, and import ---- */
 (function () {
   var ib = document.getElementById("recImportBtn"), inp = document.getElementById("recImportFile");
