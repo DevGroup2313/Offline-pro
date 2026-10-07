@@ -248,9 +248,35 @@ html.cd-dark .sideEmpty{color:#9fb0c6}
 .spkItem{display:flex;align-items:center;gap:8px;margin:4px 0}
 .spkItem .n{font-size:11.5px;color:var(--ink-2);white-space:nowrap}
 .spkItem button{font-size:12px!important;padding:3px 8px!important}
+.sumMenu .menu{min-width:250px}
+.sumList{max-height:46vh;overflow:auto}
+.sumCard{border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin:0 0 8px;background:rgba(255,255,255,.5)}
+.sumCard summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:1px;padding:2px 0}
+.sumCard summary::-webkit-details-marker{display:none}
+.sumCard .sk{font-family:var(--serif);font-weight:600;font-size:14px}
+.sumCard .sm{font-size:11px;color:var(--ink-2)}
+.sumBody{font-family:var(--serif);font-size:14px;line-height:1.5;margin:6px 0}
+.sumBody h4{font-size:14.5px;margin:10px 0 3px}.sumBody h5{font-size:13.5px;margin:8px 0 2px}
+.sumBody p{margin:0 0 6px}.sumBody ul{margin:2px 0 6px;padding-left:18px}
+.sumT{font:600 11px/1 ui-monospace,Menlo,monospace!important;padding:2px 5px!important;margin:0 3px 0 0!important;color:#1B6B93;vertical-align:1px}
+.sumBody mark.fg{background:#f6d3cf;color:inherit;border-radius:3px;padding:0 2px}
+.sumWarn{font-size:11.5px;color:#8a4a26;margin:2px 0 6px}
+.sumBar{display:flex;gap:6px;flex-wrap:wrap}
+.sumBar button{font-size:11.5px!important;padding:4px 9px!important}
+.sumAsk{margin:0 0 8px}.sumAsk textarea{width:100%;box-sizing:border-box;font-family:var(--serif);font-size:14px;border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:var(--paper);color:var(--ink)}
+.sumAskBar{display:flex;gap:6px;margin-top:5px}.sumAskBar button{font-size:12px!important;padding:5px 10px!important}
+html.cd-dark .sumCard{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.10)}
+html.cd-dark .sumCard .sm{color:#9fb0c6}html.cd-dark .sumT{color:#7fbde0}html.cd-dark .sumWarn{color:#e3a77f}
+html.cd-dark .sumBody mark.fg{background:#6b2f2a;color:#fff}
+html.cd-dark .sumAsk textarea{background:#171d28;border-color:rgba(255,255,255,.12);color:#e4e9f1}
+.spkFind{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:10px 0 0}
+.spkFind button{font-size:12px!important;padding:5px 10px!important}
+.spkFind select{font-family:var(--ui);font-size:12px;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:var(--paper);color:var(--ink)}
+.spkHint{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink-2);margin:6px 0 0;line-height:1.4}
 html.cd-dark #wordsPanel,html.cd-sdark #wordsPanel{background:#171d28;border-color:rgba(255,255,255,.10)}
 html.cd-dark #wordsList,html.cd-sdark #wordsList,html.cd-dark .spkNew input,html.cd-dark .spkItem input{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);color:#e4e9f1}
-html.cd-dark .wpHint,html.cd-dark #wordsSay,html.cd-dark .spkItem .n{color:#9fb0c6}
+html.cd-dark .wpHint,html.cd-dark #wordsSay,html.cd-dark .spkItem .n,html.cd-dark .spkHint{color:#9fb0c6}
+html.cd-dark .spkFind select{background:#171d28;border-color:rgba(255,255,255,.10);color:#e4e9f1}
 html.cd-dark .spk-c0{color:#7fbde0}html.cd-dark .spk-c1{color:#e0a676}html.cd-dark .spk-c2{color:#9fcf7f}html.cd-dark .spk-c3{color:#c6a0dc}html.cd-dark .spk-c4{color:#ec98aa}html.cd-dark .spk-c5{color:#86d2c8}
 #wordsBtn.on{background:#22304A!important;color:#fff!important}
 html.cd-dark .wrap #wordsBtn.on,html.cd-sdark .wrap #wordsBtn.on,html.cd-dark .wrap .spkMode button.on,html.cd-sdark .wrap .spkMode button.on{background:#6ba3d6!important;color:#0d1520!important;border-color:#8fbce6!important}
@@ -477,10 +503,10 @@ function scribaOfferSrt(rec){
    continues the sentence joins its paragraph. done(cues, err, undecodable):
    cues are [{from, to, text}] in seconds. */
 function scribaStamp(sec){ var m=Math.floor(sec/60), s2=Math.floor(sec%60); return (m<10?"0":"")+m+":"+(s2<10?"0":"")+s2; }
-function scribaTranscribeCues(blob,progress,done){
+function scribaTranscribeCues(blob,progress,done,turns){
   scribaBlobTo16k(blob,function(f32,err){
     if(!f32){ done(null,err||"?",true); return; }
-    var segs=scribaSegments(f32,16000,24), cues=[], k=0, lastErr=null;
+    var segs=scribaCutAtTurns(scribaSegments(f32,16000,24),turns,16000), cues=[], k=0, lastErr=null;
     (function next(){
       if(k>=segs.length){ done(cues,lastErr,false); return; }
       try{ progress&&progress(k+1,segs.length); }catch(e){}
@@ -490,13 +516,29 @@ function scribaTranscribeCues(blob,progress,done){
         if(e2){ lastErr=e2; if(!cues.length){ done(cues,e2,false); return; } }
         if(text){
           var prev=cues.length?cues[cues.length-1]:null;
-          if(prev&&/^[a-z\u00E0-\u00FF]/.test(text)){ prev.text=scribaJoinInto(prev.text,text); prev.to=g.to/16000; }
+          if(prev&&!g.turn&&/^[a-z\u00E0-\u00FF]/.test(text)){ prev.text=scribaJoinInto(prev.text,text); prev.to=g.to/16000; }
           else cues.push({from:g.from/16000, to:g.to/16000, text:text});
         }
         k++; next();
       });
     })();
   });
+}
+/* CE3: where Scriba has found the speakers, a piece is also cut where the
+   speaker changes, so each paragraph has one speaker; a turn starts a new
+   paragraph even mid-sentence. Pieces shorter than a second are not made. */
+function scribaCutAtTurns(segs,turns,rate){
+  if(!turns||!turns.length) return segs;
+  var out=[];
+  segs.forEach(function(g){
+    var start=g.from;
+    turns.forEach(function(t){ var at=Math.round(t*rate); if(at>start+rate&&at<g.to-rate){ out.push({from:start,to:at,turn:start!==g.from}); start=at; } });
+    out.push({from:start,to:g.to,turn:start!==g.from});
+  });
+  /* the first piece after a cut that falls on a piece boundary is a turn too */
+  var ts={}; turns.forEach(function(t){ ts[Math.round(t*10)]=1; });
+  out.forEach(function(g){ if(!g.turn){ var t=Math.round(g.from/rate*10); if(ts[t]||ts[t-1]||ts[t+1]) g.turn=true; } });
+  return out;
 }
 function cdTranscribe(rec){
   /* 7.26: a saved recording is decoded in the page, turned into 16 kHz WAV and
@@ -1366,6 +1408,121 @@ try { document.getElementById("tabDictateBtn").onclick = function () {
   });
   cdBoostApply();
 }catch(e){}})();</script>
+<script type="text/plain" id="scribaSpkWorker">
+/* Scriba's speaker finder: runs in its own worker, offline once its two small
+   models are on the device. Measured on AMI meetings before it was added; see
+   tools/speakers/README.md. Steps:
+   1. pyannote segmentation 3.0 (MIT) reads 10 s windows: who speaks when,
+      within each window, up to three voices at once;
+   2. WeSpeaker ResNet34 (CC BY 4.0) makes a voice print of each voice in each
+      window, from the moments it speaks alone;
+   3. the voice prints are grouped (closest groups first); groups too small
+      to be a person join the nearest real one; a number of speakers the
+      writer gives is honoured;
+   4. each moment takes as many speakers as the windows hear, the strongest
+      groups first. */
+let TF = null, M = null;
+const FR = 10 / 589, POW = [[], [0], [1], [2], [0, 1], [0, 2], [1, 2]];
+async function load(urls) {
+  if (M) return M;
+  let lastErr = null;
+  for (const u of urls) { try { TF = await import(u.module); if (u.wasm) TF.env.backends.onnx.wasm.wasmPaths = u.wasm; break; } catch (e) { lastErr = e; TF = null; } }
+  if (!TF) throw new Error('the speech library could not be loaded (' + String(lastErr && lastErr.message || lastErr) + ')');
+  const files = {}, prog = p => { if (p && p.file) { files[p.file] = p.loaded || files[p.file] || 0; let t = 0; for (const k in files) t += files[k]; postMessage({ type: 'fetch', mb: Math.round(t / 1048576) }); } };
+  const SEG = 'onnx-community/pyannote-segmentation-3.0', EMB = 'onnx-community/wespeaker-voxceleb-resnet34-LM';
+  M = { seg: await TF.AutoModelForAudioFrameClassification.from_pretrained(SEG, { dtype: 'fp32', progress_callback: prog }),
+    sp: await TF.AutoProcessor.from_pretrained(SEG, { progress_callback: prog }),
+    emb: await TF.AutoModel.from_pretrained(EMB, { dtype: 'fp32', progress_callback: prog }),
+    fe: await TF.AutoFeatureExtractor.from_pretrained(EMB, { progress_callback: prog }) };
+  return M;
+}
+async function analyse(f, step) {
+  const SR = 16000, W = 160000, st = Math.round(step * SR), minClean = 0.6;
+  const starts = []; for (let s = 0; s + W <= f.length; s += st) starts.push(s);
+  if (!starts.length || starts[starts.length - 1] + W < f.length) starts.push(Math.max(0, f.length - W));
+  const wins = [], embs = [];
+  for (let wi = 0; wi < starts.length; wi++) {
+    const s = starts[wi];
+    if (wi % 4 === 0) postMessage({ type: 'step', k: wi + 1, n: starts.length });
+    let chunk = f.subarray(s, s + W); if (chunk.length < W) { const p = new Float32Array(W); p.set(chunk); chunk = p; }
+    const { logits } = await M.seg(await M.sp(chunk));
+    const nF = logits.dims[1], L = logits.data, act = [new Uint8Array(nF), new Uint8Array(nF), new Uint8Array(nF)];
+    for (let i = 0; i < nF; i++) { let b = 0, bv = -1e9; for (let c = 0; c < 7; c++) if (L[i * 7 + c] > bv) { bv = L[i * 7 + c]; b = c; } for (const k of POW[b]) act[k][i] = 1; }
+    wins.push({ s, nF, act, cl: [-1, -1, -1] });
+    for (let k = 0; k < 3; k++) {
+      const clean = []; for (let i = 0; i < nF; i++) if (act[k][i] && act[0][i] + act[1][i] + act[2][i] === 1) clean.push(i);
+      if (clean.length * FR < minClean) continue;
+      const parts = []; let n = 0;
+      for (const i of clean) { const a = Math.floor(i * FR * SR), b = Math.min(chunk.length, Math.floor((i + 1) * FR * SR)); parts.push([a, b]); n += b - a; }
+      const buf = new Float32Array(n); let p = 0; for (const [a, b] of parts) { buf.set(chunk.subarray(a, b), p); p += b - a; }
+      const out = await M.emb(await M.fe(buf));
+      const v = Float32Array.from(out.last_hidden_state.data); let nn = 0; for (const x of v) nn += x * x; nn = Math.sqrt(nn) || 1; for (let j = 0; j < v.length; j++) v[j] /= nn;
+      embs.push({ v, w: wins.length - 1, k });
+    }
+  }
+  return { wins, embs };
+}
+function assign(A, nSamples, o) {
+  const SR = 16000, thr = o.thr, { embs, wins } = A, minSize = Math.max(o.minSize || 5, Math.round(o.minFrac * embs.length));
+  const D = embs.length ? embs[0].v.length : 0;
+  const cl = embs.map((e, i) => ({ sum: Float32Array.from(e.v), n: 1, members: [i], alive: true }));
+  const cos = (a, b) => { let d = 0, na = 0, nb = 0; for (let j = 0; j < D; j++) { d += a.sum[j] * b.sum[j]; na += a.sum[j] * a.sum[j]; nb += b.sum[j] * b.sum[j]; } return 1 - d / Math.sqrt(na * nb); };
+  const heap = [], push = x => { heap.push(x); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  const ver = cl.map(() => 0);
+  /* a number of speakers the writer gives: merge with no threshold, as far as
+     the last point where that many groups are big enough to be a person (a
+     full pass; above 1500 voice prints, only merging down, to spare memory) */
+  let stopAt = Infinity; const full = o.n && cl.length <= 1500;
+  if (full) {
+    const c2 = embs.map(e => ({ sum: Float32Array.from(e.v), n: 1, alive: true })), h2 = [], v2 = c2.map(() => 0);
+    const push2 = x => { h2.push(x); let i = h2.length - 1; while (i) { const p = (i - 1) >> 1; if (h2[p][0] <= h2[i][0]) break; [h2[p], h2[i]] = [h2[i], h2[p]]; i = p; } };
+    const pop2 = () => { const top = h2[0], lst = h2.pop(); if (h2.length) { h2[0] = lst; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < h2.length && h2[l][0] < h2[m][0]) m = l; if (r < h2.length && h2[r][0] < h2[m][0]) m = r; if (m === i) break; [h2[m], h2[i]] = [h2[i], h2[m]]; i = m; } } return top; };
+    for (let i = 0; i < c2.length; i++) for (let j = i + 1; j < c2.length; j++) push2([cos(c2[i], c2[j]), i, j, 0, 0]);
+    let big = minSize <= 1 ? c2.length : 0, step = 0, last = 0;
+    while (h2.length) { const [d, i, j, vi, vj] = pop2(); if (!c2[i].alive || !c2[j].alive || v2[i] !== vi || v2[j] !== vj) continue;
+      const a = c2[i], b = c2[j], before = (a.n >= minSize) + (b.n >= minSize);
+      for (let q = 0; q < D; q++) a.sum[q] += b.sum[q]; a.n += b.n; b.alive = false; v2[i]++; step++;
+      big += (a.n >= minSize) - before; if (big >= o.n) last = step;
+      for (let k = 0; k < c2.length; k++) if (k !== i && c2[k].alive) { const dd = cos(a, c2[k]); push2(k < i ? [dd, k, i, v2[k], v2[i]] : [dd, i, k, v2[i], v2[k]]); } }
+    stopAt = last;
+  }
+  const lim = full ? Infinity : thr; let steps = 0;
+  for (let i = 0; i < cl.length; i++) for (let j = i + 1; j < cl.length; j++) { const d = cos(cl[i], cl[j]); if (d < lim) push([d, i, j, 0, 0]); }
+  while (heap.length) {
+    const [d, i, j, vi, vj] = pop(); if (!cl[i].alive || !cl[j].alive || ver[i] !== vi || ver[j] !== vj) continue;
+    if (d >= lim || steps >= stopAt) break; steps++;
+    const a = cl[i], b = cl[j]; for (let q = 0; q < D; q++) a.sum[q] += b.sum[q]; a.n += b.n; a.members.push(...b.members); b.alive = false; ver[i]++;
+    for (let k = 0; k < cl.length; k++) if (k !== i && cl[k].alive) { const dd = cos(a, cl[k]); if (dd < thr) push(k < i ? [dd, k, i, ver[k], ver[i]] : [dd, i, k, ver[i], ver[k]]); }
+  }
+  const groups = cl.filter(c => c.alive), big = groups.filter(g => g.n >= minSize), small = groups.filter(g => g.n < minSize);
+  const final = big.length ? big : groups;
+  if (big.length) for (const s of small) { let best = null, bd = 9; for (const g of big) { const d = cos(s, g); if (d < bd) { bd = d; best = g; } } best.members.push(...s.members); for (let q = 0; q < D; q++) best.sum[q] += s.sum[q]; best.n += s.n; }
+  if (o.n) while (final.length > o.n) { let bi = 0, bj = 1, bd = 9; for (let i = 0; i < final.length; i++) for (let j = i + 1; j < final.length; j++) { const d = cos(final[i], final[j]); if (d < bd) { bd = d; bi = i; bj = j; } }
+    const a = final[bi], b = final[bj]; for (let q = 0; q < D; q++) a.sum[q] += b.sum[q]; a.n += b.n; a.members.push(...b.members); final.splice(bj, 1); }
+  final.forEach((g, gi) => g.members.forEach(m => { const e = embs[m]; wins[e.w].cl[e.k] = gi; }));
+  const total = Math.ceil(nSamples / SR / FR) + 1, K = final.length;
+  const score = Array.from({ length: K }, () => new Float32Array(total)), cnt = new Float32Array(total), cov = new Float32Array(total);
+  for (const w of wins) { const off = Math.round(w.s / SR / FR);
+    for (let i = 0; i < w.nF; i++) { const g = off + i; if (g >= total) break; cov[g]++; cnt[g] += w.act[0][i] + w.act[1][i] + w.act[2][i];
+      for (let k = 0; k < 3; k++) if (w.act[k][i] && w.cl[k] >= 0) score[w.cl[k]][g] += 1; } }
+  const lab = Array.from({ length: K }, () => new Uint8Array(total));
+  for (let g = 0; g < total; g++) { if (!cov[g]) continue; const c = Math.round(cnt[g] / cov[g]); if (!c) continue;
+    const order = [...Array(K).keys()].filter(k => score[k][g] > 0).sort((a, b) => score[b][g] - score[a][g]).slice(0, c); for (const k of order) lab[k][g] = 1; }
+  const segs = []; for (let k = 0; k < K; k++) { let st = -1; for (let g = 0; g <= total; g++) { const on = g < total && lab[k][g]; if (on && st < 0) st = g; if (!on && st >= 0) { if ((g - st) * FR >= 0.1) segs.push({ start: +(st * FR).toFixed(2), end: +(g * FR).toFixed(2), spk: k }); st = -1; } } }
+  segs.sort((a, b) => a.start - b.start);
+  return { segs, nspk: K };
+}
+onmessage = async ev => { const m = ev.data || {};
+  try {
+    await load(m.urls); postMessage({ type: 'ready' });
+    const A = await analyse(m.audio, m.step || 2.5);
+    postMessage({ type: 'step', k: 1, n: 0 });
+    const r = assign(A, m.audio.length, { thr: m.thr, minFrac: m.minFrac, minSize: m.minSize || 5, n: m.n || 0 });
+    postMessage({ type: 'result', segs: r.segs, nspk: r.nspk });
+  } catch (e) { postMessage({ type: 'error', message: String(e && e.message || e) }); }
+};
+</script>
 <script>
 /* ==================== CE1: A RECORDING'S SESSION ====================
    Caption.Ed's playback and editing, offline. A recording (made here or
@@ -1394,8 +1551,8 @@ function sessScratchText(html) { var d = document.createElement("div"); d.innerH
 function sessTxt(r, timed) { var head = (r.name || "Transcript") + "\n" + new Date(r.ts).toLocaleString() + "\n\n";
   var body = (r.cues || []).map(function (c) { return (timed ? "[" + sessFmt(c.from) + "] " : "") + (sessSpkName(c) ? sessSpkName(c) + ": " : "") + (c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text
     + (c.note && c.note.trim() ? "\n    " + sessT("Note: ", "Note : ") + c.note.trim().replace(/\n/g, "\n    ") : ""); }).join(timed ? "\n" : "\n\n");
-  var sc = sessScratchText(r.scratch);
-  return head + body + "\n" + (sc ? "\n" + sessT("NOTES", "NOTES") + "\n" + sc + "\n" : ""); }
+  var sc = sessScratchText(r.scratch), sm = (r.summaries || []).map(function (s) { return s.label.toUpperCase() + "\n" + sessSumPlain(s); }).join("\n\n");
+  return head + body + "\n" + (sc ? "\n" + sessT("NOTES", "NOTES") + "\n" + sc + "\n" : "") + (sm ? "\n" + sm + "\n" : ""); }
 /* a Word document: a real .docx (a stored ZIP of OOXML parts), built here */
 var SESS_CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function sessCrc(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = SESS_CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
@@ -1420,7 +1577,9 @@ function sessDocx(r) {
   var body = para(r.name || "Transcript", { b: true, sz: 32, after: 60 }) + para(new Date(r.ts).toLocaleString() + " · " + fmtDur(r.dur), { col: "6B7A90", sz: 18, after: 240 })
     + (r.cues || []).map(function (c) { return para((c.hl ? "(" + sessHlName(c.hl) + ") " : "") + c.text, { time: sessFmt(c.from), spk: sessSpkName(c), after: c.note && c.note.trim() ? 40 : 120, shade: c.hl ? SHADE[c.hl] : null })
         + (c.note && c.note.trim() ? para(sessT("Note: ", "Note : ") + c.note.trim(), { it: true, col: "8A6526", ind: 360, after: 120 }) : ""); }).join("")
-    + (sessScratchText(r.scratch) ? para(sessT("Notes", "Notes"), { b: true, sz: 26, after: 80 }) + sessScratchText(r.scratch).split("\n").map(function (l) { return para(l, { after: 60 }); }).join("") : "");
+    + (sessScratchText(r.scratch) ? para(sessT("Notes", "Notes"), { b: true, sz: 26, after: 80 }) + sessScratchText(r.scratch).split("\n").map(function (l) { return para(l, { after: 60 }); }).join("") : "")
+    + (r.summaries || []).map(function (s) { return para(s.label, { b: true, sz: 26, after: 80 }) + String(s.text || "").split("\n").filter(function (l) { return l.trim(); }).map(function (l) {
+        var h = /^(#+)\s+(.*)$/.exec(l); return h ? para(h[2], { b: true, sz: h[1].length > 2 ? 22 : 24, after: 60 }) : para(l.replace(/^\s*[-*]\s+/, "\u2022 ").replace(/\*\*([^*]+)\*\*/g, "$1"), { after: 60 }); }).join(""); }).join("");
   var doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + W + "><w:body>" + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>';
   var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
   var rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
@@ -1456,11 +1615,16 @@ function sessOpen(r) {
     + '<span class="sp"></span><input type="search" data-k="find" placeholder="' + sessEsc(sessT("Search the transcript", "Chercher dans la transcription")) + '"><span class="sessFind"></span>'
     + '<button type="button" data-k="noteNow" title="' + sessEsc(sessT("Write a note on the paragraph being spoken", "\u00c9crire une note sur le paragraphe en cours")) + '">' + sessEsc(sessT("Note here", "Note ici")) + '</button><button type="button" data-k="hlOnly" title="' + sessEsc(sessT("Show only highlighted or annotated paragraphs", "N\u2019afficher que les paragraphes surlign\u00e9s ou annot\u00e9s")) + '">' + sessEsc(sessT("Highlights only", "Surlignages seuls")) + '</button>'
     + '<button type="button" data-k="tx"></button>'
+    + '<span class="sessMenu sumMenu"><button type="button" data-k="sum">' + sessEsc(sessT("Summarise ▾", "Résumer ▾")) + '</button><span class="menu" role="menu"></span></span><button type="button" data-k="sumStop" style="display:none">' + sessEsc(sessT("Stop", "Arrêter")) + '</button>'
     + '<span class="sessMenu"><button type="button" data-k="exp">' + sessEsc(sessT("Export ▾", "Exporter ▾")) + '</button><span class="menu" role="menu"></span></span></div>'
     + '<div class="sessStatus" aria-live="polite"></div>'
     + '<div class="sessBody"><div class="sessCues"></div><aside class="sessSide">'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Summaries", "Résumés")) + '</h3><div class="sumList"></div></section>'
     + '<section class="sideSec"><h3>' + sessEsc(sessT("Highlights and notes", "Surlignages et notes")) + '</h3><div class="sideMarks"></div></section>'
-    + '<section class="sideSec"><h3>' + sessEsc(sessT("Speakers", "Intervenants")) + '</h3><div class="sideSpk"></div></section>'
+    + '<section class="sideSec"><h3>' + sessEsc(sessT("Speakers", "Intervenants")) + '</h3><div class="sideSpk"></div>'
+    + '<div class="spkFind"><button type="button" data-k="findSpk"></button><select data-k="spkN" aria-label="' + sessEsc(sessT("How many speakers", "Combien d\u2019intervenants")) + '"><option value="0">' + sessEsc(sessT("How many? Not sure", "Combien ? Je ne sais pas")) + '</option>'
+    + [2, 3, 4, 5, 6, 7, 8].map(function (n) { return '<option value="' + n + '">' + n + " " + sessEsc(sessT("speakers", "intervenants")) + "</option>"; }).join("") + '</select></div>'
+    + '<p class="spkHint"></p></section>'
     + '<section class="sideSec"><h3>' + sessEsc(sessT("Scratchpad", "Bloc-notes")) + '</h3><div class="padBar">'
     + '<button type="button" data-cmd="bold" title="' + sessEsc(sessT("Bold", "Gras")) + '"><b>B</b></button><button type="button" data-cmd="italic" title="' + sessEsc(sessT("Italic", "Italique")) + '"><i>I</i></button><button type="button" data-cmd="underline" title="' + sessEsc(sessT("Underline", "Soulign\u00e9")) + '"><u>U</u></button>'
     + '<button type="button" data-cmd="h3" title="' + sessEsc(sessT("Heading", "Titre")) + '">H</button><button type="button" data-cmd="insertUnorderedList" title="' + sessEsc(sessT("Bullets", "Puces")) + '">\u2022</button><button type="button" data-cmd="insertOrderedList" title="' + sessEsc(sessT("Numbered", "Num\u00e9rot\u00e9e")) + '">1.</button></div>'
@@ -1492,9 +1656,13 @@ function sessOpen(r) {
   sb.onclick = function () { sf.value = ""; sf.click(); };
   sf.onchange = function () { sessAddSlides([].slice.call(sf.files || [])); };
   sessSlidesRender();
-  var menu = host.querySelector(".sessMenu");
-  host.querySelector('[data-k="exp"]').onclick = function (e) { e.stopPropagation(); sessMenuFill(menu.querySelector(".menu")); menu.classList.toggle("open"); };
-  document.addEventListener("click", function () { menu.classList.remove("open"); });
+  host.querySelector('[data-k="findSpk"]').onclick = sessFindSpeakers;
+  var menu = host.querySelector(".sessMenu:not(.sumMenu)"), smenu = host.querySelector(".sumMenu");
+  host.querySelector('[data-k="exp"]').onclick = function (e) { e.stopPropagation(); smenu.classList.remove("open"); sessMenuFill(menu.querySelector(".menu")); menu.classList.toggle("open"); };
+  host.querySelector('[data-k="sum"]').onclick = function (e) { e.stopPropagation(); menu.classList.remove("open"); sessSumMenuFill(smenu.querySelector(".menu")); smenu.classList.toggle("open"); };
+  host.querySelector('[data-k="sumStop"]').onclick = function () { SESS.sumStop = true; sessSay(sessT("Stopping after this part\u2026", "Arrêt après cette partie\u2026")); };
+  document.addEventListener("click", function () { menu.classList.remove("open"); smenu.classList.remove("open"); });
+  sessSumBusy(!!SESS.summing);
   host.classList.add("on"); host.style.display = "";
   sessRender();
   if (!(r.cues && r.cues.length) && r._autoTx) { r._autoTx = false; sessTranscribe(); }
@@ -1549,7 +1717,7 @@ function sessRender() {
     if (c.spk) row.dataset.spk = c.spk;
     row.appendChild(t); row.appendChild(main); row.appendChild(act); box.appendChild(row);
   });
-  SESS.cur = -1; sessSpkChips(); sessTick(); sessApplyFilter(); sessSideRender();
+  SESS.cur = -1; sessSpkChips(); sessTick(); sessApplyFilter(); sessSideRender(); sessSumRender();
   if (window.scribaWordsSync) scribaWordsSync();
 }
 function sessFlush() { clearTimeout(SESS.saveT); if (SESS.rec) recPut(SESS.rec); }
@@ -1590,13 +1758,14 @@ function sessTranscribe() {
   var tx = document.querySelector('#sess [data-k="tx"]'); if (tx) tx.disabled = true;
   sessSay(sessT("Preparing the recording…", "Préparation de l’enregistrement…"));
   scribaTranscribeCues(r.blob, function (k, n) { sessSay(sessT("Transcribing ", "Transcription ") + k + " / " + n + "…"); }, function (cues, err, undecodable) {
+    if (r.diar && cues && cues.length) sessApplyDiar(r, cues);
     if (tx) tx.disabled = false;
     if (undecodable) { sessSay(sessT("This file's sound could not be decoded on this device: ", "Le son de ce fichier n’a pas pu être décodé sur cet appareil : ") + (err || "?")); return; }
     if (err && (!cues || !cues.length)) { sessSay(err); return; }
     if (SESS.rec !== r) { r.cues = cues; recPut(r); return; }
     r.cues = cues; recPut(r); sessRender();
     sessSay(cues.length ? sessT("Transcribed: ", "Transcrit : ") + cues.length + " " + sessT(cues.length === 1 ? "paragraph" : "paragraphs", cues.length === 1 ? "paragraphe" : "paragraphes") + "." : sessT("Nothing was recognised.", "Rien n’a été reconnu."));
-  });
+  }, r.diar ? sessTurns(r.diar) : null);
 }
 
 /* ---- CE2: highlights and notes ---- */
@@ -1728,11 +1897,12 @@ function sessSpkMenu(row, i) {
   setTimeout(function () { document.addEventListener("click", function off() { pop.remove(); document.removeEventListener("click", off); }); }, 0);
 }
 function sessSpkSide() {
+  sessSpkFindLabel();
   var host = document.querySelector("#sess .sideSpk"), r = SESS.rec; if (!host || !r) return;
   if (host.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
   host.innerHTML = "";
   var list = r.speakers || [];
-  if (!list.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("Name who speaks with ⋯ beside a paragraph, then Speaker. Rename a speaker here and every paragraph follows.", "Nommez qui parle avec ⋯ à côté d’un paragraphe, puis Intervenant. Renommez un intervenant ici et tous ses paragraphes suivent."); host.appendChild(e); return; }
+  if (!list.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("Name who speaks with ⋯ beside a paragraph, then Speaker, or let Scriba find them below. Rename a speaker here and every paragraph follows; give two speakers the same name to join them.", "Nommez qui parle avec ⋯ à côté d’un paragraphe, puis Intervenant, ou laissez Scriba les trouver ci-dessous. Renommez un intervenant ici et tous ses paragraphes suivent ; donnez le même nom à deux intervenants pour les réunir."); host.appendChild(e); return; }
   list.forEach(function (s) {
     var n = (r.cues || []).filter(function (c) { return c.spk === s.id; }).length;
     var it = document.createElement("div"); it.className = "spkItem spk-c" + (s.col || 0);
@@ -1746,8 +1916,290 @@ function sessSpkSide() {
     del.onclick = function () { r.speakers = list.filter(function (x) { return x !== s; }); (r.cues || []).forEach(function (c) { if (c.spk === s.id) delete c.spk; }); sessFlush(); sessSpkChips(); sessSpkSide(); };
     inp.addEventListener("input", function () { var v = inp.value.trim(); if (v) { s.name = v; sessSpkChips(); clearTimeout(SESS.saveT); SESS.saveT = setTimeout(sessFlush, 600); } });
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
-    inp.addEventListener("blur", function () { if (!inp.value.trim()) inp.value = s.name; sessFlush(); setTimeout(sessSpkSide, 0); });
+    inp.addEventListener("blur", function () { if (!inp.value.trim()) inp.value = s.name;
+      /* two speakers given the same name become one: the way to join a voice the finder split */
+      var twin = (r.speakers || []).filter(function (x) { return x !== s && x.name.trim().toLowerCase() === s.name.trim().toLowerCase(); })[0];
+      if (twin) { (r.cues || []).forEach(function (c) { if (c.spk === s.id) c.spk = twin.id; }); r.speakers = r.speakers.filter(function (x) { return x !== s; });
+        if (s.found != null && r.diar) (r.diar.segs || []).forEach(function (g) { if (g.spk === s.found && twin.found != null) g.spk = twin.found; });
+        sessSay(sessT("Joined into ", "Réuni dans ") + twin.name + "."); sessSpkChips(); }
+      sessFlush(); setTimeout(sessSpkSide, 0); });
     host.appendChild(it);
+  });
+}
+/* ---- CE3: finding the speakers, on the device ---- */
+/* measured on AMI meetings (tools/speakers/README.md); chosen on six
+   meetings, reported on six others */
+var SPK_THR = 0.3, SPK_MINFRAC = 0.02, SPK_MINSIZE = 5, SPK_STEP = 2.5;
+function sessTurns(d) {
+  var segs = (d && d.segs) || [], end = 0; segs.forEach(function (g) { if (g.end > end) end = g.end; });
+  var n = Math.ceil(end * 10), dom = new Int16Array(n).fill(-1);
+  segs.forEach(function (g) { for (var t = Math.floor(g.start * 10); t < Math.min(n, Math.ceil(g.end * 10)); t++) if (dom[t] < 0) dom[t] = g.spk; });
+  var out = [], cur = -1;
+  for (var t = 0; t < n; t++) { if (dom[t] < 0 || dom[t] === cur) continue;
+    var run = 0; while (t + run < n && run < 10 && (dom[t + run] === dom[t] || dom[t + run] < 0)) run++;
+    if (run >= 10 || t + run >= n) { if (cur >= 0) out.push(t / 10); cur = dom[t]; } }
+  return out;
+}
+/* each paragraph takes the found speaker heard most in it; one with none
+   heard keeps the speaker before it. Found speakers are named in the order
+   they first speak; names you gave are kept where the same voice returns. */
+function sessApplyDiar(r, cues) {
+  var segs = r.diar.segs || [], K = r.diar.nspk || 0, lab = cues.map(function (c) {
+    var tot = new Float64Array(K); segs.forEach(function (g) { var o = Math.min(c.to, g.end) - Math.max(c.from, g.start); if (o > 0) tot[g.spk] += o; });
+    var b = -1, bv = 0; for (var k = 0; k < K; k++) if (tot[k] > bv) { bv = tot[k]; b = k; } return b; });
+  for (var i = 1; i < lab.length; i++) if (lab[i] < 0) lab[i] = lab[i - 1];
+  for (var i2 = lab.length - 2; i2 >= 0; i2--) if (lab[i2] < 0) lab[i2] = lab[i2 + 1];
+  var old = {}; (r.speakers || []).forEach(function (s) { if (s.found != null) old[s.found] = s; });
+  r.speakers = []; var map = {};
+  lab.forEach(function (k) { if (k < 0 || map[k]) return;
+    var s = old[k] || { id: "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: sessT("Speaker ", "Intervenant ") + (r.speakers.length + 1) };
+    s.found = k; s.col = r.speakers.length % 6; r.speakers.push(s); map[k] = s; });
+  cues.forEach(function (c, i) { if (lab[i] >= 0) c.spk = map[lab[i]].id; else delete c.spk; });
+}
+function sessSpkWorkerUrl() {
+  if (!SESS.spkUrl) SESS.spkUrl = URL.createObjectURL(new Blob([document.getElementById("scribaSpkWorker").textContent], { type: "text/javascript" }));
+  return SESS.spkUrl;
+}
+function sessFindSpeakers() {
+  var r = SESS.rec, host = document.getElementById("sess"); if (!r || SESS.finding) return;
+  var btn = host.querySelector('[data-k="findSpk"]'), sel = host.querySelector('[data-k="spkN"]'), n = parseInt(sel.value, 10) || 0;
+  if (!scribaPageOk()) { sessSay(sessT("Finding speakers needs a browser with WebAssembly and workers.", "Trouver les intervenants demande un navigateur avec WebAssembly et les workers.")); return; }
+  SESS.finding = true; btn.disabled = true;
+  var t0 = Date.now(), done = function (msg) { SESS.finding = false; btn.disabled = false; if (msg) sessSay(msg); sessSpkFindLabel(); };
+  sessSay(sessT("Preparing the recording…", "Préparation de l’enregistrement…"));
+  scribaBlobTo16k(r.blob, function (f32, err) {
+    if (!f32) { done(sessT("This file's sound could not be decoded on this device.", "Le son de ce fichier n’a pas pu être décodé sur cet appareil.")); return; }
+    scribaBlobUrls(function () {
+      var w; try { w = new Worker(sessSpkWorkerUrl(), { type: "module" }); } catch (e) { done(String(e)); return; }
+      w.onmessage = function (ev) { var m = ev.data || {};
+        if (m.type === "fetch") sessSay(sessT("Fetching the speaker models, once: ", "Téléchargement des modèles d’intervenants, une seule fois : ") + m.mb + " MB…");
+        else if (m.type === "step" && m.n) sessSay(sessT("Listening for voices: ", "Écoute des voix : ") + Math.round(100 * m.k / m.n) + " %…");
+        else if (m.type === "step") sessSay(sessT("Grouping the voices…", "Regroupement des voix…"));
+        else if (m.type === "error") { w.terminate(); done(sessT("The speakers could not be found: ", "Les intervenants n’ont pas pu être trouvés : ") + m.message + sessT(". The first use needs the internet, to fetch two small models once.", ". La première utilisation demande internet, pour télécharger deux petits modèles une fois.")); }
+        else if (m.type === "result") { w.terminate();
+          r.diar = { segs: m.segs, nspk: m.nspk, n: n, at: Date.now() };
+          if (r.cues && r.cues.length) sessApplyDiar(r, r.cues);
+          recPut(r); if (SESS.rec === r) sessRender();
+          var secs = Math.round((Date.now() - t0) / 1000);
+          var nf = r.cues && r.cues.length ? (r.speakers || []).length : m.nspk;
+          done(sessT("Found ", "Trouvé : ") + nf + " " + sessT(nf === 1 ? "speaker" : "speakers", nf === 1 ? "intervenant" : "intervenants") + " (" + sessT("in ", "en ") + sessFmt(secs) + ")."
+            + (r.cues && r.cues.length ? sessT(" Check the names; for paragraphs split where the speaker changes, press Transcribe again.", " Vérifiez les noms ; pour des paragraphes coupés à chaque changement d’intervenant, appuyez sur Transcrire à nouveau.")
+              : sessT(" Transcribe now: each paragraph will have one speaker.", " Transcrivez maintenant : chaque paragraphe aura un seul intervenant."))); }
+      };
+      w.onerror = function (e) { try { w.terminate(); } catch (x) {} done(String((e && e.message) || "worker error")); };
+      var urls = scribaPageUrls();
+      try { w.postMessage({ audio: f32, urls: urls, thr: SPK_THR, minFrac: SPK_MINFRAC, minSize: SPK_MINSIZE, step: SPK_STEP, n: n }, [f32.buffer]); } catch (e) { done(String(e)); }
+    });
+  });
+}
+function sessSpkFindLabel() {
+  var host = document.getElementById("sess"), b = host && host.querySelector('[data-k="findSpk"]'), r = SESS.rec; if (!b || !r) return;
+  var named = (r.speakers || []).length;
+  b.textContent = SESS.finding ? sessT("Listening…", "Écoute…") : r.diar ? sessT("Find them again", "Les retrouver") : sessT("Find the speakers", "Trouver les intervenants");
+  b.title = named && !r.diar ? sessT("Replaces the speakers you named with the ones found", "Remplace les intervenants que vous avez nommés par ceux trouvés") : sessT("Listens to the recording on this device and labels each paragraph", "Écoute l’enregistrement sur cet appareil et étiquette chaque paragraphe");
+  var h = host.querySelector(".spkHint"); if (h) h.textContent = sessT("On this device. The first time, it fetches two small models (about 33 MB). Check the result: it is right most of the time, not always. Giving the number of speakers helps it find quiet ones, but it may then place more speech with the wrong person.", "Sur cet appareil. La première fois, il télécharge deux petits modèles (environ 33 Mo). Vérifiez le résultat : il est juste la plupart du temps, pas toujours. Donner le nombre d’intervenants l’aide à trouver les plus discrets, mais il peut alors attribuer plus de paroles à la mauvaise personne.");
+}
+/* ---- CE4: summaries and templates, from the writing model Inkwell is
+   running (the tablet's own, Apple's, the laptop's, or the one in the
+   window). A long transcript is read in parts of about 550 words, so small
+   models on a tablet can follow it; times and speakers come from the
+   transcript itself, never from the model. Every answer passes Inkwell's
+   fact guard: a name or number the transcript does not contain is marked. ---- */
+var SESS_SUM = [
+  ["summary", function () { return sessT("Summary and chapters", "Résumé et chapitres"); }],
+  ["actions", function () { return sessT("Action items", "Actions à mener"); }],
+  ["minutes", function () { return sessT("Meeting minutes", "Compte rendu de réunion"); }],
+  ["revision", function () { return sessT("Revision notes", "Fiches de révision"); }],
+  ["custom", function () { return sessT("Your own prompt…", "Votre propre consigne…"); }]
+];
+function sessSumName(k) { for (var i = 0; i < SESS_SUM.length; i++) if (SESS_SUM[i][0] === k) return SESS_SUM[i][1]().replace(/…$/, ""); return k; }
+function sessAI() { try { var a = window.parent && window.parent !== window && window.parent.inkScribaAI; return a || null; } catch (e) { return null; } }
+function sessChunks(r, maxWords) {
+  var out = [], cur = null;
+  (r.cues || []).forEach(function (c) {
+    var n = sessSpkName(c), line = (n ? n + ": " : "") + c.text, w = c.text.split(/\s+/).length;
+    if (!cur || (cur.words + w > maxWords && cur.words > maxWords * 0.4)) { cur = { from: c.from, to: c.to, words: 0, lines: [] }; out.push(cur); }
+    cur.lines.push(line); cur.words += w; cur.to = c.to;
+  });
+  out.forEach(function (k) { k.text = k.lines.join("\n"); });
+  return out;
+}
+function sessField(t, name) { var m = new RegExp("^\\s*\\**" + name + "\\**\\s*:\\s*(.*)$", "im").exec(t || ""); return m ? m[1].trim() : ""; }
+function sessList(t, head, next, orAll) {
+  /* the "- " lines under a heading, up to the next heading; NONE means none.
+     Small models sometimes leave the headings out: with orAll, a reply with
+     no heading at all gives all its lines to the first heading */
+  t = String(t || ""); var a = head ? t.search(new RegExp("^\\s*\\**" + head + "\\**\\s*:?", "im")) : 0;
+  if (a < 0) { if (!orAll || /^\s*\**[A-Z][A-Z ]{3,}\**\s*:/m.test(t)) return []; a = 0; t = "\n" + t; }
+  var rest = t.slice(a).replace(/^.*\n?/, ""), b = next ? rest.search(new RegExp("^\\s*\\**(" + next + ")\\**\\s*:?", "im")) : -1; if (b >= 0) rest = rest.slice(0, b);
+  return rest.split("\n").map(function (l) { return l.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim(); }).filter(function (l) { return l && !/^none\.?$/i.test(l) && !/^(n\/a|nothing)\.?$/i.test(l); });
+}
+function sessNoPlaceholder(l) { return String(l).replace(/^(?:Person|Someone|Somebody|Speaker|Name)\s*:\s*/i, "").replace(/^./, function (c) { return c.toUpperCase(); }); }
+function sessSumRun(kind, prompt) {
+  var r = SESS.rec, ai = sessAI(); if (!r || SESS.summing) return;
+  if (!(r.cues && r.cues.length)) { sessSay(sessT("Transcribe first.", "Transcrivez d’abord.")); return; }
+  var st = null; try { st = ai && ai.status(); } catch (e) {}
+  if (!st || !st.ok) { sessSay(sessT("Summaries need a writing model: open ⚙ Engine in Inkwell and start the tablet’s own model, Apple’s model, or connect your laptop.", "Les résumés demandent un modèle d’écriture : ouvrez ⚙ Moteur dans Inkwell et démarrez le modèle de la tablette, celui d’Apple, ou connectez votre ordinateur.")); return; }
+  var parts = sessChunks(r, 550), k = 0, res = [], warn = [], t0 = Date.now();
+  SESS.summing = true; SESS.sumStop = false; sessSumBusy(true);
+  function guard(src, out) {
+    /* the template's own words (headings, "Person", question words) and the
+       words of a title are not facts; each line is read as its own sentence */
+    var lines = String(out || "").split("\n").map(function (l) {
+      l = l.replace(/^\s*(?:[-*\u2022]|\d+[.)])\s*/, "").replace(/\*\*/g, "");
+      if (/^\s*TITLE\s*:/i.test(l)) return (l.match(/\d[\d,.]*/g) || []).join(" ");
+      return l.replace(/^\s*(?:SUMMARY|KEY POINTS|TERMS|DECISIONS|ACTIONS|NONE)\s*:?\s*/i, "").replace(/^\s*(?:Person|Someone|Somebody|Speaker|Name)\s*:\s*/i, "");
+    }).filter(function (l) { return l.trim(); });
+    try { var f = ai.facts(src, lines.join(".\n")); (f.added || []).forEach(function (w) { if (/^(What|Where|When|Why|How|Who|Which|Whose|Is|Are|Does|Do|Can|Could|Should|Would|Will|Did|Was|Were|Person|None|Speaker|Overview|Introduction|Conclusion|Summary|Discussion)$/.test(w)) return; if (warn.indexOf(w) < 0) warn.push(w); }); } catch (e) {}
+    return out; }
+  function ask(system, user, n) { return ai.ask(system, user, n).then(function (t) { return guard(user, String(t || "")); }); }
+  var P = {
+    summary: "You summarise one part of a transcript of a lecture or a meeting. Reply in exactly this form:\nTITLE: a title of at most eight words\nSUMMARY: two or three sentences\nUse only what the transcript says.",
+    actions: "List every task that someone in this transcript agreed to do or was asked to do. One per line, in this form:\n- Person: task (deadline, if one is said)\nIf no person is named, start with the task. Write NONE if there are no tasks. Use only what the transcript says.",
+    minutes: "You take the minutes of one part of a meeting transcript. Reply in exactly this form:\nTITLE: the topic, in at most eight words\nSUMMARY: two sentences on what was discussed\nDECISIONS:\n- each decision that was made\nACTIONS:\n- Person: each task someone agreed to do\nWrite NONE under a heading that has nothing. Use only what the transcript says.",
+    revision: "You write revision notes from one part of a lecture transcript. Reply in exactly this form:\nKEY POINTS:\n- each main idea, in one sentence\nTERMS:\n- term: its meaning, as the speaker explains it\nWrite NONE under a heading that has nothing. Use only what the transcript says.",
+    custom: String(prompt || "") + "\nAnswer from this part of a transcript only. Use only what it says."
+  };
+  (function next() {
+    if (SESS.sumStop) { finish(sessT("Stopped.", "Arrêté.")); return; }
+    if (k < parts.length) {
+      sessSay(sessT("Reading part ", "Lecture de la partie ") + (k + 1) + " / " + parts.length + sessT(" with ", " avec ") + st.by + "…");
+      var pt = parts[k];
+      ask(P[kind], pt.text, kind === "actions" ? 260 : 320).then(function (t) { res.push({ part: pt, text: t }); k++; next(); },
+        function (e) { finish(sessT("The model did not answer: ", "Le modèle n’a pas répondu : ") + ((e && e.message) || e)); });
+      return;
+    }
+    combine();
+  })();
+  function stamp(p) { return "[" + sessFmt(p.from) + "]"; }
+  function combine() {
+    var out = [];
+    if (kind === "summary" || kind === "minutes") {
+      var ch = res.map(function (x) { return { t: sessField(x.text, "TITLE") || sessT("Part", "Partie"), s: sessField(x.text, "SUMMARY") || x.text.split("\n")[0], p: x.part, x: x.text }; });
+      var lead = function (cb) {
+        if (ch.length === 1) { cb(ch[0].s); return; }
+        sessSay(sessT("Writing the overall summary…", "Rédaction du résumé d’ensemble…"));
+        ask("Write one paragraph of four to six sentences that summarises the whole session from these summaries of its parts, in order. Use only what they say.",
+          ch.map(function (c, i) { return (i + 1) + ". " + c.t + ": " + c.s; }).join("\n"), 320).then(cb, function (e) { finish(sessT("The model did not answer: ", "Le modèle n’a pas répondu : ") + ((e && e.message) || e)); });
+      };
+      lead(function (overall) {
+        if (kind === "summary") {
+          if (ch.length === 1) out.push("## " + ch[0].t, overall.trim());
+          else { out.push("## " + sessT("Summary", "Résumé"), overall.trim(), "", "## " + sessT("Chapters", "Chapitres"));
+            ch.forEach(function (c) { out.push("### " + stamp(c.p) + " " + c.t, c.s); }); }
+        } else {
+          var who = (r.speakers || []).filter(function (s) { return (r.cues || []).some(function (c) { return c.spk === s.id; }); }).map(function (s) { return s.name; });
+          out.push("## " + (r.name || sessT("Meeting", "Réunion")), new Date(r.ts).toLocaleString() + " · " + fmtDur(r.dur));
+          if (who.length) out.push("", "**" + sessT("Present", "Présents") + ":** " + who.join(", "));
+          out.push("", "## " + sessT("Summary", "Résumé"), overall.trim(), "", "## " + sessT("Topics", "Sujets"));
+          ch.forEach(function (c) { out.push("- " + stamp(c.p) + " " + c.t); });
+          var dec = [], act = [];
+          ch.forEach(function (c) { sessList(c.x, "DECISIONS", "ACTIONS|TITLE|SUMMARY").forEach(function (d) { dec.push("- " + stamp(c.p) + " " + d); }); sessList(c.x, "ACTIONS", "DECISIONS|TITLE|SUMMARY").map(sessNoPlaceholder).forEach(function (d) { act.push("- " + stamp(c.p) + " " + d); }); });
+          out.push("", "## " + sessT("Decisions", "Décisions")); out.push.apply(out, dec.length ? dec : [sessT("None recorded.", "Aucune notée.")]);
+          out.push("", "## " + sessT("Actions", "Actions")); out.push.apply(out, act.length ? act : [sessT("None recorded.", "Aucune notée.")]);
+        }
+        save(out.join("\n"));
+      });
+      return;
+    }
+    if (kind === "actions") {
+      var seen = {};
+      res.forEach(function (x) { sessList(x.text, "", "").map(sessNoPlaceholder).forEach(function (l) { var key = l.toLowerCase().replace(/\W+/g, " ").trim(); if (seen[key]) return; seen[key] = 1; out.push("- " + stamp(x.part) + " " + l); }); });
+      save(out.length ? out.join("\n") : sessT("No action items were found.", "Aucune action n’a été trouvée."));
+      return;
+    }
+    if (kind === "revision") {
+      var kp = [], tm = [];
+      res.forEach(function (x) { sessList(x.text, "KEY POINTS", "TERMS", true).forEach(function (l) { kp.push("- " + stamp(x.part) + " " + l); }); sessList(x.text, "TERMS", "KEY POINTS").forEach(function (l) { tm.push("- " + l); }); });
+      if (!kp.length && !tm.length) { save(sessT("No key points were found in this transcript.", "Aucun point clé n’a été trouvé dans cette transcription.")); return; }
+      sessSay(sessT("Writing questions to test yourself…", "Rédaction de questions pour vous tester…"));
+      ask("Write three to five questions a student could answer to test themselves on these revision notes. One per line, starting with '- '. Use only what the notes say.",
+        kp.concat(tm).join("\n"), 260).then(function (q) {
+        out.push("## " + sessT("Key points", "Points clés")); out.push.apply(out, kp.length ? kp : [sessT("None found.", "Aucun trouvé.")]);
+        if (tm.length) { out.push("", "## " + sessT("Terms", "Termes")); out.push.apply(out, tm); }
+        var qs = sessList(q, "", ""); if (qs.length) { out.push("", "## " + sessT("Test yourself", "Testez-vous")); qs.forEach(function (l) { out.push("- " + l); }); }
+        save(out.join("\n"));
+      }, function (e) { finish(sessT("The model did not answer: ", "Le modèle n’a pas répondu : ") + ((e && e.message) || e)); });
+      return;
+    }
+    /* your own prompt: one answer, or the parts' answers combined */
+    if (res.length === 1) { save(res[0].text.trim()); return; }
+    sessSay(sessT("Combining the parts…", "Assemblage des parties…"));
+    ask("Combine these partial answers into one answer to this request: " + prompt + "\nUse only what they say.", res.map(function (x, i) { return sessT("Part ", "Partie ") + (i + 1) + ":\n" + x.text; }).join("\n\n"), 520)
+      .then(function (t) { save(t.trim()); }, function (e) { finish(sessT("The model did not answer: ", "Le modèle n’a pas répondu : ") + ((e && e.message) || e)); });
+  }
+  function save(text) {
+    r.summaries = r.summaries || [];
+    r.summaries.unshift({ id: "m" + Date.now().toString(36), kind: kind, label: kind === "custom" ? String(prompt).slice(0, 80) : sessSumName(kind), at: Date.now(), by: st.by, text: text, warn: warn.slice(0, 20) });
+    recPut(r); if (SESS.rec === r) sessSumRender();
+    finish(sessT("Done in ", "Terminé en ") + sessFmt(Math.round((Date.now() - t0) / 1000)) + (warn.length ? sessT(". Check the marked words.", ". Vérifiez les mots marqués.") : "."));
+  }
+  function finish(msg) { SESS.summing = false; sessSumBusy(false); sessSay(msg); }
+}
+function sessSumBusy(on) {
+  var b = document.querySelector('#sess [data-k="sum"]'), x = document.querySelector('#sess [data-k="sumStop"]');
+  if (b) b.disabled = !!on; if (x) x.style.display = on ? "" : "none";
+}
+function sessSumMenuFill(m) {
+  m.innerHTML = "";
+  SESS_SUM.forEach(function (it) { var b = document.createElement("button"); b.type = "button"; b.textContent = it[1]();
+    b.onclick = function (e) { e.stopPropagation(); m.parentNode.classList.remove("open"); if (it[0] === "custom") sessSumPrompt(); else sessSumRun(it[0]); }; m.appendChild(b); });
+  var st = null; try { st = sessAI() && sessAI().status(); } catch (e) {}
+  var p = document.createElement("div"); p.className = "cueEmpty"; p.style.padding = "6px 8px"; p.style.fontSize = "12px";
+  p.textContent = st && st.ok ? sessT("With ", "Avec ") + st.by + sessT(", on your own devices.", ", sur vos propres appareils.") : sessT("Start a writing model in Inkwell’s ⚙ Engine first.", "Démarrez d’abord un modèle d’écriture dans ⚙ Moteur d’Inkwell.");
+  m.appendChild(p);
+}
+function sessSumPrompt() {
+  var host = document.querySelector("#sess .sumList"); if (!host) return;
+  var box = document.querySelector("#sess .sumAsk");
+  if (!box) { box = document.createElement("div"); box.className = "sumAsk";
+    box.innerHTML = '<textarea rows="3"></textarea><div class="sumAskBar"><button type="button" data-a="go"></button><button type="button" data-a="x"></button></div>';
+    host.parentNode.insertBefore(box, host); }
+  var ta = box.querySelector("textarea"); ta.placeholder = sessT("e.g. List the arguments for and against, with who made them.", "p. ex. Listez les arguments pour et contre, avec qui les a avancés.");
+  try { ta.value = localStorage.getItem("scriba_lastprompt_v1") || ""; } catch (e) {}
+  box.querySelector('[data-a="go"]').textContent = sessT("Ask", "Demander"); box.querySelector('[data-a="x"]').textContent = sessT("Cancel", "Annuler");
+  box.querySelector('[data-a="go"]').onclick = function () { var v = ta.value.trim(); if (!v) return; try { localStorage.setItem("scriba_lastprompt_v1", v); } catch (e) {} box.remove(); sessSumRun("custom", v); };
+  box.querySelector('[data-a="x"]').onclick = function () { box.remove(); };
+  box.scrollIntoView({ block: "nearest" }); ta.focus();
+}
+/* the answer as a little document: headings, bullets, and times that play */
+function sessSumHtml(s) {
+  var esc = function (t) { var h = sessEsc(t).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); (s.warn || []).forEach(function (w) { h = h.replace(new RegExp("\\b" + sessEsc(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "g"), '<mark class="fg" title="' + sessEsc(sessT("Not in the transcript: check it", "Absent de la transcription : à vérifier")) + '">$&</mark>'); });
+    return h.replace(/\[(\d+(?::\d\d){1,2})\]/g, '<button type="button" class="sumT" data-t="$1">$1</button>'); };
+  var html = "", inList = false;
+  String(s.text || "").split("\n").forEach(function (l) {
+    var m;
+    if ((m = /^\s*[-*•]\s+(.*)$/.exec(l))) { if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + esc(m[1]) + "</li>"; return; }
+    if (inList) { html += "</ul>"; inList = false; }
+    if ((m = /^###\s+(.*)$/.exec(l))) html += "<h5>" + esc(m[1]) + "</h5>";
+    else if ((m = /^##\s+(.*)$/.exec(l))) html += "<h4>" + esc(m[1]) + "</h4>";
+    else if (l.trim()) html += "<p>" + esc(l) + "</p>";
+  });
+  if (inList) html += "</ul>";
+  return html;
+}
+function sessSumPlain(s) { return String(s.text || "").replace(/^#+\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1"); }
+function sessSumRender() {
+  var host = document.querySelector("#sess .sumList"), r = SESS.rec; if (!host || !r) return;
+  host.innerHTML = "";
+  var list = r.summaries || [];
+  if (!list.length) { var e = document.createElement("div"); e.className = "sideEmpty"; e.textContent = sessT("A summary, chapters, action items, minutes or revision notes, written from the transcript by the writing model on your devices. Use Summarise above.", "Un résumé, des chapitres, des actions, un compte rendu ou des fiches, écrits d’après la transcription par le modèle de vos appareils. Utilisez Résumer ci-dessus."); host.appendChild(e); return; }
+  list.forEach(function (s) {
+    var d = document.createElement("details"); d.className = "sumCard"; d.open = s === list[0];
+    d.innerHTML = '<summary><span class="sk"></span><span class="sm"></span></summary><div class="sumBody"></div><div class="sumWarn"></div><div class="sumBar"><button type="button" data-a="copy"></button><button type="button" data-a="pad"></button><button type="button" data-a="del"></button></div>';
+    d.querySelector(".sk").textContent = s.label; d.querySelector(".sm").textContent = new Date(s.at).toLocaleString() + " · " + s.by;
+    d.querySelector(".sumBody").innerHTML = sessSumHtml(s);
+    var w = d.querySelector(".sumWarn");
+    if (s.warn && s.warn.length) w.textContent = "⚠ " + sessT("Not in the transcript, so check before you rely on it: ", "Absent de la transcription, à vérifier avant de vous y fier : ") + s.warn.map(function (x) { return "“" + x + "”"; }).join(", ") + ".";
+    else w.textContent = sessT("Fact guard: no name or number that the transcript lacks.", "Garde-fou : aucun nom ni nombre absent de la transcription.");
+    d.querySelectorAll(".sumT").forEach(function (b) { b.onclick = function () { var p = b.getAttribute("data-t").split(":").map(Number), sec = p.reduce(function (a, x) { return a * 60 + x; }, 0); if (SESS.media) { SESS.media.currentTime = sec + 0.01; SESS.media.play().catch(function () {}); } }; });
+    var bc = d.querySelector('[data-a="copy"]'), bp = d.querySelector('[data-a="pad"]'), bd = d.querySelector('[data-a="del"]');
+    bc.textContent = sessT("Copy", "Copier"); bp.textContent = sessT("Into the scratchpad", "Dans le bloc-notes"); bd.textContent = sessT("Remove", "Retirer");
+    bc.onclick = function () { try { navigator.clipboard.writeText(s.label + "\n\n" + sessSumPlain(s)).then(function () { sessSay(sessT("Copied.", "Copié.")); }); } catch (e) {} };
+    bp.onclick = function () { var pad = document.querySelector("#sess .scratch"); var h = "<h3>" + sessEsc(s.label) + "</h3>" + sessSumHtml({ text: s.text }).replace(/<button[^>]*>([^<]*)<\/button>/g, "[$1]").replace(/<h4>/g, "<h3>").replace(/<\/h4>/g, "</h3>").replace(/<h5>/g, "<p><b>").replace(/<\/h5>/g, "</b></p>");
+      r.scratch = sessCleanHtml((r.scratch || "") + h); if (pad) pad.innerHTML = r.scratch; recPut(r); sessSay(sessT("In the scratchpad.", "Dans le bloc-notes.")); };
+    bd.onclick = function () { r.summaries = list.filter(function (x) { return x !== s; }); recPut(r); sessSumRender(); };
+    host.appendChild(d);
   });
 }
 /* the transcript with its speakers named, for the files that leave */

@@ -9094,6 +9094,20 @@ async function inkWrite(instr,text){
  if(PRO){const r=await proChat(instr+rules,text,Math.min(1500,wordCt(text)*3+200));
   if(r&&r.trim())return {text:r.trim(),by:PRONAME||'the on-device model'};throw new Error('no answer');}
  throw new Error('none');}
+/* 7.36: Scriba's summaries ask through the same engines: the laptop's
+   model, Apple's on-device model, the tablet's own model, or the writing
+   model in this window. Scriba checks each answer with the fact guard. */
+window.inkScribaAI={
+ status(){const srv=inkSrv();return {ok:srv||!!PRO,by:srv?(S.serverModel?String(S.serverModel).replace(/\.gguf$/i,''):'the laptop\u2019s model'):(PRO?(PRONAME||'the on-device model'):''),tablet:!!(PRO&&(PRO.native||PRO.apple))};},
+ async ask(system,user,maxTok){
+  if(inkSrv()){let r=null;
+   try{r=await api('ask',{system:system,user:user,max_tokens:maxTok||400});}catch(e){r=null;}
+   if(!r){/* a server from before 7.36 has no /api/ask */const c=await api('compose',{instruction:system+'\n\n'+user});r={ok:!!(c&&c.text),text:c&&c.text};}
+   const t=String((r&&r.text)||'').trim();if(!t)throw new Error((r&&r.error)||'no answer');return t;}
+  if(PRO){const t=await proChat(system,user,maxTok||400);if(!t||!t.trim())throw new Error('no answer');return t.trim();}
+  throw new Error('none');},
+ facts(src,out){return inkFactCheck(src,out);}
+};
 async function inkPromptRun(instr){
  instr=String(instr||'').trim();if(!instr)return toast('Write a prompt, or pick one below');
  if(!ALTSEL||!ALTSEL.t)return toast('Select the passage again, please');

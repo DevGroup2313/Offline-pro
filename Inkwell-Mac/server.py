@@ -12,6 +12,7 @@ Serves the local AI endpoints Inkwell.html expects at http://127.0.0.1:8317:
     POST /api/rewrite_custom {text, instruction}     -> {"ok": true, "text": "..."}
     POST /api/presets     {}                          -> {"ok": true, "presets": [...], "modes": [...]}
     POST /api/compose     {instruction, style}      -> {"text": "..."}
+    POST /api/ask         {system, user, max_tokens} -> {"ok": true, "text": "..."}
     POST /api/tone        {text}                    -> {"label": "...", "tips": [...]}
     POST /api/similarity  {text, library:[{title,text}]} -> {"matches": [{"title","overlap"}]}
     POST /api/socrat      {stage, answer}           -> {"question": "..."}
@@ -1332,6 +1333,27 @@ def ep_rewrite_custom(body):
             "text": text, "think": None}
 
 
+def ep_ask(body):
+    """7.36: Scriba's summaries and notes. The task is the system message, the
+    passage of transcript the user message; nothing is added but the rule
+    against invention. The app checks the answer against the passage."""
+    system = str(body.get("system", ""))[:4000]
+    user = str(body.get("user", ""))[:24000]
+    try:
+        n = max(32, min(1200, int(body.get("max_tokens") or 400)))
+    except (TypeError, ValueError):
+        n = 400
+    if not user.strip():
+        return {"ok": False, "error": "nothing to read"}
+    system = (system + " Never invent facts, names, numbers or quotations.").strip()
+    raw = (generate(user, max_new_tokens=n, system=system, temperature=0.2) if AI.get("local")
+           else generate(system + "\n\n" + user, max_new_tokens=n))
+    ans, thk = split_off_think(raw) if raw else (None, None)
+    if ans:
+        return {"ok": True, "text": ans}
+    return {"ok": False, "error": "AI model unavailable", "text": ""}
+
+
 def ep_presets(body):
     """Return the available rewrite presets and modes so the app can
     build its UI dynamically."""
@@ -1734,7 +1756,7 @@ def ep_model_install(body):
 
 ROUTES = {
     "correct": ep_correct, "rewrite": ep_rewrite, "rewrite_preset": ep_rewrite_preset,
-    "rewrite_custom": ep_rewrite_custom, "presets": ep_presets,
+    "rewrite_custom": ep_rewrite_custom, "presets": ep_presets, "ask": ep_ask,
     "compose": ep_compose,
     "tone": ep_tone, "similarity": ep_similarity, "socrat": ep_socrat,
     "review": ep_review, "reader": ep_reader, "select_model": ep_select_model, "remove_model": ep_remove_model,
