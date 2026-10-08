@@ -7649,6 +7649,71 @@ const GRAM38=[
  /* Oxford comma suggestion is advisory only */
  {re:/\b( and | or )(?=[A-Za-z]+,?\s+(?:and|or)\s)/gi,to:null,cat:'c',label:'A serial comma before the final "and/or" can prevent ambiguity',cs:true}
 ];
+/* 7.37 GRAM39: the learner's pack. Errors common in learners' essays (the
+   classes found most often in a public learner corpus, used for measurement
+   only), each written so that it fires only where the fix is certain. A rule
+   may name what must come before it (pre) or must not (npre). */
+/* only forms that are not themselves English words: "-leaved", "singed", "ringed", "waked" and the name "Sayd" are left alone */
+const IRREG_PAST={buyed:'bought',teached:'taught',thinked:'thought',catched:'caught',bringed:'brought',goed:'went',runned:'ran',choosed:'chose',writed:'wrote',drived:'drove',eated:'ate',falled:'fell',feeled:'felt',finded:'found',getted:'got',gived:'gave',knowed:'knew',losed:'lost',maked:'made',meeted:'met',sayed:'said',selled:'sold',sended:'sent',sitted:'sat',speaked:'spoke',spended:'spent',standed:'stood',swimmed:'swam',taked:'took',telled:'told',understanded:'understood',weared:'wore',winned:'won',beginned:'began',breaked:'broke',builded:'built',drinked:'drank',feeded:'fed',fighted:'fought',forgetted:'forgot',forgived:'forgave',growed:'grew',hitted:'hit',holded:'held',hurted:'hurt',keeped:'kept',lended:'lent',readed:'read',rised:'rose',seeked:'sought',shaked:'shook',sleeped:'slept',stealed:'stole',striked:'struck',sweared:'swore',throwed:'threw',becomed:'became',comed:'came',drawed:'drew',flyed:'flew',freezed:'froze',hided:'hid',leaded:'led',rided:'rode',seeked:'sought',shooted:'shot',sinked:'sank',stinged:'stung',wakened:null};
+const PAST_BASE={went:'go',came:'come',saw:'see',took:'take',made:'make',got:'get',gave:'give',knew:'know',thought:'think',bought:'buy',told:'tell',found:'find',left:'leave',felt:'feel',wrote:'write',ate:'eat',ran:'run',began:'begin',spoke:'speak',brought:'bring',taught:'teach',chose:'choose',drove:'drive',fell:'fall',forgot:'forget',lost:'lose',met:'meet',paid:'pay',said:'say',sold:'sell',sent:'send',sat:'sit',spent:'spend',stood:'stand',swam:'swim',understood:'understand',wore:'wear',won:'win',broke:'break',built:'build',drank:'drink',flew:'fly',grew:'grow',held:'hold',kept:'keep',slept:'sleep',threw:'throw',woke:'wake',became:'become',heard:'hear',did:'do',had:'have',was:'be',were:'be'};
+const UNCOUNT_PL={informations:'information',advices:'advice',furnitures:'furniture',equipments:'equipment',knowledges:'knowledge',homeworks:'homework',evidences:'evidence',feedbacks:'feedback',luggages:'luggage',baggages:'baggage',softwares:'software',sceneries:'scenery',vocabularies:null,traffics:'traffic',pollutions:'pollution',musics:'music',moneys:null,staffs:null,researchs:'research',stuffs:'stuff',accommodations:null,behaviours:null};
+const IRREG_PL={childs:'children',womans:'women',foots:'feet',tooths:'teeth',mouses:null,sheeps:'sheep',gooses:'geese',fishs:'fish',persones:'persons',lifes:'lives',wifes:'wives',knifes:'knives',leafs:null,thiefs:'thieves',wolfs:'wolves',halfs:'halves',shelfs:'shelves'};
+const MODALS='can|could|will|would|shall|should|may|might|must|cannot';
+const NEG_AUX="didn['’]t|doesn['’]t|don['’]t|did not|does not|do not|can['’]t|couldn['’]t|won['’]t|wouldn['’]t|shouldn['’]t|mustn['’]t";
+const TRANSITIONS='However|Moreover|Furthermore|Nevertheless|Nonetheless|Consequently|Additionally|Nowadays|Firstly|Secondly|Thirdly|Lastly|Unfortunately|Fortunately|Personally|Honestly|Surprisingly|Interestingly|In addition|For example|For instance|In conclusion|To conclude|To sum up|In my opinion|In my view|On the other hand|On the one hand|Of course|In fact|As a result|In general|In short|In summary|Above all|All in all|After all|In other words|To be honest|As a matter of fact';
+const GRAM39=[
+ /* the pronoun I in lower case, wherever it stands alone; not a list marker
+    ("(i)", "i)"), a numeral ("part i", "chapter i") or an abbreviation ("i.e.") */
+ {re:/\bi\b(?![.)\]=:\-'’]|\s*\))/g,cs:true,to:'I',cat:'g',label:'Capitalise the pronoun I',
+  npre:/(?:\(|\[|\b(?:part|chapter|section|volume|vol\.|appendix|figure|fig\.|table|case|type|phase|stage|class|grade|level|book|act|scene|article|annex|item|step|no\.|war|henry|louis|george|james|elizabeth|charles|edward|william|richard|pope|king|queen|world war|[a-z]\s?,)\s*)$/i},
+ {re:/\bi(?=['’](?:m|ve|ll|d)\b)/g,cs:true,to:'I',cat:'g',label:'Capitalise the pronoun I'},
+ /* irregular verbs given a regular ending */
+ {re:new RegExp('\\b('+Object.keys(IRREG_PAST).filter(k=>IRREG_PAST[k]).join('|')+')\\b','gi'),to:m=>IRREG_PAST[m.toLowerCase()],cat:'g',label:'An irregular verb: its past is not formed with -ed'},
+ /* nouns that take no plural */
+ {re:new RegExp('\\b('+Object.keys(UNCOUNT_PL).filter(k=>UNCOUNT_PL[k]).join('|')+')\\b','gi'),to:m=>UNCOUNT_PL[m.toLowerCase()],cat:'g',label:'This noun has no plural: it counts as a whole'},
+ {re:/\b(the|many|some|these|those|several|my|our|their|his|her|recent|previous|further|other) researches\b/gi,to:'$1 research',cat:'g',label:'"Research" has no plural: it counts as a whole'},
+ /* irregular plurals */
+ {re:new RegExp('\\b('+Object.keys(IRREG_PL).filter(k=>IRREG_PL[k]).join('|')+')\\b','gi'),to:m=>IRREG_PL[m.toLowerCase()],cat:'g',label:'An irregular plural'},
+ /* a modal takes the bare verb: not "to", not the past, not -s */
+ {re:new RegExp('\\b('+MODALS+') to (?=(?:go|be|do|have|make|get|see|take|come|give|find|help|work|study|live|play|use|buy|learn|improve|change|say|tell|know|think|feel|become|keep|leave|start|stop|try|visit|travel|spend|save|pay|read|write|speak|understand|enjoy|meet|win|lose|pass)\\b)','gi'),fx:r=>r.replace(/\s+to\s+$/i,' '),cat:'g',label:'A modal verb takes the bare verb, without "to"'},
+ {re:new RegExp('\\b('+MODALS+'|'+NEG_AUX+') ('+Object.keys(PAST_BASE).filter(k=>!/^(did|had|was|were|made|found|left|felt|kept|held|paid|said|sold|sent|spent|stood|lost|met|built|heard|read)$/.test(k)).join('|')+')\\b','gi'),to:(m,a,v)=>a+' '+PAST_BASE[v.toLowerCase()],cat:'g',label:'After a modal or "did", the bare verb',npre:/\b(?:the|a|his|her|my|their|its|your|our)\s+$/i},
+ {re:new RegExp('\\b('+NEG_AUX+'|'+MODALS+') (goes|does|has|makes|takes|gets|gives|comes|knows|thinks|likes|wants|needs|says|sees|works|lives|plays|studies|tries|helps|seems|feels|looks|becomes|means|tells|finds|keeps|leaves|starts|stops|uses|loves|hates)\\b','gi'),to:(m,a,v)=>a+' '+({goes:'go',does:'do',has:'have',studies:'study',tries:'try'}[v.toLowerCase()]||v.replace(/s$/i,'')),cat:'g',label:'After a modal or "does", the bare verb',npre:/\b(?:the|a|his|her|my|their|its|your|our)\s+$/i},
+ /* a comparative needs no "more", a superlative no "most" */
+ {re:/\bmore (better|worse|easier|harder|bigger|smaller|larger|greater|higher|lower|older|younger|stronger|weaker|faster|slower|cheaper|happier|healthier|richer|safer|simpler|longer|shorter|nicer|busier|closer|wider|deeper|heavier|lighter|cleaner|quieter|louder|warmer|colder|hotter)\b/gi,to:'$1',cat:'g',label:'A comparative in -er needs no "more"'},
+ {re:/\b(the )?most (best|worst|easiest|hardest|biggest|smallest|largest|greatest|highest|lowest|oldest|youngest|strongest|weakest|fastest|cheapest|happiest|richest|safest|simplest|longest|shortest|nicest|closest|deepest)\b/gi,to:(m,a,b)=>(a||'')+b,cat:'g',label:'A superlative in -est needs no "most"'},
+ /* a comma after an opening transition */
+ {re:new RegExp('\\b('+TRANSITIONS+')(?= (?:I|we|you|he|she|it|they|this|that|these|those|there|the|a|an|people|many|most|some|in|on|at|if|when|my|our|your|his|her|their|its|one|all|both|each|every|no|not|students|children|everyone|everybody|technology|today|nowadays)\\b)','g'),cs:true,pre:/(?:^|[.!?]["”’)]?\s+|\n\s*)$/,fx:r=>r+',',cat:'g',label:'A comma after an opening transition'},
+ /* agreement with plural nouns that end without -s */
+ {re:/\b(people|children|men|women) (is|was|has)\b(?! (?:been|it|that|what|who)\b)/gi,to:(m,n,v)=>n+' '+({is:'are',was:'were',has:'have'}[v.toLowerCase()]),cat:'g',label:'"People" and "children" are plural'},
+ /* "everyday" is an adjective; the adverb is two words */
+ {re:/\beveryday(?=[.,;!?]|\s+(?:and|but|or|so|because|in|at|to|for|with|from|after|before|until|since|when|while|of|I|we|you|he|she|they|it)\b|\s*$)/gi,fx:r=>r[0]==='E'?'Every day':'every day',cat:'g',label:'"Everyday" is an adjective ("everyday life"); the adverb is "every day"'},
+ /* there, their */
+ {re:/\btheir (is|are|was|were|will be|has been|have been)\b/gi,to:'there $1',cat:'g',label:'"There is", not "their is"'},
+ {re:/\bthere (own|own\b)/gi,to:'their own',cat:'g',label:'"Their own", not "there own"'},
+ /* fixed prepositions */
+ {re:/\binterested (on|about|for|at)\b/gi,to:'interested in',cat:'g',label:'"Interested in"'},
+ {re:/\b(depend|depends|depended|depending) (of|from)\b/gi,to:'$1 on',cat:'g',label:'"Depend on"'},
+ {re:/\b(discuss|discusses|discussed|discussing) about\b/gi,to:'$1',cat:'g',label:'"Discuss" takes no "about"'},
+ {re:/\b(mention|mentions|mentioned|mentioning) about\b/gi,to:'$1',cat:'g',label:'"Mention" takes no "about"'},
+ {re:/\b(emphasi[sz]e|emphasi[sz]es|emphasi[sz]ed|emphasi[sz]ing) on\b/gi,to:'$1',cat:'g',label:'"Emphasise" takes no "on"'},
+ {re:/\b(explain|explains|explained) (me|us|him|her|them)\b(?! to)/gi,to:'$1 to $2',cat:'g',label:'"Explain to me": the person takes "to"'},
+ {re:/\b(married|engaged) with\b/gi,to:'$1 to',cat:'g',label:'"Married to"'},
+ {re:/\b(listen|listens|listened|listening) (music|the music|the radio|songs|him|her|me|them|us)\b/gi,to:'$1 to $2',cat:'g',label:'"Listen to"'},
+ {re:/\b(afraid|scared) from\b/gi,to:'$1 of',cat:'g',label:'"Afraid of"'},
+ {re:/\b(aware) about\b/gi,to:'$1 of',cat:'g',label:'"Aware of"'},
+ {re:/\b(responsible) of\b/gi,to:'$1 for',cat:'g',label:'"Responsible for"'},
+ {re:/\b(famous) (of|about)\b/gi,to:'$1 for',cat:'g',label:'"Famous for"'},
+ {re:/\b(proud) (for|about|with)\b/gi,to:'$1 of',cat:'g',label:'"Proud of"'},
+ {re:/\b(focus|focuses|focused|focusing) in\b/gi,to:'$1 on',cat:'g',label:'"Focus on"'},
+ {re:/\bin the other hand\b/gi,to:'on the other hand',cat:'g',label:'"On the other hand"'},
+ {re:/\b(on|at) my opinion\b/gi,to:'in my opinion',cat:'g',label:'"In my opinion"'},
+ {re:/\baccording to me\b/gi,to:'in my opinion',cat:'g',label:'"According to" introduces another’s view; for your own, "in my opinion"'},
+ {re:/\b(I|we|you|they|people|students|children) lack of\b/g,to:'$1 lack',cat:'g',label:'The verb "lack" takes no "of"'},
+ {re:/\b(reach|reached|reaching) to (?=the|a|an|their|our|his|her|my|your)\b/gi,fx:r=>r.replace(/\s+to\s+$/i,' '),cat:'g',label:'"Reach" takes no "to"'},
+ {re:/\bthe most of (the )?(people|students|children|time|things|countries|cases|times)\b/gi,to:(m,a,n)=>a?'most of the '+n:'most '+n,cat:'g',label:'"Most people", or "most of the people"'},
+ /* "much" and "less" with plural count nouns */
+ {re:/\b(so|too|how|very)? ?much (people|students|children|things|problems|cars|books|friends|places|countries|questions|ideas|reasons|ways|times|jobs|hours|days|years)\b/gi,to:(m,a,n)=>(a?a+' ':'')+'many '+n,cat:'g',label:'Count nouns take "many", not "much"'}
+];
 
 /* ----- SCHOLAR18 — the doctoral register, next set ---------------------- */
 const SCHOLAR18=[
@@ -8133,7 +8198,7 @@ function ruleEdits(t){
  var _pkey=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+((S.muteWords||[]).length)+'|'+(S.citeStyle||'');
  if(__packSig!==_pkey||!__packArr){
   __packSig=_pkey;
-  __packArr=BASE.concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38);
+  __packArr=BASE.concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39);
   if(S.reg==='scholarly')__packArr=__packArr.concat(SCHOLAR).concat(SCHOLAR_XTRA).concat(SCHOLAR3).concat(SCHOLAR4).concat(SCHOLAR5).concat(SCHOLAR6).concat(SCHOLAR7).concat(SCHOLAR8).concat(SCHOLAR9).concat(SCHOLAR10).concat(SCHOLAR11).concat(SCHOLAR12).concat(SCHOLAR13).concat(SCHOLAR13B).concat(SCHOLAR14).concat(SCHOLAR15).concat(SCHOLAR16).concat(SCHOLAR17).concat(SCHOLAR18);
   if(S.reg==='creative')__packArr=__packArr.concat(CREATIVE);
   var _knob=(typeof docKnob==='function')?docKnob():null;
@@ -8148,9 +8213,11 @@ function ruleEdits(t){
   if(r.to!==null&&out.some(o=>typeof o.fix==='string'&&o.fix!==o.orig&&m.start<o.end&&m.start+m.raw.length>o.start))continue;
   if(inMask(m.start,ms))continue;
   /* 7.37: a rule may name what must come before it (no lookbehind: Safari before 16.4 cannot parse one) */
-  if(r.pre&&!r.pre.test(t.slice(Math.max(0,m.start-2),m.start)))continue;
+  if(r.pre&&!r.pre.test(t.slice(Math.max(0,m.start-24),m.start)))continue;
+  if(r.npre&&r.npre.test(t.slice(Math.max(0,m.start-24),m.start)))continue;
   if(S.reg==='casual'&&r.cat==='s')continue;
-  let fix=r.to===null?null:m.raw.replace(rxOne(r.re,r.cs),r.to);
+  /* 7.37: fx gives the fix from the matched words directly, for a pattern that looks ahead past them */
+  let fix=r.fx?r.fx(m.raw):r.to===null?null:m.raw.replace(rxOne(r.re,r.cs),r.to);
   if(fix)fix=matchCase(m.raw,fix);
   const o={start:m.start,end:m.start+m.raw.length,orig:m.raw,fix:(fix!==m.raw)?fix:null,why:r.label,cat:r.cat};
   if(r.alts){const as=Array.isArray(r.alts)?r.alts:r.alts[m.raw.toLowerCase()];

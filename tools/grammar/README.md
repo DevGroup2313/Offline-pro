@@ -185,3 +185,42 @@ A fault found and fixed on the way: the shared script block the model's
 worker loads now includes the spelling library, which assumed a global the
 worker lacks; it stopped the worker (and would have stopped the in-window
 writing model too) until fixed.
+
+## 7.37: a learner's pack of rules, and the rewrites made safe
+
+The rules caught 31 of the 3,309 errors marked in the tuning half. Most of
+what learners get wrong (missing commas, word choice, prepositions, tense,
+articles) needs the sentence's sense, which rules cannot read; a few classes
+can be caught with certainty, and 7.37 adds them: irregular verbs given -ed
+("buyed"), nouns with no plural ("informations"), irregular plurals
+("childs"), a modal with "to" or the wrong form ("can to go", "didn't went",
+"can gives"), "more better", a comma after an opening "However" or "In my
+opinion", "people is", "everyday" as an adverb, "their is", and fixed
+prepositions ("interested on", "discuss about", "explain me", "on my
+opinion"). Forms that are themselves English words ("-leaved", "singed",
+"ringed") and names ("Sayd") are excluded after a check on correct text.
+The pronoun "i" is now capitalised wherever it stands alone, not only before
+forty verbs; list markers and numerals ("(i)", "part i") are left alone.
+
+Held out (not used for any choice):
+
+| Set | 7.36 rules + spelling: P / R / F0.5 | 7.37 rules + spelling: P / R / F0.5 |
+|---|---|---|
+| W&I report half | 63.2% / 3.4% / 0.140 | 67.6% / 4.3% / 0.173 |
+| CoNLL-2014 | 78.6% / 5.0% / 0.199 | 80.5% / 5.8% / 0.224 |
+| Correct Wikipedia changed | 3.5% | 3.5% |
+
+Rules alone: W&I 0.061 to 0.100 (precision 75.8%), CoNLL-2014 0.015 to 0.059.
+The writer's thesis: no correctness suggestion from the rules, as before.
+
+What this means plainly: with no model at all, Inkwell now finds about one
+learner error in twenty-three, and about two in three of its suggestions
+agree with a human corrector. For a fluent writer, whose slips are fewer and
+of the kinds rules catch, the share is higher; no measurement of that exists
+here. The careful grammar model (Engine, opt-in) remains the way to catch the
+errors that need the sentence's sense.
+
+The offline rewrites (Rewrite: Concise, Shorter, Professional, Scholarly,
+Casual, Confident) were rewritten to keep meaning and grammar, with 143 test
+cases (tools/rewrite/cases.js) and a reading of every change made to 600
+Wikipedia sentences and the writer's thesis.
