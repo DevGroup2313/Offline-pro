@@ -552,13 +552,13 @@ body[data-motion=minimal] .doorCard{animation:none}
    and the edge together, so no edge ever shows above a pressed face. */
 @property --y{syntax:'<length>';inherits:true;initial-value:0px}
 .doorSeal{display:flex;justify-content:center}
-.b3seal{--S:88px;--d:7px;--y:0px;--sh:.9;--blur:9px;--off:7px;
- --b3-side:linear-gradient(90deg,#4a3511 0%,#8a6526 18%,#d8bd7c 38%,#a77d34 62%,#5e4417 86%,#3d2b0c 100%);--b3-cast:rgba(40,28,8,.42);
- --b3-well:radial-gradient(circle at 50% 40%,#f3ecdb,#e9e0ca);--b3-wellSh:rgba(60,45,20,.28);--b3-wellHi:rgba(255,255,255,.85);--b3-glare:.32;
+.b3seal{--S:88px;--d:3px;--y:0px;--sh:.5;--blur:3.5px;--off:2.5px;
+ --b3-side:linear-gradient(90deg,#4a3511 0%,#8a6526 18%,#d8bd7c 38%,#a77d34 62%,#5e4417 86%,#3d2b0c 100%);--b3-cast:rgba(40,28,8,.5);
+ --b3-well:radial-gradient(circle at 50% 40%,#f3ecdb,#e9e0ca);--b3-wellSh:rgba(60,45,20,.28);--b3-wellHi:rgba(255,255,255,.85);--b3-glare:.12;
  position:relative;display:block;width:var(--S);height:calc(var(--S) + var(--d));margin:0 auto;padding:0;border:0;background:transparent;box-shadow:none;
  cursor:pointer;line-height:0;-webkit-tap-highlight-color:transparent;transition:--y .3s cubic-bezier(.25,1.5,.4,1)}
 [data-theme=dark] .b3seal{--b3-side:linear-gradient(90deg,#06121b 0%,#123247 18%,#3b7aa0 38%,#1d4b68 62%,#0d2433 86%,#050d14 100%);--b3-cast:rgba(0,0,0,.85);
- --b3-well:radial-gradient(circle at 50% 40%,#111a24,#0b1219);--b3-wellSh:rgba(0,0,0,.75);--b3-wellHi:rgba(255,255,255,.06);--b3-glare:.14}
+ --b3-well:radial-gradient(circle at 50% 40%,#111a24,#0b1219);--b3-wellSh:rgba(0,0,0,.75);--b3-wellHi:rgba(255,255,255,.06);--b3-glare:.06}
 .b3seal:hover,.b3seal:active{background:transparent;transform:none}
 .b3seal:focus{outline:none}
 .b3seal:focus-visible .b3-face{outline:1.5px solid var(--brass,#a9803a);outline-offset:5px;border-radius:50%}
@@ -575,24 +575,24 @@ body[data-motion=minimal] .doorCard{animation:none}
 .b3seal .b3-glare{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
  background:radial-gradient(circle at var(--gx,40%) var(--gy,30%),rgba(255,255,255,var(--b3-glare)) 0%,rgba(255,255,255,0) 50%);mix-blend-mode:soft-light;transition:opacity .3s ease}
 .b3seal .s3-sheen{animation:b3Sheen 8s cubic-bezier(.45,0,.25,1) 1.4s infinite}
-.b3seal.hover{--y:-2px;--off:10px;--blur:12px;--sh:.75}
+.b3seal.hover{--y:-1px;--off:4px;--blur:5px;--sh:.45}
 .b3seal.hover .b3-glare{opacity:1}
-.b3seal.down{--y:calc(var(--d) - 1.5px);--off:2px;--blur:3px;--sh:1;transition-duration:.07s;transition-timing-function:ease-out}
+.b3seal.down{--y:calc(var(--d) - .8px);--off:1px;--blur:2px;--sh:.6;transition-duration:.07s;transition-timing-function:ease-out}
 .b3seal.down .b3-cast{transition-duration:.07s}
 .b3seal.rise{animation:b3Rise .9s cubic-bezier(.2,.9,.25,1) both}
 .b3seal.rise .b3-cast{animation:b3CastIn .9s ease both}
 .b3seal.knock{animation:b3Knock .5s cubic-bezier(.3,.7,.3,1)}
 .b3seal.knock .s3-sheen{animation:b3Sheen1 .8s cubic-bezier(.45,0,.25,1)}
-@keyframes b3Rise{0%{--y:var(--d)}55%{--y:-2.5px}78%{--y:.6px}100%{--y:0px}}
+@keyframes b3Rise{0%{--y:var(--d)}55%{--y:-1px}78%{--y:.3px}100%{--y:0px}}
 @keyframes b3CastIn{0%{opacity:0}100%{opacity:var(--sh)}}
-@keyframes b3Knock{0%{--y:calc(var(--d) - 1.5px)}45%{--y:-2.5px}75%{--y:.5px}100%{--y:0px}}
+@keyframes b3Knock{0%{--y:calc(var(--d) - .8px)}45%{--y:-1px}75%{--y:.3px}100%{--y:0px}}
 @keyframes b3Sheen{0%{transform:translateX(0)}18%{transform:translateX(196px)}100%{transform:translateX(196px)}}
 @keyframes b3Sheen1{0%{transform:translateX(0)}100%{transform:translateX(196px)}}
 body[data-motion=minimal] .b3seal,body[data-motion=minimal] .b3seal .b3-cast,body[data-motion=minimal] .b3seal .s3-sheen{animation:none !important;transition:none}
 @media (prefers-reduced-motion:reduce){.b3seal,.b3seal .b3-cast,.b3seal .s3-sheen{animation:none !important;transition:none}}
-#brandSeal{--S:36px;--d:3px;--off:3px;--blur:4px;flex-shrink:0;margin:0}
-#brandSeal.hover{--y:-1px;--off:5px;--blur:6px}
-#brandSeal.down{--y:calc(var(--d) - .8px);--off:1px;--blur:2px}
+#brandSeal{--S:36px;--d:1.5px;--off:1.2px;--blur:2px;--sh:.45;flex-shrink:0;margin:0}
+#brandSeal.hover{--y:-.5px;--off:2px;--blur:3px}
+#brandSeal.down{--y:calc(var(--d) - .4px);--off:.6px;--blur:1.2px}
 #brandSeal .b3-well{box-shadow:inset 0 1px 3px var(--b3-wellSh),inset 0 -1px 0 var(--b3-wellHi)}
 .doorName{font:700 40px Georgia,'Iowan Old Style',serif;letter-spacing:.03em;margin-top:10px}
 .doorRule{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}
@@ -1383,13 +1383,13 @@ body.kbd .doorRow button:not(.primary):focus-visible{box-shadow:0 4px 0 #c7ab72,
    field with a champagne double rule, and the seal's dip-pen nib in relief.
    It floats over the desk, so it has no well. Its drag (wireScheFabDrag) is
    unchanged; while dragged it lifts instead of pressing in. */
-#scheFab.b3seal{--S:44px;--d:3px;--off:4px;--blur:6px;--sh:.7;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
+#scheFab.b3seal{--S:44px;--d:2px;--off:2.5px;--blur:4px;--sh:.55;position:fixed;display:block;width:var(--S);height:calc(var(--S) + var(--d));
  margin:0;padding:0;border:0;background:transparent;box-shadow:none;filter:none;font-size:0;cursor:grab;touch-action:none;transform:none}
 #scheFab.b3seal:hover,#scheFab.b3seal:active{background:transparent;box-shadow:none;filter:none;transform:none}
 #scheFab .b3-well{display:none}
 #scheFab .b3-side{background:none}
-#scheFab.b3seal.hover{--y:-2px;--off:7px;--blur:9px;--sh:.6}
-#scheFab.b3seal.down{--y:calc(var(--d) - .6px);--off:1px;--blur:2px}
+#scheFab.b3seal.hover{--y:-1px;--off:4px;--blur:6px;--sh:.5}
+#scheFab.b3seal.down{--y:calc(var(--d) - .4px);--off:.8px;--blur:1.5px}
 #scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-4px;--off:12px;--blur:12px;--sh:.55;cursor:grabbing;transition:none}
 #scheFab .fbadge{position:absolute;z-index:3;top:-3px;right:-3px;transform:translateY(var(--y));background:linear-gradient(#f0dca6,#b88d3e);color:#17384c;
  border:1.5px solid var(--bg);font-family:var(--disp);font-size:11px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.35)}
@@ -4538,7 +4538,7 @@ function scheFacePaint(dark){
   +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.18:.9)+'" transform="translate(-.5 -.6) '+nibAt+'"/>'
   +'<path d="'+NIB+'" fill-rule="evenodd" fill="'+u('nb')+'" transform="'+nibAt+'"/>'
   +'</svg><span class="b3-glare" aria-hidden="true"></span>';
- const side=document.querySelector('#scheFab .b3-side');if(side)side.innerHTML=inkWaxSide(44,3,dark);
+ const side=document.querySelector('#scheFab .b3-side');if(side)side.innerHTML=inkWaxSide(44,2,dark);
  doorSealWire(document.getElementById('scheFab'));
 }
 function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorSeal'),88,dark,rise);}
@@ -4547,7 +4547,7 @@ function sealButtonPaint(b,size,dark,rise){
  if(!b)return;
  b.innerHTML='<span class="b3-well" aria-hidden="true"></span><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span>'
   +'<span class="b3-face">'+inkwellSeal(size,dark)+'<span class="b3-glare" aria-hidden="true"></span></span>';
- const side=b.querySelector('.b3-side');if(side)side.innerHTML=inkWaxSide(size,b.id==='brandSeal'?3:7,dark);
+ const side=b.querySelector('.b3-side');if(side)side.innerHTML=inkWaxSide(size,b.id==='brandSeal'?1.5:3,dark);
  b.classList.remove('knock','hover','down');
  if(rise){b.classList.remove('rise');void b.offsetWidth;b.classList.add('rise');clearTimeout(b.__rise);b.__rise=setTimeout(function(){b.classList.remove('rise');},950);}
  doorSealWire(b);}
