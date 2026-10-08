@@ -278,9 +278,6 @@ body.readable #editor,body.readable #hli{font:19px/2.05 Tahoma,Verdana,Georgia,s
 #status{display:flex;gap:10px;align-items:center;padding:2px 12px;font-size:9.2px;letter-spacing:.1em;min-height:0;text-transform:uppercase;color:var(--mut);background:var(--card);border-top:1px solid var(--line);box-shadow:0 -8px 20px #24201a08;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}#status #stWps,#status #stLex,#status #stFlesch,#status #stGain,#status #stModel{display:none !important}
 #status::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
 #status .foldBtn{position:sticky;right:2px;flex-shrink:0;background:var(--card);box-shadow:-12px 0 12px -6px var(--card)}
-#tourLay{position:fixed;inset:0;z-index:88;display:none;background:rgba(20,14,6,.42);backdrop-filter:blur(3px)}
-#tourCard{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);width:min(400px,90vw);background:var(--card);border:1px solid var(--gold);border-radius:18px;padding:15px 18px;box-shadow:var(--sh-lg);text-align:center;animation:pup .3s var(--pop)}
-.tourSpot{position:relative;z-index:89;outline:2.5px solid var(--gold);outline-offset:4px;box-shadow:0 0 0 6px #a97e2c33,0 0 24px 6px #a97e2c44 !important;border-radius:10px}
 #status .foldBtn{width:20px;height:17px;padding:0;font-size:8.5px;margin:0}
 #thinkPane{position:fixed;right:86px;bottom:64px;z-index:66;width:min(360px,88vw);background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:16px;padding:10px 14px 12px;box-shadow:var(--sh-lg);display:none;animation:rise .3s var(--pop)}
 /* drop a model anywhere */
@@ -569,8 +566,10 @@ body[data-motion=minimal] .doorCard{animation:none}
  background:var(--b3-well);box-shadow:inset 0 2px 5px var(--b3-wellSh),inset 0 -1px 0 var(--b3-wellHi),0 1px 0 var(--b3-wellHi)}
 .b3seal .b3-cast{position:absolute;left:4%;width:92%;height:var(--S);top:var(--d);border-radius:50%;background:var(--b3-cast);filter:blur(var(--blur));
  transform:translateY(calc(var(--off) - var(--y) * .5));opacity:var(--sh);transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s ease,filter .3s ease}
-.b3seal .b3-side{position:absolute;left:0;top:var(--y);width:var(--S);height:calc(var(--S) + var(--d) - var(--y));border-radius:calc(var(--S) / 2);
- background:repeating-linear-gradient(90deg,rgba(255,255,255,.10) 0 1px,rgba(0,0,0,.10) 1px 2px),var(--b3-side);box-shadow:inset 0 -1px 1px rgba(0,0,0,.35)}
+.b3seal .b3-side{position:absolute;left:0;top:var(--y);width:var(--S);height:calc(var(--S) + var(--d) - var(--y));overflow:hidden;background:none}
+/* 7.37: the seals are pressed wax, so the edge is the wax's own thickness
+   (drawn by inkWaxSide) and they sit on the paper rather than in a well */
+.b3seal .b3-well{display:none}
 .b3seal .b3-face{position:absolute;left:0;top:0;width:var(--S);height:var(--S);border-radius:50%;transform:translateY(var(--y))}
 .b3seal .b3-face svg{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
 .b3seal .b3-glare{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
@@ -595,7 +594,6 @@ body[data-motion=minimal] .b3seal,body[data-motion=minimal] .b3seal .b3-cast,bod
 #brandSeal.hover{--y:-1px;--off:5px;--blur:6px}
 #brandSeal.down{--y:calc(var(--d) - .8px);--off:1px;--blur:2px}
 #brandSeal .b3-well{box-shadow:inset 0 1px 3px var(--b3-wellSh),inset 0 -1px 0 var(--b3-wellHi)}
-#brandSeal .b3-side{background:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,rgba(0,0,0,.12) 1px 2px),var(--b3-side)}
 .doorName{font:700 40px Georgia,'Iowan Old Style',serif;letter-spacing:.03em;margin-top:10px}
 .doorRule{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px}
 .doorRule span{width:58px;height:1px;background:var(--acc);opacity:.5}
@@ -748,9 +746,11 @@ body.panelFolded #right>:not(#panelFoldBtn):not(#panelFoldLabel){display:none}
    the Schedae pin (right:20+bottom:26, a 52px circle), against the paper's
    side of it, never beneath it. */
 body.ftrFolded #status{display:none}
-#footTab{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:2147483000;
- align-items:center;gap:6px;padding:4px 13px;font-size:11px;border-radius:999px;color:var(--mut);
- background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);box-shadow:var(--sh-sm),inset 0 1px 0 #ffffff70}
+/* 7.37: the footer's pull sits on the right, just left of Schedae, off the page */
+#footTab{display:none;position:fixed;right:84px;bottom:30px;z-index:2147483000;align-items:center;gap:5px;padding:5px 12px;
+ font:700 12px/1 var(--disp,Georgia);letter-spacing:.08em;border-radius:999px;color:#8a6526;background:linear-gradient(#fffdf7,#f1e8d4);
+ border:1px solid rgba(169,128,58,.5);box-shadow:0 2px 0 #c7ab72,0 4px 10px rgba(60,44,14,.16);cursor:pointer}
+[data-theme=dark] #footTab{color:#c9a964;background:linear-gradient(#19242f,#0f1820);border-color:rgba(201,169,100,.4);box-shadow:0 2px 0 #04080c,0 4px 10px rgba(0,0,0,.5)}
 body.ftrFolded #footTab:hover{background:var(--faceD)}
 body.ftrFolded #footTab{display:inline-flex}
 
@@ -771,7 +771,7 @@ body.panelFolded #panelFoldLabel,body.sideFolded #sideFoldLabel{display:block}
    family, the scroll and foot refinements, the perf line, the matte pass (457),
    the night wall, the lift (501), the final seating (592), the night inks. The
    seams Inkwell needs are marked. */
-.sticky-note { position: fixed; width: 202px; min-height: 152px; background: #ffef9c; color: #4a3f1e; border-radius: 3px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 0 rgba(16,42,58,0.16), 0 3px 0 rgba(16,42,58,0.26), 0 6px 9px rgba(16,42,58,0.17), 0 14px 24px rgba(16,42,58,0.12); pointer-events: auto; display: flex; flex-direction: column; transform: none; z-index: 5000; }
+.sticky-note { position: fixed; width: 202px; min-height: 152px; background: #efdfb1; color: #4a3f1e; border-radius: 3px; box-shadow: 0 0 0 1px rgba(60,44,14,.10), 0 1px 2px rgba(60,44,14,.14), 0 4px 10px rgba(60,44,14,.10); pointer-events: auto; display: flex; flex-direction: column; transform: none; z-index: 5000; }
 .sticky-note .sn-head { height: 22px; cursor: default; display: flex; align-items: center; gap: 4px; padding: 0 5px; background: rgba(16,42,58,0.07); border-radius: 3px 3px 0 0; color: #6b5d2e; box-shadow: none; }
 .sticky-note .sn-iconbtn { border: none; background: transparent; cursor: pointer; color: #6b5d2e; font-size: 12px; line-height: 1; padding: 2px 5px; border-radius: 4px; box-shadow: none; position: relative; z-index: 6; }
 .sticky-note .sn-iconbtn:hover { color: #2c2410; background: rgba(0,0,0,0.10); }
@@ -791,20 +791,26 @@ body.panelFolded #panelFoldLabel,body.sideFolded #sideFoldLabel{display:block}
 .sticky-note .sn-resize { position: absolute; right: 1px; bottom: 1px; width: 20px; height: 20px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.20) 50%); border-radius: 0 0 3px 0; }
 .sticky-note { resize: none; will-change: transform; }
 /* matte pass (457): thicker, hard-edged, no sheen; a whisper of rotation */
-.sticky-note{ border-radius:3px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1.5px 0 rgba(16,42,58,0.14), 0 3px 0 rgba(16,42,58,0.26), 0 6px 9px rgba(16,42,58,0.17), 0 14px 24px rgba(16,42,58,0.12) !important; transition: transform .14s cubic-bezier(.34,1.35,.64,1), box-shadow .14s ease !important; }
+.sticky-note{ border-radius:3px; box-shadow: 0 0 0 1px rgba(60,44,14,.09), 0 1px 1px rgba(60,44,14,.16), 0 3px 6px rgba(60,44,14,.10), 6px 12px 12px -9px rgba(60,44,14,.42), -6px 12px 12px -9px rgba(60,44,14,.42) !important; transition: transform .14s cubic-bezier(.34,1.35,.64,1), box-shadow .14s ease !important; }
 .sticky-note:nth-child(odd){ transform: rotate(-0.25deg) !important; }
 .sticky-note:nth-child(even){ transform: rotate(0.3deg) !important; }
-.sticky-note.sn-dragging, .sticky-note:active{ transform: rotate(0deg) translateY(-2px) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1.5px 0 rgba(16,42,58,0.15), 0 4px 0 rgba(16,42,58,0.28), 0 10px 15px rgba(16,42,58,0.19), 0 22px 34px rgba(16,42,58,0.13) !important; }
+.sticky-note.sn-dragging, .sticky-note:active{ transform: rotate(0deg) translateY(-2px) !important; box-shadow: 0 0 0 1px rgba(60,44,14,.12), 0 2px 4px rgba(60,44,14,.16), 0 10px 20px rgba(60,44,14,.14) !important; }
 /* night: warm darker paper, still matte, wall in true black */
-html[data-theme=dark] .sticky-note{ box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1.5px 0 rgba(0,0,0,0.45), 0 3px 0 rgba(0,0,0,0.62), 0 7px 11px rgba(0,0,0,0.48), 0 18px 30px rgba(0,0,0,0.36), 0 34px 56px rgba(0,0,0,0.28) !important; }
+html[data-theme=dark] .sticky-note{ box-shadow: 0 0 0 1px rgba(255,246,228,0.07), 0 1px 1px rgba(0,0,0,0.55), 0 3px 6px rgba(0,0,0,0.35), 6px 12px 12px -9px rgba(0,0,0,0.75), -6px 12px 12px -9px rgba(0,0,0,0.75) !important; }
 /* the lift (501) */
 html body .sticky-note.sticky-note:hover { transform: translateY(-2px); }
 /* the final day seating (592): the window's own four casts in the note's warm ink */
 /* deepened one grade at her word (4.4): the matte lip returns for the paper's edge,
    the warm-ink seat and every cast step one grade stronger, same hue, same geometry */
-html body .sticky-note.sticky-note{ box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1.5px 0 rgba(16,42,58,0.14), 0 2px 0 rgba(90,70,20,0.36), 0 10px 16px rgba(60,46,14,0.26), 0 24px 44px rgba(60,46,14,0.19), 0 46px 76px rgba(60,46,14,0.13) !important; }
+/* 7.37: paper, in 3D, without gloss: no highlight line and no heavy cast.
+   The corners lift a little off the desk, so each throws its own soft shadow;
+   a lean on hover, a higher lift while dragged */
+html body .sticky-note.sticky-note{ box-shadow: 0 0 0 1px rgba(60,44,14,.09), 0 1px 1px rgba(60,44,14,.16), 0 3px 6px rgba(60,44,14,.10), 6px 12px 12px -9px rgba(60,44,14,.42), -6px 12px 12px -9px rgba(60,44,14,.42) !important; background-blend-mode: normal; }
+html body .sticky-note.sticky-note:hover{ box-shadow: 0 0 0 1px rgba(60,44,14,.10), 0 2px 3px rgba(60,44,14,.16), 0 8px 16px rgba(60,44,14,.14), 8px 18px 16px -10px rgba(60,44,14,.40), -8px 18px 16px -10px rgba(60,44,14,.40) !important; }
+.snColName{font:italic 600 14px/1.2 var(--disp);letter-spacing:.02em;color:#8a6526;padding:0 6px 8px}
+[data-theme=dark] .snColName{color:#c9a964}
 html body .sticky-note:hover { transform: translateY(-2px) !important; }
-html body .sticky-note.sticky-note.sn-dragging, html body .sticky-note.sticky-note:active{ transform: translateY(-4px) scale(1.015) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 4px 0 rgba(90,70,20,0.30), 0 14px 26px rgba(60,46,14,0.36), 0 32px 56px rgba(60,46,14,0.28), 0 56px 92px rgba(60,46,14,0.17) !important; }
+html body .sticky-note.sticky-note.sn-dragging, html body .sticky-note.sticky-note:active{ transform: translateY(-4px) scale(1.012) !important; box-shadow: 0 0 0 1px rgba(60,44,14,.10), 0 4px 6px rgba(60,44,14,.16), 0 16px 28px rgba(60,44,14,.18), 10px 24px 20px -12px rgba(60,44,14,.38), -10px 24px 20px -12px rgba(60,44,14,.38) !important; }
 /* night inks */
 html[data-theme=dark] .sticky-note.sticky-note { color: #e8dcc0 !important; }
 html[data-theme=dark] .sticky-note .sn-body { color: #e8dcc0 !important; }
@@ -1346,7 +1352,12 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
 /* the switch: a brass knob in a midnight track */
 .dtoggle{font-family:var(--disp);font-size:16px;font-weight:500;color:#5c5444;margin-top:22px}
 .dtoggle .dlbl{font-family:var(--disp);font-size:16.5px;font-weight:500}
-.doorRow button:focus-visible,#doorOpen:focus-visible{outline:1.5px solid var(--brass);outline-offset:4px}
+/* 7.37: the door puts focus on its own button, and the outline drawn 4 px
+   outside it looked like an oversized ring. Now no ring unless the keyboard
+   is in use, and then a brass line inside the button's face, where it fits */
+.doorRow button:focus-visible,#doorOpen:focus-visible{outline:none}
+body.kbd .doorRow button.primary:focus-visible{box-shadow:0 4px 0 var(--btnEdge),0 7px 14px rgba(6,16,24,.30),inset 0 0 0 2px #d9bd7c,inset 0 1px 0 rgba(255,255,255,.24)}
+body.kbd .doorRow button:not(.primary):focus-visible{box-shadow:0 4px 0 #c7ab72,0 7px 14px rgba(60,44,14,.18),inset 0 0 0 2px #a9803a}
 .doorRow button:focus:not(:focus-visible){outline:none}
 [data-theme=dark] .dtoggle{color:#b5a888}
 .dtoggle:hover{background:rgba(169,128,58,.08)}
@@ -1376,7 +1387,7 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
  margin:0;padding:0;border:0;background:transparent;box-shadow:none;filter:none;font-size:0;cursor:grab;touch-action:none;transform:none}
 #scheFab.b3seal:hover,#scheFab.b3seal:active{background:transparent;box-shadow:none;filter:none;transform:none}
 #scheFab .b3-well{display:none}
-#scheFab .b3-side{background:var(--b3-side)}
+#scheFab .b3-side{background:none}
 #scheFab.b3seal.hover{--y:-2px;--off:7px;--blur:9px;--sh:.6}
 #scheFab.b3seal.down{--y:calc(var(--d) - .6px);--off:1px;--blur:2px}
 #scheFab.b3seal.dragging,#scheFab.b3seal.dragging.down{--y:-4px;--off:12px;--blur:12px;--sh:.55;cursor:grabbing;transition:none}
@@ -1415,6 +1426,67 @@ body[data-motion=minimal] #scheFab.b3seal{transition:none}
 [data-theme=dark] .schePanel .scheRow .btn{background:linear-gradient(#19242f,#0f1820);color:#e2cf9f;box-shadow:0 2px 0 #04080c,0 3px 6px rgba(0,0,0,.5)}
 [data-theme=dark] .schePanel .scheRow .btn:hover{box-shadow:0 3px 0 #04080c,0 6px 10px rgba(0,0,0,.55)}
 [data-theme=dark] .schePanel .scheRow .btn:active{box-shadow:0 0 0 #04080c,0 1px 2px rgba(0,0,0,.6)}
+/* 7.37 the Outline's fold */
+#outlineSec .olHead{display:flex;align-items:center;gap:6px}
+#outlineSec .olFold{margin-left:auto;width:22px;height:22px;min-height:0;padding:0;border-radius:50%;font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+#outlineSec.folded #outline{display:none}
+/* 7.37 light mode, a grade nearer the seal: a warm desk instead of grey, an
+   ivory sheet with a brass hairline, brass rules under the header and beside
+   the shelves, and the shelf labels in the seal's lettering */
+html:not([data-theme=dark]){--canvas:#e6dfcf}
+html:not([data-theme=dark]) #editWrap{background:radial-gradient(120% 70% at 50% 0%,#ece6d8 0%,#e4dccb 70%,#ddd4c0 100%)}
+html:not([data-theme=dark]) .pgsheet{background:#fffdf8;box-shadow:inset 0 1px 0 #ffffff,0 0 0 1px rgba(169,128,58,.22),0 1px 0 rgba(60,44,14,.20),0 0 26px rgba(60,44,14,.10),0 10px 18px -6px rgba(60,44,14,.24),0 22px 38px -16px rgba(60,44,14,.26)}
+html:not([data-theme=dark]) header{border-bottom-color:rgba(169,128,58,.45);box-shadow:0 1px 0 #fffdf6,0 3px 0 -1px rgba(169,128,58,.2),0 10px 30px #14100a12}
+html:not([data-theme=dark]) #side,html:not([data-theme=dark]) #right{background:linear-gradient(180deg,#f4efe3 0%,#efe9db 40%,#ebe4d4 100%)}
+html:not([data-theme=dark]) #side{box-shadow:inset -1px 0 0 rgba(169,128,58,.22)}
+html:not([data-theme=dark]) #right{box-shadow:inset 1px 0 0 rgba(169,128,58,.22)}
+html:not([data-theme=dark]) #side .lbl,html:not([data-theme=dark]) #right .lbl{font-family:var(--disp);font-size:12.5px;font-weight:700;letter-spacing:.26em;color:#8a6526}
+html:not([data-theme=dark]) #docTitle{color:#17384c}
+/* 7.37 THE GUIDED TOUR, after Carpe Diem's: no veil and no blur, so the desk
+   it describes stays in plain view. A ring of brass marks the part each card
+   is about; the card sits at the foot of the desk, or at its head when the
+   part is low, and can be dragged aside by its top line. */
+#inkTour{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;display:flex;justify-content:center;padding:0 16px 18px;pointer-events:none}
+#inkTour.atTop{bottom:auto;top:0;padding:14px 16px 0}
+#inkTour.atRight{justify-content:flex-end}#inkTour.atLeft{justify-content:flex-start}
+#inkTour.atRight .itCard,#inkTour.atLeft .itCard{max-width:360px}
+.itCard{pointer-events:auto;max-width:440px;width:100%;box-sizing:border-box;color:var(--ink);text-align:left;
+ background:radial-gradient(130% 90% at 50% 0%,#fffefa 0%,#fbf6ea 60%,#f3ead6 100%);border:1px solid rgba(169,128,58,.55);border-radius:18px;padding:13px 18px 13px;
+ box-shadow:inset 0 0 0 4px #fbf6ea,inset 0 0 0 5px var(--hair),0 2px 4px rgba(20,16,10,.08),0 14px 30px rgba(20,16,10,.16),0 30px 60px rgba(20,16,10,.12)}
+[data-theme=dark] .itCard{background:radial-gradient(130% 90% at 50% 0%,#162231 0%,#0e161f 60%,#090e14 100%);border-color:rgba(63,127,163,.55);
+ box-shadow:inset 0 0 0 4px #0e161f,inset 0 0 0 5px rgba(201,169,100,.26),0 2px 4px #000b,0 14px 30px #000a,0 30px 60px #0009}
+.itCard.itDrag{cursor:grabbing}
+.itTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.itChap{font-family:var(--disp);font-weight:700;font-size:11.5px;line-height:1.3;letter-spacing:.16em;text-transform:uppercase;color:#8a6526}
+[data-theme=dark] .itChap{color:#c9a964}
+.itCard button.itChaps{flex-shrink:0;font-size:11px;padding:3px 10px;min-height:0;border-radius:999px;border:1px solid var(--hair);background:transparent;color:var(--mut);box-shadow:none}
+.itTitle{font-family:var(--disp);font-weight:700;font-size:21px;line-height:1.2;color:#17384c;margin:2px 0 5px}
+[data-theme=dark] .itTitle{color:#e2cf9f}
+.itBody{font:14.5px/1.62 Georgia,'Iowan Old Style',serif;color:var(--ink)}
+.itTip{display:flex;gap:7px;align-items:flex-start;margin-top:10px;font:13px/1.55 Georgia,'Iowan Old Style',serif;color:#6b5320;background:rgba(169,128,58,.08);border-radius:10px;padding:8px 10px}
+[data-theme=dark] .itTip{color:#d8c28e;background:rgba(201,169,100,.08)}
+.itMotto{font-family:var(--disp);font-style:italic;font-weight:500;font-size:17px;line-height:1.5;text-align:center;color:#8a6526;margin-top:12px}
+[data-theme=dark] .itMotto{color:#c9a964}
+.itRow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:13px}
+.itLeft{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.itCard button.itLink{background:transparent;border:0;box-shadow:none;color:var(--mut);font-size:13px;padding:4px 2px;min-height:0;cursor:pointer}
+.itCard button.itLink:hover{color:var(--ink);transform:none}
+.itCard button.itNext{padding:9px 22px;border-radius:999px;font-size:14px;flex-shrink:0}
+#inkTourMenu{position:fixed;inset:0;z-index:2147483001;display:flex;align-items:flex-end;justify-content:center;padding:0 16px 90px;background:rgba(20,16,10,.14)}
+.itMenu{max-height:66vh;overflow:auto}
+.itCard button.itCh{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1px solid var(--hairSoft);border-radius:10px;padding:9px 12px;margin-top:6px;background:transparent;box-shadow:none;font-size:14px;color:var(--ink);min-height:0}
+.itCard button.itCh.on{box-shadow:inset 0 0 0 1.5px var(--brass);font-weight:600}
+.itN{font-family:var(--disp);font-weight:700;font-size:12px;color:var(--brass);min-width:16px}
+.itCard button.itSub{display:block;width:100%;text-align:left;border:0;background:transparent;box-shadow:none;padding:3px 12px 3px 38px;font-size:12.5px;color:var(--mut);min-height:0}
+.inkTourSpot{outline:2px solid #c9a24a !important;outline-offset:3px !important;box-shadow:0 0 0 4px rgba(201,162,74,.22) !important}
+@keyframes inkTourPulse{0%,100%{box-shadow:0 0 0 3px rgba(201,162,74,.34)}50%{box-shadow:0 0 0 9px rgba(201,162,74,.06)}}
+.inkTourPulse{animation:inkTourPulse 2s ease-in-out infinite !important}
+@keyframes itIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes itInTop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.itAnim{animation:itIn .32s cubic-bezier(.22,.61,.36,1)}
+#inkTour.atTop .itAnim{animation-name:itInTop}
+@media (prefers-reduced-motion:reduce){.itAnim,.inkTourPulse{animation:none !important}}
+@media (max-width:520px){.itCard{padding:12px 14px}.itTitle{font-size:19px}.itBody{font-size:14px}}
 </style>
 </head>
 <body>
@@ -1507,7 +1579,7 @@ body[data-motion=minimal] #scheFab.b3seal{transition:none}
   <div class="lbl">Documents</div>
   <div id="docs"></div>
   <div id="outlineSec">
-   <div class="lbl">Outline <button class="tipchip" style="padding:2px 8px;font-size:10px" onclick="tipOpen(event,'outline')">💡</button></div>
+   <div class="lbl olHead">Outline <button class="tipchip" style="padding:2px 8px;font-size:10px" onclick="tipOpen(event,'outline')">💡</button><button class="olFold" id="olFold" onclick="foldOutline()" title="Fold the outline away" aria-label="Fold the outline away" aria-expanded="true">▾</button></div>
    <div id="outline"><div style="font-size:12px;color:var(--mut);padding:0 8px">Add <b>#</b> headings to see the map. Drag to reorder sections.</div></div>
   </div>
   <div class="foot">
@@ -1601,12 +1673,7 @@ body[data-motion=minimal] #scheFab.b3seal{transition:none}
  <b style="font-family:Georgia,serif;font-size:16px;display:block;margin-top:6px">Model on approach</b>
  <span style="font-size:12px;color:var(--mut);display:block;margin-top:5px;line-height:1.6" id="dropSub"></span>
 </div></div>
-<button id="footTab" onclick="foldFoot()">▴ Show footer</button>
-<div id="tourLay"><div id="tourCard"><div class="lbl">🧭 TOUR</div>
- <div id="tourTxt" style="font:14px/1.65 Georgia,serif;margin:4px 0 2px"></div>
- <div style="display:flex;gap:8px;margin-top:11px;justify-content:center">
-  <button class="lkbtn" onclick="tourNext()">Next ▸</button><button class="lkbtn" onclick="endTour()">Skip tour</button>
- </div></div></div>
+<button id="footTab" onclick="foldFoot()" title="Show the footer" aria-label="Show the footer">▴ Footer</button>
 <div id="toast"></div>
 <div id="modal" onclick="if(event.target.id==='modal')closeModal()"><div class="box" id="modalBody" role="dialog" aria-modal="true"></div></div>
 
@@ -2479,7 +2546,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.36 · VII · OCTOBRIS · MMXXVI';
+const BUILD='7.37 · VIII · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -4247,70 +4314,160 @@ function toggleSprint(){inkClepPress();}
 const SEAL_NAME='M27.36 18.52Q27.52 18.73 27.64 18.82Q27.76 18.9 27.9 18.86Q28.04 18.81 28.27 18.64Q28.29 18.63 28.32 18.67Q28.35 18.71 28.33 18.73Q28.14 18.87 27.9 19.04Q27.66 19.21 27.37 19.42Q27.11 19.61 26.87 19.8Q26.63 19.99 26.44 20.13Q26.42 20.14 26.39 20.1Q26.36 20.05 26.37 20.04Q26.6 19.87 26.69 19.75Q26.78 19.63 26.74 19.49Q26.69 19.35 26.54 19.13L24 15.71Q23.84 15.49 23.72 15.42Q23.6 15.34 23.46 15.38Q23.32 15.43 23.09 15.6Q23.07 15.61 23.04 15.56Q23.01 15.52 23.02 15.51Q23.21 15.37 23.46 15.2Q23.72 15.03 23.98 14.83Q24.26 14.62 24.5 14.43Q24.73 14.24 24.91 14.11Q24.94 14.09 24.97 14.14Q25 14.18 24.98 14.2Q24.76 14.36 24.68 14.49Q24.59 14.62 24.64 14.76Q24.68 14.89 24.84 15.11ZM30.85 15.73 28.94 11.8 29.19 11.7 31.1 15.61Q31.31 16.05 31.62 16.22Q31.93 16.38 32.25 16.23Q32.27 16.22 32.29 16.27Q32.31 16.32 32.3 16.33Q32.12 16.42 31.92 16.5Q31.72 16.59 31.49 16.7Q31.24 16.82 31.01 16.94Q30.78 17.07 30.58 17.16Q30.55 17.18 30.53 17.13Q30.5 17.08 30.53 17.07Q30.89 16.89 30.98 16.53Q31.06 16.17 30.85 15.73ZM35.64 14.85Q35.65 14.88 35.62 14.9Q35.58 14.92 35.56 14.92L29.23 12.27Q28.76 12.07 28.5 12.05Q28.23 12.03 28.03 12.13Q28.01 12.14 27.98 12.09Q27.96 12.04 27.98 12.04Q28.14 11.95 28.32 11.88Q28.5 11.8 28.65 11.73Q28.94 11.58 29.18 11.46Q29.42 11.33 29.55 11.27Q29.66 11.22 29.76 11.29Q29.86 11.36 30.17 11.5L34.91 13.52ZM33.58 10.62 35.64 14.85 35.28 14.72 33.34 10.73Q33.13 10.3 32.82 10.12Q32.51 9.95 32.19 10.11Q32.17 10.12 32.15 10.07Q32.12 10.02 32.14 10.01Q32.32 9.92 32.52 9.84Q32.72 9.76 32.95 9.64Q33.18 9.53 33.38 9.42Q33.59 9.3 33.78 9.21Q33.79 9.2 33.82 9.25Q33.84 9.3 33.82 9.31Q33.49 9.47 33.43 9.83Q33.37 10.18 33.58 10.62ZM39.08 12.74 38.11 8.6Q38.04 8.34 37.97 8.22Q37.89 8.1 37.74 8.08Q37.59 8.06 37.32 8.13Q37.3 8.13 37.28 8.08Q37.27 8.03 37.3 8.02Q37.53 7.97 37.82 7.91Q38.11 7.86 38.43 7.78Q38.77 7.7 39.06 7.62Q39.34 7.54 39.56 7.49Q39.59 7.48 39.6 7.53Q39.62 7.59 39.59 7.59Q39.32 7.66 39.2 7.74Q39.08 7.83 39.06 7.97Q39.04 8.12 39.1 8.38L40.08 12.51Q40.14 12.77 40.22 12.89Q40.29 13.01 40.44 13.03Q40.58 13.04 40.86 12.97Q40.9 12.97 40.91 13.02Q40.92 13.07 40.88 13.08Q40.65 13.14 40.37 13.19Q40.08 13.25 39.74 13.33Q39.42 13.41 39.13 13.49Q38.83 13.57 38.6 13.62Q38.58 13.62 38.57 13.57Q38.56 13.52 38.58 13.51Q38.85 13.45 38.98 13.37Q39.11 13.29 39.13 13.15Q39.15 13 39.08 12.74ZM41.31 11.61 39.69 10.24 40.25 9.38 42.05 10.91Q42.52 11.32 42.84 11.58Q43.15 11.84 43.36 11.98Q43.57 12.13 43.71 12.18Q43.86 12.23 43.98 12.22Q44.11 12.21 44.25 12.17Q44.28 12.17 44.29 12.22Q44.3 12.27 44.28 12.28Q43.88 12.37 43.64 12.43Q43.4 12.49 43.28 12.52Q43.14 12.55 43.04 12.58Q42.95 12.61 42.88 12.63Q42.76 12.66 42.66 12.63Q42.56 12.61 42.41 12.5Q42.25 12.4 42 12.19Q41.74 11.97 41.31 11.61ZM39.08 11.07 40.83 8.16Q41.08 7.75 40.94 7.53Q40.8 7.31 40.35 7.41Q40.32 7.42 40.31 7.37Q40.3 7.31 40.32 7.31Q40.57 7.25 40.82 7.2Q41.07 7.16 41.49 7.06Q41.92 6.96 42.16 6.89Q42.41 6.81 42.64 6.76Q42.67 6.75 42.68 6.81Q42.7 6.86 42.67 6.87Q42.26 6.96 41.82 7.32Q41.38 7.67 41.07 8.16L39.32 11.04ZM50.68 8.93 49.52 11.96Q49.51 11.99 49.42 11.99Q49.33 11.99 49.31 11.96L47.02 6.95Q46.9 6.68 46.81 6.54Q46.72 6.4 46.61 6.35Q46.51 6.29 46.33 6.29Q46.3 6.29 46.3 6.24Q46.3 6.18 46.33 6.18Q46.44 6.18 46.5 6.19Q46.56 6.2 46.67 6.21Q46.77 6.21 47 6.22Q47.42 6.22 47.66 6.22Q47.91 6.22 48.06 6.21Q48.22 6.2 48.34 6.2Q48.37 6.2 48.36 6.26Q48.36 6.32 48.34 6.31Q47.96 6.31 47.92 6.46Q47.88 6.61 48.12 7.13L49.81 10.84L49.42 11.47L50.51 8.68ZM54.72 6.27Q54.74 6.27 54.74 6.33Q54.74 6.38 54.72 6.38Q54.38 6.38 54.08 6.67Q53.78 6.95 53.58 7.46L51.83 11.98Q51.82 12.02 51.73 12.02Q51.64 12.02 51.62 11.98L49.33 6.98Q49.19 6.67 49.05 6.5Q48.92 6.32 48.75 6.32Q48.72 6.32 48.72 6.26Q48.72 6.21 48.75 6.21Q48.84 6.21 48.9 6.22Q48.95 6.23 49.04 6.23Q49.13 6.24 49.32 6.24Q49.84 6.25 50.06 6.24Q50.29 6.23 50.44 6.23Q50.46 6.23 50.46 6.28Q50.46 6.34 50.43 6.34Q50.19 6.33 50.19 6.49Q50.19 6.64 50.43 7.16L52.14 10.86L51.74 11.49L53.27 7.52Q53.46 7.02 53.34 6.7Q53.22 6.37 52.87 6.36Q52.84 6.36 52.84 6.31Q52.85 6.25 52.87 6.25Q53.11 6.26 53.34 6.27Q53.56 6.29 53.9 6.29Q54.16 6.3 54.33 6.28Q54.49 6.27 54.72 6.27ZM50.56 8.68 51.06 7.4Q51.27 6.86 51.27 6.6Q51.27 6.35 51.04 6.34Q51.01 6.34 51.01 6.29Q51.01 6.23 51.04 6.23Q51.13 6.23 51.16 6.24Q51.19 6.25 51.28 6.26Q51.36 6.26 51.64 6.27Q51.87 6.27 52.01 6.26Q52.16 6.25 52.36 6.25Q52.38 6.25 52.38 6.3Q52.38 6.36 52.36 6.36Q52.04 6.36 51.79 6.62Q51.54 6.88 51.32 7.43L50.74 8.94ZM60.93 13.53 56.98 12.56Q56.95 12.55 56.97 12.5Q56.98 12.44 57.01 12.45Q57.28 12.52 57.43 12.51Q57.57 12.5 57.65 12.37Q57.73 12.25 57.79 11.99L58.81 7.85Q58.87 7.6 58.86 7.45Q58.85 7.31 58.73 7.23Q58.6 7.15 58.33 7.08Q58.3 7.08 58.31 7.02Q58.33 6.97 58.35 6.97L62.14 7.91Q62.23 7.93 62.21 8.01L61.94 9.2Q61.93 9.22 61.88 9.22Q61.84 9.22 61.83 9.18Q61.81 8.62 61.53 8.29Q61.26 7.96 60.7 7.83L60.43 7.76Q60.25 7.72 60.13 7.74Q60 7.76 59.92 7.85Q59.84 7.95 59.8 8.11L58.79 12.2Q58.75 12.37 58.77 12.5Q58.78 12.62 58.86 12.7Q58.94 12.77 59.08 12.81L59.37 12.88Q60.07 13.05 60.56 12.87Q61.05 12.69 61.39 12.14Q61.41 12.11 61.46 12.14Q61.5 12.16 61.5 12.18Q61.4 12.43 61.28 12.78Q61.17 13.12 61.1 13.43Q61.06 13.56 60.93 13.53ZM60.92 11.41Q61.01 11.05 60.78 10.77Q60.56 10.49 60.02 10.36L58.82 10.06L58.88 9.81L60.09 10.11Q60.62 10.24 60.94 10.13Q61.25 10.01 61.33 9.7Q61.34 9.67 61.39 9.68Q61.44 9.69 61.43 9.72Q61.36 10.02 61.31 10.18Q61.27 10.34 61.22 10.52Q61.17 10.75 61.13 10.96Q61.09 11.18 61.03 11.44Q61.02 11.46 60.97 11.45Q60.91 11.43 60.92 11.41ZM67.32 10.62 65.57 14.45Q65.48 14.65 65.47 14.77Q65.45 14.89 65.54 14.97Q65.63 15.05 65.83 15.15L66.12 15.28Q66.77 15.57 67.41 15.44Q68.05 15.3 68.47 14.79Q68.49 14.77 68.53 14.8Q68.57 14.82 68.56 14.85Q68.41 15.11 68.2 15.49Q68 15.87 67.85 16.2Q67.8 16.32 67.67 16.26L63.72 14.47Q63.7 14.46 63.72 14.41Q63.75 14.36 63.76 14.37Q64.02 14.48 64.17 14.5Q64.31 14.51 64.42 14.41Q64.52 14.3 64.63 14.06L66.39 10.18Q66.5 9.94 66.51 9.8Q66.52 9.66 66.42 9.55Q66.31 9.45 66.05 9.33Q66.04 9.32 66.06 9.27Q66.08 9.22 66.1 9.23Q66.3 9.32 66.58 9.46Q66.85 9.6 67.15 9.74Q67.47 9.89 67.74 10Q68.02 10.1 68.23 10.2Q68.25 10.21 68.23 10.26Q68.21 10.31 68.18 10.3Q67.93 10.19 67.78 10.17Q67.63 10.16 67.53 10.27Q67.43 10.37 67.32 10.62ZM74.27 14.48 71.85 17.92Q71.72 18.11 71.69 18.22Q71.65 18.34 71.72 18.43Q71.8 18.53 71.98 18.66L72.23 18.83Q72.82 19.25 73.47 19.23Q74.12 19.22 74.64 18.79Q74.66 18.77 74.69 18.81Q74.73 18.84 74.71 18.86Q74.51 19.1 74.24 19.43Q73.98 19.77 73.77 20.06Q73.69 20.17 73.58 20.09L70.02 17.6Q70.01 17.59 70.04 17.54Q70.07 17.5 70.09 17.51Q70.32 17.67 70.46 17.71Q70.6 17.75 70.72 17.67Q70.84 17.59 70.99 17.37L73.44 13.88Q73.59 13.66 73.63 13.53Q73.67 13.39 73.58 13.27Q73.5 13.15 73.26 12.98Q73.25 12.97 73.28 12.93Q73.31 12.88 73.33 12.89Q73.51 13.02 73.75 13.21Q74 13.39 74.27 13.59Q74.55 13.79 74.8 13.94Q75.05 14.1 75.24 14.23Q75.26 14.25 75.23 14.3Q75.2 14.34 75.18 14.32Q74.95 14.17 74.8 14.13Q74.66 14.08 74.54 14.17Q74.43 14.26 74.27 14.48Z';
 const SEAL_DATE='M16.27 75.54Q16.26 75.53 16.28 75.51Q16.31 75.5 16.31 75.51Q16.36 75.58 16.42 75.59Q16.47 75.61 16.52 75.49L17.42 73.07Q17.51 72.85 17.51 72.71Q17.51 72.58 17.43 72.48Q17.42 72.47 17.44 72.45Q17.47 72.43 17.47 72.44Q17.53 72.52 17.58 72.6Q17.64 72.69 17.69 72.76Q17.81 72.92 17.91 73.04Q18.01 73.17 18.09 73.27Q18.09 73.28 18.07 73.3Q18.05 73.31 18.05 73.3Q17.99 73.24 17.94 73.21Q17.88 73.19 17.83 73.32L16.92 75.78Q16.85 75.97 16.86 76.11Q16.87 76.25 16.96 76.37Q16.97 76.38 16.94 76.4Q16.92 76.42 16.91 76.41Q16.86 76.33 16.79 76.23Q16.72 76.13 16.64 76.02Q16.52 75.87 16.43 75.75Q16.35 75.64 16.27 75.54ZM15.2 74.1Q15.19 74.09 15.21 74.07Q15.23 74.05 15.24 74.07Q15.32 74.17 15.55 74.25Q15.78 74.33 16.18 74.32L17.11 74.32L17.11 74.42L16.24 74.44Q15.92 74.45 15.8 74.55Q15.68 74.66 15.81 74.83Q15.82 74.84 15.8 74.86Q15.78 74.87 15.77 74.87Q15.69 74.76 15.63 74.67Q15.56 74.57 15.44 74.41Q15.37 74.31 15.32 74.25Q15.27 74.19 15.2 74.1ZM17.21 74.45 17.21 74.35 18.08 74.33Q18.41 74.32 18.53 74.21Q18.64 74.11 18.51 73.93Q18.51 73.92 18.53 73.91Q18.55 73.89 18.56 73.9Q18.63 74 18.7 74.1Q18.76 74.2 18.88 74.36Q18.96 74.46 19.01 74.52Q19.06 74.58 19.13 74.67Q19.14 74.68 19.11 74.7Q19.09 74.71 19.08 74.7Q19.01 74.6 18.77 74.52Q18.54 74.44 18.14 74.45ZM18.64 78.4Q18.63 78.39 18.66 78.38Q18.68 78.36 18.68 78.37Q18.74 78.43 18.8 78.44Q18.85 78.46 18.89 78.33L19.58 75.84Q19.64 75.62 19.63 75.48Q19.61 75.35 19.53 75.25Q19.52 75.24 19.54 75.22Q19.56 75.21 19.57 75.22Q19.63 75.28 19.69 75.36Q19.76 75.44 19.82 75.51Q19.94 75.65 20.06 75.77Q20.17 75.89 20.26 75.99Q20.26 75.99 20.24 76.01Q20.22 76.03 20.22 76.02Q20.16 75.96 20.1 75.94Q20.05 75.93 20.01 76.06L19.31 78.59Q19.26 78.78 19.28 78.92Q19.3 79.06 19.4 79.17Q19.41 79.18 19.39 79.2Q19.37 79.22 19.36 79.21Q19.3 79.14 19.22 79.04Q19.14 78.95 19.05 78.85Q18.93 78.71 18.83 78.6Q18.73 78.5 18.64 78.4ZM17.45 77.06Q17.44 77.05 17.46 77.03Q17.48 77.02 17.49 77.03Q17.58 77.12 17.81 77.18Q18.05 77.24 18.45 77.2L19.38 77.11L19.38 77.22L18.52 77.32Q18.19 77.35 18.09 77.46Q17.98 77.58 18.13 77.74Q18.13 77.75 18.11 77.77Q18.09 77.78 18.09 77.78Q18 77.68 17.93 77.59Q17.85 77.5 17.72 77.36Q17.64 77.26 17.58 77.21Q17.53 77.15 17.45 77.06ZM19.49 77.24 19.48 77.14 20.34 77.04Q20.67 77 20.78 76.88Q20.88 76.77 20.74 76.61Q20.73 76.6 20.75 76.58Q20.77 76.56 20.78 76.57Q20.86 76.67 20.94 76.76Q21.01 76.85 21.14 77Q21.23 77.09 21.28 77.15Q21.34 77.2 21.41 77.29Q21.42 77.3 21.4 77.31Q21.38 77.33 21.37 77.32Q21.29 77.22 21.05 77.17Q20.81 77.11 20.41 77.15ZM20.94 80.24Q20.84 80.33 20.81 80.4Q20.78 80.46 20.82 80.52Q20.85 80.59 20.95 80.69Q20.96 80.69 20.94 80.71Q20.92 80.73 20.91 80.72Q20.83 80.64 20.73 80.54Q20.63 80.43 20.5 80.32Q20.39 80.2 20.28 80.1Q20.17 80 20.08 79.92Q20.08 79.91 20.1 79.89Q20.12 79.88 20.12 79.88Q20.22 79.98 20.29 80.01Q20.35 80.04 20.42 80.01Q20.48 79.98 20.57 79.89L22.03 78.39Q22.12 78.3 22.15 78.24Q22.17 78.17 22.14 78.11Q22.11 78.04 22.01 77.94Q22 77.94 22.02 77.92Q22.04 77.9 22.05 77.9Q22.13 77.99 22.23 78.09Q22.33 78.2 22.45 78.32Q22.57 78.44 22.68 78.53Q22.79 78.63 22.87 78.71Q22.88 78.72 22.86 78.74Q22.84 78.76 22.83 78.75Q22.74 78.65 22.67 78.62Q22.6 78.59 22.54 78.63Q22.47 78.66 22.38 78.75ZM22.66 81.81Q22.57 81.9 22.55 81.97Q22.52 82.04 22.55 82.1Q22.59 82.16 22.7 82.25Q22.71 82.26 22.69 82.28Q22.67 82.3 22.66 82.29Q22.57 82.21 22.47 82.12Q22.36 82.02 22.23 81.91Q22.11 81.8 21.99 81.71Q21.88 81.61 21.79 81.53Q21.78 81.53 21.8 81.51Q21.82 81.49 21.83 81.49Q21.93 81.59 22 81.61Q22.07 81.64 22.13 81.61Q22.19 81.57 22.28 81.48L23.65 79.9Q23.73 79.8 23.76 79.74Q23.78 79.67 23.74 79.61Q23.71 79.55 23.6 79.45Q23.6 79.45 23.61 79.43Q23.63 79.41 23.64 79.41Q23.73 79.49 23.83 79.59Q23.94 79.69 24.06 79.8Q24.19 79.91 24.31 80Q24.42 80.1 24.51 80.17Q24.52 80.18 24.5 80.2Q24.48 80.22 24.47 80.21Q24.37 80.12 24.3 80.1Q24.23 80.07 24.17 80.11Q24.11 80.14 24.02 80.24ZM24.47 83.27Q24.39 83.38 24.36 83.44Q24.34 83.51 24.38 83.57Q24.42 83.63 24.53 83.72Q24.54 83.72 24.52 83.75Q24.51 83.77 24.49 83.76Q24.4 83.69 24.29 83.59Q24.18 83.5 24.05 83.4Q23.92 83.3 23.8 83.21Q23.68 83.12 23.58 83.05Q23.58 83.05 23.59 83.02Q23.61 83 23.62 83.01Q23.73 83.09 23.8 83.12Q23.87 83.14 23.93 83.11Q23.99 83.07 24.07 82.97L25.35 81.32Q25.43 81.22 25.45 81.15Q25.47 81.08 25.43 81.02Q25.39 80.96 25.28 80.87Q25.27 80.87 25.29 80.85Q25.3 80.82 25.31 80.83Q25.4 80.9 25.52 81Q25.63 81.1 25.76 81.19Q25.89 81.3 26.01 81.38Q26.13 81.47 26.22 81.54Q26.23 81.55 26.21 81.57Q26.2 81.59 26.19 81.58Q26.08 81.5 26.01 81.48Q25.94 81.45 25.88 81.49Q25.82 81.53 25.74 81.64ZM27.55 85.11Q27.45 85.04 27.42 84.94Q27.4 84.84 27.47 84.73Q27.53 84.63 27.63 84.61Q27.74 84.59 27.84 84.66Q27.95 84.73 27.97 84.83Q27.99 84.92 27.92 85.02Q27.86 85.13 27.76 85.15Q27.66 85.18 27.55 85.11ZM31.65 85.49Q31.57 85.64 31.59 85.79Q31.61 85.95 31.69 86.1Q31.77 86.26 31.87 86.42Q31.97 86.6 32.06 86.77Q32.14 86.95 32.16 87.13Q32.18 87.32 32.08 87.51Q31.98 87.72 31.78 87.83Q31.58 87.93 31.34 87.92Q31.1 87.91 30.85 87.79Q30.73 87.73 30.62 87.64Q30.5 87.55 30.41 87.46Q30.32 87.37 30.29 87.3Q30.28 87.28 30.28 87.26Q30.27 87.24 30.29 87.2L30.6 86.56Q30.61 86.54 30.63 86.55Q30.65 86.56 30.65 86.57Q30.65 86.73 30.65 86.9Q30.65 87.08 30.68 87.24Q30.72 87.4 30.79 87.53Q30.87 87.67 31.01 87.74Q31.1 87.79 31.2 87.8Q31.3 87.81 31.4 87.75Q31.5 87.69 31.57 87.54Q31.67 87.36 31.65 87.18Q31.63 87 31.55 86.83Q31.47 86.66 31.38 86.5Q31.28 86.33 31.2 86.17Q31.12 86.01 31.11 85.84Q31.09 85.67 31.18 85.5Q31.29 85.27 31.49 85.19Q31.69 85.11 31.92 85.14Q32.15 85.17 32.35 85.28Q32.49 85.35 32.63 85.45Q32.76 85.55 32.82 85.63Q32.86 85.66 32.86 85.69Q32.86 85.71 32.84 85.74L32.55 86.33Q32.54 86.34 32.52 86.34Q32.5 86.33 32.49 86.32Q32.5 86.26 32.51 86.12Q32.52 85.99 32.51 85.83Q32.5 85.68 32.43 85.53Q32.36 85.39 32.2 85.31Q32.1 85.26 31.99 85.26Q31.89 85.26 31.8 85.31Q31.71 85.36 31.65 85.49ZM34.7 89.45 32.86 88.69Q32.85 88.69 32.86 88.66Q32.87 88.64 32.88 88.64Q33.01 88.7 33.08 88.7Q33.15 88.71 33.2 88.65Q33.25 88.6 33.3 88.48L34.09 86.55Q34.14 86.43 34.15 86.36Q34.15 86.3 34.1 86.25Q34.04 86.2 33.92 86.14Q33.9 86.14 33.91 86.11Q33.92 86.09 33.94 86.09L35.7 86.82Q35.74 86.84 35.73 86.88L35.51 87.43Q35.5 87.44 35.48 87.44Q35.46 87.43 35.45 87.42Q35.49 87.15 35.38 86.97Q35.27 86.79 35.01 86.68L34.88 86.63Q34.8 86.59 34.74 86.59Q34.67 86.59 34.63 86.63Q34.58 86.67 34.55 86.75L33.76 88.65Q33.73 88.73 33.73 88.79Q33.73 88.86 33.76 88.9Q33.79 88.94 33.86 88.97L34 89.03Q34.32 89.16 34.57 89.11Q34.82 89.06 35.03 88.81Q35.04 88.8 35.06 88.82Q35.08 88.84 35.07 88.84Q35.01 88.96 34.93 89.12Q34.85 89.28 34.79 89.42Q34.76 89.48 34.7 89.45ZM34.85 88.43Q34.92 88.26 34.83 88.11Q34.74 87.96 34.49 87.85L33.93 87.62L33.98 87.51L34.55 87.74Q34.79 87.84 34.95 87.81Q35.12 87.78 35.18 87.63Q35.18 87.62 35.2 87.63Q35.23 87.64 35.22 87.65Q35.17 87.79 35.13 87.86Q35.1 87.94 35.06 88.02Q35.02 88.13 34.98 88.23Q34.95 88.33 34.9 88.45Q34.9 88.46 34.87 88.45Q34.85 88.44 34.85 88.43ZM36.79 89.79Q36.75 89.92 36.75 89.99Q36.76 90.07 36.84 90.12Q36.92 90.18 37.1 90.24Q37.11 90.24 37.1 90.26Q37.1 90.29 37.08 90.29Q36.95 90.24 36.79 90.19Q36.63 90.13 36.44 90.07Q36.29 90.02 36.14 89.98Q36 89.94 35.89 89.9Q35.88 89.9 35.89 89.87Q35.9 89.84 35.91 89.85Q36.04 89.89 36.11 89.89Q36.18 89.89 36.23 89.83Q36.27 89.78 36.31 89.65L36.95 87.67Q36.99 87.55 36.99 87.48Q36.99 87.41 36.93 87.36Q36.88 87.32 36.75 87.28Q36.73 87.27 36.74 87.25Q36.75 87.22 36.76 87.23Q36.87 87.26 37.01 87.31Q37.14 87.36 37.3 87.41Q37.4 87.45 37.57 87.49Q37.74 87.53 37.89 87.58Q38.16 87.66 38.34 87.8Q38.53 87.94 38.6 88.13Q38.67 88.33 38.6 88.58Q38.54 88.81 38.41 88.94Q38.27 89.08 38.1 89.14Q37.93 89.2 37.74 89.2Q37.55 89.2 37.39 89.15Q37.34 89.13 37.29 89.11Q37.24 89.09 37.19 89.06Q37.18 89.05 37.19 89.02Q37.21 89 37.22 89.01Q37.26 89.03 37.3 89.05Q37.34 89.06 37.36 89.07Q37.49 89.11 37.62 89.07Q37.74 89.02 37.86 88.89Q37.97 88.75 38.05 88.51Q38.12 88.29 38.11 88.11Q38.1 87.93 38 87.81Q37.9 87.69 37.72 87.63Q37.64 87.6 37.59 87.61Q37.54 87.61 37.5 87.67Q37.46 87.72 37.43 87.83ZM40.49 88.44Q40.22 88.38 39.99 88.51Q39.76 88.64 39.58 88.94Q39.57 88.95 39.55 88.95Q39.53 88.94 39.53 88.93Q39.55 88.87 39.59 88.76Q39.62 88.65 39.67 88.52Q39.71 88.39 39.74 88.27Q39.78 88.15 39.8 88.07Q39.8 88.05 39.83 88.05Q39.85 88.06 39.85 88.08Q39.84 88.12 39.88 88.16Q39.92 88.19 39.98 88.21Q40.03 88.23 40.07 88.24Q40.45 88.34 40.95 88.46Q41.26 88.53 41.44 88.57Q41.63 88.6 41.8 88.64Q41.96 88.68 42.04 88.68Q42.13 88.68 42.17 88.61Q42.17 88.6 42.2 88.6Q42.22 88.61 42.22 88.63Q42.19 88.69 42.16 88.82Q42.12 88.94 42.08 89.08Q42.04 89.21 42.01 89.33Q41.98 89.44 41.97 89.5Q41.96 89.51 41.94 89.51Q41.92 89.5 41.92 89.49Q41.93 89.13 41.79 88.92Q41.65 88.71 41.39 88.65Q41.3 88.63 41.25 88.65Q41.2 88.66 41.17 88.71Q41.14 88.77 41.12 88.87L40.64 90.89Q40.61 91.01 40.62 91.08Q40.63 91.16 40.7 91.2Q40.78 91.24 40.93 91.27Q40.95 91.28 40.94 91.3Q40.93 91.33 40.92 91.33Q40.8 91.3 40.65 91.26Q40.49 91.22 40.31 91.17Q40.14 91.13 39.98 91.1Q39.83 91.07 39.7 91.04Q39.69 91.03 39.69 91.01Q39.7 90.98 39.71 90.99Q39.87 91.02 39.95 91.02Q40.03 91.01 40.08 90.96Q40.12 90.9 40.15 90.77L40.63 88.74Q40.65 88.65 40.65 88.59Q40.65 88.53 40.61 88.49Q40.57 88.46 40.49 88.44ZM44.66 91.98 42.69 91.68Q42.68 91.68 42.68 91.65Q42.69 91.63 42.7 91.63Q42.84 91.65 42.91 91.64Q42.98 91.63 43.01 91.56Q43.04 91.5 43.06 91.37L43.37 89.31Q43.39 89.18 43.38 89.11Q43.36 89.04 43.3 89.01Q43.24 88.98 43.1 88.96Q43.09 88.95 43.09 88.93Q43.09 88.9 43.11 88.9L44.99 89.18Q45.04 89.19 45.03 89.23L44.95 89.82Q44.95 89.83 44.93 89.83Q44.91 89.84 44.9 89.82Q44.87 89.55 44.72 89.4Q44.57 89.25 44.29 89.21L44.16 89.19Q44.07 89.18 44.01 89.19Q43.94 89.21 43.91 89.26Q43.87 89.31 43.86 89.39L43.56 91.43Q43.54 91.51 43.56 91.57Q43.57 91.63 43.61 91.67Q43.65 91.7 43.72 91.71L43.87 91.73Q44.22 91.78 44.45 91.67Q44.68 91.56 44.82 91.28Q44.83 91.27 44.85 91.28Q44.88 91.29 44.87 91.3Q44.84 91.42 44.8 91.6Q44.76 91.77 44.73 91.92Q44.72 91.99 44.66 91.98ZM44.56 90.95Q44.58 90.77 44.46 90.64Q44.34 90.52 44.07 90.48L43.47 90.39L43.49 90.26L44.1 90.35Q44.36 90.39 44.51 90.32Q44.66 90.25 44.68 90.09Q44.68 90.08 44.71 90.08Q44.73 90.09 44.73 90.1Q44.71 90.25 44.69 90.33Q44.68 90.41 44.67 90.5Q44.65 90.61 44.64 90.72Q44.63 90.83 44.61 90.96Q44.61 90.97 44.58 90.96Q44.56 90.96 44.56 90.95ZM46.33 91.6 46.49 89.46 46.62 89.48 46.45 91.6Q46.43 91.84 46.53 91.99Q46.62 92.13 46.81 92.14Q46.82 92.14 46.82 92.17Q46.82 92.2 46.8 92.19Q46.7 92.19 46.6 92.18Q46.5 92.17 46.37 92.16Q46.22 92.15 46.11 92.15Q45.99 92.15 45.89 92.14Q45.88 92.14 45.88 92.12Q45.88 92.09 45.89 92.09Q46.08 92.1 46.19 91.97Q46.31 91.83 46.33 91.6ZM49.52 92.29Q49.52 92.29 49.52 92.32Q49.52 92.34 49.51 92.34Q49.4 92.34 49.25 92.32Q49.1 92.31 48.94 92.3Q48.77 92.29 48.63 92.29Q48.48 92.29 48.37 92.28Q48.35 92.28 48.35 92.25Q48.36 92.23 48.37 92.23Q48.58 92.24 48.64 92.18Q48.71 92.13 48.71 91.93L48.71 89.93L48.96 89.59L47.67 92.21Q47.66 92.23 47.63 92.23Q47.6 92.22 47.6 92.21L46.46 89.73Q46.31 89.41 46.07 89.39Q46.06 89.39 46.06 89.36Q46.06 89.34 46.08 89.34Q46.17 89.34 46.27 89.35Q46.38 89.36 46.45 89.37Q46.56 89.37 46.65 89.37Q46.74 89.37 46.79 89.38Q46.85 89.38 46.88 89.43Q46.92 89.47 46.98 89.62L47.89 91.56L47.64 91.96L48.82 89.6Q48.85 89.54 48.88 89.52Q48.92 89.49 48.96 89.5Q49.01 89.5 49.06 89.51Q49.11 89.51 49.18 89.52Q49.32 89.52 49.42 89.53Q49.52 89.53 49.62 89.53Q49.63 89.53 49.63 89.56Q49.63 89.59 49.62 89.59Q49.41 89.57 49.31 89.65Q49.21 89.73 49.21 89.91L49.2 91.96Q49.21 92.09 49.23 92.16Q49.25 92.23 49.31 92.26Q49.38 92.28 49.52 92.29ZM51.75 90.76 51.79 90.68Q52.1 90.67 52.33 90.75Q52.56 90.84 52.7 91.01Q52.83 91.18 52.84 91.41Q52.85 91.64 52.72 91.84Q52.6 92.03 52.36 92.15Q52.13 92.27 51.84 92.28Q51.71 92.29 51.53 92.28Q51.34 92.28 51.19 92.28Q51.03 92.29 50.88 92.3Q50.73 92.31 50.62 92.32Q50.6 92.32 50.6 92.29Q50.6 92.26 50.61 92.26Q50.74 92.26 50.81 92.23Q50.88 92.21 50.9 92.14Q50.93 92.07 50.93 91.94L50.84 89.86Q50.83 89.73 50.8 89.66Q50.77 89.6 50.7 89.58Q50.63 89.56 50.51 89.56Q50.5 89.56 50.5 89.53Q50.49 89.51 50.5 89.51Q50.62 89.5 50.76 89.5Q50.91 89.5 51.07 89.5Q51.2 89.49 51.34 89.47Q51.48 89.45 51.62 89.45Q51.89 89.44 52.09 89.49Q52.28 89.55 52.39 89.67Q52.5 89.8 52.51 89.99Q52.52 90.24 52.33 90.45Q52.14 90.66 51.75 90.76ZM51.56 89.55Q51.47 89.55 51.42 89.58Q51.37 89.61 51.36 89.67Q51.34 89.73 51.34 89.85L51.38 90.73L51.21 90.7Q51.36 90.7 51.45 90.7Q51.55 90.7 51.56 90.7Q51.8 90.69 51.91 90.5Q52.03 90.31 52.02 90.05Q52.01 89.88 51.95 89.77Q51.9 89.65 51.8 89.6Q51.7 89.54 51.56 89.55ZM51.76 92.18Q52.07 92.16 52.2 92Q52.33 91.83 52.32 91.54Q52.3 91.21 52.14 91Q51.97 90.8 51.62 90.82Q51.57 90.82 51.46 90.82Q51.36 90.83 51.24 90.86L51.38 90.8L51.43 91.92Q51.43 92.01 51.46 92.07Q51.48 92.13 51.55 92.15Q51.62 92.18 51.76 92.18ZM56.28 91.85Q56.22 91.85 56.04 91.71Q55.87 91.56 55.62 91.27Q55.37 90.98 55.05 90.57L55.44 90.39Q55.87 90.89 56.17 91.18Q56.46 91.47 56.68 91.59Q56.89 91.71 57.07 91.69Q57.08 91.69 57.08 91.71Q57.09 91.74 57.08 91.74Q56.76 91.78 56.57 91.81Q56.37 91.83 56.28 91.85ZM54.96 89.17Q55.37 89.11 55.61 89.24Q55.85 89.36 55.88 89.62Q55.92 89.89 55.8 90.11Q55.68 90.33 55.46 90.47Q55.25 90.61 54.99 90.65Q54.93 90.66 54.86 90.66Q54.8 90.67 54.75 90.68L54.87 91.66Q54.89 91.79 54.92 91.85Q54.95 91.92 55.02 91.93Q55.09 91.95 55.23 91.93Q55.24 91.93 55.24 91.95Q55.25 91.98 55.24 91.98Q55.12 92 54.98 92.01Q54.84 92.02 54.67 92.05Q54.51 92.07 54.36 92.09Q54.22 92.11 54.1 92.13Q54.09 92.13 54.08 92.1Q54.08 92.08 54.09 92.08Q54.23 92.06 54.3 92.03Q54.36 92 54.38 91.93Q54.39 91.86 54.37 91.73L54.1 89.66Q54.09 89.53 54.06 89.47Q54.03 89.41 53.96 89.39Q53.89 89.38 53.75 89.39Q53.74 89.4 53.74 89.37Q53.73 89.34 53.74 89.34Q53.86 89.33 54 89.31Q54.14 89.3 54.3 89.28Q54.45 89.26 54.63 89.22Q54.8 89.19 54.96 89.17ZM55.4 89.86Q55.36 89.6 55.29 89.46Q55.22 89.33 55.12 89.29Q55.02 89.26 54.9 89.27Q54.72 89.29 54.65 89.37Q54.59 89.45 54.61 89.6L54.73 90.55Q54.79 90.55 54.86 90.55Q54.94 90.54 54.99 90.53Q55.25 90.5 55.35 90.34Q55.44 90.18 55.4 89.86ZM58.75 91.02Q58.78 91.15 58.82 91.21Q58.85 91.27 58.92 91.28Q58.99 91.29 59.13 91.26Q59.14 91.26 59.15 91.28Q59.15 91.31 59.14 91.31Q59.03 91.33 58.88 91.36Q58.74 91.38 58.57 91.42Q58.42 91.45 58.27 91.49Q58.13 91.52 58.01 91.54Q58 91.55 58 91.52Q57.99 91.49 58 91.49Q58.14 91.46 58.2 91.43Q58.26 91.39 58.28 91.32Q58.29 91.25 58.26 91.12L57.84 89.08Q57.81 88.95 57.77 88.89Q57.74 88.84 57.66 88.83Q57.59 88.82 57.45 88.84Q57.44 88.85 57.44 88.82Q57.43 88.79 57.44 88.79Q57.56 88.77 57.7 88.74Q57.85 88.72 58.01 88.69Q58.18 88.65 58.32 88.62Q58.46 88.58 58.57 88.56Q58.58 88.55 58.59 88.58Q58.59 88.61 58.58 88.61Q58.45 88.64 58.39 88.68Q58.32 88.72 58.31 88.79Q58.31 88.86 58.33 88.99ZM60.25 88.61Q60.3 88.78 60.42 88.88Q60.54 88.98 60.7 89.04Q60.86 89.1 61.04 89.16Q61.24 89.22 61.42 89.29Q61.6 89.37 61.74 89.49Q61.88 89.61 61.93 89.82Q62 90.05 61.92 90.26Q61.85 90.46 61.66 90.62Q61.48 90.78 61.21 90.85Q61.08 90.89 60.93 90.9Q60.78 90.91 60.66 90.9Q60.53 90.9 60.47 90.87Q60.45 90.86 60.43 90.85Q60.41 90.84 60.4 90.8L60.2 90.11Q60.19 90.09 60.21 90.08Q60.24 90.07 60.24 90.09Q60.35 90.21 60.47 90.33Q60.59 90.46 60.72 90.56Q60.85 90.66 60.99 90.71Q61.14 90.75 61.29 90.71Q61.39 90.68 61.47 90.62Q61.56 90.56 61.59 90.46Q61.62 90.35 61.58 90.19Q61.52 89.98 61.39 89.86Q61.26 89.74 61.09 89.67Q60.91 89.6 60.73 89.54Q60.55 89.49 60.38 89.42Q60.21 89.35 60.09 89.24Q59.96 89.13 59.91 88.93Q59.85 88.69 59.94 88.5Q60.03 88.31 60.22 88.18Q60.41 88.04 60.63 87.98Q60.79 87.94 60.95 87.93Q61.11 87.91 61.22 87.93Q61.26 87.93 61.28 87.95Q61.3 87.97 61.31 88L61.48 88.63Q61.49 88.65 61.47 88.66Q61.45 88.67 61.44 88.66Q61.4 88.61 61.32 88.51Q61.24 88.4 61.12 88.29Q61.01 88.18 60.86 88.12Q60.71 88.06 60.54 88.11Q60.43 88.14 60.35 88.21Q60.28 88.28 60.25 88.38Q60.22 88.48 60.25 88.61ZM65.06 88.85Q64.95 88.9 64.85 88.86Q64.75 88.81 64.71 88.7Q64.67 88.59 64.71 88.49Q64.75 88.4 64.87 88.35Q64.99 88.31 65.08 88.35Q65.17 88.39 65.21 88.5Q65.26 88.62 65.22 88.71Q65.18 88.81 65.06 88.85ZM68.37 87.5 67.4 85.59 67.52 85.54 68.48 87.44Q68.59 87.66 68.74 87.73Q68.9 87.81 69.06 87.72Q69.07 87.71 69.08 87.74Q69.1 87.76 69.09 87.77Q69 87.81 68.9 87.86Q68.81 87.9 68.7 87.96Q68.57 88.03 68.47 88.09Q68.37 88.15 68.28 88.2Q68.27 88.2 68.25 88.18Q68.24 88.16 68.25 88.15Q68.42 88.06 68.45 87.89Q68.48 87.71 68.37 87.5ZM71.46 86.44Q71.46 86.44 71.48 86.46Q71.49 86.49 71.48 86.49Q71.38 86.55 71.24 86.61Q71.11 86.68 70.97 86.76Q70.82 86.83 70.7 86.91Q70.57 86.98 70.47 87.03Q70.46 87.04 70.44 87.01Q70.43 86.99 70.44 86.98Q70.63 86.88 70.66 86.8Q70.68 86.72 70.58 86.56L69.55 84.84L69.58 84.42L69.83 87.33Q69.84 87.35 69.81 87.37Q69.79 87.38 69.77 87.37L67.52 85.84Q67.22 85.63 67.01 85.75Q67 85.75 66.99 85.73Q66.97 85.71 66.99 85.7Q67.07 85.65 67.16 85.61Q67.26 85.57 67.32 85.53Q67.42 85.48 67.5 85.43Q67.57 85.39 67.62 85.36Q67.67 85.33 67.72 85.36Q67.77 85.38 67.91 85.47L69.69 86.67L69.68 87.13L69.47 84.5Q69.47 84.43 69.48 84.4Q69.5 84.36 69.54 84.34Q69.58 84.32 69.63 84.3Q69.67 84.28 69.73 84.25Q69.86 84.18 69.95 84.13Q70.03 84.08 70.12 84.03Q70.13 84.02 70.14 84.05Q70.16 84.07 70.15 84.08Q69.96 84.18 69.92 84.3Q69.87 84.42 69.96 84.57L71.02 86.33Q71.09 86.44 71.14 86.48Q71.2 86.53 71.27 86.52Q71.34 86.51 71.46 86.44ZM72.38 85.25 71.22 83.46 71.33 83.4 72.49 85.18Q72.62 85.38 72.78 85.44Q72.94 85.5 73.1 85.39Q73.11 85.38 73.12 85.41Q73.14 85.43 73.13 85.44Q73.05 85.49 72.96 85.55Q72.87 85.6 72.76 85.68Q72.64 85.76 72.55 85.83Q72.45 85.9 72.37 85.95Q72.36 85.96 72.35 85.94Q72.33 85.92 72.34 85.91Q72.49 85.8 72.5 85.63Q72.52 85.45 72.38 85.25ZM75.34 83.86Q75.34 83.86 75.36 83.88Q75.37 83.9 75.37 83.91Q75.27 83.97 75.15 84.05Q75.02 84.13 74.89 84.22Q74.75 84.32 74.63 84.4Q74.52 84.49 74.42 84.55Q74.41 84.56 74.39 84.54Q74.38 84.52 74.39 84.51Q74.56 84.39 74.58 84.31Q74.6 84.22 74.48 84.07L73.27 82.48L73.25 82.05L73.82 84.92Q73.83 84.94 73.8 84.96Q73.78 84.97 73.76 84.96L71.36 83.69Q71.04 83.52 70.84 83.66Q70.83 83.66 70.82 83.64Q70.8 83.62 70.81 83.61Q70.89 83.56 70.98 83.5Q71.07 83.45 71.13 83.41Q71.22 83.34 71.29 83.29Q71.36 83.24 71.4 83.21Q71.45 83.17 71.51 83.19Q71.56 83.21 71.71 83.28L73.6 84.28L73.65 84.74L73.15 82.15Q73.14 82.08 73.15 82.04Q73.16 82.01 73.2 81.98Q73.24 81.95 73.28 81.93Q73.33 81.91 73.38 81.87Q73.5 81.79 73.58 81.73Q73.66 81.67 73.74 81.61Q73.75 81.6 73.77 81.62Q73.79 81.65 73.77 81.65Q73.6 81.77 73.57 81.9Q73.54 82.02 73.65 82.16L74.89 83.79Q74.97 83.89 75.03 83.93Q75.09 83.98 75.16 83.96Q75.23 83.94 75.34 83.86ZM77.48 82.17Q77.47 82.18 77.45 82.15Q77.44 82.13 77.45 82.13Q77.51 82.07 77.53 82.01Q77.54 81.96 77.42 81.92L74.95 81.16Q74.73 81.09 74.59 81.1Q74.45 81.11 74.36 81.19Q74.35 81.2 74.33 81.18Q74.31 81.16 74.32 81.15Q74.39 81.09 74.47 81.03Q74.56 80.97 74.62 80.91Q74.77 80.79 74.89 80.68Q75.02 80.57 75.11 80.48Q75.12 80.48 75.14 80.5Q75.15 80.52 75.15 80.53Q75.08 80.58 75.06 80.64Q75.05 80.69 75.18 80.74L77.69 81.51Q77.88 81.56 78.02 81.55Q78.16 81.53 78.27 81.43Q78.28 81.42 78.3 81.44Q78.32 81.46 78.31 81.47Q78.23 81.54 78.14 81.61Q78.04 81.68 77.94 81.77Q77.79 81.89 77.69 81.99Q77.58 82.09 77.48 82.17ZM76.11 83.32Q76.1 83.33 76.08 83.31Q76.06 83.29 76.07 83.28Q76.17 83.2 76.24 82.96Q76.3 82.72 76.27 82.33L76.21 81.4L76.32 81.39L76.39 82.26Q76.42 82.58 76.53 82.7Q76.64 82.81 76.81 82.66Q76.81 82.66 76.83 82.68Q76.85 82.7 76.84 82.7Q76.74 82.79 76.65 82.86Q76.56 82.93 76.41 83.06Q76.31 83.14 76.25 83.19Q76.2 83.25 76.11 83.32ZM76.34 81.29 76.24 81.29 76.16 80.43Q76.14 80.1 76.03 79.99Q75.91 79.88 75.75 80.02Q75.74 80.03 75.72 80.01Q75.7 79.99 75.71 79.98Q75.81 79.9 75.91 79.83Q76 79.76 76.15 79.63Q76.25 79.55 76.3 79.49Q76.36 79.44 76.45 79.36Q76.46 79.36 76.47 79.38Q76.49 79.4 76.48 79.41Q76.38 79.49 76.32 79.73Q76.26 79.96 76.28 80.37ZM80.2 79.63Q80.19 79.64 80.17 79.62Q80.15 79.6 80.16 79.59Q80.22 79.53 80.23 79.47Q80.24 79.41 80.12 79.39L77.59 78.85Q77.36 78.8 77.23 78.82Q77.09 78.84 77 78.93Q76.99 78.94 76.97 78.92Q76.96 78.9 76.96 78.89Q77.03 78.83 77.1 78.76Q77.18 78.69 77.24 78.63Q77.38 78.49 77.49 78.37Q77.6 78.25 77.69 78.16Q77.7 78.15 77.72 78.17Q77.74 78.19 77.73 78.2Q77.67 78.26 77.66 78.32Q77.65 78.37 77.78 78.41L80.35 78.95Q80.54 78.99 80.68 78.96Q80.82 78.93 80.93 78.83Q80.94 78.82 80.95 78.83Q80.97 78.85 80.96 78.86Q80.89 78.93 80.81 79.01Q80.72 79.1 80.62 79.19Q80.49 79.33 80.39 79.43Q80.29 79.54 80.2 79.63ZM78.93 80.9Q78.92 80.91 78.9 80.89Q78.89 80.87 78.9 80.86Q78.99 80.77 79.03 80.53Q79.07 80.29 79.01 79.89L78.87 78.97L78.97 78.96L79.12 79.82Q79.18 80.14 79.3 80.24Q79.42 80.34 79.57 80.18Q79.58 80.18 79.6 80.19Q79.62 80.21 79.61 80.22Q79.52 80.31 79.43 80.39Q79.35 80.47 79.21 80.61Q79.12 80.7 79.07 80.76Q79.02 80.82 78.93 80.9ZM78.99 78.86 78.89 78.87 78.74 78.01Q78.68 77.69 78.56 77.59Q78.44 77.49 78.28 77.64Q78.28 77.65 78.26 77.63Q78.24 77.61 78.25 77.61Q78.34 77.51 78.43 77.44Q78.51 77.36 78.65 77.22Q78.74 77.13 78.79 77.07Q78.84 77.01 78.92 76.93Q78.93 76.92 78.95 76.94Q78.97 76.96 78.96 76.97Q78.87 77.06 78.83 77.3Q78.79 77.54 78.85 77.94ZM81.28 74.16Q81.29 74.15 81.31 74.16Q81.33 74.18 81.32 74.19Q81.22 74.32 81.23 74.52Q81.25 74.73 81.38 74.95L82.55 77.02Q82.56 77.03 82.53 77.06Q82.51 77.1 82.49 77.09L79.88 76.41Q79.71 76.37 79.6 76.38Q79.49 76.39 79.42 76.47Q79.41 76.48 79.39 76.46Q79.37 76.45 79.38 76.44Q79.41 76.39 79.43 76.37Q79.46 76.35 79.49 76.32Q79.53 76.28 79.6 76.19Q79.76 76 79.86 75.88Q79.96 75.75 80.02 75.67Q80.08 75.6 80.12 75.54Q80.13 75.53 80.15 75.55Q80.18 75.57 80.17 75.58Q80.04 75.72 80.08 75.84Q80.13 75.96 80.32 76.01L82.19 76.5L82.34 76.9L81.29 75.04Q81.17 74.84 81.01 74.79Q80.85 74.75 80.71 74.92Q80.7 74.93 80.68 74.92Q80.66 74.9 80.67 74.89Q80.75 74.79 80.83 74.7Q80.91 74.62 81.04 74.47Q81.12 74.37 81.16 74.31Q81.21 74.24 81.28 74.16ZM84.2 74.28Q84.31 74.35 84.38 74.37Q84.44 74.4 84.5 74.35Q84.56 74.31 84.64 74.2Q84.65 74.19 84.67 74.2Q84.69 74.22 84.68 74.23Q84.62 74.33 84.53 74.44Q84.44 74.55 84.34 74.69Q84.25 74.82 84.16 74.95Q84.08 75.07 84.01 75.17Q84.01 75.17 83.99 75.16Q83.96 75.14 83.97 75.13Q84.05 75.02 84.07 74.95Q84.1 74.88 84.05 74.82Q84.01 74.76 83.91 74.69L82.22 73.47Q82.11 73.39 82.04 73.38Q81.98 73.36 81.91 73.4Q81.85 73.44 81.77 73.56Q81.77 73.56 81.75 73.55Q81.72 73.53 81.73 73.52Q81.8 73.43 81.89 73.31Q81.98 73.2 82.08 73.06Q82.18 72.93 82.26 72.8Q82.34 72.68 82.4 72.59Q82.41 72.58 82.43 72.59Q82.45 72.61 82.45 72.62Q82.37 72.73 82.35 72.8Q82.33 72.87 82.37 72.93Q82.41 72.99 82.52 73.07Z';
 let SEAL_N=0;
-function inkwellSeal(size,dark,opt){
- /* The house seal, struck as a medallion. Day: midnight ink on ivory inside
-    a brass rim, the official mark. Night: champagne on a midnight field
-    inside a midnight-blue rim. The field is always opaque. Light falls from
-    the upper left; every depth cue is a hairline or a soft gradient. */
- opt=opt||{};
- const P=dark?{field:['#141c26','#0c1219','#06090d'],ink:'#cdb582',inkHi:'#e2cf9f',inkLo:'#a48a55',inline:'#0c1219',
-   rim:['#5d9ec2','#2b6a8e','#1a4560','#0d2433'],edge:'#06121b',hair:'#3f7fa3',star:'#6aa6c8',
-   hl:'#fff6dc',hlRim:.45,hlArt:.12,sh:'#000000',shArt:.75,shRec:.55,sheen:.14}
-  :{field:['#fffdf7','#f7f1e2','#ebe1c9'],ink:'#17384c',inkHi:'#2a5874',inkLo:'#0f2737',inline:'#f8f2e3',
-   rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],edge:'#4a3511',hair:'#a9803a',star:'#a9803a',
-   hl:'#ffffff',hlRim:.75,hlArt:.8,sh:'#1d1405',shArt:.22,shRec:.2,sheen:.42};
- const k='iks'+(++SEAL_N),id=s=>k+s,u=s=>'url(#'+k+s+')';
- const st=a=>a.map(s=>'<stop offset="'+s[0]+'" stop-color="'+s[1]+'"'+(s[2]!=null?' stop-opacity="'+s[2]+'"':'')+'/>').join('');
- const lin=(n,x1,y1,x2,y2,a)=>'<linearGradient id="'+id(n)+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'">'+st(a)+'</linearGradient>';
- const NIB='M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
- const COLLAR='M42.4,35.6 L57.6,35.6 Q58.8,35.6 58.8,36.8 L58.8,38.2 Q58.8,39.4 57.6,39.4 L42.4,39.4 Q41.2,39.4 41.2,38.2 L41.2,36.8 Q41.2,35.6 42.4,35.6 Z';
- const BODY='M44.6,39.4 L55.4,39.4 L55.4,41.4 C55.4,43.8 64.2,45.2 65.4,51.4 L66.8,64.6 Q67.2,69.4 62.6,69.4 L37.4,69.4 Q32.8,69.4 33.2,64.6 L34.6,51.4 C35.8,45.2 44.6,43.8 44.6,41.4 Z';
- const FOOT='M33.4,69.4 L66.6,69.4 Q68,69.4 68,70.6 L68,71 Q68,72.2 66.6,72.2 L33.4,72.2 Q32,72.2 32,71 L32,70.6 Q32,69.4 33.4,69.4 Z';
- const star=(x,y,r)=>'M'+x+','+(y-r)+' Q'+(x+r*.16)+','+(y-r*.16)+' '+(x+r)+','+y+' Q'+(x+r*.16)+','+(y+r*.16)+' '+x+','+(y+r)+' Q'+(x-r*.16)+','+(y+r*.16)+' '+(x-r)+','+y+' Q'+(x-r*.16)+','+(y-r*.16)+' '+x+','+(y-r)+' Z';
- return '<svg class="s3-svg" width="'+size+'" height="'+size+'" viewBox="0 0 100 100" role="img" aria-label="Inkwell seal">'
- +'<defs>'
- +lin('rim',.15,.05,.85,.95,[[0,P.rim[0]],[.38,P.rim[1]],[.72,P.rim[2]],[1,P.rim[3]]])
- +lin('rimO',.2,.05,.8,.95,[[0,P.hl,P.hlRim],[.42,P.hl,0],[1,P.hl,0]])
- +lin('rimI',.2,.05,.8,.95,[[0,P.sh,dark?.6:.32],[.5,P.sh,0],[.6,P.hl,0],[1,P.hl,P.hlRim*.55]])
- +lin('rec',.25,.1,.75,.9,[[0,P.sh,P.shRec],[.45,P.sh,0],[1,P.sh,0]])
- +lin('ink',0,0,0,1,[[0,P.inkHi],[.5,P.ink],[1,P.inkLo]])
- +(opt.sheen?lin('sheen',0,0,1,0,[[0,P.hl,0],[.44,P.hl,0],[.5,P.hl,P.sheen],[.56,P.hl,0],[1,P.hl,0]]):'')
- +'<radialGradient id="'+id('field')+'" cx=".4" cy=".34" r=".74">'+st([[0,P.field[0]],[.68,P.field[1]],[1,P.field[2]]])+'</radialGradient>'
- +'<filter id="'+id('soft')+'" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".22"/></filter>'
- +'<filter id="'+id('rblur')+'" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".8"/></filter>'
- +'<clipPath id="'+id('disc')+'"><circle cx="50" cy="50" r="49.7"/></clipPath>'
- +'<clipPath id="'+id('face')+'"><circle cx="50" cy="50" r="47.3"/></clipPath>'
- +'<clipPath id="'+id('bottle')+'"><path d="'+BODY+'"/></clipPath>'
- +'<g id="'+id('txt')+'"><path d="'+SEAL_NAME+'"/><path d="'+SEAL_DATE+'"/></g>'
- +'<g id="'+id('emb')+'"><path d="'+NIB+'" fill-rule="evenodd"/><path d="'+COLLAR+'"/><path d="'+BODY+'"/><path d="'+FOOT+'"/></g>'
- +'</defs>'
- /* the seal's thickness, then the face, a little below the rim */
- +'<circle cx="50" cy="50.95" r="49.55" fill="'+P.edge+'"/>'
- +'<circle cx="50" cy="50" r="47.4" fill="'+u('field')+'"/>'
- +'<g clip-path="'+u('face')+'"><circle cx="50" cy="50" r="47.5" fill="none" stroke="'+u('rec')+'" stroke-width="2.6" filter="'+u('rblur')+'"/></g>'
- /* the rim, bevelled on both edges */
- +'<circle cx="50" cy="50" r="48.5" fill="none" stroke="'+u('rim')+'" stroke-width="2.4"/>'
- +'<circle cx="50" cy="50" r="49.5" fill="none" stroke="'+u('rimO')+'" stroke-width=".45"/>'
- +'<circle cx="50" cy="50" r="47.42" fill="none" stroke="'+u('rimI')+'" stroke-width=".4"/>'
- /* engraved rules and the two stars */
- +'<circle cx="50" cy="50" r="46.1" fill="none" stroke="'+P.hair+'" stroke-width=".32" opacity=".9"/>'
- +'<circle cx="50" cy="50" r="35.4" fill="none" stroke="'+P.hair+'" stroke-width=".7"/>'
- +'<circle cx="50" cy="50" r="34.35" fill="none" stroke="'+P.hair+'" stroke-width=".25" opacity=".9"/>'
- +'<path d="'+star(9.1,50,2.1)+' '+star(90.9,50,2.1)+'" fill="'+P.star+'"/>'
- /* low relief: a soft shadow below right, a hairline of light above left, then the ink */
- +'<g fill="'+P.sh+'" opacity="'+P.shArt+'" transform="translate(.2 .3)" filter="'+u('soft')+'"><use href="#'+id('txt')+'"/><use href="#'+id('emb')+'"/></g>'
- +'<g fill="'+P.hl+'" opacity="'+P.hlArt+'" transform="translate(-.15 -.18)"><use href="#'+id('txt')+'"/><use href="#'+id('emb')+'"/></g>'
- +'<use href="#'+id('txt')+'" fill="'+P.ink+'"/>'
- +'<g fill="'+u('ink')+'"><path d="'+NIB+'" fill-rule="evenodd"/><path d="'+COLLAR+'"/><path d="'+BODY+'"/><path d="'+FOOT+'"/></g>'
- /* the glass: an engraved inner line, the ink's surface, one facet */
- +'<g clip-path="'+u('bottle')+'" fill="none">'
- +'<path d="'+BODY+'" stroke="'+P.inline+'" stroke-width="2.9" stroke-opacity="'+(dark?.9:.85)+'"/>'
- +'<path d="'+BODY+'" stroke="'+u('ink')+'" stroke-width="1.8"/>'
- +'<path d="M35.2,55.6 Q50,53 64.8,55.6" stroke="'+P.inline+'" stroke-width=".5" stroke-opacity="'+(dark?.8:.75)+'"/>'
- +'<path d="M38.9,49.4 Q40.4,46.7 44.2,45.6" stroke="'+P.inline+'" stroke-width=".55" stroke-linecap="round" stroke-opacity="'+(dark?.55:.6)+'"/>'
- +'</g>'
- +(opt.sheen?'<g clip-path="'+u('disc')+'"><g transform="rotate(24 50 50)"><rect class="s3-sheen" x="-70" y="-30" width="44" height="160" fill="'+u('sheen')+'"/></g></g>':'')
- +'</svg>';}
+/* 7.37 THE SEAL, IN WAX. A pressed wax seal with a poured edge: by day
+   cream wax, the lettering gilded and the emblem in midnight ink; by night
+   midnight-blue wax with the lettering and emblem in brass leaf. The emblem
+   is the house dip pen entering a classical inkwell. The field is always
+   opaque, so the seal never shows through on a home screen. */
+/* The new emblem: the house dip pen entering the inkwell. Coordinates in the
+   seal's 100 x 100 box; the inner rule is a circle of radius 34.35. */
+const INK_EMBLEM=(function () {
+  const f = v => +v.toFixed(2);
+  /* the house nib (the same drawing as Schedae's), point up, tip at (50,17.6) */
+  const NIB = 'M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
+  function along(T, ang, rows, capR) {
+    const a = ang * Math.PI / 180, u = [Math.sin(a), -Math.cos(a)], n = [Math.cos(a), Math.sin(a)];
+    const P = (s, w) => [T[0] + u[0] * s + n[0] * w, T[1] + u[1] * s + n[1] * w];
+    const L = rows.map(([s, w]) => P(s, -w)), R = rows.map(([s, w]) => P(s, w)).reverse();
+    let d = 'M' + L.map(p => f(p[0]) + ',' + f(p[1])).join(' L');
+    const last = rows[rows.length - 1];
+    if (capR) { const e = P(last[0], last[1]); d += ' A' + f(last[1]) + ',' + f(last[1]) + ' 0 0,1 ' + f(e[0]) + ',' + f(e[1]); }
+    d += ' L' + R.map(p => f(p[0]) + ',' + f(p[1])).join(' L') + ' Z';
+    return { d, P };
+  }
+  /* a classical inkwell, shorter and wider than the old bottle: a stepped
+     plinth, a broad bell of cut glass with two facets, a short neck and a
+     rolled lip. cx is the centre line, by the foot of the plinth. */
+  function bottle(k, cx, by) {
+    const X = x => f(cx + (x - 50) * k), Y = y => f(by - (72 - y) * k);
+    const tr = s => s.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (m, x, y) => X(+x) + ',' + Y(+y));
+    return {
+      LIP: tr('M43.2,44.6 L56.8,44.6 Q58.4,44.6 58.4,46.1 Q58.4,47.6 56.8,47.6 L43.2,47.6 Q41.6,47.6 41.6,46.1 Q41.6,44.6 43.2,44.6 Z'),
+      BODY: tr('M45.0,47.6 L55.0,47.6 L55.0,49.6 C55.0,51.2 59.4,51.6 62.8,53.6 C66.6,55.8 68.0,59.0 68.6,63.0 L69.2,66.4 L30.8,66.4 L31.4,63.0 C32.0,59.0 33.4,55.8 37.2,53.6 C40.6,51.6 45.0,51.2 45.0,49.6 Z'),
+      FOOT: tr('M30.2,66.4 L69.8,66.4 Q71.0,66.4 71.0,67.4 L71.0,67.9 L29.0,67.9 L29.0,67.4 Q29.0,66.4 30.2,66.4 Z M27.6,68.6 L72.4,68.6 Q73.8,68.6 73.8,70.0 L73.8,70.6 Q73.8,72.0 72.4,72.0 L27.6,72.0 Q26.2,72.0 26.2,70.6 L26.2,70.0 Q26.2,68.6 27.6,68.6 Z'),
+      inkLine: tr('M33.6,58.6 Q50,56.4 66.4,58.6'),
+      facet: tr('M42.6,54.2 L40.2,65.6 M57.4,54.2 L59.8,65.6'),
+      shine: tr('M36.4,57.2 Q37.6,54.6 40.6,53.4'),
+      mouthY: by - (72 - 44.6) * k
+    };
+  }
+  function emblem(o) {
+    o = o || {};
+    const k = o.k ?? 1, B = bottle(k, 50, o.by ?? 72.4);
+    const ang = o.ang ?? 22, nk = o.nk ?? 0.8, T = [50 + (o.dx ?? 0), B.mouthY + (o.dip ?? 2.6)];
+    const nl = 17.6 * nk;               // the nib's length along the pen
+    const fer = along(T, ang, [[nl - 0.5, 2.05 * nk / 0.7], [nl + 4.0, 2.05 * nk / 0.7]]);
+    /* the holder runs up to the inner rule, less a margin */
+    const a = ang * Math.PI / 180, ux = Math.sin(a), uy = -Math.cos(a), R = o.reach ?? 32.2;
+    const bx = T[0] - 50, byy = T[1] - 50, bb = bx * ux + byy * uy, cc = bx * bx + byy * byy - R * R;
+    const end = o.len ?? (-bb + Math.sqrt(bb * bb - cc));
+    const hw = o.hw ?? 1.95;
+    const hol = along(T, ang, [[nl + 3.8, hw * 0.9], [nl + 6.5, hw], [end - 4, hw * 0.92], [end - 1.6, hw * 0.8]], true);
+    const ring = s => { const p = fer.P(s, -2.05 * nk / 0.7), q = fer.P(s, 2.05 * nk / 0.7); return 'M' + f(p[0]) + ',' + f(p[1]) + ' L' + f(q[0]) + ',' + f(q[1]); };
+    const lt0 = hol.P(nl + 6.6, -0.8), lt1 = hol.P(end - 3.2, -0.7);
+    return {
+      /* the nib drawing turned to point down the pen's axis into the well */
+      nib: NIB, nibAt: 'translate(' + f(T[0]) + ' ' + f(T[1]) + ') rotate(' + (180 + ang) + ') scale(' + nk + ') translate(-50 -17.6)',
+      pen: fer.d + ' ' + hol.d,
+      rings: ring(nl + 0.9) + ' ' + ring(nl + 2.6),
+      light: 'M' + f(lt0[0]) + ',' + f(lt0[1]) + ' L' + f(lt1[0]) + ',' + f(lt1[1]),
+      LIP: B.LIP, BODY: B.BODY, FOOT: B.FOOT, inkLine: B.inkLine, facet: B.facet, shine: B.shine
+    };
+  }
+  return emblem;
+})();
+
+const INKSEAL=(function(){
+  let N = 0;
+  const EMB = { k: 1, nk: .9, ang: 24, hw: 2.25, dip: 3.4 };
+  const st = a => a.map(s => '<stop offset="' + s[0] + '" stop-color="' + s[1] + '"' + (s[2] != null ? ' stop-opacity="' + s[2] + '"' : '') + '/>').join('');
+  function emblemPaths(E) {
+    return '<path d="' + E.nib + '" transform="' + E.nibAt + '" fill-rule="evenodd"/><path d="' + E.pen + '"/><path d="' + E.LIP + '"/><path d="' + E.BODY + '"/><path d="' + E.FOOT + '"/>';
+  }
+  /* the lettering and the emblem, raised: a soft shadow down and right, a
+     hairline of light up and left, then the face colour */
+  function relief(id, u, E, face, hl, hlO, sh, shO, inline, inlO, embFace) {
+    const ef = embFace || face;
+    return '<g fill="' + sh + '" opacity="' + shO + '" transform="translate(.28 .4)" filter="' + u('soft') + '"><use href="#' + id('txt') + '"/>' + emblemPaths(E) + '</g>'
+      + '<g fill="' + hl + '" opacity="' + hlO + '" transform="translate(-.18 -.22)"><use href="#' + id('txt') + '"/>' + emblemPaths(E) + '</g>'
+      + '<use href="#' + id('txt') + '" fill="' + face + '"/>'
+      + '<g fill="' + ef + '"><path d="' + E.nib + '" transform="' + E.nibAt + '" fill-rule="evenodd"/><path d="' + E.pen + '"/></g>'
+      /* the pen passes behind the lip: a thin cut in the field colour */
+      + '<g fill="' + ef + '" stroke="' + inline + '" stroke-opacity="' + inlO + '" stroke-width="1.1" stroke-linejoin="round" paint-order="stroke"><path d="' + E.LIP + '"/></g>'
+      + '<g fill="' + ef + '"><path d="' + E.BODY + '"/><path d="' + E.FOOT + '" fill-rule="evenodd"/></g>'
+      + '<g fill="none" stroke="' + inline + '" stroke-opacity="' + inlO + '">'
+      + '<path d="' + E.rings + '" stroke-width=".45"/>'
+      + '<path d="' + E.light + '" stroke-width=".5" stroke-linecap="round" opacity=".55"/>'
+      + '<path d="' + E.inkLine + '" stroke-width=".5"/>'
+      + '<path d="' + E.facet + '" stroke-width=".45" stroke-linecap="round" opacity=".75"/>'
+      + '<path d="' + E.shine + '" stroke-width=".6" stroke-linecap="round" opacity=".7"/></g>';
+  }
+  function blob(r0, amp) {
+    let d = '';
+    for (let i = 0; i <= 96; i++) {
+      const t = i / 96 * Math.PI * 2;
+      const r = r0 + amp * (0.55 * Math.sin(3 * t + 0.7) + 0.3 * Math.sin(5 * t + 2.1) + 0.22 * Math.sin(8 * t + 0.4) + 0.12 * Math.sin(13 * t + 1.3));
+      const x = 50 + r * Math.cos(t), y = 50 + r * Math.sin(t);
+      d += (i ? ' L' : 'M') + x.toFixed(2) + ',' + y.toFixed(2);
+    }
+    return d + ' Z';
+  }
+  const WAX = {
+    cream: { hi: '#fffaee', mid: '#f1e5c8', lo: '#dccaa0', deep: '#bda67a', floor: '#f5ebd2', lip: '#ffffff', edgeS: .32 },
+    midnight: { hi: '#3a7193', mid: '#1f4b67', lo: '#0d2638', deep: '#071521', floor: '#1a4561', lip: '#5d93b4' },
+    oxblood: { hi: '#8e3b3f', mid: '#6a2329', lo: '#3f1115', deep: '#26090c', floor: '#5d1e24', lip: '#b46a6b' }
+  };
+  const GILD = { face: '#c9a45a', hl: '#f6e2a8', sh: '#2a1a05' };
+  /* B: a pressed wax seal. The wax has a poured edge; the stamp has left a
+     shallow round bed with the lettering and the emblem raised in it. With
+     gild, the raised parts carry brass leaf, as gilded seals do. */
+  function wax(size, dark, opt) {
+    opt = opt || {};
+    const kind = opt.wax || (dark ? 'midnight' : 'cream');
+    const W = WAX[kind], g = opt.gild !== false, cream = kind === 'cream';
+    const k = 'eW' + (++N), id = s => k + s, u = s => 'url(#' + k + s + ')';
+    const E = INK_EMBLEM(EMB), B = blob(48, 1.5);
+    const face = g ? GILD.face : W.hi, hl = g ? GILD.hl : '#ffffff', hlO = g ? .9 : (dark ? .25 : .35), sh = '#000', shO = g ? .7 : .75;
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 100 100" role="img" aria-label="Inkwell seal" style="overflow:visible"><defs>'
+      + '<radialGradient id="' + id('wax') + '" cx=".36" cy=".3" r=".8">' + st([[0, W.hi], [.45, W.mid], [1, W.lo]]) + '</radialGradient>'
+      + '<radialGradient id="' + id('bed') + '" cx=".5" cy=".5" r=".5">' + st([[0, W.floor], [.85, W.mid], [1, W.lo]]) + '</radialGradient>'
+      + '<linearGradient id="' + id('lipL') + '" x1=".2" y1=".1" x2=".8" y2=".9">' + st([[0, W.lip, .9], [.45, W.lip, 0], [1, W.lip, 0]]) + '</linearGradient>'
+      + '<linearGradient id="' + id('lipS') + '" x1=".2" y1=".1" x2=".8" y2=".9">' + st([[0, '#000', 0], [.55, '#000', 0], [1, cream ? '#5a4419' : '#000', W.edgeS || .55]]) + '</linearGradient>'
+      + '<linearGradient id="' + id('goldD') + '" x1="0" y1="0" x2="1" y2="1">' + st([[0, '#c49a48'], [.5, '#9a7430'], [1, '#6e5019']]) + '</linearGradient>'
+      + '<linearGradient id="' + id('navy') + '" x1="0" y1="0" x2="0" y2="1">' + st([[0, '#2a5874'], [.5, '#17384c'], [1, '#0f2737']]) + '</linearGradient>'
+      + '<linearGradient id="' + id('bedS') + '" x1=".2" y1=".1" x2=".8" y2=".9">' + st([[0, cream ? '#6b5320' : '#000', cream ? .32 : .6], [.5, '#000', 0], [.62, W.lip, 0], [1, W.lip, .55]]) + '</linearGradient>'
+      + (g ? '<linearGradient id="' + id('gold') + '" x1="0" y1="0" x2="1" y2="1">' + st([[0, '#efd696'], [.45, '#c9a45a'], [1, '#8f6a2c']]) + '</linearGradient>' : '')
+      + '<filter id="' + id('soft') + '" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".28"/></filter>'
+      + '<filter id="' + id('b1') + '" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.1"/></filter>'
+      + '<clipPath id="' + id('bedc') + '"><circle cx="50" cy="50" r="45.6"/></clipPath>'
+      + '<g id="' + id('txt') + '"><path d="' + SEAL_NAME + '"/><path d="' + SEAL_DATE + '"/></g></defs>'
+      /* the wax and its rolled lip */
+      + '<path d="' + B + '" fill="' + u('wax') + '"/>'
+      + '<path d="' + B + '" fill="none" stroke="' + u('lipL') + '" stroke-width="1.4" transform="translate(.15 .2)" filter="' + u('b1') + '"/>'
+      + '<path d="' + B + '" fill="none" stroke="' + u('lipS') + '" stroke-width="2.2" filter="' + u('b1') + '"/>'
+      /* the stamp's bed: a little lower than the lip, shadowed where the lip overhangs */
+      + '<circle cx="50" cy="50" r="45.6" fill="' + u('bed') + '"/>'
+      + '<g clip-path="' + u('bedc') + '"><circle cx="50" cy="50" r="45.9" fill="none" stroke="' + u('bedS') + '" stroke-width="2.6" filter="' + u('b1') + '"/></g>'
+      /* the stamp's own rules, raised */
+      + '<g fill="none"><circle cx="50" cy="50.35" r="35.0" stroke="#000" stroke-opacity=".45" stroke-width=".9" filter="' + u('soft') + '"/>'
+      + '<circle cx="50" cy="50" r="35.0" stroke="' + (cream ? u('goldD') : g ? u('gold') : W.hi) + '" stroke-width=".75"/></g>'
+      + (cream ? relief(id, u, E, u('goldD'), '#ffffff', .95, '#3d2b0c', .32, W.mid, 1, u('navy'))
+               : relief(id, u, E, g ? u('gold') : face, hl, hlO, sh, shO, W.mid, 1))
+      + '</svg>';
+  }
+  /* the wax's thickness for the button's side: the same outline, swept down */
+  function waxSide(size, dpx, opt) {
+    const W = WAX[(opt && opt.wax) || 'midnight'], B = blob(48, 1.5), d = dpx / size * 100;
+    let s = '';
+    for (let i = 4; i >= 0; i--) s += '<path d="' + B + '" transform="translate(0 ' + (d * i / 4).toFixed(2) + ')" fill="' + (i === 4 ? W.deep : W.lo) + '"/>';
+    return '<svg width="' + size + '" height="' + (size + dpx) + '" viewBox="0 0 100 ' + (100 + d).toFixed(2) + '" style="position:absolute;left:0;bottom:0;overflow:visible">' + s + '</svg>';
+  }
+
+  return { wax: wax, waxSide: waxSide, blob: blob, WAX: WAX, st: st, EMB: EMB };
+})();
+function inkwellSeal(size,dark,opt){return INKSEAL.wax(size,!!dark,opt||{});}
+/* the wax's thickness, for the seal buttons' edge */
+function inkWaxSide(size,dpx,dark){return INKSEAL.waxSide(size,dpx,{wax:dark?'midnight':'cream'});}
 inkMark('seal');
 /* the seal's first paint happens in applyMode() below, once TMQ exists.
    Painting it here ran before TMQ was initialised, and on the auto theme
@@ -4355,30 +4512,33 @@ function doorSealEnter(){
    false keeps it settled (a change of theme while the door is open) */
 /* Schedae's face: a small struck medallion with the seal's nib */
 function scheFacePaint(dark){
+ /* Schedae's button, the seal's sibling: the same pressed wax (cream by day,
+    midnight by night) with a gilded ring and the house nib in relief */
  const f=document.getElementById('scheFace');if(!f)return;
+ const W=INKSEAL.WAX[dark?'midnight':'cream'],st=INKSEAL.st,B=INKSEAL.blob(48,1.5);
  const k='skf'+(++SEAL_N),id=s=>k+s,u=s=>'url(#'+k+s+')';
- const P=dark?{f:['#1d2a38','#121b26','#0a1017'],rim:['#c9a964','#8f6f31','#5a4419','#2f230b'],ink:['#f4e6bf','#d9c08a','#a98c52'],hair:'rgba(201,169,100,.45)',hl:.3,sh:.55}
-            :{f:['#fffefa','#f7f1e2','#e9dec4'],rim:['#efdca7','#c39a4b','#8a6526','#5e4417'],ink:['#2f6889','#17384c','#0d2638'],hair:'rgba(169,128,58,.55)',hl:.8,sh:.22};
  const NIB='M50,17.6 C51.2,21.4 54.6,25.6 54.6,29.6 C54.6,32.2 53.4,33.7 52.9,35.2 L47.1,35.2 C46.6,33.7 45.4,32.2 45.4,29.6 C45.4,25.6 48.8,21.4 50,17.6 Z M49.72,19.4 L50.28,19.4 L50.3,27.6 L49.7,27.6 Z M50,27.6 m-1.25,0 a1.25,1.25 0 1,0 2.5,0 a1.25,1.25 0 1,0 -2.5,0 Z';
- const nibAt='translate(50 51) scale(2.3) translate(-50 -26.4)';
+ const nibAt='translate(50 51) scale(2.25) translate(-50 -26.4)';
  f.innerHTML='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="display:block;overflow:visible;pointer-events:none"><defs>'
-  +'<radialGradient id="'+id('fl')+'" cx=".38" cy=".3" r=".78"><stop offset="0" stop-color="'+P.f[0]+'"/><stop offset=".55" stop-color="'+P.f[1]+'"/><stop offset="1" stop-color="'+P.f[2]+'"/></radialGradient>'
-  +'<linearGradient id="'+id('rm')+'" x1=".15" y1=".05" x2=".85" y2=".95"><stop offset="0" stop-color="'+P.rim[0]+'"/><stop offset=".38" stop-color="'+P.rim[1]+'"/><stop offset=".72" stop-color="'+P.rim[2]+'"/><stop offset="1" stop-color="'+P.rim[3]+'"/></linearGradient>'
-  +'<linearGradient id="'+id('hlr')+'" x1=".2" y1=".05" x2=".8" y2=".95"><stop offset="0" stop-color="#fff" stop-opacity="'+P.hl+'"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/></linearGradient>'
-  +'<linearGradient id="'+id('nb')+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+P.ink[0]+'"/><stop offset=".5" stop-color="'+P.ink[1]+'"/><stop offset="1" stop-color="'+P.ink[2]+'"/></linearGradient>'
-  +'<linearGradient id="'+id('sh')+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity="'+(dark?.14:.5)+'"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
-  +'<clipPath id="'+id('cl')+'"><circle cx="50" cy="50" r="49.5"/></clipPath>'
-  +'<filter id="'+id('bl')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".9"/></filter></defs>'
-  +'<circle cx="50" cy="50" r="46" fill="'+u('fl')+'"/>'
-  +'<circle cx="50" cy="50" r="46" fill="none" stroke="#000" stroke-opacity="'+(dark?.45:.16)+'" stroke-width="2" filter="'+u('bl')+'"/>'
-  +'<circle cx="50" cy="50" r="48.3" fill="none" stroke="'+u('rm')+'" stroke-width="3.2"/>'
-  +'<circle cx="50" cy="50" r="49.55" fill="none" stroke="'+u('hlr')+'" stroke-width=".9"/>'
-  +'<circle cx="50" cy="50" r="41" fill="none" stroke="'+P.hair+'" stroke-width=".8"/>'
-  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity="'+P.sh+'" transform="translate(.8 1.1) '+nibAt+'"/>'
-  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.14:.9)+'" transform="translate(-.5 -.6) '+nibAt+'"/>'
+  +'<radialGradient id="'+id('wx')+'" cx=".36" cy=".3" r=".8">'+st([[0,W.hi],[.45,W.mid],[1,W.lo]])+'</radialGradient>'
+  +'<radialGradient id="'+id('bd')+'" cx=".5" cy=".5" r=".5">'+st([[0,W.floor],[.85,W.mid],[1,W.lo]])+'</radialGradient>'
+  +'<linearGradient id="'+id('lL')+'" x1=".2" y1=".1" x2=".8" y2=".9">'+st([[0,W.lip,.9],[.45,W.lip,0],[1,W.lip,0]])+'</linearGradient>'
+  +'<linearGradient id="'+id('lS')+'" x1=".2" y1=".1" x2=".8" y2=".9">'+st([[0,'#000',0],[.55,'#000',0],[1,dark?'#000':'#5a4419',dark?.55:.32]])+'</linearGradient>'
+  +'<linearGradient id="'+id('gd')+'" x1="0" y1="0" x2="1" y2="1">'+(dark?st([[0,'#efd696'],[.45,'#c9a45a'],[1,'#8f6a2c']]):st([[0,'#c49a48'],[.5,'#9a7430'],[1,'#6e5019']]))+'</linearGradient>'
+  +'<linearGradient id="'+id('nb')+'" x1="0" y1="0" x2="0" y2="1">'+(dark?st([[0,'#f4e6bf'],[.5,'#d9b56c'],[1,'#a37f3d']]):st([[0,'#2a5874'],[.5,'#17384c'],[1,'#0f2737']]))+'</linearGradient>'
+  +'<filter id="'+id('b1')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.1"/></filter>'
+  +'<filter id="'+id('sf')+'" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".5"/></filter></defs>'
+  +'<path d="'+B+'" fill="'+u('wx')+'"/>'
+  +'<path d="'+B+'" fill="none" stroke="'+u('lL')+'" stroke-width="2" transform="translate(.2 .3)" filter="'+u('b1')+'"/>'
+  +'<path d="'+B+'" fill="none" stroke="'+u('lS')+'" stroke-width="3" filter="'+u('b1')+'"/>'
+  +'<circle cx="50" cy="50" r="43.5" fill="'+u('bd')+'"/>'
+  +'<circle cx="50" cy="50.6" r="37.5" fill="none" stroke="#000" stroke-opacity="'+(dark?.5:.25)+'" stroke-width="2.2" filter="'+u('sf')+'"/>'
+  +'<circle cx="50" cy="50" r="37.5" fill="none" stroke="'+u('gd')+'" stroke-width="2"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#000" opacity="'+(dark?.55:.25)+'" transform="translate(.8 1.1) '+nibAt+'" filter="'+u('sf')+'"/>'
+  +'<path d="'+NIB+'" fill-rule="evenodd" fill="#fff" opacity="'+(dark?.18:.9)+'" transform="translate(-.5 -.6) '+nibAt+'"/>'
   +'<path d="'+NIB+'" fill-rule="evenodd" fill="'+u('nb')+'" transform="'+nibAt+'"/>'
-  +'<g clip-path="'+u('cl')+'"><g transform="rotate(24 50 50)"><rect class="s3-sheen" x="-70" y="-30" width="44" height="160" fill="'+u('sh')+'"/></g></g>'
   +'</svg><span class="b3-glare" aria-hidden="true"></span>';
+ const side=document.querySelector('#scheFab .b3-side');if(side)side.innerHTML=inkWaxSide(44,3,dark);
  doorSealWire(document.getElementById('scheFab'));
 }
 function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorSeal'),88,dark,rise);}
@@ -4386,7 +4546,8 @@ function doorSealPaint(dark,rise){sealButtonPaint(document.getElementById('doorS
 function sealButtonPaint(b,size,dark,rise){
  if(!b)return;
  b.innerHTML='<span class="b3-well" aria-hidden="true"></span><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span>'
-  +'<span class="b3-face">'+inkwellSeal(size,dark,{sheen:true})+'<span class="b3-glare" aria-hidden="true"></span></span>';
+  +'<span class="b3-face">'+inkwellSeal(size,dark)+'<span class="b3-glare" aria-hidden="true"></span></span>';
+ const side=b.querySelector('.b3-side');if(side)side.innerHTML=inkWaxSide(size,b.id==='brandSeal'?3:7,dark);
  b.classList.remove('knock','hover','down');
  if(rise){b.classList.remove('rise');void b.offsetWidth;b.classList.add('rise');clearTimeout(b.__rise);b.__rise=setTimeout(function(){b.classList.remove('rise');},950);}
  doorSealWire(b);}
@@ -4434,7 +4595,8 @@ function closeDoor(){
 inkMark('doorFns');
  S.door=!document.getElementById('doorChk').checked;SV('door',S.door);
  document.body.classList.remove('doorOn');d.classList.add('gone');setTimeout(()=>{d.style.display='none';},480);
- ed.focus();doorTipCycle();}
+ ed.focus();doorTipCycle();
+ setTimeout(function(){try{tourOffer();}catch(e){}},700);}
 /* the door behaves like a window: drag the head, resize from every edge */
 let doorWired=false;
 function doorGeoSave(){try{const c=document.getElementById('doorCard');
@@ -4587,13 +4749,17 @@ function stickyToNotebook(id) {
   toast('Sent to the page; the note stays pinned until you unpin it');
   return true;
 }
+/* 7.37: six named papers, the same names by day and by night. The day faces
+   are muted dark academia companions of the night papers; the yellow is
+   Ochre, an antique gold, in both. The ids stay as they were, so every note
+   already on the desk keeps its colour. */
 const STICKY_COLORS = [
-  { id: "ivory",  bg: "linear-gradient(180deg, #fdfaf0, #f1e9d4)" },
-  { id: "gold",   bg: "linear-gradient(180deg, #fbf3cf, #f2e6a8)" },
-  { id: "sky",    bg: "linear-gradient(180deg, #dcefff, #b6e0ff)" },
-  { id: "rose",   bg: "linear-gradient(180deg, #ffe0ea, #ffc6d8)" },
-  { id: "sage",   bg: "linear-gradient(180deg, #e6f4de, #c8edc1)" },
-  { id: "violet", bg: "linear-gradient(180deg, #ece2fb, #d5c4f4)" },
+  { id: "ivory",  name: "Foolscap", bg: "linear-gradient(180deg, #f8f2e4, #f1e9d6)" },
+  { id: "gold",   name: "Ochre",    bg: "linear-gradient(180deg, #efdfb1, #e8d39f)" },
+  { id: "sky",    name: "Lapis",    bg: "linear-gradient(180deg, #dfe5e6, #d3dcdf)" },
+  { id: "rose",   name: "Claret",   bg: "linear-gradient(180deg, #efdeda, #e7d1cc)" },
+  { id: "sage",   name: "Laurel",   bg: "linear-gradient(180deg, #e3e6d4, #d8ddc5)" },
+  { id: "violet", name: "Vespers",  bg: "linear-gradient(180deg, #e8e0e6, #ddd2db)" },
 ];
 function stickyColorBg(id) { const c = STICKY_COLORS.find(x => x.id === id) || STICKY_COLORS[0]; return c.bg; }
 function saveStickyAsNew(id) {
@@ -4610,13 +4776,20 @@ function openStickyMenu(n, anchorEl) {
   const r = (anchorEl && anchorEl.getBoundingClientRect) ? anchorEl.getBoundingClientRect() : { left: 100, bottom: 120 };
   const left = Math.min(Math.round(r.left), (window.innerWidth || 360) - 200);
   const menu = el("div", { style: { position: "fixed", left: Math.max(8, left) + "px", top: Math.round((r.bottom || 120) + 4) + "px", background: "var(--glassStrong)", border: "0.5px solid var(--glassBorder)", borderRadius: "12px", boxShadow: "0 12px 36px rgba(0,0,0,0.26)", padding: "8px", minWidth: "182px", backdropFilter: "saturate(180%) blur(20px)", WebkitBackdropFilter: "saturate(180%) blur(20px)" } });
-  const sw = el("div", { style: { display: "flex", gap: "7px", padding: "2px 4px 8px" } });
+  const sw = el("div", { style: { display: "flex", gap: "7px", padding: "2px 4px 4px" } });
+  const curName = () => (STICKY_COLORS.find(x => x.id === (n.color || "gold")) || STICKY_COLORS[1]).name;
+  const nameLbl = el("div", { class: "snColName", text: curName() });
   STICKY_COLORS.forEach(c => {
-    const dot = el("button", { title: "Colour", "data-sn-col": c.id, style: { width: "20px", height: "20px", borderRadius: "50%", border: ((n.color || "gold") === c.id) ? "2px solid var(--acc)" : "1px solid rgba(0,0,0,0.22)", background: c.bg, cursor: "pointer", padding: "0", boxShadow: "none" } });
-    dot.onclick = () => { n.color = c.id; saveState(); renderStickyPins(); try { menu.querySelectorAll("[data-sn-col]").forEach(function (x) { x.style.border = (x.getAttribute("data-sn-col") === c.id) ? "2px solid var(--acc)" : "1px solid rgba(0,0,0,0.2)"; }); } catch (e) {} };
+    const dot = el("button", { title: c.name, "aria-label": c.name, "data-sn-col": c.id, style: { width: "20px", height: "20px", borderRadius: "50%", border: ((n.color || "gold") === c.id) ? "2px solid var(--acc)" : "1px solid rgba(0,0,0,0.22)", background: c.bg, cursor: "pointer", padding: "0", boxShadow: "none" } });
+    dot.addEventListener("mouseenter", () => { nameLbl.textContent = c.name; });
+    dot.addEventListener("focus", () => { nameLbl.textContent = c.name; });
+    dot.addEventListener("mouseleave", () => { nameLbl.textContent = curName(); });
+    dot.addEventListener("blur", () => { nameLbl.textContent = curName(); });
+    dot.onclick = () => { n.color = c.id; nameLbl.textContent = c.name; saveState(); renderStickyPins(); try { menu.querySelectorAll("[data-sn-col]").forEach(function (x) { x.style.border = (x.getAttribute("data-sn-col") === c.id) ? "2px solid var(--acc)" : "1px solid rgba(0,0,0,0.2)"; }); } catch (e) {} };
     sw.appendChild(dot);
   });
   menu.appendChild(sw);
+  menu.appendChild(nameLbl);
   const mkRow = (label, fn) => { const b = el("button", { class: "btn btn-soft btn-sm", style: { display: "block", width: "100%", textAlign: "left", marginTop: "4px" }, text: label }); b.onclick = fn; return b; };
   menu.appendChild(mkRow(n.min ? "Unfold note" : "Minimise note", () => {
     n.min = !n.min; saveState(); renderStickyPins(); back.remove();
@@ -4766,7 +4939,7 @@ function wireScheFabDrag(){
   if(!drag)return;
   if(dragged){
    const r=f.getBoundingClientRect();
-   SV('schePos',{x:Math.round(r.left),y:Math.round(r.top)});}
+   SV('schePos',{x:Math.round(r.left),y:Math.round(r.top)});try{inkFootTabPlace();}catch(e){}}
   drag=null;
   try{if(e&&e.pointerId!==undefined)f.releasePointerCapture(e.pointerId);}catch(_){}
   setTimeout(function(){f.classList.remove('dragging');},40);
@@ -4917,7 +5090,7 @@ const MENUS={
   ['☀ Display & Sound',()=>openModal('display'),()=>''],
   ['🔊 Soundscape',()=>toggleSound(),()=>S.sound?'on':''],
   ['🎯 Goals; who, what, why',()=>openModal('goals')],
-  ['🧭 Brief tour',()=>startTour()],
+  ['🧭 Guided tour',()=>startTour()],
   ['1× One suggestion at a time',()=>toggleSolo(),()=>S.solo?'on':''],
   ['◌ Motion: '+({full:'Full',calm:'Calm',minimal:'Minimal'}[S.motion]),()=>cycleMotion()]],
  file:[['lbl','This document'],
@@ -7746,6 +7919,8 @@ const TIPLIB={
 const TIPNEXT=['bank','sprint','dialect','panels'];
 var __tipIdx={};
 function showTip(id){
+ /* the guided tour speaks for itself; the desk's own tips wait until it ends */
+ if(window.__inkTourOn)return;
  var c=document.getElementById('tipCard');if(!c)return;
  var t=TIPLIB[id];
  if(!t){var i0=(__tipIdx._any||0);t=TIPLIB[TIPNEXT[i0%TIPNEXT.length]];__tipIdx._any=i0+1;}
@@ -7957,7 +8132,11 @@ let SPELLD=null,SPELLLOAD=null;
 function inkSpellLoad(){
  if(SPELLD||SPELLLOAD||typeof INKSPELL==='undefined')return SPELLLOAD;
  SPELLLOAD=fetch(new URL('vendor/scowl-words.txt',document.baseURI||location.href).href).then(r=>r.ok?r.text():'').then(t=>{
-  if(!t)return;SPELLD=INKSPELL.load(t);CARDSIG='';try{scan();}catch(e){}}).catch(()=>{});
+  if(!t||!/^\d+ /.test(t))return;
+  /* a server that answers a missing file with a web page must never leave a
+     word list that knows nothing: then every word would be marked */
+  const D=INKSPELL.load(t);if(D.size<50000||!['the','which','because'].every(w=>INKSPELL.known(D,w)))return;
+  SPELLD=D;CARDSIG='';try{scan();}catch(e){}}).catch(()=>{});
  return SPELLLOAD;}
 function inkSpellEdits(t,taken){
  if(!SPELLD||S.spellOff)return [];
@@ -9995,7 +10174,13 @@ ed.addEventListener('keydown',e=>{if(!e.shiftKey)hideBubble();});ed.addEventList
 /* The right-click panel lives in its own script block at the foot of the
    page, wired the Forge's way; see THE RIGHT-CLICK PANEL there. */
 /* one Escape settles every layer */
-function closeAllOverlays(){closeAlts();if(tourOn)endTour();hideMenu();hideHoverFix();
+document.addEventListener('keydown',function(e){if(e.key==='Tab')document.body.classList.add('kbd');},true);
+document.addEventListener('pointerdown',function(){document.body.classList.remove('kbd');},true);
+function closeAllOverlays(){
+ /* during the tour, Escape closes the layer it opened first; with nothing open, it pauses the tour */
+ if(tourOn){const m=document.getElementById('menu'),open=(m&&m.style.display==='flex')||document.getElementById('modal').style.display==='flex'||ALTMODE||document.getElementById('inkTourMenu');
+  if(open){const tm=document.getElementById('inkTourMenu');if(tm)tm.remove();tourCloseLayers();return;}endTour();return;}
+ closeAlts();hideMenu();hideHoverFix();
  if(document.getElementById('modal').style.display==='flex')closeModal();
  const d=document.getElementById('door');if(d.style.display==='flex'&&!d.classList.contains('gone'))closeDoor();}
 document.addEventListener('keydown',e=>{
@@ -11005,8 +11190,17 @@ function download(){markExported();const name=(document.getElementById('docTitle
  const b=new Blob([ed.value],{type:'text/plain'});const a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download=name;a.click();}
 function toggleRight(){document.getElementById('right').classList.toggle('hidden');}
+/* 7.37: the Outline folds away, and the documents list takes the room */
+function foldOutline(){S.outlineFold=!S.outlineFold;SV('outlineFold',S.outlineFold);const sec=document.getElementById('outlineSec'),b=document.getElementById('olFold');
+ sec.classList.toggle('folded',S.outlineFold);if(b){b.textContent=S.outlineFold?'▸':'▾';b.title=S.outlineFold?'Show the outline':'Fold the outline away';b.setAttribute('aria-label',b.title);b.setAttribute('aria-expanded',String(!S.outlineFold));}}
 function foldFoot(){S.footFold=!S.footFold;SV('footFold',S.footFold);
- document.body.classList.toggle('ftrFolded',S.footFold);}
+ document.body.classList.toggle('ftrFolded',S.footFold);requestAnimationFrame(inkFootTabPlace);}
+/* the pull follows Schedae, wherever it has been dragged along the edge */
+function inkFootTabPlace(){const t=document.getElementById('footTab'),f=document.getElementById('scheFab');if(!t||!t.offsetWidth)return;
+ const r=f?f.getBoundingClientRect():null;
+ if(r&&r.width>4&&r.left>t.offsetWidth+24){t.style.left=Math.round(r.left-t.offsetWidth-10)+'px';t.style.top=Math.round(r.top+r.height/2-t.offsetHeight/2)+'px';t.style.right='auto';t.style.bottom='auto';}
+ else{t.style.left='';t.style.top='';t.style.right='';t.style.bottom='';}}
+window.addEventListener('resize',function(){try{inkFootTabPlace();}catch(e){}});
 function afterChange(){saveNow();scan();}
 function insertAtCursor(t){if(!AUTH_SRC)inkAuthMark('i');ed.focus();ed.setRangeText(t,ed.selectionStart,ed.selectionEnd,'end');afterChange();}
 
@@ -11283,6 +11477,9 @@ function originality(){
  var m=document.getElementById('modal');if(m)m.style.display='flex';
 }
 
+/* 7.37: Socrat, the memo and Authorship drew their panel and returned before
+   the line that shows it, so from the Coach menu they seemed to do nothing */
+function inkModalShow(){const b=document.getElementById('modalBody');if(b&&b.innerHTML.trim())document.getElementById('modal').style.display='flex';}
 function openModalDo(which){
  const b=document.getElementById('modalBody');
  b.classList.toggle('guide3D',which==='guide');
@@ -11292,10 +11489,10 @@ function openModalDo(which){
   '<button onclick="newDoc(\'brainstorm\')">🧠 Brainstorm</button>'+
   '<button onclick="document.getElementById(\'docFile\').click()" title=".txt, .md, .docx, .pdf, .rtf, .odt or .html from this device" style="color:var(--acc)">⇧ Upload your own document</button></div>'+
   '<p style="font-size:12.5px;color:var(--mut);margin-top:12px">The skeleton walks a chapter the way a supervisor would: gap → question → claim → warrant → evidence → objection → contribution. Its # headings feed the outline; its References section feeds ⌾ Refs. Upload opens a .txt, .md, .docx, .pdf, .rtf, .odt or .html from this device onto a fresh page; the original file stays untouched. A dropped file does the same thing without the door.</p>';}
- if(which==='socrat'){openSocrat();return;}
- if(which==='memo'){openMemo();return;}
- if(which==='authorship'){openAuthorship();return;}
- if(which==='guide'){b.innerHTML='<div class="guideHead"><div class="guideHeadL"><h3>The Inkwell Guide</h3><span class="guideSeal">'+inkwellSeal(34,S.mode==='dark'||(S.mode==='auto'&&TMQ.matches))+'</span></div><button class="tour3d" onclick="closeModal();startTour()">▶ Brief tour</button></div>'+
+ if(which==='socrat'){b.innerHTML='';openSocrat();inkModalShow();return;}
+ if(which==='memo'){b.innerHTML='';openMemo();inkModalShow();return;}
+ if(which==='authorship'){b.innerHTML='';openAuthorship();inkModalShow();return;}
+ if(which==='guide'){b.innerHTML='<div class="guideHead"><div class="guideHeadL"><h3>The Inkwell Guide</h3><span class="guideSeal">'+inkwellSeal(34,S.mode==='dark'||(S.mode==='auto'&&TMQ.matches))+'</span></div><button class="tour3d" onclick="closeModal();startTour()">▶ Guided tour</button></div>'+
  '<div class="steps">'+
  [['Write','Anything. The rules engine underlines as you type; nothing leaves this device.'],
   ['Choose a register','Casual relaxes style flags; Professional is the working default; Creative adds fiction craft (dialogue punctuation, filter words, borrowed images); Scholarly adds the doctoral pack and protects your citations.'],
@@ -11672,24 +11869,300 @@ document.addEventListener('drop',e=>{
  toast('Arriving on the shelf: '+f.name);
  upModel(f,null,null).then(()=>{refreshShelf();ping();
   if(document.getElementById('modal').style.display!=='flex')openModal('server');});},true);
-/* ================= THE BRIEF TOUR ================= */
+/* ================= THE GUIDED TOUR =================
+   7.37, after Carpe Diem's tour: chapters, a card that rings the real
+   control and often opens it and shows it working, "Chapter complete"
+   cards between chapters, a chapter menu, and a closing card. The app is
+   never blurred or covered: the card sits at the foot of the desk (or at
+   the head, when what it describes is low on the screen), and it can be
+   dragged aside. The tour works on a sample page it opens itself; that
+   page, the note it pins and every setting it touches are put back when
+   it ends, and a sample left behind by a closed app is removed at start.
+   You can stop at any card; Inkwell remembers where you were. */
+const TOUR_SAMPLE_ID='tour-sample';
+const TOUR_SAMPLE='# A sample page\n\nThe results was clear. Its a mixed picture, and alot of readers will agree with it. Due to the fact that the evidence is strong, the team made a decision to continue.\n\nThis obviously shows that the team was right. In this paragraph we look at the data and we show what it means for the field, and then we turn to objections and we answer the strongest one carefully.\n\n# References\n\nSmith, J. (2019). Notes on scale. Oxford: Example Press.';
+let TOURI=0,tourOn=false,TOURSAVE=null,TOURDRAG=null;
+function tourQ(sel){try{return document.querySelector(sel);}catch(e){return null;}}
+function tourEditIndex(re){return EDITS.findIndex(e=>re.test((e.why||'')+' '+(e.orig||'')));}
+function tourMenu(name){hideMenu();const b=[...document.querySelectorAll('.menuBtn,button')].find(x=>new RegExp("showMenu\\(event,'"+name+"'\\)").test(x.getAttribute('onclick')||''));
+ if(b)showMenu({stopPropagation(){},target:b},name);return '#menu';}
+function tourCloseLayers(){try{hideMenu();}catch(e){}try{if(document.getElementById('modal').style.display==='flex')closeModal();}catch(e){}
+ try{if(ALTMODE)closeAlts();}catch(e){}try{document.querySelectorAll('.sticky-card-menu-back,.sticky-panel-back').forEach(x=>x.remove());}catch(e){}}
+function tourStage(want){try{if(want!=='tabula'&&document.getElementById('tabStageFrame'))closeTabulaStage();}catch(e){}
+ try{if(want!=='scriba')closeAppStage('scriba');}catch(e){}try{if(want!=='fontes')closeAppStage('fontes');}catch(e){}}
+function tourSelect(words){const t=ed.value,i=t.indexOf(words);if(i<0)return false;try{ed.focus();}catch(e){}ed.setSelectionRange(i,i+words.length);return true;}
+function tourNote(){let n=(state.stickyNotes||[]).find(x=>/^sn-tour-/.test(x.id));if(n)return n;
+ n=newStickyNote();n.id='sn-tour-'+Date.now();n.text='Find the Smith quote for chapter two.';n.x=Math.max(40,innerWidth/2-60);n.y=Math.max(120,innerHeight/2-140);
+ saveState();renderStickyPins();return n;}
+function tourDropNotes(){try{state.stickyNotes=(state.stickyNotes||[]).filter(n=>!/^sn-tour-/.test(n.id));saveState();renderStickyPins();}catch(e){}}
+function tourDropSample(){const had=S.docs.some(d=>d.id===TOUR_SAMPLE_ID);if(had){S.docs=S.docs.filter(d=>d.id!==TOUR_SAMPLE_ID);persist();}return had;}
+const TOURCH={
+ 'Welcome':{tease:'',close:''},
+ 'The desk':{tease:'The five parts of the desk, and where each one lives.',close:'You know the lie of the desk: the bar, the shelf, the page, the panel and the foot.'},
+ 'Correcting':{tease:'How a suggestion is shown, opened, accepted, or set aside.',close:'A suggestion is a question, never an order. You open it, learn from it, and decide.'},
+ 'Clarity and style':{tease:'The quieter notes, the register, the form, and the instruments.',close:'The register and the form tell Inkwell what you are writing, and the notes follow.'},
+ 'Rewriting and drafting':{tease:'Rewrites that work offline, and drafting with a model.',close:'Nothing reaches the page until you press Use this. You always choose.'},
+ 'The coach':{tease:'The tests a good supervisor would run on a page.',close:'The coach asks the questions an examiner will ask, while there is still time to answer them.'},
+ 'Sources':{tease:'Citations, footnotes, and your library of sources.',close:'Your sources live in one place, and every citation comes from there.'},
+ 'Your documents':{tease:'Opening, outlining, starting, and keeping your work safe.',close:'Your library is yours. File, Export library keeps a copy you can carry anywhere.'},
+ 'Focus':{tease:'The water clock, a quieter desk, and settings for your senses.',close:'The desk can be as quiet as you need it to be, and the clock keeps time for you.'},
+ 'Notes':{tease:'Schedae, and notes you pin to the desk.',close:'A stray thought has a place to wait now, and the page keeps your place.'},
+ 'The rooms':{tease:'Tabula, Scriba and Fontes, the three rooms off the desk.',close:'Three rooms, one desk: the work moves freely among them.'},
+ 'Studio':{tease:'Your rules, your voice, the engines, and the look of the desk.',close:'Studio is where the desk becomes yours.'},
+ 'In closing':{tease:'',close:''}};
 const TOUR=[
- ['#paper','Write here. Inkwell follows along quietly and marks only what it would question.'],
- ['.hdr','The desk bar: Correct is the deep pass, Draft writes to order, and the menus hold the coach, rewrites, studio and files.'],
- ['#right','The suggestions panel speaks when you ask: open a row, tap a coloured mark in the text, or go one at a time with 1×.'],
- ['#scheFab','The pencil pins thoughts as paper notes on the desk; Send ▸ moves one onto the page when ripe.'],
- ['#status','The status line reads you back as you work: words, pace, reading level, issues waiting.']];
-let TOURI=0,tourOn=false;
-function startTour(){TOURI=0;tourOn=true;document.getElementById('tourLay').style.display='block';tourStep();}
-function tourStep(){
- document.querySelectorAll('.tourSpot').forEach(e=>e.classList.remove('tourSpot'));
- if(TOURI>=TOUR.length)return endTour();
- const s=TOUR[TOURI];const el=document.querySelector(s[0]);
- document.getElementById('tourTxt').innerHTML='<b style="font-family:Georgia,serif">'+(TOURI+1)+' of '+TOUR.length+'.</b> '+s[1];
- if(el){el.classList.add('tourSpot');if(el.scrollIntoView){try{el.scrollIntoView({block:'center',behavior:'auto'});}catch(e){try{el.scrollIntoView(false);}catch(e2){}}}}}
-function tourNext(){TOURI++;tourStep();}
-function endTour(){tourOn=false;document.querySelectorAll('.tourSpot').forEach(e=>e.classList.remove('tourSpot'));
- document.getElementById('tourLay').style.display='none';}
+ {chap:'Welcome',sub:'Getting started',go:()=>{},
+  t:'🧭 Welcome to the guided tour',b:'This tour walks the whole desk in order, in twelve short chapters. Each card rings the part it describes, and many open it and show it working. The desk stays clear and usable the whole time.',
+  tip:'You can stop at any card. Inkwell remembers where you were, and Chapters ▾ takes you straight to any part.'},
+ {chap:'Welcome',go:()=>tourSampleOpen(),spot:'#paper',
+  t:'📄 A sample page',b:'We have opened a sample page with a few slips planted in it. Your own documents are untouched. The sample goes away when the tour ends.',
+  tip:'If this card ever covers what it describes, drag it aside by its top line.'},
+ {chap:'The desk',sub:'The top bar',spot:'header',
+  t:'🪶 The bar across the top',b:'The top bar holds the main actions: Correct, Draft, and five menus (Coach, Rewrite, Insert, Studio, File). At its right are the theme, the three rooms, and the Guide.'},
+ {chap:'The desk',sub:'The shelf',spot:'#side',go:()=>{if(S.sideFold)foldSide();},
+  t:'📚 The documents shelf',b:'On the left are your documents, newest first, and below them the Outline of the page you are in.',
+  tip:'The « button folds the shelf away when you want the page alone.'},
+ {chap:'The desk',sub:'The page',spot:'#paper',
+  t:'✍ The page',b:'The page is where you write. Inkwell reads along quietly and underlines only what it would question. It never changes a word unless you accept a suggestion.'},
+ {chap:'The desk',sub:'The panel',spot:'#right',go:()=>{if(S.panelFold)foldPanel();setRTab('sugg');},
+  t:'☰ The suggestions panel',b:'On the right are the suggestions for this page, and a second tab of instruments that read your writing back to you.'},
+ {chap:'The desk',sub:'The foot',spot:'#status',go:()=>{if(S.footFold)foldFoot();},
+  t:'📏 The status line',b:'Along the foot of the desk: words, reading time, issues waiting, and whether the page is saved.',
+  tip:'The small ▾ at its end folds it away; Footer brings it back.'},
+ {chap:'Correcting',sub:'Marks',spot:'#cards',go:()=>{tourSampleReset();setRTab('sugg');if(S.solo)toggleSolo();EXPID=-1;CARDSIG='';renderCards();},
+  t:'〰 Marks and the list',b:'Each underline on the page is one suggestion, and the list on the right shows them in order: the words, the fix, and the reason in a few words. The dot gives its kind; red is correctness.'},
+ {chap:'Correcting',sub:'Opening a suggestion',spot:'#cards',go:()=>{const i=tourEditIndex(/Agreement|results was/);if(i>=0){EXPID=i;CARDSIG='';renderCards();try{locate(i);}catch(e){}try{hideBubble();}catch(e){}}},
+  t:'▾ Open a suggestion',b:'We have opened one. A card gives the fix, the reason, and a short lesson. Read the lesson once; it is the reason the slip will not come back.',
+  tip:'A verb agrees with its subject, even when other words sit between them: “The list of results is long.”'},
+ {chap:'Correcting',spot:'#paper',go:()=>{const i=tourEditIndex(/Agreement|results was/),e=EDITS[i];if(e&&ed.value.slice(e.start,e.end)===e.orig)acceptOne(i);},
+  t:'✓ Accept it',b:'We accepted it, and the page changed: “The results were clear.” The row has left the list. Undo puts it back: ↺ in the toolbar, or Ctrl+Z.'},
+ {chap:'Correcting',sub:'Spelling',spot:'#cards',go:()=>{const i=tourEditIndex(/^Spelling.*alot|alot/);if(i>=0){EXPID=i;CARDSIG='';renderCards();}},
+  t:'🔤 Spelling',b:'Spelling is checked against a dictionary of British, American and Canadian words, on this device. A word it does not know can be added to your own dictionary from its card.',
+  tip:'“A lot” is always two words; “alot” is one of the commonest slips in English.'},
+ {chap:'Correcting',sub:'Setting one aside',spot:'#cards .cremove',go:()=>{EXPID=-1;CARDSIG='';renderCards();},
+  t:'✕ Set one aside',b:'The ✕ at the end of a row dismisses a suggestion you disagree with. Inkwell will not raise it again on that text.'},
+ {chap:'Correcting',sub:'One at a time',spot:'#soloBtn',go:()=>{if(!S.solo)toggleSolo();},
+  t:'1× One at a time',b:'We switched on 1×. The list now shows a single suggestion and takes you to its place on the page. The others wait. Calmer when a page has many.',
+  tip:'On a long draft, one at a time keeps the list from feeling like a wall.'},
+ {chap:'Correcting',spot:'#rh',go:()=>{if(S.solo)toggleSolo();},
+  t:'Fix all, and Clear',b:'Back to the whole list. Fix all accepts every correctness fix at once; Clear dismisses the list. We will not press either here.'},
+ {chap:'Correcting',sub:'Correct',spot:'.hdr button[onclick^="correct"]',
+  t:'✔ Correct',b:'Correct checks the whole page at once: the rules engine and the dictionary, entirely offline. If you turn on the optional grammar model, it joins in.',
+  tip:'Ctrl+Enter runs Correct from the keyboard.'},
+ {chap:'Clarity and style',sub:'Clarity notes',spot:'#cards',go:()=>{if(!S.showStyle)inkToggleStyle();},
+  t:'✦ Clarity and style notes',b:'Beyond correctness, Inkwell notes wordy phrases, empty emphasis, weak hedges, passive voice and long sentences. They stay folded until you open them, so the list stays quiet. We have opened them.',
+  tip:'“Due to the fact that” is almost always just “because”, and “made a decision to” is “decided to”.'},
+ {chap:'Clarity and style',sub:'Register',spot:'#regSeg',go:()=>{if(S.showStyle)inkToggleStyle();},
+  t:'Register',b:'Casual, Professional, Creative and Scholarly change which notes Inkwell raises. Scholarly protects citations and adds the academic checks.'},
+ {chap:'Clarity and style',sub:'Form',spot:'#regDocChip',go:()=>{try{regDocChipClick({stopPropagation(){},target:document.getElementById('regDocChip'),currentTarget:document.getElementById('regDocChip')});}catch(e){}},
+  t:'Form',b:'Form narrows the target: an essay, a thesis chapter, a cover letter, a poem. A formal form flags contractions; a poem keeps its own time.'},
+ {chap:'Clarity and style',sub:'Spelling dialect',spot:'#diaSeg',go:()=>tourCloseLayers(),
+  t:'US or UK',b:'Choose American or British spelling. The dictionary knows both, and Inkwell marks the other variant.'},
+ {chap:'Clarity and style',sub:'Instruments',spot:'#instrPanel',go:()=>setRTab('instr'),
+  t:'🎛 Instruments',b:'The Instruments tab reads the page back to you: an overall score, formality, tone, and the rhythm of your sentence lengths.',
+  tip:'Good prose varies its sentence lengths. A row of long bars in Rhythm is a cue to break one up.'},
+ {chap:'Clarity and style',spot:'#patList',go:()=>setRTab('instr'),
+  t:'Your patterns',b:'Every fix you accept is counted. Your commonest slips become your syllabus, each with a short lesson. Mastery is the count going down to zero.'},
+ {chap:'Rewriting and drafting',sub:'Rewrite',spot:'#menu',go:()=>{setRTab('sugg');tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');tourMenu('rewrite');},
+  t:'↻ Rewrite',b:'Select a passage, then open Rewrite. We have selected a wordy sentence on the sample page. The first group rewrites the selection; the presets give paragraph styles; the last item rewrites it your way, from your own prompt.'},
+ {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#right',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
+  t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device. A rewrite never touches the page until you press Use this. With a writing model, more versions appear beside it.',
+  tip:'Read both versions aloud. The one you can say in a breath usually wins.'},
+ {chap:'Rewriting and drafting',sub:'Draft',spot:'.hdr .draftBtn',go:()=>{try{closeAlts();}catch(e){}},
+  t:'✨ Draft',b:'Draft writes to order from a short brief. It needs a writing model: on this device, on your laptop, or on your Mac mini. Without one, Inkwell says so rather than guess.'},
+ {chap:'The coach',sub:'The menu',spot:'#menu',go:()=>tourMenu('coach'),
+  t:'🎓 Coach',b:'The Coach menu holds the tests a good supervisor would run: questions, objections, reader reactions, a structure pass, a memo, references, originality, and a grade against a rubric.'},
+ {chap:'The coach',sub:'Socrat',spot:'#modalBody',go:()=>{hideMenu();openModal('socrat');},
+  t:'🎓 Socrat',b:'Socrat asks one question at a time about your argument, and your answers land on a Brainstorm page. Fully offline.',
+  tip:'If you cannot state your claim in one sentence with a verb that takes a side, the page is not ready to be polished yet.'},
+ {chap:'The coach',sub:'Authorship',spot:'#modalBody',go:()=>{closeModal();openModal('authorship');},
+  t:'📜 Authorship',b:'Authorship records how a page came to be: typed, pasted, dictated, accepted from suggestions, or written by a model. A fair record you can save.'},
+ {chap:'The coach',sub:'The rest',spot:'.hdr button[onclick*="\'coach\'"]',go:()=>{closeModal();},
+  t:'More from the coach',b:'Reviewer raises hostile objections; Reader reactions shows how the page will land; Deep read checks structure; Grade marks the page against a rubric. Some need a writing model, and each says so when it does.'},
+ {chap:'Sources',sub:'Insert',spot:'#menu',go:()=>tourMenu('insert'),
+  t:'✱ Insert',b:'Insert puts a citation, a footnote, or a References section at the caret, in the citation style you choose. Dictation starts here too.'},
+ {chap:'Sources',sub:'Fontes',spot:'button[onclick*="openFontesStage"]',go:()=>hideMenu(),
+  t:'Fontes',b:'Fontes is your library of sources. Citations come from it, and the coach checks your references against it. We will open it in the chapter on the rooms.'},
+ {chap:'Your documents',sub:'The list',spot:'#docs',
+  t:'📚 Your documents',b:'Click a document to open it. Each one keeps its own versions, so an older draft is never lost.'},
+ {chap:'Your documents',sub:'The outline',spot:'#outline',
+  t:'Outline',b:'The Outline lists the # headings of the page. Click one to jump to it; drag one to move its whole section.'},
+ {chap:'Your documents',sub:'A new document',spot:'#side .foot .primary',
+  t:'+ New document',b:'New document offers a blank page, a thesis chapter skeleton, or a brainstorm, or opens a file from this device: Word, PDF, plain text and others.'},
+ {chap:'Your documents',sub:'File',spot:'#menu',go:()=>tourMenu('file'),
+  t:'File',b:'File holds versions, copying, Word export, and your library.',
+  tip:'Before you reinstall or update Inkwell, use File, Export library, and keep the file somewhere safe. It holds every document.'},
+ {chap:'Focus',sub:'Clepsydra',spot:'#clepBtn',go:()=>hideMenu(),
+  t:'⏳ Clepsydra',b:'The water clock times a focus sprint, then a break. The time runs in the toolbar; press it again to stop.',
+  tip:'Start a sprint before you feel ready. The first five minutes are the hardest, and the clock carries you through them.'},
+ {chap:'Focus',sub:'A quieter desk',spot:'#sideFoldBtn',
+  t:'« » Fold the shelves',b:'The « and » buttons fold the side shelves away, and the page widens. Press them again, or the labels at the edge, to bring them back.'},
+ {chap:'Focus',sub:'Your senses',spot:'#menu',go:()=>tourMenu('studio'),
+  t:'Readable type, motion and sound',b:'In Studio: Readable type sets larger, more open type; Motion calms or stops animation; Soundscape turns soft sounds on or off; 1× keeps suggestions to one at a time.'},
+ {chap:'Notes',sub:'Schedae',spot:'#scheFab',go:()=>hideMenu(),
+  t:'✎ Schedae',b:'The round pen button is Schedae, your notes. Press it to jot a thought without leaving the page. It can be dragged along the edge of the desk.'},
+ {chap:'Notes',sub:'A pinned note',spot:'.sticky-note[data-sn-id^="sn-tour-"]',go:()=>tourNote(),
+  t:'A note on the desk',b:'Here is a note pinned to the desk. Drag it by its top bar; resize it from its corner. It stays until you unpin it or delete it. This one goes when the tour ends.',
+  tip:'Park a stray thought on a note instead of following it. The page keeps your place, and the thought keeps too.'},
+ {chap:'Notes',spot:'.sticky-card-menu-back > div',go:()=>{const n=tourNote(),c=document.querySelector('.sticky-note[data-sn-id="'+n.id+'"] .sn-iconbtn[title="Menu"]');if(c)openStickyMenu(n,c);},
+  t:'Its menu',b:'The ⋯ menu holds the colours, folding the note small, the list of all your notes, and Send ▸, which puts the note onto the page.'},
+ {chap:'The rooms',sub:'Tabula',go:()=>{tourCloseLayers();tourStage('tabula');openTabulaStage();},
+  t:'▦ Tabula',b:'Tabula is the full word processor: the ribbon, tables, and real Word files. It opens over the desk; close it to come back.'},
+ {chap:'The rooms',sub:'Scriba',go:()=>{tourStage('scriba');openScribaStage();},
+  t:'🎙 Scriba',b:'Scriba turns speech into text on this device: dictation, recordings with playback, speakers, highlights, and summaries.'},
+ {chap:'The rooms',sub:'Fontes',go:()=>{tourStage('fontes');openFontesStage();},
+  t:'Fontes',b:'Fontes keeps your sources and makes citations in the styles Zotero uses. Inkwell’s citations come from here.'},
+ {chap:'Studio',sub:'Rules',spot:'#modalBody',go:()=>{tourStage('');openModal('rules');},
+  t:'⚖ Rules',b:'Rules holds your own grammar rules, and a switch for each kind of check, including spelling and your own dictionary.'},
+ {chap:'Studio',sub:'My Style',spot:'#modalBody',go:()=>{closeModal();openModal('style');},
+  t:'✒ My Style',b:'My Style learns your voice from your own pages, so that suggestions keep your manner instead of a generic one.'},
+ {chap:'Studio',sub:'Engine',spot:'#modalBody',go:()=>{closeModal();openModal('server');},
+  t:'⚙ Engine and models',b:'Inkwell works fully without any model. Here you can add one: the careful grammar model, a writing model on this device, or a stronger one on your laptop or Mac mini over your home Wi-Fi.'},
+ {chap:'Studio',sub:'The look',spot:'#modeSeg',go:()=>closeModal(),
+  t:'☀ ◐ ☾ Light and dark',b:'Light, follow the system, or dark. Display & Sound in Studio holds the finer settings.'},
+ {chap:'Studio',sub:'The seal',spot:'#brandSeal',
+  t:'The seal',b:'The seal in the corner reopens the welcome door whenever you want it.'},
+ {chap:'In closing',sub:'The Guide',spot:'button[onclick="openModal(\'guide\')"]',
+  t:'? The Guide',b:'The Guide explains each part in a few lines, and starts this tour again. So does Studio, Guided tour.',
+  tip:'Chapters ▾ on any card takes you straight back to a part you want to see again.'}
+];
+function tourChapList(){const out=[],seen={};TOUR.forEach((s,k)=>{if(!seen[s.chap]){seen[s.chap]=1;out.push({chap:s.chap,start:k});}});return out;}
+function tourChapBounds(i){const v=[];TOUR.forEach((s,k)=>{if(s.chap===TOUR[i].chap)v.push(k);});return {n:v.length,pos:v.indexOf(i)+1};}
+function tourSubFor(i){for(let k=i;k>=0&&TOUR[k].chap===TOUR[i].chap;k--)if(TOUR[k].sub)return TOUR[k].sub;return '';}
+function tourChapSubs(start){const out=[];for(let k=start;k<TOUR.length&&TOUR[k].chap===TOUR[start].chap;k++)if(TOUR[k].sub)out.push({sub:TOUR[k].sub,start:k});return out;}
+function tourLively(){return S.motion!=='minimal'&&!matchMedia('(prefers-reduced-motion: reduce)').matches;}
+function tourClearSpot(){document.querySelectorAll('.inkTourSpot').forEach(e=>e.classList.remove('inkTourSpot','inkTourPulse'));}
+function tourSpot(sel){tourClearSpot();if(!sel)return null;let tries=0;const gen=(tourSpot.g=(tourSpot.g||0)+1);
+ const ring=()=>{if(gen!==tourSpot.g)return true;const el=tourQ(sel);if(!el)return false;const r=el.getBoundingClientRect();if(r.width<4||r.height<4)return false;
+  el.classList.add('inkTourSpot');if(tourLively())el.classList.add('inkTourPulse');
+  if(r.top<0||r.bottom>innerHeight){try{el.scrollIntoView({block:'nearest'});}catch(e){}}
+  tourPlace();return true;};
+ if(!ring())(function retry(){if(tries++>14||ring())return;setTimeout(retry,120);})();}
+function tourSampleReset(){const d=S.docs.find(x=>x.id===TOUR_SAMPLE_ID);if(!d||d.text===TOUR_SAMPLE)return;d.text=TOUR_SAMPLE;if(S.active===TOUR_SAMPLE_ID){ed.value=TOUR_SAMPLE;try{afterChange();}catch(e){scan();}}}
+function tourSampleOpen(){
+ if(!TOURSAVE)return;
+ if(!S.docs.some(d=>d.id===TOUR_SAMPLE_ID))S.docs.unshift({id:TOUR_SAMPLE_ID,title:'Tour sample (removed after the tour)',text:TOUR_SAMPLE,ts:Date.now(),baseWords:0,tour:true});
+ if(S.active!==TOUR_SAMPLE_ID)openDoc(TOUR_SAMPLE_ID);}
+/* the card: at the foot of the desk, at its head when the ringed part is
+   low, or wherever the writer has dragged it */
+function tourPlace(){const ov=document.getElementById('inkTour');if(!ov)return;const card=ov.firstChild;if(!card)return;
+ if(TOURDRAG){card.style.position='fixed';card.style.left=TOURDRAG.x+'px';card.style.top=TOURDRAG.y+'px';return;}
+ card.style.position='';card.style.left='';card.style.top='';ov.classList.remove('atTop','atRight','atLeft');
+ const sp=document.querySelector('.inkTourSpot');if(!sp)return;
+ const r=sp.getBoundingClientRect();
+ const over=(a,b)=>!(a.right<b.left-8||a.left>b.right+8||a.bottom<b.top-8||a.top>b.bottom+8);
+ for(const cls of ['','atTop','atRight','atLeft']){ov.classList.remove('atTop','atRight','atLeft');if(cls)ov.classList.add(cls);
+  if(!over(r,card.getBoundingClientRect()))return;}
+ /* nothing clears a part this large; the foot covers least of it */
+ ov.classList.remove('atTop','atRight','atLeft');}
+function tourEl(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function tourCard(){
+ document.getElementById('inkTour')&&document.getElementById('inkTour').remove();
+ const ov=tourEl('div','');ov.id='inkTour';const card=tourEl('div','itCard'+(tourLively()?' itAnim':''));
+ card.setAttribute('role','dialog');card.setAttribute('aria-live','polite');card.setAttribute('aria-label','Guided tour');
+ ov.appendChild(card);document.body.appendChild(ov);
+ /* drag by the top line; the position holds for the rest of the tour */
+ card.addEventListener('pointerdown',e=>{if(!e.target.closest('.itTop')||e.target.closest('button'))return;
+  const r=card.getBoundingClientRect(),dx=e.clientX-r.left,dy=e.clientY-r.top;card.setPointerCapture(e.pointerId);card.classList.add('itDrag');
+  const mv=ev=>{TOURDRAG={x:Math.max(4,Math.min(innerWidth-r.width-4,ev.clientX-dx)),y:Math.max(4,Math.min(innerHeight-60,ev.clientY-dy))};tourPlace();};
+  const up=()=>{card.removeEventListener('pointermove',mv);card.removeEventListener('pointerup',up);card.classList.remove('itDrag');};
+  card.addEventListener('pointermove',mv);card.addEventListener('pointerup',up);});
+ return card;}
+/* a click on the card must not reach the desk: the desk closes an open
+   menu on any click outside it, and the card has just opened one */
+function tourAct(fn){return function(e){if(e)e.stopPropagation();fn();};}
+function tourBtnRow(card,left,primaryLabel,primaryFn){
+ const row=tourEl('div','itRow'),l=tourEl('div','itLeft');left.forEach(b=>l.appendChild(b));row.appendChild(l);
+ const p=tourEl('button','primary itNext',primaryLabel);p.onclick=tourAct(primaryFn);row.appendChild(p);card.appendChild(row);
+ setTimeout(()=>{try{p.focus({preventScroll:true});}catch(e){}},30);}
+function tourLink(label,fn){const b=tourEl('button','itLink',label);b.onclick=tourAct(fn);return b;}
+function tourTop(card,label){const top=tourEl('div','itTop');top.appendChild(tourEl('div','itChap',label));
+ const ch=tourEl('button','itChaps','Chapters ▾');ch.onclick=tourAct(tourChapters);top.appendChild(ch);card.appendChild(top);}
+function tourRender(){
+ if(!tourOn)return;const s=TOUR[TOURI];SV('tourAt',TOURI);
+ /* every card after the welcome works on the sample page, whatever was opened meanwhile */
+ if(TOURI>=1)tourSampleOpen();
+ try{if(s.go)s.go();}catch(e){}
+ const card=tourCard(),b=tourChapBounds(TOURI),sub=tourSubFor(TOURI);
+ tourTop(card,s.chap+(sub&&sub!==s.chap?' · '+sub:'')+' · '+b.pos+' of '+b.n);
+ card.appendChild(tourEl('div','itTitle',s.t));card.appendChild(tourEl('div','itBody',s.b));
+ if(s.tip){const tp=tourEl('div','itTip');tp.appendChild(tourEl('span','','💡'));tp.appendChild(tourEl('span','',s.tip));card.appendChild(tp);}
+ const left=[];if(TOURI>0)left.push(tourLink('Back',tourBack));left.push(tourLink('End',()=>endTour()));
+ const last=TOURI===TOUR.length-1;
+ tourBtnRow(card,left,last?'Done':'Next',last?tourFinale:tourNext);
+ tourPlace();
+ setTimeout(()=>tourSpot(s.spot||''),s.go?180:0);
+ [500,1200].forEach(ms=>setTimeout(()=>{if(tourOn&&TOUR[TOURI]===s)tourPlace();},ms));}
+function tourNext(){const n=TOURI+1;if(n>=TOUR.length)return tourFinale();
+ if(TOUR[n].chap!==TOUR[TOURI].chap&&TOUR[TOURI].chap!=='Welcome')return tourInterstitial(n);
+ TOURI=n;tourRender();}
+function tourBack(){if(TOURI>0){TOURI--;tourCloseLayers();tourRender();}}
+function tourInterstitial(n){
+ tourClearSpot();tourCloseLayers();const done=TOUR[TOURI].chap,next=TOUR[n].chap;
+ const card=tourCard();tourTop(card,'✓ Chapter complete');
+ card.appendChild(tourEl('div','itTitle',done));
+ card.appendChild(tourEl('div','itBody',((TOURCH[done]||{}).close||'')+(next==='In closing'?' One last card.':' Next: '+next+'. '+((TOURCH[next]||{}).tease||''))));
+ tourBtnRow(card,[tourLink('Back',()=>tourRender()),tourLink('End',()=>endTour())],'Continue',()=>{TOURI=n;tourRender();});
+ tourPlace();}
+function tourChapters(){
+ document.getElementById('inkTourMenu')&&document.getElementById('inkTourMenu').remove();
+ const back=tourEl('div','');back.id='inkTourMenu';back.onclick=e=>{if(e.target===back)back.remove();};
+ const p=tourEl('div','itCard itMenu'+(tourLively()?' itAnim':''));p.appendChild(tourEl('div','itChap','Chapters'));
+ const cur=TOUR[TOURI].chap;
+ tourChapList().forEach((c,k)=>{const b=tourEl('button','itCh'+(c.chap===cur?' on':''));b.appendChild(tourEl('span','itN',String(k+1)));b.appendChild(tourEl('span','',c.chap));
+  b.onclick=tourAct(()=>{back.remove();tourCloseLayers();TOURI=c.start;tourRender();});p.appendChild(b);
+  tourChapSubs(c.start).forEach(sb=>{const x=tourEl('button','itSub','· '+sb.sub);x.onclick=tourAct(()=>{back.remove();tourCloseLayers();TOURI=sb.start;tourRender();});p.appendChild(x);});});
+ const cl=tourLink('Close',()=>back.remove());cl.style.margin='6px auto 0';cl.style.display='block';p.appendChild(cl);
+ back.appendChild(p);document.body.appendChild(back);}
+function tourFinale(){
+ tourClearSpot();tourCloseLayers();tourStage('');
+ const card=tourCard();tourTop(card,'✓ Tour complete');
+ card.appendChild(tourEl('div','itTitle','You know the desk now'));
+ card.appendChild(tourEl('div','itBody','You have seen every part: the bar and the shelf, correcting and the quieter notes, rewriting, the coach, your sources and documents, the clock, your notes, the three rooms and the studio. What remains is the writing itself, one page after another.'));
+ card.appendChild(tourEl('div','itMotto','Nulla dies sine linea. No day without a line.'));
+ tourBtnRow(card,[tourLink('Back',()=>{TOURI=TOUR.length-1;tourRender();})],'Close',()=>endTour(true));
+ tourPlace();}
+function startTour(fromStart){
+ if(tourOn)return;
+ const at=LS('tourAt');
+ if(!fromStart&&typeof at==='number'&&at>1&&at<TOUR.length-1){
+  /* the tour was stopped part way: offer to pick it up there */
+  tourSaveState();const card=tourCard();tourTop(card,'Guided tour');
+  card.appendChild(tourEl('div','itTitle','Welcome back'));
+  card.appendChild(tourEl('div','itBody','You stopped at “'+TOUR[at].chap+'”. Pick up there, or start from the beginning.'));
+  tourBtnRow(card,[tourLink('From the beginning',()=>{TOURI=0;tourRender();}),tourLink('Not now',()=>endTour())],'Resume',()=>{TOURI=at;tourSampleOpen();tourRender();});
+  return;}
+ tourSaveState();TOURI=0;tourRender();}
+function tourSaveState(){TOURDRAG=null;window.__inkTourOn=true;
+ TOURSAVE={active:S.active===TOUR_SAMPLE_ID?null:S.active,solo:!!S.solo,showStyle:!!S.showStyle,rtab:S.rtab||'sugg',sideFold:!!S.sideFold,panelFold:!!S.panelFold,footFold:!!S.footFold};
+ try{closeAllOverlays();}catch(e){}tourOn=true;}
+function endTour(finished){
+ if(!tourOn)return;tourOn=false;window.__inkTourOn=false;
+ tourClearSpot();['inkTour','inkTourMenu'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove();});
+ tourCloseLayers();tourStage('');tourDropNotes();
+ const T=TOURSAVE||{};TOURSAVE=null;TOURDRAG=null;
+ try{if(!!S.solo!==T.solo)toggleSolo();if(!!S.showStyle!==T.showStyle)inkToggleStyle();setRTab(T.rtab||'sugg');
+  if(!!S.sideFold!==T.sideFold)foldSide();if(!!S.panelFold!==T.panelFold)foldPanel();if(!!S.footFold!==T.footFold)foldFoot();}catch(e){}
+ const had=tourDropSample();
+ if(had){const back=T.active&&S.docs.find(d=>d.id===T.active)?T.active:(S.docs[0]&&S.docs[0].id);if(back)openDoc(back);else{ed.value='';renderDocs();}}
+ if(finished)SV('tourAt',0);
+ if(!finished)toast('Tour paused. Start it again from ? or Studio, and it picks up where you left off.');}
+/* a sample or a note left by a closed app is removed at start */
+function tourBootClean(){try{if(tourDropSample()&&S.active===TOUR_SAMPLE_ID){S.active=S.docs[0]?S.docs[0].id:null;persist();}}catch(e){}
+ try{if((state.stickyNotes||[]).some(n=>/^sn-tour-/.test(n.id)))tourDropNotes();}catch(e){}}
+/* the first time the desk opens after an install or an update to 7.37,
+   Inkwell offers the tour once, quietly */
+function tourOffer(){
+ if(tourOn||LS('tourOffered'))return;SV('tourOffered',1);
+ const card=tourCard();tourTop(card,'Guided tour');
+ card.appendChild(tourEl('div','itTitle','Would you like a tour of the desk?'));
+ card.appendChild(tourEl('div','itBody','Twelve short chapters show every part of Inkwell, many with a live demonstration on a sample page. About ten minutes. You can stop at any card, and pick up later.'));
+ tourBtnRow(card,[tourLink('Not now',()=>{const e=document.getElementById('inkTour');if(e)e.remove();toast('The tour waits under ? and in Studio.');})],'Start the tour',()=>{startTour(true);});}
+document.addEventListener('keydown',e=>{if(!tourOn||!document.getElementById('inkTour'))return;
+ if(e.target&&(e.target.isContentEditable||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)))return;
+ if(e.key==='ArrowRight'){e.preventDefault();const b=document.querySelector('#inkTour .itNext');if(b)b.click();}
+ else if(e.key==='ArrowLeft'){e.preventDefault();const b=[...document.querySelectorAll('#inkTour .itLink')].find(x=>x.textContent==='Back');if(b)b.click();}});
+window.addEventListener('resize',()=>{if(tourOn){TOURDRAG=null;tourPlace();}});
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2600);}
 
@@ -11747,9 +12220,11 @@ function renderPatterns(){
    x:n.x, y:n.y, w:n.w, h:n.h};});
  });
  step('motion',function(){ if(LOW_POWER&&!LS('motion')){S.motion='calm';applyMotion();} });
+ step('tourclean',function(){ tourBootClean(); });
  step('render',function(){ renderDocs();renderPatterns();scan();setPill();setRTab(S.rtab||'sugg');renderStickyPins();saveState(); });
  step('fabdrag',function(){ wireScheFabDrag(); });
- step('footfold',function(){ if(S.footFold)document.body.classList.add('ftrFolded'); });
+ step('outline',function(){ S.outlineFold=!!LS('outlineFold'); if(S.outlineFold){S.outlineFold=false;foldOutline();} });
+ step('footfold',function(){ if(S.footFold)document.body.classList.add('ftrFolded'); setTimeout(inkFootTabPlace,300); });
  step('favicon',function(){ const lk=document.createElement('link');lk.rel='icon';lk.type='image/svg+xml';
   lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64));document.head.appendChild(lk); });
  step('pros',function(){
@@ -11772,7 +12247,7 @@ function renderPatterns(){
    setTimeout(function(){toast('No model loaded at start: the app closed while one was loading last time');},2500);return;}
   if(!PRO_ALLOWED&&S.proAuto){S.proAuto=false;SV('proAuto',false);}
   setTimeout(function(){ if(S.miniAuto&&!MINI)installMini(); if(S.proAuto&&!PRO)installPro(); },IS_TABLETAPP?6000:0); });
- step('door',function(){ if(S.door)showDoor();else doorTipCycle(); });
+ step('door',function(){ if(S.door)showDoor();else{doorTipCycle();setTimeout(function(){try{tourOffer();}catch(e){}},1600);} });
  step('watch',function(){
   setInterval(function(){ try{
    if(typeof _fSheets==='undefined'||!_fSheets.length)return;
@@ -11844,21 +12319,26 @@ finally{try{var _sb=document.getElementById('stBuild');if(_sb&&!/boot ok/.test(_
   }
   /* the six house papers, keyed by the daylight face */
   var DAY = {
-    '251,243,207': { p:'#3a3a1e', e:'#232312', n:'Primrose'  },
-    '220,239,255': { p:'#1f2a3d', e:'#131a26', n:'Inkwell'   },
-    '255,224,234': { p:'#38181f', e:'#240f14', n:'Claret'    },
-    '230,244,222': { p:'#1c2c1b', e:'#111b10', n:'Laurel'    },
-    '236,226,251': { p:'#271c33', e:'#181020', n:'Vespers'   },
-    '253,250,240': { p:'#33363a', e:'#1f2124', n:'Foolscap'  }
+    '239,223,177': { p:'#45361a', e:'#2c2210', n:'Ochre'    },
+    '223,229,230': { p:'#1f2a3d', e:'#131a26', n:'Lapis'    },
+    '239,222,218': { p:'#38181f', e:'#240f14', n:'Claret'   },
+    '227,230,212': { p:'#1c2c1b', e:'#111b10', n:'Laurel'   },
+    '232,224,230': { p:'#271c33', e:'#181020', n:'Vespers'  },
+    '248,242,228': { p:'#36322b', e:'#221f1b', n:'Foolscap' },
+    /* the faces before 7.37, for a note painted by an older build */
+    '251,243,207': { p:'#45361a', e:'#2c2210', n:'Ochre'    },
+    '220,239,255': { p:'#1f2a3d', e:'#131a26', n:'Lapis'    },
+    '255,224,234': { p:'#38181f', e:'#240f14', n:'Claret'   },
+    '230,244,222': { p:'#1c2c1b', e:'#111b10', n:'Laurel'   },
+    '236,226,251': { p:'#271c33', e:'#181020', n:'Vespers'  },
+    '253,250,240': { p:'#36322b', e:'#221f1b', n:'Foolscap' }
   };
   function paperName(css) {
     try { var rgb = rgbOf(css); if (!rgb) return ''; var k = DAY[rgb.join(',')];
       return k && k.n ? k.n : ''; } catch (e) { return ''; }
   }
-  var LIT_TOP  = 'rgba(255,246,228,0.10)';
-  var LIT_SIDE = 'rgba(255,246,228,0.05)';
-  var SEAT = '0 2px 0 rgba(0,0,0,0.60), 0 10px 16px rgba(0,0,0,0.50), ' +
-             '0 22px 38px rgba(0,0,0,0.38), 0 42px 66px rgba(0,0,0,0.28)';
+  /* 7.37: matte by night too, a hairline and a short shadow */
+  var SEAT = '0 0 0 1px rgba(255,246,228,0.07), 0 1px 1px rgba(0,0,0,0.55), 0 3px 6px rgba(0,0,0,0.35), 6px 12px 12px -9px rgba(0,0,0,0.75), -6px 12px 12px -9px rgba(0,0,0,0.75)';
   function rgbOf(css) {
     if (!css) return null;
     var m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i.exec(css);
@@ -11920,9 +12400,7 @@ finally{try{var _sb=document.getElementById('stBuild');if(_sb&&!/boot ok/.test(_
       card.__cdDayWall = card.style.getPropertyValue('box-shadow');
       card.style.setProperty('background', night.p, 'important');
       card.style.setProperty('background-image', 'none', 'important');
-      card.style.setProperty('box-shadow',
-        'inset 0 2px 0 ' + LIT_TOP + ', inset 2px 0 0 ' + LIT_SIDE + ', ' +
-        'inset -2px 0 0 ' + night.e + ', inset 0 -3px 0 ' + night.e + ', ' + SEAT, 'important');
+      card.style.setProperty('box-shadow', SEAT, 'important');
       card.__cdNightPaper = 1;
     } catch (e) {}
   }
@@ -11947,7 +12425,7 @@ finally{try{var _sb=document.getElementById('stBuild');if(_sb&&!/boot ok/.test(_
           els[i].style.setProperty('background', n.p, 'important');
           els[i].style.setProperty('box-shadow', 'inset 0 0 0 1px rgba(255,246,228,0.30)', 'important');
           if (n.n && !els[i].__cdDotNamed) { els[i].__cdDotNamed = 1;
-            try { els[i].title = n.n; } catch (e) {} }
+            try { els[i].title = n.n; els[i].setAttribute('aria-label', n.n); } catch (e) {} }
         } else if (els[i].__cdDotDay) {
           els[i].style.setProperty('background', els[i].__cdDotDay, '');
           els[i].style.removeProperty('box-shadow');

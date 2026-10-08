@@ -1,8 +1,8 @@
 // Every app icon from the app's own seal (inkwellSeal in Inkwell.html): the
-// official mark, brass by day, on its opaque cream field. Round icons keep a
+// official mark in wax (cream by day), on its opaque field. Round icons keep a
 // clear background; the square icons iOS requires opaque get a midnight-ink
 // ground. Run from the repository: node tools/icons/make_icons.mjs  (needs
-// Playwright and Chromium), then python3 tools/icons/pack_icons.py.
+// Playwright and Chromium; from a folder where the playwright package resolves), then python3 tools/icons/pack_icons.py.
 import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
