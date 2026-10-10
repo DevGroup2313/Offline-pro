@@ -1,7 +1,8 @@
 // Every app icon from the app's own seal (inkwellSeal in Inkwell.html): the
 // official mark in wax (cream by day), on its opaque field. Round icons keep a
 // clear background; the square icons iOS requires opaque (the iPhone and iPad
-// app, and the web app's home screen icon) get a plain white ground. Run from the repository: node tools/icons/make_icons.mjs  (needs
+// app, and the web app's home screen icon) get a plain ground in the
+// seal's own cream (#f2e7cc, its wax face as drawn). Run from the repository: node tools/icons/make_icons.mjs  (needs
 // Playwright and Chromium; from a folder where the playwright package resolves), then python3 tools/icons/pack_icons.py.
 import { chromium } from 'playwright';
 import fs from 'fs';
@@ -25,7 +26,7 @@ const SEALS = await page.evaluate((list) => { const o = {}; list.forEach(s => { 
 async function shot(name, size, opaque, scale) {
   // the seal's edge reaches 1.5% below its circle, so it is set with a small margin
   const s = Math.round(size * scale), off = Math.round((size - s) / 2) - Math.round(size * 0.006), seal = SEALS[s];
-  const ground = opaque ? 'background:#ffffff;' : 'background:transparent;';
+  const ground = opaque ? 'background:#f2e7cc;' : 'background:transparent;';
   await page.setViewportSize({ width: size, height: size });
   await page.setContent(`<html><body style="margin:0;width:${size}px;height:${size}px;overflow:hidden;${ground}"><div style="position:absolute;left:${Math.round((size - s) / 2)}px;top:${off}px;width:${s}px;height:${s}px">${seal}</div></body></html>`);
   await page.waitForTimeout(100);
