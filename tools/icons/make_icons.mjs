@@ -14,23 +14,23 @@ const page = await browser.newPage();
 await page.route('https://ink.local/**', r => r.fulfill({ status: 200, contentType: 'text/html', body: page_html }));
 await page.route('http://127.0.0.1:8317/**', r => r.abort());
 await page.goto('https://ink.local/Inkwell.html'); await page.waitForTimeout(1500);
-const seal = await page.evaluate(() => inkwellSeal(1000, false));
+// 7.38: the seal is struck into the wax and lit by an SVG lamp whose slopes are
+// set per pixel, so each icon's seal is drawn at that icon's own size, here,
+// before the page is replaced by the icon scenes
+const SHOTS = [];
+for (const [n, sz] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) SHOTS.push([`android_${n}.png`, sz, false, 0.94]);
+SHOTS.push(['web_192.png', 192, false, 0.94], ['web_512.png', 512, false, 0.94], ['apple_touch_180.png', 180, true, 0.82], ['ios_1024.png', 1024, true, 0.82], ['round_1024.png', 1024, false, 0.94], ['round_512.png', 512, false, 0.94]);
+for (const sz of [16, 24, 32, 48, 64, 128, 256]) SHOTS.push([`ico_${sz}.png`, sz, false, 0.96]);
+const SEALS = await page.evaluate((list) => { const o = {}; list.forEach(s => { o[s] = inkwellSeal(s, false); }); return o; }, [...new Set(SHOTS.map(x => Math.round(x[1] * x[3])))]);
 async function shot(name, size, opaque, scale) {
   // the seal's edge reaches 1.5% below its circle, so it is set with a small margin
-  const s = Math.round(size * scale), off = Math.round((size - s) / 2) - Math.round(size * 0.006);
+  const s = Math.round(size * scale), off = Math.round((size - s) / 2) - Math.round(size * 0.006), seal = SEALS[s];
   const ground = opaque ? 'background:radial-gradient(circle at 50% 38%,#24577a 0%,#17405a 55%,#0d2638 100%);' : 'background:transparent;';
   await page.setViewportSize({ width: size, height: size });
-  await page.setContent(`<html><body style="margin:0;width:${size}px;height:${size}px;overflow:hidden;${ground}"><div style="position:absolute;left:${Math.round((size - s) / 2)}px;top:${off}px;width:${s}px;height:${s}px">${seal.replace(/width="1000" height="1000"/, `width="${s}" height="${s}"`)}</div></body></html>`);
+  await page.setContent(`<html><body style="margin:0;width:${size}px;height:${size}px;overflow:hidden;${ground}"><div style="position:absolute;left:${Math.round((size - s) / 2)}px;top:${off}px;width:${s}px;height:${s}px">${seal}</div></body></html>`);
   await page.waitForTimeout(100);
   await page.screenshot({ path: path.join(OUT, name), omitBackground: !opaque });
 }
-for (const [n, sz] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) await shot(`android_${n}.png`, sz, false, 0.94);
-await shot('web_192.png', 192, false, 0.94);
-await shot('web_512.png', 512, false, 0.94);
-await shot('apple_touch_180.png', 180, true, 0.82);
-await shot('ios_1024.png', 1024, true, 0.82);
-await shot('round_1024.png', 1024, false, 0.94);
-await shot('round_512.png', 512, false, 0.94);
-for (const sz of [16, 24, 32, 48, 64, 128, 256]) await shot(`ico_${sz}.png`, sz, false, 0.96);
+for (const x of SHOTS) await shot(...x);
 await browser.close();
 console.log('icons rendered in', OUT);
