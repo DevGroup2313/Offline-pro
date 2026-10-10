@@ -1,0 +1,85 @@
+INKWELL v7.38: HANDOFF NOTES
+============================
+Date: 10 October 2026. Read INKWELL_HANDOFF_v7p36.txt and the earlier notes
+for everything before 7.37.
+
+Look for "v7.38" beside the date at the top. If it is not there, the device
+is not running 7.38.
+
+BEFORE YOU INSTALL
+------------------
+On every device: File, Export library, and keep the file. Each new build
+installs over the old one and keeps your documents, but uninstalling
+deletes them. Keep this repository PRIVATE: the Fire package holds the
+app's signing key.
+
+WHAT CAME IN 7.38
+-----------------
+1. The seals, pressed into the wax. The main seal keeps the pen in the
+   inkwell, navy by day and gold by night, with a gilded collar and base,
+   lit as if struck into the wax. Schedae's seal is a quill writing on
+   rolled parchment, on every Schedae button. The app icons are redrawn
+   from the new seal; on the iPhone and iPad home screen the seal sits on
+   its own cream (#f2e7cc).
+2. Schedae: "Send to Tabula" beside "Send to the page"; six note colours
+   that suit Inkwell by day and by night (Foolscap, the first, is the
+   default); every colour and every symbol button names itself on hover,
+   above the button, in the page's own colours.
+3. Right-click Paste works with text copied from other apps, through each
+   device's own clipboard (Mac and Windows app, Fire, iPhone and iPad).
+4. Clepsydra in Inkwell's colours; a 3D footer fold button; the guided
+   tour's buttons are 3D and animated; the heavy square shadow behind the
+   side symbol buttons is gone. Every sentence and title starts with a
+   capital; an interface text sweep fixed grammar, plurals and stray
+   debug words.
+5. Rewrite with a prompt works with no model. Every library prompt, and the
+   writer's own prompts where their words say what they ask:
+   - rule rewrites, each change listed with its reason; new modes:
+     Simplify, One idea per sentence, Active voice (plain past, the doer
+     named after "by"), Neutral, Hedged to the evidence; Correct only
+     (grammar rules and spelling, with each fix's lesson);
+   - a coach for what rules cannot write (Show, don't tell; Signpost;
+     Synthesis; Topic sentence; Method; Abstract; Rhythm; Expand; Warm;
+     Diplomatic; and others): it quotes the words, says how, gives a marked
+     example, and checks the writer's own try (Your turn, Check mine, Use
+     mine; the writer's version is recorded as typed by the writer).
+   src/lib/rewrite_core.js and src/lib/coach_core.js; tests in
+   tools/rewrite (230 and 38 checks).
+6. Another computer's model. A laptop (MacBook Pro, Windows) can use the
+   Mac mini's model over the Wi-Fi: Engine, "Another computer's model".
+   This computer's own model stands in whenever the Mac mini does not
+   answer. Tablets and phones: "Your computer's model". The shared port now
+   offers /api/ask too. Inkwell must be open on the Mac mini.
+7. The item on the Desktop. On the Mac it was the installer disk the .dmg
+   mounts; Inkwell now ejects each installer disk holding this version or
+   an older one when it opens from Applications (never a newer one, never
+   forced). On Windows the Desktop shortcut is optional and unticked.
+
+MEASURED IN 7.38
+----------------
+- Grammar (rules and spelling), held out: W&I report half 67.6% / 4.3% /
+  F0.5 0.173; CoNLL-2014 80.5% / 5.8% / 0.224; correct Wikipedia changed
+  3.5%. All unchanged from 7.37: the 7.38 rule fixes were to style notes.
+- The new rewrite modes on 600 Wikipedia sentences, every change read by
+  hand: Active voice changed 3, One idea per sentence 6, Simplify 22,
+  Neutral 5, Hedged 0; all keep the meaning after five faults were fixed.
+
+NOT TESTED ON YOUR DEVICES
+--------------------------
+Everything above was tested in a browser here (Chromium), by day, by
+night and at phone size, with stand-ins for the desktop window host, the
+Fire and iPad bridges, two servers on a pretend home network, and hdiutil.
+Nothing has been tried on the real Mac mini, MacBook Pro, Windows laptop,
+Fire tablet, iPhone or iPad. The iPhone clipboard code (Swift) and the
+disk ejecting on the Mac can only be proven on those devices.
+
+GITHUB ACTIONS
+--------------
+On 10 October no workflow could start on this repository: every push,
+and a manual start of the Android build that passed on 8 October, ended
+in "startup_failure" with no job created. The workflow files are valid
+and unchanged since then, so the cause is on GitHub's side for the
+account or repository (for example the Actions minutes for a private
+repository, or a billing hold). The failed run's page on GitHub says
+which. Until it is cleared, the .dmg, the Windows installer and the .ipa
+cannot be built; the Fire APK was built in the session instead.
