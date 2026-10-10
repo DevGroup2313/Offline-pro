@@ -728,6 +728,26 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 .altOpt .awhy{font-size:11px;color:var(--mut);font-style:italic;margin-bottom:8px}
 .altOpt .row button{flex:initial;padding:6px 15px;font-size:12px}
 .aempty{color:var(--mut);font-size:12.5px;padding:6px;font-style:italic;line-height:1.55}
+/* 7.38: what changed and why, under each offline version; the coach's cards */
+.altOpt .awhyl{margin:0 0 9px;padding:7px 9px;border-radius:9px;background:var(--card);border:1px dashed var(--line);font-size:11.5px;line-height:1.55;color:var(--ink)}
+.altOpt .awhyh,.coachOpt .cLab{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.altOpt .awhyh{margin-bottom:3px}
+.altOpt .awg{margin:3px 0}
+.altOpt .awr{color:var(--mut)}
+.altOpt .awhyl del,.coachOpt .cEx del{color:#b03a2e;text-decoration:line-through;opacity:.85}
+.altOpt .awhyl ins,.coachOpt .cEx ins{color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px;padding:0 2px}
+.altOpt .wq{font-style:italic}
+.coachOpt .cSay{font-size:12.5px;line-height:1.55;margin:6px 0 4px}
+.coachOpt.quiet .cSay{color:var(--mut);font-style:italic;margin-bottom:2px}
+.coachOpt .cHow,.coachOpt .cEx{font-size:12px;line-height:1.55;margin:5px 0}
+.coachOpt .cLab{margin-right:5px}
+.coachOpt .cTry{margin-top:8px}
+.coachOpt .cTry textarea{display:block;width:100%;box-sizing:border-box;font:13px/1.55 Georgia,serif;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin:4px 0 7px;resize:vertical}
+.coachOpt .row{gap:6px}
+.coachOpt .cFb{font-size:12px;line-height:1.5;margin-top:7px;color:var(--acc)}
+.coachOpt .cFb:empty{display:none}
+[data-theme=dark] .altOpt .awhyl del,[data-theme=dark] .coachOpt .cEx del,[data-theme=dark] .altOpt .at del{color:#f2a49b !important}
+[data-theme=dark] .altOpt .awhyl ins,[data-theme=dark] .coachOpt .cEx ins,[data-theme=dark] .altOpt .at ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
 /* (the bubble's names now come from the shared tooltip, inkTips) */
 #bubble .btones button{border-radius:999px}
 /* suggestion legend: the category dots with counts, quiet */
@@ -1552,6 +1572,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_FONTES_CORE@@
 @@LIB_SPELL_CORE@@
 @@LIB_REWRITE_CORE@@
+@@LIB_COACH_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -9744,13 +9765,13 @@ document.addEventListener('keydown',e=>{
 /* 7.37: the offline rewrites live in src/lib/rewrite_core.js (INKRW), with tests */
 const DEMORW=(typeof INKRW!=='undefined')?INKRW:{};
 let ALTSEL=null,ALTS=[],ALTMODE=false;
-function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];renderCards();}
+function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];renderCards();}
 async function improveAlternatives(){
  const sel=inkTargetText();
  if(sel.whole){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
  if(sel.lost||!sel.t){toast('Select the text again, please: the selection was lost.');return hideBubble();}
  const s=sel.s,e2=sel.e2,t=sel.t;ALTSEL={s,e2,t,before:ed.value.slice(Math.max(0,s-60),s)};
- ALTS=[];ALTMODE=true;
+ ALTS=[];COACH=[];ALTMODE=true;
  hideBubble();
  if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');
@@ -9758,8 +9779,8 @@ async function improveAlternatives(){
  renderAlts('Thinking through stronger versions beside your selection…');
  const OFFWHY={concise:'Tighter without losing meaning',professional:'Polished for the workplace',scholarly:'Formal doctoral register',casual:'Relaxed and warm',confident:'Decisive: hedged words removed',shorten:'Keeps the strongest sentences'};
  for(const m of Object.keys(OFFWHY)){
-  try{const out=DEMORW[m]?DEMORW[m](t):null;
-   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.'});}catch(e){}}
+  try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
+   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.',changes:r.changes,off:true});}catch(e){}}
  renderAlts('');
  if(inkSrv()){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
   [['concise','Local model · concise'],['scholarly','Local model · '+S.reg]].forEach(async mv=>{try{
@@ -9818,7 +9839,7 @@ function inkPromptPanel(){
  const chip=(label,instr)=>'<button class="bchip" title="'+esc(instr)+'" onclick="inkPromptRun(this.title)">'+esc(label)+'</button>';
  return '<div class="pmBox" style="margin:2px 0 12px">'
   +'<div style="font-size:12px;color:var(--mut);margin-bottom:4px">How should the selected passage sound?</div>'
-  +'<textarea id="pmIn" rows="3" style="width:100%;box-sizing:border-box;font:13px/1.5 inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" placeholder="e.g. Make it read like the opening of a DPhil chapter: confident, precise, one clear claim" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){inkPromptRun(this.value);}"></textarea>'
+  +'<textarea id="pmIn" rows="3" style="width:100%;box-sizing:border-box;font:13px/1.5 inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" placeholder="e.g. Make it read like the opening of a DPhil chapter: confident, precise, one clear claim" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){inkPromptRun(this.value);}">'+esc(ALTSEL&&ALTSEL.instr||'')+'</textarea>'
   +'<div class="row" style="gap:6px;margin:6px 0"><button class="primary" onclick="inkPromptRun(document.getElementById(\'pmIn\').value)">Rewrite ▸</button>'
   +'<button class="lkbtn" onclick="inkPromptKeep()">☆ Save this prompt</button></div>'
   +(mine.length?'<div style="font-size:11px;color:var(--mut);margin:8px 0 3px">Your prompts</div><div>'+mine.map((m,i)=>chip(m.label,m.instr)+'<button class="lkbtn" title="Remove" onclick="inkPromptDrop('+i+')">×</button>').join('')+'</div>':'')
@@ -9852,17 +9873,111 @@ window.inkScribaAI={
   throw new Error('none');},
  facts(src,out){return inkFactCheck(src,out);}
 };
+/* 7.38: every prompt does something on this device, with no model. Rules
+   rewrite where a rule keeps the meaning, and say what each change was and
+   why; the coach answers what only the writer can write: it points to the
+   words, says how in a line, and checks the writer's own try. A writing
+   model, where there is one, adds its version above them. */
+const PROMPT_PLANS={
+ 'Scholarly register':{rw:['scholarly'],coach:[]},
+ 'Sharpen the claim':{rw:['confident'],coach:['claim']},
+ 'Hedge to the evidence':{rw:['hedge'],coach:['absolutes']},
+ 'Synthesis, not a list':{rw:[],coach:['synthesis']},
+ 'Signpost the argument':{rw:[],coach:['signpost']},
+ 'Topic sentence':{rw:[],coach:['topic']},
+ 'Methodology: precise':{rw:[],coach:['method']},
+ 'Abstract style':{rw:['scholarly'],coach:['abstract']},
+ 'Vivid and concrete':{rw:[],coach:['vivid']},
+ 'Show, don\'t tell':{rw:[],coach:['show']},
+ 'Tighten the pacing':{rw:['concise'],coach:['rhythm']},
+ 'More lyrical':{rw:[],coach:['rhythm']},
+ 'Improve it':{rw:[['correct','concise']],coach:['long']},
+ 'Simplify':{rw:['simplify'],coach:['long']},
+ 'One idea per sentence':{rw:['split'],coach:['long']},
+ 'Active voice':{rw:['active'],coach:['passive']},
+ 'Confident':{rw:['confident'],coach:['claim']},
+ 'Diplomatic':{rw:[],coach:['diplomatic']},
+ 'Neutral':{rw:['neutral'],coach:['loaded']},
+ 'Warm':{rw:['casual'],coach:['warm']},
+ 'Shorter by a third':{rw:['shorten'],coach:['cut']},
+ 'Expand, no new facts':{rw:[],coach:['expand']},
+ 'Sound natural':{rw:[['correct','concise']],coach:[]},
+ 'Correct only':{rw:['correct'],coach:[]}};
+const OFF_LABEL={scholarly:'Scholarly',confident:'Confident',hedge:'Hedged',concise:'Concise',shorten:'Shorter',simplify:'Simpler',split:'One idea per sentence',active:'Active voice',neutral:'Neutral',casual:'Warmer',professional:'Professional',correct:'Corrected'};
+let COACH=[];
+function inkPromptPlan(instr){
+ for(const g of PROMPT_LIBRARY)for(const x of g[1])if(x[1]===instr&&PROMPT_PLANS[x[0]])return Object.assign({known:true},PROMPT_PLANS[x[0]]);
+ const p=(typeof INKCOACH!=='undefined')?INKCOACH.plan(instr):{rw:[],coach:[],known:false};
+ return {rw:p.rw.slice(0,3),coach:p.coach.slice(0,2),known:p.known};}
+/* "Correct only", offline: the grammar rules and the spelling checker, and
+   nothing of style or clarity */
+function inkCorrectOnly(t){
+ let es=[];
+ try{es=inkRuleGate(t,ruleEdits(t));Array.prototype.push.apply(es,inkSpellEdits(t,es));}catch(e){es=[];}
+ es=es.filter(e=>typeof e.fix==='string'&&e.end>e.start&&t.slice(e.start,e.end)!==e.fix&&(e.cat==='g'||/^Spelling/.test(e.why||''))).sort((a,b)=>a.start-b.start);
+ const keep=[];let last=-1;for(const e of es)if(e.start>=last){keep.push(e);last=e.end;}
+ let out=t;keep.slice().reverse().forEach(e=>{out=out.slice(0,e.start)+e.fix+out.slice(e.end);});
+ const lesson=w=>{const L=LESSONS[w];const first=L&&String(L[0]).split(/(?:[.!?])\s/)[0];return w+(first?': '+first.replace(/[.!?]$/,'')+'.':'.');};
+ return {text:out,changes:keep.map(e=>({from:t.slice(e.start,e.end),to:e.fix,why:'correct',whyText:lesson(String(e.why||'Grammar').replace(/^Spelling: not in the dictionary$/,'Spelling'))}))};}
+function inkOfflineVersions(plan,t){
+ const out=[],seen={};
+ (plan.rw||[]).forEach(step=>{
+  const steps=[].concat(step);let text=t,changes=[];
+  try{for(const m of steps){const r=m==='correct'?inkCorrectOnly(text):(DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,text):null);if(!r)continue;changes=changes.concat(r.changes);text=r.text;}}catch(e){return;}
+  if(!text.trim()||text.trim()===t.trim()||seen[text])return;seen[text]=1;
+  out.push({kind:steps.map(m=>OFF_LABEL[m]||m).join(' + ')+' · offline',text:text,why:'Instant, on this device: rules, no model.',diff:true,changes:changes,off:true});});
+ return out;}
+function inkOfflineNote(plan){
+ const v=ALTS.filter(a=>a.off).length,c=COACH.filter(k=>k.hits&&k.hits.length).length;
+ if(!plan.known)return 'Offline, Inkwell rewrites by rules and coaches the rest. This prompt asks for writing only a model can do (⚙ Engine). Every prompt in the library works offline.';
+ if(!v&&!c)return 'The rules found nothing to change for this prompt, and the coach found nothing to point out: the passage may already do what it asks.';
+ return (v?(v===1?'One version':v+' versions')+' by rules':'')+(v&&c?', and notes':'')+(c&&!v?'Notes':'')+(c?' from the coach':'')+'. All on this device. A writing model (⚙ Engine) would add its own version.';}
 async function inkPromptRun(instr){
  instr=String(instr||'').trim();if(!instr)return toast('Write a prompt, or pick one below');
  if(!ALTSEL||!ALTSEL.t)return toast('Select the passage again, please');
- const box=document.getElementById('pmIn');if(box&&!box.value.trim())box.value=instr;
- const hist=inkPromptsMine();
- if(!S.connected&&!PRO){renderAlts('Rewriting with a prompt needs a writing model: on this device, '+(inkNative()?'start the tablet\u2019s own model (⚙ Engine), or connect to your laptop\u2019s':IS_TABLETAPP?'use Apple\u2019s on-device model where the iPhone or iPad has it, or connect to your laptop\u2019s model (⚙ Engine)':'install the writing model (⚙ Engine)')+'. The rules engine can correct, but it cannot rewrite to a brief.');return;}
- const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');
+ ALTSEL.instr=instr;
+ /* offline first: instant, on every device */
+ ALTS=ALTS.filter(a=>!a.off&&!a.mine);COACH=[];
+ const plan=inkPromptPlan(instr);
+ inkOfflineVersions(plan,ALTSEL.t).forEach(a=>ALTS.push(a));
+ (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
+ const toResults=()=>setTimeout(()=>{const f=document.querySelector('#cards .altOpt');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}},60);
+ if(!S.connected&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
+ const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
  try{const r=await inkWrite(instr,ALTSEL.t);
   if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
   renderAlts(ALTS.length>n0?'':'The model returned the passage unchanged.');}
- catch(e){renderAlts('The model did not answer: '+(e&&e.message||e));}}
+ catch(e){renderAlts('The model did not answer: '+(e&&e.message||e)+'. The offline versions still work.');}}
+/* what changed in an offline version, grouped by why: "Shorter, and it
+   means the same: in order to → to · due to the fact that → because" */
+function inkWhyList(a){
+ const cs=(a.changes||[]).filter(c=>c&&c.from!==c.to);if(!cs.length)return '';
+ const groups=[],at={};
+ cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||'A change the rules make.';if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
+ const item=c=>{const f=String(c.from).trim(),t=String(c.to).trim();
+  if(f.length>44||t.length>44)return '<span class="wq">“'+esc(f.split(/\s+/).slice(0,5).join(' '))+'…”</span>';
+  return t?'<del>'+esc(f)+'</del> → <ins>'+esc(t)+'</ins>':'<del>'+esc(f)+'</del> taken out';};
+ return '<div class="awhyl"><div class="awhyh">What changed, and why</div>'+groups.map(g=>'<div class="awg"><span class="awr">'+esc(g.why)+'</span> '+g.items.slice(0,4).map(item).join(' · ')+(g.items.length>4?' · and '+(g.items.length-4)+' more':'')+'</div>').join('')+'</div>';}
+/* the coach's card: what it noticed, how, an example, and the writer's turn */
+function inkCoachCard(k,i){
+ const quiet=!k.hits||!k.hits.length;
+ const ex=k.ex&&k.ex[0]?'<div class="cEx"><span class="cLab">For example</span>'+(k.ex[1]?'<del>'+esc(k.ex[0])+'</del> → <ins>'+esc(k.ex[1])+'</ins>':esc(k.ex[0]))+'</div>':'';
+ return '<div class="altOpt coachOpt'+(quiet?' quiet':'')+'"><span class="ak">🧭 Coach · '+esc(k.title)+'</span>'
+  +'<div class="cSay">'+esc(k.say)+'</div>'
+  +(quiet?'':'<div class="cHow"><span class="cLab">How</span>'+esc(k.how)+'</div>'+ex
+   +'<div class="cTry"><span class="cLab">Your turn</span><textarea id="cTry'+i+'" rows="3" aria-label="Your version" oninput="if(COACH['+i+'])COACH['+i+'].mine=this.value">'+esc(k.mine!=null?k.mine:(k.on||''))+'</textarea>'
+   +'<div class="row"><button onclick="inkCoachCheck('+i+')">Check mine</button><button class="primary" onclick="inkCoachUse('+i+')">Use mine ▸</button></div>'
+   +'<div class="cFb" id="cFb'+i+'" aria-live="polite">'+esc(k.fb||'')+'</div></div>')
+  +'</div>';}
+function inkCoachCheck(i){const k=COACH[i];if(!k)return;const el=document.getElementById('cTry'+i),v=el?el.value:'';
+ k.mine=v;k.fb=(String(v).trim()===String(k.on||'').trim())?'This is still the sentence as it was. Change it, then check.':INKCOACH.check(k.id,k.on||'',v);
+ const fb=document.getElementById('cFb'+i);if(fb)fb.textContent=k.fb;}
+function inkCoachUse(i){const k=COACH[i];if(!k||!ALTSEL)return;const el=document.getElementById('cTry'+i),v=(el?el.value:'').trim();
+ if(!v)return toast('Write your version first.');
+ const at=k.on?ALTSEL.t.indexOf(k.on):-1;
+ if(at<0)return toast('That sentence is no longer in the selection. Select the passage again, please.');
+ ALTS.push({kind:'Your version',text:ALTSEL.t.slice(0,at)+v+ALTSEL.t.slice(at+k.on.length),why:'Your own words.',diff:true,mine:true});
+ useAlt(ALTS.length-1);}
 /* the changes between the passage and a version, marked word by word */
 function inkDiffHTML(a,b){
  try{const A=GECFILTER.words(a),B=GECFILTER.words(b);if(A.length*B.length>400000)return esc(b);
@@ -9872,7 +9987,10 @@ function inkDiffHTML(a,b){
    /* 7.38: a word taken out keeps its space, so "does it really?" shows as
       "does it [really]?" and never as "does itreally?" */
    const gap=del&&A[h.i0].s>0&&/\s/.test(a[A[h.i0].s-1])&&!/\s$/.test(b.slice(0,h.j0<B.length?B[h.j0].s:b.length))?' ':'';
-   if(del)out+=gap+'<del style="color:#b03a2e;text-decoration:line-through;opacity:.75">'+esc(del)+'</del>'+(ins?' ':'');
+   /* and a word taken out with nothing in its place keeps the space after it,
+      so "is very clear" shows as "is [very] clear", not "is [very]clear" */
+   const nx=b.charAt(h.j0<B.length?B[h.j0].s:b.length),tail=del&&!ins&&/\w/.test(nx)&&/\s$/.test(out+gap)?' ':'';
+   if(del)out+=gap+'<del style="color:#b03a2e;text-decoration:line-through;opacity:.75">'+esc(del)+'</del>'+(ins?' ':tail);
    if(ins)out+='<ins style="color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px">'+esc(ins)+'</ins>';
    bi=h.j1>h.j0?B[h.j1-1].e:(h.j0<B.length?B[h.j0].s:b.length);}
   return out+esc(b.slice(bi));}catch(e){return esc(b);}}
@@ -9903,12 +10021,14 @@ function renderAlts(status){
  const c=document.getElementById('cards');
  let html='<div class="altHead">'+(ALTSEL&&ALTSEL.prompt?'✍ Rewrite with a prompt':'✨ Alternatives')+'<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
  if(ALTSEL&&ALTSEL.prompt)html+=inkPromptPanel();
- if(!ALTS.length)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
- else html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
+ const cards=ALTS.length+COACH.length;
+ if(!cards)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
+ else{html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
   '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
-  inkFactNote(a)+
-  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('');
- html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+(status||((ALTS.length===1?'One alternative':ALTS.length+' alternatives')+'. Your suggestions wait under ‹ Back.'))+'</div>';
+  inkWhyList(a)+inkFactNote(a)+
+  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('')
+  +COACH.map(inkCoachCard).join('');
+  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+esc(status||((ALTS.length?(ALTS.length===1?'One version':ALTS.length+' versions'):'')+(ALTS.length&&COACH.length?', and notes':'')+(COACH.length&&!ALTS.length?'Notes':'')+(COACH.length?' from the coach':'')+'. Your suggestions wait under ‹ Back.'))+'</div>';}
  c.innerHTML=html;}
 function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
 function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
@@ -9916,7 +10036,7 @@ function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
   +(f.lost.length?'it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '):'')+(f.lost.length&&f.added.length?'; ':'')
   +(f.added.length?'it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain':'')+'.</div>';}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
- pushUndo();inkAuthMark(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f');
+ pushUndo();inkAuthMark(a.mine?'t':(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f'));
  let text=a.text;
  if(ALTSEL.s===ALTSEL.e2){
   /* 7.30: an insertion (a draft) keeps a proper gap from its neighbours: a new
@@ -9991,7 +10111,7 @@ function inkSafeReplace(s,e,orig,repl,before){
  ed.value=t.slice(0,s)+repl+t.slice(e);
  return {s:s,e:s+repl.length};}
 function inkAltsOpen(sel,status){
- ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];ALTMODE=true;
+ ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];COACH=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts(status);
@@ -10007,8 +10127,8 @@ function rewrite(mode){
  function done(){if(--pending<=0&&!ALTS.length){
   renderAlts(S.connected||PRO?'The engine returned no change for this text.'
    :(DEMORW[mode]?'This text is already tight for that style.':label+' needs a writing model: start the server (⚙ Engine) or install the Pro model.'));}}
- try{const out=DEMORW[mode]?DEMORW[mode](sel.t):null;
-  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine'});}catch(e){}
+ try{const r=DEMORW.explain&&DEMORW[mode]?DEMORW.explain(mode,sel.t):null,out=r&&r.text;
+  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine',changes:r.changes,off:true});}catch(e){}
  renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
  const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
  if(inkSrv()){pending++;

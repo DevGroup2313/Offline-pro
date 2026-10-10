@@ -224,3 +224,45 @@ The offline rewrites (Rewrite: Concise, Shorter, Professional, Scholarly,
 Casual, Confident) were rewritten to keep meaning and grammar, with 143 test
 cases (tools/rewrite/cases.js) and a reading of every change made to 600
 Wikipedia sentences and the writer's thesis.
+
+## 7.38: every prompt works offline, and says why
+
+Before 7.38, "Rewrite with a prompt" needed a writing model: with none, it
+said so and did nothing. Now every prompt in the library, and the writer's
+own prompts where their words say what they ask, does something on the
+device, with no model:
+
+- Rule rewrites, each change listed with its reason ("Shorter, and it means
+  the same: in order to → to"). New modes in `src/lib/rewrite_core.js`:
+  Simplify, One idea per sentence, Active voice (the plain past only, where
+  the one who acts is named after "by"), Neutral, and Hedged to the evidence.
+  "Correct only" applies the grammar rules and the spelling checker, with the
+  lesson for each fix.
+- A coach (`src/lib/coach_core.js`) for what rules cannot write: Show, don't
+  tell; Vivid and concrete; Signpost the argument; Topic sentence; Synthesis,
+  not a list; Methodology; Abstract style; Rhythm; Expand; Warm; Diplomatic;
+  absolute claims; softeners; long sentences; actions with no doer; judging
+  words; Shorter by a third. It quotes the words it found, says how in one
+  line, gives a marked example, and checks the writer's own try ("Your turn",
+  "Check mine", "Use mine").
+- A prompt Inkwell cannot answer offline ("Translate this into Welsh") is
+  told so plainly.
+
+Tests: `node tools/rewrite/run.js` (230 cases, traps included) and
+`node tools/rewrite/coach_test.js` (38). Every change the new modes make to
+the 600 Wikipedia sentences was read by hand; the first reading found five
+faults (a fragment after a semicolon, a split inside brackets, a verb or a
+"which" left on the wrong noun by Active voice), all fixed and kept as
+tests. The older modes no longer reword a quotation that runs across
+sentences ("Kramnik said, "A proper analysis must take into
+consideration..."); otherwise they give exactly what they gave before.
+
+The 7.38 rule fixes, measured on the held-out sets (rules and spelling):
+
+| Set | 7.37: P / R / F0.5 | 7.38: P / R / F0.5 |
+|---|---|---|
+| W&I report half | 67.6% / 4.3% / 0.173 | 67.6% / 4.3% / 0.173 |
+| CoNLL-2014 | 80.5% / 5.8% / 0.224 | 80.5% / 5.8% / 0.224 |
+| Correct Wikipedia changed | 3.5% | 3.5% |
+
+The fixes were to style and clarity notes; correctness is unchanged.

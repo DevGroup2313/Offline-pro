@@ -1,5 +1,7 @@
 /* Inkwell's offline rewrites: Concise, Shorter, Professional, Scholarly,
-   Casual and Confident, by rules, on this device. 7.37 rewrote them after a
+   Casual and Confident, by rules, on this device; from 7.38 also Simplify,
+   One idea per sentence (split), Active voice, Neutral and Hedged to the
+   evidence, each change with the reason for it (explain). 7.37 rewrote them after a
    test found edits that changed the meaning or broke the grammar ("used to"
    became "employed to", "talks about" became "discusss", "a very
    interesting" became "a interesting", "In order to understand the data, it
@@ -12,11 +14,13 @@
   /* ---- helpers ---- */
   const DET = '(?:the|a|an|this|that|these|those|its|their|our|my|your|his|her|each|every|any|no|some)';
   const VOWEL_SOUND = /^(?:[aeio]|u(?!ni|se|su|ra|ro|ti|ku|bi)|hour|honest|honou?r|heir|8|11|18)/i;
-  /* outside quotation marks only */
-  function outsideQuotes(t, fn) {
-    const parts = t.split(/("[^"\n]*"|“[^”\n]*”)/);
-    return parts.map((p, i) => (i % 2 ? p : fn(p))).join('');
-  }
+  /* 7.38: every change can be explained. While LOG is a list, each rule that
+     changes the text records what it changed and the kind of change (WHY),
+     so the writer is taught what was removed and why, not only shown it. */
+  let LOG = null, WHY = '';
+  function note(from, to) { if (LOG && from !== to) LOG.push({ from: from, to: to, why: WHY }); }
+  /* a rule with its own kind of change, where it differs from its list's */
+  function tag(rule, why) { return [rule[0], rule[1], why]; }
   /* a match inside a title ("Wake Me When I'm Dead", "Talk About Town") or a
      name is left alone: the words around it are capitalised mid-sentence */
   function inTitle(str, off, len) {
@@ -41,16 +45,36 @@
       return typeof rep === 'function' ? rep.apply(null, a) : rep;
     }];
   }
-  function apply(t, list) {
-    for (const [re, rep] of list) {
+  function apply(t, list, why) {
+    const was = WHY;
+    for (const [re, rep, own] of list) {
+      WHY = own || why || was;
       t = t.replace(re, function () {
         const a = arguments, m = a[0], off = a[a.length - 2], str = a[a.length - 1];
         if (typeof off === 'number' && inTitle(str, off, m.length)) return m;
-        if (typeof rep === 'function') return rep.apply(null, a);
-        const groups = Array.prototype.slice.call(a, 1, a.length - 2);
-        return rep.replace(/\$(\d)/g, (x, n) => groups[+n - 1] == null ? '' : groups[+n - 1]);
+        let r;
+        if (typeof rep === 'function') r = rep.apply(null, a);
+        else {
+          const groups = Array.prototype.slice.call(a, 1, a.length - 2);
+          r = rep.replace(/\$(\d)/g, (x, n) => groups[+n - 1] == null ? '' : groups[+n - 1]);
+        }
+        note(m, r);
+        return r;
       });
     }
+    WHY = was;
+    return t;
+  }
+  /* a replace that is recorded, for the rules written as plain replaces */
+  function swap(t, re, r, why) {
+    const was = WHY; WHY = why;
+    t = t.replace(re, function () {
+      const a = arguments, m = a[0];
+      const out = typeof r === 'function' ? r.apply(null, a) : r.replace(/\$(\d)/g, (x, n) => a[+n] == null ? '' : a[+n]);
+      note(m, out);
+      return out;
+    });
+    WHY = was;
     return t;
   }
   /* keep the capital of a replaced phrase that began a sentence */
@@ -158,7 +182,7 @@
     [/\bby means of\b/gi, keepCase('by')],
     /* a sentence that opens with a filler: only at the start of a sentence, so
        no introductory phrase is left hanging on the wrong subject */
-    atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say,?|it goes without saying that)\\s*')
+    tag(atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say,?|it goes without saying that)\\s*'), 'filler')
   ].concat(forms([
     [['make a decision', 'makes a decision', 'made a decision', 'making a decision'], ['decide', 'decides', 'decided', 'deciding']],
     [['come to (?:a|the) conclusion', 'comes to (?:a|the) conclusion', 'came to (?:a|the) conclusion', 'coming to (?:a|the) conclusion'], ['conclude', 'concludes', 'concluded', 'concluding']],
@@ -175,23 +199,24 @@
 
   /* ---- intensifiers: removed only where nothing else depends on them ---- */
   function dropIntensifiers(t) {
-    t = t.replace(/\b(very|really|extremely)(?:,?\s+\1\b)+/gi, '$1');
+    t = swap(t, /\b(very|really|extremely)(?:,?\s+\1\b)+/gi, '$1', 'intensifier');
     /* "the very end", "not really", "really?" keep their word */
-    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her'], '')]);
-    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', "n't", 'n’t'], '')]);
+    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her'], '')], 'intensifier');
+    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', "n't", 'n’t'], '')], 'intensifier');
     return t;
   }
   /* ---- hedges: only words that soften and carry no fact ---- */
   function dropHedges(t) {
-    t = t.replace(/,\s*(?:I think|I believe|I feel|in my opinion|perhaps|arguably|it seems|more or less|to some extent)\s*,/gi, '');
-    t = t.replace(/,\s*(?:I think|I believe|I feel) (?:that )?(?=[a-z])/g, ', ');
+    const H = 'hedge';
+    t = swap(t, /,\s*(?:I think|I believe|I feel|in my opinion|perhaps|arguably|it seems|more or less|to some extent)\s*,/gi, '', H);
+    t = swap(t, /,\s*(?:I think|I believe|I feel) (?:that )?(?=[a-z])/g, ', ', H);
     t = apply(t, [
       atStart('(?:I think that|I think|I believe that|I believe|I feel that|I would say that|I would argue that|in my opinion,?|it seems that|it appears that|it could be argued that|perhaps|maybe|arguably|possibly)\\s+')
-    ]);
-    t = t.replace(/\b(?:perhaps|arguably|presumably|somewhat) (?=[a-z])/g, '');
-    t = t.replace(/\s*\b(?:more or less|to some extent)\b/gi, '');
+    ], H);
+    t = swap(t, /\b(?:perhaps|arguably|presumably|somewhat) (?=[a-z])/g, '', H);
+    t = swap(t, /\s*\b(?:more or less|to some extent)\b/gi, '', H);
     /* "sort of" and "kind of" only where they soften a verb or an adjective */
-    t = t.replace(/\b(is|are|was|were|be|been|it's|I|we|you|they|he|she|feel|felt|seems|seemed|looks|looked) (?:sort|kind) of (?=[a-z])/gi, '$1 ');
+    t = swap(t, /\b(is|are|was|were|be|been|it's|I|we|you|they|he|she|feel|felt|seems|seemed|looks|looked) (?:sort|kind) of (?=[a-z])/gi, '$1 ', H);
     return t;
   }
   /* ---- contractions written out, for formal registers ---- */
@@ -264,7 +289,7 @@
     [/\bpurchased\b/gi, keepCase('bought')],
     [/\bapproximately\b/gi, keepCase('about')],
     [/\bassist(s|ed|ing)?\b/gi, (m, e) => keepCase('help' + (e || ''))(m)],
-    [/\bdemonstrate(s|d)?\b/gi, (m, e) => keepCase('show' + ({ s: 's', d: 'ed' }[e] || ''))(m)],
+    [/\bdemonstrate(s)?\b/gi, (m, e) => keepCase('show' + (e ? 's' : ''))(m)], [/\bdemonstrated\b/gi, pastOr('shown', 'showed')],
     [/\bsubsequently\b/gi, keepCase('later')],
     [/\bin addition to\b/gi, keepCase('besides')],
     [/(^|[.!?]\s+)In addition,\s*/g, '$1Also, '],
@@ -272,22 +297,258 @@
     [/,\s*however,\s*/gi, ', though, ']
   ];
 
+  /* ---- 7.38: a past participle where the grammar needs one ---- */
+  const AUX = /\b(?:has|have|had|having|is|are|was|were|be|been|being|am|get|gets|got)\s+(?:(?:not|also|already|clearly|repeatedly|widely|often|first|recently|previously|never|since|now|long|well)\s+)?$/i;
+  const DET_END = /\b(?:the|a|an|this|that|these|those|its|their|our|his|her|my|your)\s+$/i;
+  /* "demonstrated" becomes "shown" after has, been or was, "showed" as a past
+     verb, and stays as it is where it describes a noun ("the demonstrated
+     effect"), which a plainer word would not fit */
+  function pastOr(part, past) {
+    return function () {
+      const a = arguments, m = a[0], off = a[a.length - 2], str = a[a.length - 1];
+      const pre = typeof off === 'number' ? str.slice(Math.max(0, off - 30), off) : '';
+      if (DET_END.test(pre)) return m;
+      return keepCase(AUX.test(pre) ? part : past)(m);
+    };
+  }
+  /* ---- plainer words with the same meaning, for Simplify ---- */
+  const PLAIN = [
+    [/\butili[sz](e|es|ed|ing)\b/gi, (m, e) => keepCase('us' + e.toLowerCase())(m)],
+    [/\butili[sz]ation\b/gi, keepCase('use')],
+    [/\bcommence(s)?\b/gi, (m, s) => keepCase('start' + (s ? 's' : ''))(m)],
+    [/\bcommenced\b/gi, keepCase('started')], [/\bcommencing\b/gi, keepCase('starting')],
+    [/\bdemonstrate(s)?\b/gi, (m, s) => keepCase('show' + (s ? 's' : ''))(m)],
+    [/\bdemonstrated\b/gi, pastOr('shown', 'showed')], [/\bdemonstrating\b/gi, keepCase('showing')],
+    [/\bassist(s|ed|ing)?\b/gi, (m, e) => keepCase('help' + (e || ''))(m)],
+    [/\bascertain(s|ed|ing)?\b/gi, (m, e) => keepCase({ s: 'finds out', ed: 'found out', ing: 'finding out' }[e] || 'find out')(m)],
+    [/\bapproximately\b/gi, keepCase('about')],
+    [/\bsubsequently\b/gi, keepCase('later')],
+    [/\bnumerous\b/gi, keepCase('many')],
+    [/\bsufficient\b/gi, keepCase('enough')],
+    [/\bindividuals\b(?!['’])/gi, keepCase('people')],
+    [/\bin excess of\b/gi, keepCase('more than')],
+    [/\bwith the result that\b/gi, keepCase('so')],
+    [/\bin conjunction with\b/gi, keepCase('together with')],
+    [/\bon the grounds that\b/gi, keepCase('because')],
+    [/(^|[.!?]\s+)Furthermore,\s*/g, '$1Also, '],
+    [/(^|[.!?]\s+)Nevertheless,\s*/g, '$1Still, ']
+  ];
+  /* ---- one idea per sentence ---- */
+  const SUBJ = '(?:it|they|we|he|she|this|these|those|there|i|you|the|a|an|its|their|our|his|her|my|your|such|many|most|some|each|both|one|no|[A-Z][\\w’\'-]*)';
+  const LINKW = '(?:however|therefore|thus|moreover|indeed|consequently|instead|otherwise|nevertheless|meanwhile|similarly|likewise|hence|accordingly|in contrast|as a result|for example|for instance)';
+  const SUBORD = /\b(?:that|which|who|whom|whose|whether|if|because|although|though|while|when|whenever|since|unless|until|as|after|before|where|whereas|so that)\b/i;
+  const nWords = s => (s.match(/[A-Za-z0-9’'-]+/g) || []).length;
+  const FINITE = /\b(?:is|are|was|were|be|been|has|have|had|will|would|can|could|may|might|must|shall|should|do|does|did|[a-z]{2,}ed|ran|went|came|saw|took|gave|made|found|said|told|thought|knew|got|left|kept|held|brought|began|became|wrote|stood|felt|met|led|sent|built|lost|paid|fell|rose|grew|won|chose|spoke|broke|drove|ate|drew|threw|flew|sat|lay|hid|shook|sold|spent|taught|caught|fought|sought|bought|meant|heard|struck|hung|rang|sang|swam|wore|tore|woke|forgot|understood|put|set|cut|hit|let|read)\b/i;
+  const AUXW = /^(?:is|are|was|were|has|have|had|will|would|can|could|may|might|must|should|shall|does|did|do)$/i;
+  const cap = x => x[0].toUpperCase() + x.slice(1);
+  const balanced = x => (x.split('(').length === x.split(')').length) && (x.split('[').length === x.split(']').length);
+  /* the clause after ", and he" or ", and the results": a verb must follow its
+     subject at once, or it is a list of things and not a second sentence */
+  function clauseAfter(subj, b) {
+    const w = b.split(/\s+/).slice(0, 5);
+    if (/^the$/i.test(subj)) {
+      for (let i = 1; i < w.length; i++) { if (/^(?:who|which|that|whose|of)$/i.test(w[i]) && i < 2) return false; if (AUXW.test(w[i])) return i <= 3; }
+      return false;
+    }
+    const v = /^\w+ly$/i.test(w[0]) ? w[1] : w[0];
+    return !!v && (AUXW.test(v) || /^[a-z]{2,}(?:ed|s)$/i.test(v));
+  }
+  function splitIdeas(t) {
+    const W = WHY; WHY = 'split';
+    /* a semicolon joining two clauses (never one in a list of several) */
+    if ((t.match(/;/g) || []).length === 1) {
+      t = t.replace(new RegExp('^([^;]*?[\\w"”’)])\\s*;\\s+((?:' + SUBJ + '\\b|' + LINKW + ',)[^;]*)$'), (m, a, b) => {
+        if (nWords(a) < 4 || nWords(b) < 4 || !balanced(a) || !FINITE.test(a) || !FINITE.test(b)) return m;
+        const out = a + '. ' + cap(b); note(m, out); return out;
+      });
+    }
+    /* ", and it ..." after a plain main clause */
+    t = t.replace(/^([^,;:]+?), and (it|they|we|he|she|there|I|the) ([\s\S]+)$/, (m, a, s, b) => {
+      if (nWords(a) < 4 || nWords(b) < 3 || SUBORD.test(a) || !balanced(a) || !FINITE.test(a) || !clauseAfter(s, b)) return m;
+      const out = a + '. ' + cap(s) + ' ' + b; note(m, out); return out;
+    });
+    WHY = W;
+    return t;
+  }
+  /* ---- the active voice, for the plain past: "The samples were analysed by
+     the team" becomes "The team analysed the samples". Only where the one
+     who acts is named after "by", the sentence opens with what was acted on,
+     and every word's role is certain; everything else is left as written ---- */
+  const IRREG = {
+    written: 'wrote', rewritten: 'rewrote', taken: 'took', undertaken: 'undertook', mistaken: 'mistook', given: 'gave', forgiven: 'forgave',
+    shown: 'showed', seen: 'saw', foreseen: 'foresaw', overseen: 'oversaw', done: 'did', known: 'knew', made: 'made', found: 'found',
+    held: 'held', built: 'built', sent: 'sent', spent: 'spent', lent: 'lent', told: 'told', sold: 'sold', said: 'said', brought: 'brought',
+    thought: 'thought', bought: 'bought', caught: 'caught', taught: 'taught', sought: 'sought', fought: 'fought', led: 'led', misled: 'misled',
+    fed: 'fed', read: 'read', put: 'put', set: 'set', cut: 'cut', hit: 'hit', hurt: 'hurt', shut: 'shut', run: 'ran', begun: 'began',
+    chosen: 'chose', driven: 'drove', eaten: 'ate', forgotten: 'forgot', hidden: 'hid', spoken: 'spoke', stolen: 'stole', broken: 'broke',
+    drawn: 'drew', withdrawn: 'withdrew', grown: 'grew', thrown: 'threw', blown: 'blew', flown: 'flew', won: 'won', left: 'left', kept: 'kept',
+    lost: 'lost', paid: 'paid', laid: 'laid', understood: 'understood', felt: 'felt', met: 'met', heard: 'heard', beaten: 'beat', bitten: 'bit',
+    frozen: 'froze', shaken: 'shook', sung: 'sang', rung: 'rang', worn: 'wore', torn: 'tore', sworn: 'swore', woken: 'woke', ridden: 'rode',
+    struck: 'struck', stung: 'stung', swept: 'swept', wept: 'wept', bound: 'bound', ground: 'ground', wound: 'wound', dug: 'dug', spun: 'spun',
+    upheld: 'upheld', withheld: 'withheld', overcome: 'overcame', overtaken: 'overtook', overthrown: 'overthrew'
+  };
+  /* "divided by two", "delayed by an hour", "reduced by half": measures, not doers */
+  const VBX = /^(?:divided|multiplied|increased|decreased|reduced|raised|lowered|extended|shortened|lengthened|widened|narrowed|delayed|postponed|offset|exceeded|measured|separated|rounded|scaled|adjusted|inflated|deflated|weighted|ranked|sorted|grouped|indexed|followed)$/;
+  /* nouns that end in -ing, which are doers and not "by using" */
+  const INGN = /^(?:lightning|kings?|things?|mornings?|evenings?|spring|strings?|wings?|ceilings?|siblings?|offspring|vikings?|Beijing|Reading|Ealing|Kipling|Sterling|Browning|Fielding|Golding|Stirling)$/i;
+  /* "found by the river", "parked by the house": a place, not a doer */
+  const LOCN = /^(?:house|home|door|doorway|window|river|riverside|stream|sea|seaside|lake|pond|road|roadside|path|fire|fireplace|bed|bedside|wall|gate|station|tree|trees|shore|side|bridge|church|entrance|exit|table|desk|pool|canal|track|tracks|railway|harbour|harbor|coast|beach|cliff|well|fountain|stairs|sink|stove|bin|fence|hedge|garden|park|field|lane|street|motorway|highway|window|kerb|curb|wayside|sea|bank|waterside|lakeside|fireside|roadway|door)$/i;
+  const PRON_OBJ = { i: 'me', he: 'him', she: 'her', we: 'us', they: 'them', it: 'it', you: 'you' };
+  const PRON_SUBJ = { me: 'I', him: 'he', her: 'she', us: 'we', them: 'they', it: 'it', you: 'you' };
+  const DETW = /^(?:the|a|an|this|that|these|those|its|their|our|his|her|my|your|each|every|all|some|many|most|several|both|no|such|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+  const STOPW = /^(?:in|on|at|during|after|before|for|with|from|to|into|onto|over|under|between|among|amongst|through|throughout|across|since|until|as|because|while|when|where|whereas|although|though|but|nor|so|yet|via|per|within|without|against|despite|using|than|if|that|which|who|whom|whose|and|or|is|are|was|were|has|have|had|will|would|can|could|may|might|must|should|shall|do|does|did|not)$/i;
+  const BYX = /^(?:hand|far|default|mistake|chance|email|e-mail|mail|post|phone|telephone|car|train|bus|air|sea|road|rail|accident|design|law|nature|contrast|comparison|definition|way|means|then|now|night|day|heart|name|weight|volume|number|numbers|percent|half|twice|itself|himself|herself|themselves|myself|ourselves|yourself|yourselves|end|time|virtue|dint|force|proxy|word|wire|cheque|check|cash|credit|hour|hours|minute|minutes|second|seconds|week|weeks|month|months|year|years|day|days|inch|inches|foot|feet|metre|metres|meter|meters|mile|miles|dozen|dozens|hundred|hundreds|thousand|thousands|million|millions|percentage|turns|degrees|default)$/i;
+  const OPENER = /^((?:(?:However|Moreover|Furthermore|Indeed|Thus|Therefore|Finally|Later|Then|Next|Meanwhile|Consequently|Afterwards|Subsequently|Similarly|In turn|In addition|As a result|For example|For instance)|(?:In|On|At|During|After|Before|By|Until|Since) [^,]{1,30}),\s+)?/;
+  function activeVoice(t) {
+    const W = WHY; WHY = 'active';
+    const out = activeOne(t);
+    WHY = W;
+    return out;
+  }
+  function activeOne(t) {
+    const hits = t.match(/ (?:was|were) (?:[a-z]+ly )?[a-z]+ by /g);
+    if (!hits || hits.length !== 1) return t;
+    const m = / (was|were) (?:([a-z]+ly) )?([a-z]+) by /.exec(t);
+    const op = OPENER.exec(t), pre = op[1] || '';
+    const subj = t.slice(pre.length, m.index), after = t.slice(m.index + m[0].length);
+    const vbn = m[3].toLowerCase(), adv = m[2] || '';
+    const vbd = IRREG[vbn] || (vbn.length > 4 && /ed$/.test(vbn) ? vbn : null);
+    if (!vbd || VBX.test(vbn)) return t;
+    /* what was acted on: one to seven words, no clause of its own */
+    const sw = subj.split(/\s+/);
+    if (!subj || sw.length > 7 || /[,;:()"“”]/.test(subj) || SUBORD.test(subj) || /^(?:there|here|what|which|who|it)$/i.test(sw[0]) && sw.length > 1) return t;
+    let obj;
+    const lower = subj.toLowerCase();
+    if (sw.length === 1 && PRON_OBJ[lower]) obj = PRON_OBJ[lower];
+    else if (DETW.test(sw[0])) obj = (pre ? subj : subj[0].toLowerCase() + subj.slice(1));
+    /* a name: two to four capitalised words, or one in mid-sentence */
+    else if (sw.every(w => /^[A-Z][a-z’'-]+$/.test(w)) && sw.length <= 4 && (sw.length > 1 || pre)) obj = subj;
+    /* a plural at the start ("Samples were collected by ...") */
+    else if (m[1] === 'were' && sw.length === 1 && /^[A-Z][a-z]+s$/.test(sw[0])) obj = sw[0].toLowerCase();
+    else return t;
+    /* the one who acts: a determiner and a few words, "of" and a second name allowed */
+    const toks = after.match(/^[^,;:.!?()"“”]*/)[0].split(/\s+/).filter(Boolean);
+    const ag = [];
+    for (let i = 0; i < toks.length && ag.length < 8; i++) {
+      const w = toks[i], lw = w.toLowerCase();
+      if (/\d/.test(w)) return t;
+      if (lw === 'of' && ag.length && i + 1 < toks.length && !STOPW.test(toks[i + 1])) { ag.push(w); continue; }
+      if ((lw === 'and' || lw === 'or') && ag.length && i + 1 < toks.length && (DETW.test(toks[i + 1]) || /^[A-Z]/.test(toks[i + 1]))) { ag.push(w); continue; }
+      if (STOPW.test(lw) && lw !== 'that') break;
+      if (lw === 'that') { if (ag.length && DETW.test(toks[0])) return t; break; }
+      ag.push(w);
+    }
+    if (!ag.length || BYX.test(ag[0]) || (/ing$/i.test(ag[0]) && !INGN.test(ag[0])) || (DETW.test(ag[0]) && ag[1] && BYX.test(ag[1]))) return t;
+    if (ag.length === 1 && DETW.test(ag[0]) && !PRON_SUBJ[ag[0].toLowerCase()]) return t;
+    if (LOCN.test(ag[ag.length - 1])) return t;
+    let pos = 0;
+    for (const w of ag) pos = after.indexOf(w, pos) + w.length;
+    const agent = ag.join(' '), rest = after.slice(pos);
+    if (/^\s+that\b/i.test(rest) || (lower === 'it' && /^\s+(?:to|that)\b/i.test(rest))) return t;
+    /* "... and was expected to ...": a second verb would lose its subject;
+       "..., which acquitted him": a relative clause would attach to the wrong noun */
+    if (/\b(?:and|but|or)\s+(?:(?:then|later|also|subsequently|eventually|soon|was|were|is|are|has|have|had|will|would|could|can|may|might)\b|[a-z]+ed\b)/i.test(rest)) return t;
+    if (/\b(?:who|whom|whose|which)\b/i.test(rest)) return t;
+    let doer = ag.length === 1 && PRON_SUBJ[agent.toLowerCase()] ? PRON_SUBJ[agent.toLowerCase()] : agent;
+    if (doer === 'i') doer = 'I';
+    if (!pre) doer = doer[0].toUpperCase() + doer.slice(1);
+    else if (DETW.test(ag[0]) || PRON_SUBJ[agent.toLowerCase()]) doer = doer === 'I' ? 'I' : doer[0].toLowerCase() + doer.slice(1);
+    const out = pre + doer + ' ' + (adv ? adv + ' ' : '') + vbd + ' ' + obj + rest;
+    note(t, out);
+    return out;
+  }
+  /* ---- neutral: words that tell the reader what to think ---- */
+  const STANCE = [
+    atStart('(?:obviously|clearly|undoubtedly|unquestionably|surely|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|needless to say|interestingly|remarkably|admittedly|frankly|honestly),\\s*'),
+    [/,\s*(?:obviously|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|frankly|honestly),\s*/gi, ' '],
+    [/\b(?:obviously|undoubtedly|unquestionably) (?=[a-z])/gi, '']
+  ];
+  /* ---- hedged to the evidence: claims of certainty made careful ---- */
+  const OVER = [
+    [/\b(prove|proves|proved)\b(?= (\w+))/gi, (m, v, next) => {
+      const that = next.toLowerCase() === 'that';
+      if (!that && !DETW.test(next) && !/^(?:it|them|this)$/i.test(next)) return m;
+      return keepCase((that ? { prove: 'suggest', proves: 'suggests', proved: 'suggested' } : { prove: 'support', proves: 'supports', proved: 'supported' })[v.toLowerCase()])(m);
+    }],
+    [/\b(?:clearly|conclusively|definitively|undeniably|unequivocally) (show|shows|showed|shown|demonstrate|demonstrates|demonstrated|establish|establishes|established|prove|proves|proved)\b/gi,
+      (m, v) => keepCase({ show: 'indicate', shows: 'indicates', showed: 'indicated', shown: 'indicated', demonstrate: 'indicate', demonstrates: 'indicates', demonstrated: 'indicated', establish: 'indicate', establishes: 'indicates', established: 'indicated', prove: 'suggest', proves: 'suggests', proved: 'suggested' }[v.toLowerCase()])(m)],
+    [/\bit is (?:clear|obvious|evident|undeniable|indisputable|beyond doubt) that\b/gi, keepCase('it appears that')],
+    [/\bit is (?:certain) that\b/gi, keepCase('it is likely that')],
+    [/\b(is|are|was|were) (?:certainly|definitely|undoubtedly|unquestionably|without (?:a )?doubt) /gi, '$1 probably '],
+    [new RegExp(S0 + '(?:undoubtedly|unquestionably|without (?:a )?doubt|beyond (?:any )?doubt|certainly|definitely),\\s*', 'gi'), (m, pre) => pre + (/,\s*$/.test(pre) ? 'probably, ' : 'Probably, ')],
+    [/\b(is|are) always\b/gi, '$1 usually'],
+    [/\ball (researchers|scholars|experts|studies|scientists|historians|critics|commentators|economists|linguists|philosophers|theorists)\b/gi, (m, w) => keepCase('most ' + w)(m)]
+  ];
+
+  /* 7.38: quotations found in the whole text, so one that runs across
+     sentences ("A proper analysis must take ... three!" Then ...) or is never
+     closed is protected too; a quotation is never reworded */
+  function quoteSpans(src) {
+    const out = [], re = /"[^"\n]*(?:"|$)|“[^”\n]*(?:”|$)/gm;
+    let m;
+    while ((m = re.exec(src))) { if (!m[0].length) { re.lastIndex++; continue; } out.push([m.index, m.index + m[0].length]); }
+    return out;
+  }
   function run(t, fn) {
-    const src = String(t || '');
+    const src = String(t || ''), Q = quoteSpans(src);
     /* sentences and their gaps, kept exactly: a marker after each end mark */
     const parts = src.replace(/([.!?]["”’)]?)(\s+)/g, '$1\u0001$2\u0001').replace(/(\n+)/g, '\u0001$1\u0001').split('\u0001');
+    let off = 0;
     return parts.map((p, i) => {
+      const at = off; off += p.length;
       if (i % 2 || !p.trim()) return p;
-      const o = outsideQuotes(p, fn);
+      /* the parts of this sentence outside every quotation */
+      let o = '', k = 0;
+      for (const [qs, qe] of Q) {
+        const s0 = Math.max(qs - at, 0), e0 = Math.min(qe - at, p.length);
+        if (e0 <= 0 || s0 >= p.length || s0 < k) continue;
+        o += fn(p.slice(k, s0)) + p.slice(s0, e0); k = e0;
+      }
+      o += k < p.length ? fn(p.slice(k)) : '';
       return o === p ? p : finish(p, o);
     }).join('');
   }
-  const concise = t => run(t, x => dropIntensifiers(apply(x, WORDY)));
-  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(x, WORDY))));
+  const concise = t => run(t, x => dropIntensifiers(apply(x, WORDY, 'wordy')));
+  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(x, WORDY, 'wordy'))));
   const confident = t => run(t, x => dropHedges(x));
-  const professional = t => run(t, x => apply(apply(x, CONTR), INFORMAL));
-  const scholarly = t => run(t, x => apply(apply(apply(apply(x, CONTR), INFORMAL), WORDY), ELEV));
-  const casual = t => run(t, x => apply(x, CASUAL));
-  const api = { concise, shorten, confident, professional, scholarly, casual, fixArticles, tidy };
+  const professional = t => run(t, x => apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'));
+  const scholarly = t => run(t, x => apply(apply(apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'), WORDY, 'wordy'), ELEV, 'exact'));
+  const casual = t => run(t, x => apply(x, CASUAL, 'casual'));
+  /* 7.38 */
+  const simplify = t => run(t, x => splitIdeas(dropIntensifiers(apply(apply(x, WORDY, 'wordy'), PLAIN, 'plain'))));
+  const split = t => run(t, x => splitIdeas(x));
+  const active = t => run(t, x => activeVoice(x));
+  const neutral = t => run(t, x => dropIntensifiers(apply(x, STANCE, 'stance')));
+  const hedge = t => run(t, x => apply(x, OVER, 'overclaim'));
+  /* why each kind of change was made, in the words the panel shows */
+  const WHYS = {
+    wordy: 'Shorter, and it means the same.',
+    filler: 'This opening only announces the point. Starting with the point is stronger.',
+    intensifier: 'Words like “very” and “really” rarely add meaning; the word they lean on carries it.',
+    hedge: 'A softener that weakens a claim the passage can make plainly.',
+    contraction: 'Formal writing spells contractions out.',
+    informal: 'Too informal for this register.',
+    exact: 'A more exact word, as academic writing prefers.',
+    casual: 'A plainer, more relaxed word.',
+    plain: 'A plainer word that means the same.',
+    split: 'Two ideas, two sentences: each is easier to hold in mind.',
+    active: 'Active voice: the one who acts comes first, so the reader sees who did what.',
+    stance: 'This word tells the reader what to think. Neutral writing lets the evidence speak.',
+    overclaim: 'A claim of certainty. A careful word matches what the evidence can show.'
+  };
+  /* the rewrite and, for each change, what it was and why */
+  function explain(mode, t) {
+    const prev = LOG; LOG = [];
+    let text, log;
+    try { text = api[mode](t); } finally { log = LOG; LOG = prev; }
+    const seen = {}, changes = [];
+    if (text !== t) log.forEach(c => {
+      const k = c.why + '\u0000' + c.from.toLowerCase().trim() + '\u0000' + c.to.toLowerCase().trim();
+      if (seen[k]) { seen[k].n++; return; }
+      seen[k] = { from: c.from, to: c.to, why: c.why, n: 1 }; changes.push(seen[k]);
+    });
+    return { text: text, changes: changes };
+  }
+  const api = { concise, shorten, confident, professional, scholarly, casual, simplify, split, active, neutral, hedge, explain, WHYS, fixArticles, tidy };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKRW = api;
 })(typeof self !== 'undefined' ? self : this);

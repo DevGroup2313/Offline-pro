@@ -728,6 +728,26 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 .altOpt .awhy{font-size:11px;color:var(--mut);font-style:italic;margin-bottom:8px}
 .altOpt .row button{flex:initial;padding:6px 15px;font-size:12px}
 .aempty{color:var(--mut);font-size:12.5px;padding:6px;font-style:italic;line-height:1.55}
+/* 7.38: what changed and why, under each offline version; the coach's cards */
+.altOpt .awhyl{margin:0 0 9px;padding:7px 9px;border-radius:9px;background:var(--card);border:1px dashed var(--line);font-size:11.5px;line-height:1.55;color:var(--ink)}
+.altOpt .awhyh,.coachOpt .cLab{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.altOpt .awhyh{margin-bottom:3px}
+.altOpt .awg{margin:3px 0}
+.altOpt .awr{color:var(--mut)}
+.altOpt .awhyl del,.coachOpt .cEx del{color:#b03a2e;text-decoration:line-through;opacity:.85}
+.altOpt .awhyl ins,.coachOpt .cEx ins{color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px;padding:0 2px}
+.altOpt .wq{font-style:italic}
+.coachOpt .cSay{font-size:12.5px;line-height:1.55;margin:6px 0 4px}
+.coachOpt.quiet .cSay{color:var(--mut);font-style:italic;margin-bottom:2px}
+.coachOpt .cHow,.coachOpt .cEx{font-size:12px;line-height:1.55;margin:5px 0}
+.coachOpt .cLab{margin-right:5px}
+.coachOpt .cTry{margin-top:8px}
+.coachOpt .cTry textarea{display:block;width:100%;box-sizing:border-box;font:13px/1.55 Georgia,serif;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin:4px 0 7px;resize:vertical}
+.coachOpt .row{gap:6px}
+.coachOpt .cFb{font-size:12px;line-height:1.5;margin-top:7px;color:var(--acc)}
+.coachOpt .cFb:empty{display:none}
+[data-theme=dark] .altOpt .awhyl del,[data-theme=dark] .coachOpt .cEx del,[data-theme=dark] .altOpt .at del{color:#f2a49b !important}
+[data-theme=dark] .altOpt .awhyl ins,[data-theme=dark] .coachOpt .cEx ins,[data-theme=dark] .altOpt .at ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
 /* (the bubble's names now come from the shared tooltip, inkTips) */
 #bubble .btones button{border-radius:999px}
 /* suggestion legend: the category dots with counts, quiet */
@@ -2439,7 +2459,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 })(typeof self !== 'undefined' ? self : this);
 
 /* Inkwell's offline rewrites: Concise, Shorter, Professional, Scholarly,
-   Casual and Confident, by rules, on this device. 7.37 rewrote them after a
+   Casual and Confident, by rules, on this device; from 7.38 also Simplify,
+   One idea per sentence (split), Active voice, Neutral and Hedged to the
+   evidence, each change with the reason for it (explain). 7.37 rewrote them after a
    test found edits that changed the meaning or broke the grammar ("used to"
    became "employed to", "talks about" became "discusss", "a very
    interesting" became "a interesting", "In order to understand the data, it
@@ -2452,11 +2474,13 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   /* ---- helpers ---- */
   const DET = '(?:the|a|an|this|that|these|those|its|their|our|my|your|his|her|each|every|any|no|some)';
   const VOWEL_SOUND = /^(?:[aeio]|u(?!ni|se|su|ra|ro|ti|ku|bi)|hour|honest|honou?r|heir|8|11|18)/i;
-  /* outside quotation marks only */
-  function outsideQuotes(t, fn) {
-    const parts = t.split(/("[^"\n]*"|“[^”\n]*”)/);
-    return parts.map((p, i) => (i % 2 ? p : fn(p))).join('');
-  }
+  /* 7.38: every change can be explained. While LOG is a list, each rule that
+     changes the text records what it changed and the kind of change (WHY),
+     so the writer is taught what was removed and why, not only shown it. */
+  let LOG = null, WHY = '';
+  function note(from, to) { if (LOG && from !== to) LOG.push({ from: from, to: to, why: WHY }); }
+  /* a rule with its own kind of change, where it differs from its list's */
+  function tag(rule, why) { return [rule[0], rule[1], why]; }
   /* a match inside a title ("Wake Me When I'm Dead", "Talk About Town") or a
      name is left alone: the words around it are capitalised mid-sentence */
   function inTitle(str, off, len) {
@@ -2481,16 +2505,36 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       return typeof rep === 'function' ? rep.apply(null, a) : rep;
     }];
   }
-  function apply(t, list) {
-    for (const [re, rep] of list) {
+  function apply(t, list, why) {
+    const was = WHY;
+    for (const [re, rep, own] of list) {
+      WHY = own || why || was;
       t = t.replace(re, function () {
         const a = arguments, m = a[0], off = a[a.length - 2], str = a[a.length - 1];
         if (typeof off === 'number' && inTitle(str, off, m.length)) return m;
-        if (typeof rep === 'function') return rep.apply(null, a);
-        const groups = Array.prototype.slice.call(a, 1, a.length - 2);
-        return rep.replace(/\$(\d)/g, (x, n) => groups[+n - 1] == null ? '' : groups[+n - 1]);
+        let r;
+        if (typeof rep === 'function') r = rep.apply(null, a);
+        else {
+          const groups = Array.prototype.slice.call(a, 1, a.length - 2);
+          r = rep.replace(/\$(\d)/g, (x, n) => groups[+n - 1] == null ? '' : groups[+n - 1]);
+        }
+        note(m, r);
+        return r;
       });
     }
+    WHY = was;
+    return t;
+  }
+  /* a replace that is recorded, for the rules written as plain replaces */
+  function swap(t, re, r, why) {
+    const was = WHY; WHY = why;
+    t = t.replace(re, function () {
+      const a = arguments, m = a[0];
+      const out = typeof r === 'function' ? r.apply(null, a) : r.replace(/\$(\d)/g, (x, n) => a[+n] == null ? '' : a[+n]);
+      note(m, out);
+      return out;
+    });
+    WHY = was;
     return t;
   }
   /* keep the capital of a replaced phrase that began a sentence */
@@ -2598,7 +2642,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     [/\bby means of\b/gi, keepCase('by')],
     /* a sentence that opens with a filler: only at the start of a sentence, so
        no introductory phrase is left hanging on the wrong subject */
-    atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say,?|it goes without saying that)\\s*')
+    tag(atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say,?|it goes without saying that)\\s*'), 'filler')
   ].concat(forms([
     [['make a decision', 'makes a decision', 'made a decision', 'making a decision'], ['decide', 'decides', 'decided', 'deciding']],
     [['come to (?:a|the) conclusion', 'comes to (?:a|the) conclusion', 'came to (?:a|the) conclusion', 'coming to (?:a|the) conclusion'], ['conclude', 'concludes', 'concluded', 'concluding']],
@@ -2615,23 +2659,24 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 
   /* ---- intensifiers: removed only where nothing else depends on them ---- */
   function dropIntensifiers(t) {
-    t = t.replace(/\b(very|really|extremely)(?:,?\s+\1\b)+/gi, '$1');
+    t = swap(t, /\b(very|really|extremely)(?:,?\s+\1\b)+/gi, '$1', 'intensifier');
     /* "the very end", "not really", "really?" keep their word */
-    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her'], '')]);
-    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', "n't", 'n’t'], '')]);
+    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her'], '')], 'intensifier');
+    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', "n't", 'n’t'], '')], 'intensifier');
     return t;
   }
   /* ---- hedges: only words that soften and carry no fact ---- */
   function dropHedges(t) {
-    t = t.replace(/,\s*(?:I think|I believe|I feel|in my opinion|perhaps|arguably|it seems|more or less|to some extent)\s*,/gi, '');
-    t = t.replace(/,\s*(?:I think|I believe|I feel) (?:that )?(?=[a-z])/g, ', ');
+    const H = 'hedge';
+    t = swap(t, /,\s*(?:I think|I believe|I feel|in my opinion|perhaps|arguably|it seems|more or less|to some extent)\s*,/gi, '', H);
+    t = swap(t, /,\s*(?:I think|I believe|I feel) (?:that )?(?=[a-z])/g, ', ', H);
     t = apply(t, [
       atStart('(?:I think that|I think|I believe that|I believe|I feel that|I would say that|I would argue that|in my opinion,?|it seems that|it appears that|it could be argued that|perhaps|maybe|arguably|possibly)\\s+')
-    ]);
-    t = t.replace(/\b(?:perhaps|arguably|presumably|somewhat) (?=[a-z])/g, '');
-    t = t.replace(/\s*\b(?:more or less|to some extent)\b/gi, '');
+    ], H);
+    t = swap(t, /\b(?:perhaps|arguably|presumably|somewhat) (?=[a-z])/g, '', H);
+    t = swap(t, /\s*\b(?:more or less|to some extent)\b/gi, '', H);
     /* "sort of" and "kind of" only where they soften a verb or an adjective */
-    t = t.replace(/\b(is|are|was|were|be|been|it's|I|we|you|they|he|she|feel|felt|seems|seemed|looks|looked) (?:sort|kind) of (?=[a-z])/gi, '$1 ');
+    t = swap(t, /\b(is|are|was|were|be|been|it's|I|we|you|they|he|she|feel|felt|seems|seemed|looks|looked) (?:sort|kind) of (?=[a-z])/gi, '$1 ', H);
     return t;
   }
   /* ---- contractions written out, for formal registers ---- */
@@ -2704,7 +2749,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     [/\bpurchased\b/gi, keepCase('bought')],
     [/\bapproximately\b/gi, keepCase('about')],
     [/\bassist(s|ed|ing)?\b/gi, (m, e) => keepCase('help' + (e || ''))(m)],
-    [/\bdemonstrate(s|d)?\b/gi, (m, e) => keepCase('show' + ({ s: 's', d: 'ed' }[e] || ''))(m)],
+    [/\bdemonstrate(s)?\b/gi, (m, e) => keepCase('show' + (e ? 's' : ''))(m)], [/\bdemonstrated\b/gi, pastOr('shown', 'showed')],
     [/\bsubsequently\b/gi, keepCase('later')],
     [/\bin addition to\b/gi, keepCase('besides')],
     [/(^|[.!?]\s+)In addition,\s*/g, '$1Also, '],
@@ -2712,24 +2757,554 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     [/,\s*however,\s*/gi, ', though, ']
   ];
 
+  /* ---- 7.38: a past participle where the grammar needs one ---- */
+  const AUX = /\b(?:has|have|had|having|is|are|was|were|be|been|being|am|get|gets|got)\s+(?:(?:not|also|already|clearly|repeatedly|widely|often|first|recently|previously|never|since|now|long|well)\s+)?$/i;
+  const DET_END = /\b(?:the|a|an|this|that|these|those|its|their|our|his|her|my|your)\s+$/i;
+  /* "demonstrated" becomes "shown" after has, been or was, "showed" as a past
+     verb, and stays as it is where it describes a noun ("the demonstrated
+     effect"), which a plainer word would not fit */
+  function pastOr(part, past) {
+    return function () {
+      const a = arguments, m = a[0], off = a[a.length - 2], str = a[a.length - 1];
+      const pre = typeof off === 'number' ? str.slice(Math.max(0, off - 30), off) : '';
+      if (DET_END.test(pre)) return m;
+      return keepCase(AUX.test(pre) ? part : past)(m);
+    };
+  }
+  /* ---- plainer words with the same meaning, for Simplify ---- */
+  const PLAIN = [
+    [/\butili[sz](e|es|ed|ing)\b/gi, (m, e) => keepCase('us' + e.toLowerCase())(m)],
+    [/\butili[sz]ation\b/gi, keepCase('use')],
+    [/\bcommence(s)?\b/gi, (m, s) => keepCase('start' + (s ? 's' : ''))(m)],
+    [/\bcommenced\b/gi, keepCase('started')], [/\bcommencing\b/gi, keepCase('starting')],
+    [/\bdemonstrate(s)?\b/gi, (m, s) => keepCase('show' + (s ? 's' : ''))(m)],
+    [/\bdemonstrated\b/gi, pastOr('shown', 'showed')], [/\bdemonstrating\b/gi, keepCase('showing')],
+    [/\bassist(s|ed|ing)?\b/gi, (m, e) => keepCase('help' + (e || ''))(m)],
+    [/\bascertain(s|ed|ing)?\b/gi, (m, e) => keepCase({ s: 'finds out', ed: 'found out', ing: 'finding out' }[e] || 'find out')(m)],
+    [/\bapproximately\b/gi, keepCase('about')],
+    [/\bsubsequently\b/gi, keepCase('later')],
+    [/\bnumerous\b/gi, keepCase('many')],
+    [/\bsufficient\b/gi, keepCase('enough')],
+    [/\bindividuals\b(?!['’])/gi, keepCase('people')],
+    [/\bin excess of\b/gi, keepCase('more than')],
+    [/\bwith the result that\b/gi, keepCase('so')],
+    [/\bin conjunction with\b/gi, keepCase('together with')],
+    [/\bon the grounds that\b/gi, keepCase('because')],
+    [/(^|[.!?]\s+)Furthermore,\s*/g, '$1Also, '],
+    [/(^|[.!?]\s+)Nevertheless,\s*/g, '$1Still, ']
+  ];
+  /* ---- one idea per sentence ---- */
+  const SUBJ = '(?:it|they|we|he|she|this|these|those|there|i|you|the|a|an|its|their|our|his|her|my|your|such|many|most|some|each|both|one|no|[A-Z][\\w’\'-]*)';
+  const LINKW = '(?:however|therefore|thus|moreover|indeed|consequently|instead|otherwise|nevertheless|meanwhile|similarly|likewise|hence|accordingly|in contrast|as a result|for example|for instance)';
+  const SUBORD = /\b(?:that|which|who|whom|whose|whether|if|because|although|though|while|when|whenever|since|unless|until|as|after|before|where|whereas|so that)\b/i;
+  const nWords = s => (s.match(/[A-Za-z0-9’'-]+/g) || []).length;
+  const FINITE = /\b(?:is|are|was|were|be|been|has|have|had|will|would|can|could|may|might|must|shall|should|do|does|did|[a-z]{2,}ed|ran|went|came|saw|took|gave|made|found|said|told|thought|knew|got|left|kept|held|brought|began|became|wrote|stood|felt|met|led|sent|built|lost|paid|fell|rose|grew|won|chose|spoke|broke|drove|ate|drew|threw|flew|sat|lay|hid|shook|sold|spent|taught|caught|fought|sought|bought|meant|heard|struck|hung|rang|sang|swam|wore|tore|woke|forgot|understood|put|set|cut|hit|let|read)\b/i;
+  const AUXW = /^(?:is|are|was|were|has|have|had|will|would|can|could|may|might|must|should|shall|does|did|do)$/i;
+  const cap = x => x[0].toUpperCase() + x.slice(1);
+  const balanced = x => (x.split('(').length === x.split(')').length) && (x.split('[').length === x.split(']').length);
+  /* the clause after ", and he" or ", and the results": a verb must follow its
+     subject at once, or it is a list of things and not a second sentence */
+  function clauseAfter(subj, b) {
+    const w = b.split(/\s+/).slice(0, 5);
+    if (/^the$/i.test(subj)) {
+      for (let i = 1; i < w.length; i++) { if (/^(?:who|which|that|whose|of)$/i.test(w[i]) && i < 2) return false; if (AUXW.test(w[i])) return i <= 3; }
+      return false;
+    }
+    const v = /^\w+ly$/i.test(w[0]) ? w[1] : w[0];
+    return !!v && (AUXW.test(v) || /^[a-z]{2,}(?:ed|s)$/i.test(v));
+  }
+  function splitIdeas(t) {
+    const W = WHY; WHY = 'split';
+    /* a semicolon joining two clauses (never one in a list of several) */
+    if ((t.match(/;/g) || []).length === 1) {
+      t = t.replace(new RegExp('^([^;]*?[\\w"”’)])\\s*;\\s+((?:' + SUBJ + '\\b|' + LINKW + ',)[^;]*)$'), (m, a, b) => {
+        if (nWords(a) < 4 || nWords(b) < 4 || !balanced(a) || !FINITE.test(a) || !FINITE.test(b)) return m;
+        const out = a + '. ' + cap(b); note(m, out); return out;
+      });
+    }
+    /* ", and it ..." after a plain main clause */
+    t = t.replace(/^([^,;:]+?), and (it|they|we|he|she|there|I|the) ([\s\S]+)$/, (m, a, s, b) => {
+      if (nWords(a) < 4 || nWords(b) < 3 || SUBORD.test(a) || !balanced(a) || !FINITE.test(a) || !clauseAfter(s, b)) return m;
+      const out = a + '. ' + cap(s) + ' ' + b; note(m, out); return out;
+    });
+    WHY = W;
+    return t;
+  }
+  /* ---- the active voice, for the plain past: "The samples were analysed by
+     the team" becomes "The team analysed the samples". Only where the one
+     who acts is named after "by", the sentence opens with what was acted on,
+     and every word's role is certain; everything else is left as written ---- */
+  const IRREG = {
+    written: 'wrote', rewritten: 'rewrote', taken: 'took', undertaken: 'undertook', mistaken: 'mistook', given: 'gave', forgiven: 'forgave',
+    shown: 'showed', seen: 'saw', foreseen: 'foresaw', overseen: 'oversaw', done: 'did', known: 'knew', made: 'made', found: 'found',
+    held: 'held', built: 'built', sent: 'sent', spent: 'spent', lent: 'lent', told: 'told', sold: 'sold', said: 'said', brought: 'brought',
+    thought: 'thought', bought: 'bought', caught: 'caught', taught: 'taught', sought: 'sought', fought: 'fought', led: 'led', misled: 'misled',
+    fed: 'fed', read: 'read', put: 'put', set: 'set', cut: 'cut', hit: 'hit', hurt: 'hurt', shut: 'shut', run: 'ran', begun: 'began',
+    chosen: 'chose', driven: 'drove', eaten: 'ate', forgotten: 'forgot', hidden: 'hid', spoken: 'spoke', stolen: 'stole', broken: 'broke',
+    drawn: 'drew', withdrawn: 'withdrew', grown: 'grew', thrown: 'threw', blown: 'blew', flown: 'flew', won: 'won', left: 'left', kept: 'kept',
+    lost: 'lost', paid: 'paid', laid: 'laid', understood: 'understood', felt: 'felt', met: 'met', heard: 'heard', beaten: 'beat', bitten: 'bit',
+    frozen: 'froze', shaken: 'shook', sung: 'sang', rung: 'rang', worn: 'wore', torn: 'tore', sworn: 'swore', woken: 'woke', ridden: 'rode',
+    struck: 'struck', stung: 'stung', swept: 'swept', wept: 'wept', bound: 'bound', ground: 'ground', wound: 'wound', dug: 'dug', spun: 'spun',
+    upheld: 'upheld', withheld: 'withheld', overcome: 'overcame', overtaken: 'overtook', overthrown: 'overthrew'
+  };
+  /* "divided by two", "delayed by an hour", "reduced by half": measures, not doers */
+  const VBX = /^(?:divided|multiplied|increased|decreased|reduced|raised|lowered|extended|shortened|lengthened|widened|narrowed|delayed|postponed|offset|exceeded|measured|separated|rounded|scaled|adjusted|inflated|deflated|weighted|ranked|sorted|grouped|indexed|followed)$/;
+  /* nouns that end in -ing, which are doers and not "by using" */
+  const INGN = /^(?:lightning|kings?|things?|mornings?|evenings?|spring|strings?|wings?|ceilings?|siblings?|offspring|vikings?|Beijing|Reading|Ealing|Kipling|Sterling|Browning|Fielding|Golding|Stirling)$/i;
+  /* "found by the river", "parked by the house": a place, not a doer */
+  const LOCN = /^(?:house|home|door|doorway|window|river|riverside|stream|sea|seaside|lake|pond|road|roadside|path|fire|fireplace|bed|bedside|wall|gate|station|tree|trees|shore|side|bridge|church|entrance|exit|table|desk|pool|canal|track|tracks|railway|harbour|harbor|coast|beach|cliff|well|fountain|stairs|sink|stove|bin|fence|hedge|garden|park|field|lane|street|motorway|highway|window|kerb|curb|wayside|sea|bank|waterside|lakeside|fireside|roadway|door)$/i;
+  const PRON_OBJ = { i: 'me', he: 'him', she: 'her', we: 'us', they: 'them', it: 'it', you: 'you' };
+  const PRON_SUBJ = { me: 'I', him: 'he', her: 'she', us: 'we', them: 'they', it: 'it', you: 'you' };
+  const DETW = /^(?:the|a|an|this|that|these|those|its|their|our|his|her|my|your|each|every|all|some|many|most|several|both|no|such|one|two|three|four|five|six|seven|eight|nine|ten)$/i;
+  const STOPW = /^(?:in|on|at|during|after|before|for|with|from|to|into|onto|over|under|between|among|amongst|through|throughout|across|since|until|as|because|while|when|where|whereas|although|though|but|nor|so|yet|via|per|within|without|against|despite|using|than|if|that|which|who|whom|whose|and|or|is|are|was|were|has|have|had|will|would|can|could|may|might|must|should|shall|do|does|did|not)$/i;
+  const BYX = /^(?:hand|far|default|mistake|chance|email|e-mail|mail|post|phone|telephone|car|train|bus|air|sea|road|rail|accident|design|law|nature|contrast|comparison|definition|way|means|then|now|night|day|heart|name|weight|volume|number|numbers|percent|half|twice|itself|himself|herself|themselves|myself|ourselves|yourself|yourselves|end|time|virtue|dint|force|proxy|word|wire|cheque|check|cash|credit|hour|hours|minute|minutes|second|seconds|week|weeks|month|months|year|years|day|days|inch|inches|foot|feet|metre|metres|meter|meters|mile|miles|dozen|dozens|hundred|hundreds|thousand|thousands|million|millions|percentage|turns|degrees|default)$/i;
+  const OPENER = /^((?:(?:However|Moreover|Furthermore|Indeed|Thus|Therefore|Finally|Later|Then|Next|Meanwhile|Consequently|Afterwards|Subsequently|Similarly|In turn|In addition|As a result|For example|For instance)|(?:In|On|At|During|After|Before|By|Until|Since) [^,]{1,30}),\s+)?/;
+  function activeVoice(t) {
+    const W = WHY; WHY = 'active';
+    const out = activeOne(t);
+    WHY = W;
+    return out;
+  }
+  function activeOne(t) {
+    const hits = t.match(/ (?:was|were) (?:[a-z]+ly )?[a-z]+ by /g);
+    if (!hits || hits.length !== 1) return t;
+    const m = / (was|were) (?:([a-z]+ly) )?([a-z]+) by /.exec(t);
+    const op = OPENER.exec(t), pre = op[1] || '';
+    const subj = t.slice(pre.length, m.index), after = t.slice(m.index + m[0].length);
+    const vbn = m[3].toLowerCase(), adv = m[2] || '';
+    const vbd = IRREG[vbn] || (vbn.length > 4 && /ed$/.test(vbn) ? vbn : null);
+    if (!vbd || VBX.test(vbn)) return t;
+    /* what was acted on: one to seven words, no clause of its own */
+    const sw = subj.split(/\s+/);
+    if (!subj || sw.length > 7 || /[,;:()"“”]/.test(subj) || SUBORD.test(subj) || /^(?:there|here|what|which|who|it)$/i.test(sw[0]) && sw.length > 1) return t;
+    let obj;
+    const lower = subj.toLowerCase();
+    if (sw.length === 1 && PRON_OBJ[lower]) obj = PRON_OBJ[lower];
+    else if (DETW.test(sw[0])) obj = (pre ? subj : subj[0].toLowerCase() + subj.slice(1));
+    /* a name: two to four capitalised words, or one in mid-sentence */
+    else if (sw.every(w => /^[A-Z][a-z’'-]+$/.test(w)) && sw.length <= 4 && (sw.length > 1 || pre)) obj = subj;
+    /* a plural at the start ("Samples were collected by ...") */
+    else if (m[1] === 'were' && sw.length === 1 && /^[A-Z][a-z]+s$/.test(sw[0])) obj = sw[0].toLowerCase();
+    else return t;
+    /* the one who acts: a determiner and a few words, "of" and a second name allowed */
+    const toks = after.match(/^[^,;:.!?()"“”]*/)[0].split(/\s+/).filter(Boolean);
+    const ag = [];
+    for (let i = 0; i < toks.length && ag.length < 8; i++) {
+      const w = toks[i], lw = w.toLowerCase();
+      if (/\d/.test(w)) return t;
+      if (lw === 'of' && ag.length && i + 1 < toks.length && !STOPW.test(toks[i + 1])) { ag.push(w); continue; }
+      if ((lw === 'and' || lw === 'or') && ag.length && i + 1 < toks.length && (DETW.test(toks[i + 1]) || /^[A-Z]/.test(toks[i + 1]))) { ag.push(w); continue; }
+      if (STOPW.test(lw) && lw !== 'that') break;
+      if (lw === 'that') { if (ag.length && DETW.test(toks[0])) return t; break; }
+      ag.push(w);
+    }
+    if (!ag.length || BYX.test(ag[0]) || (/ing$/i.test(ag[0]) && !INGN.test(ag[0])) || (DETW.test(ag[0]) && ag[1] && BYX.test(ag[1]))) return t;
+    if (ag.length === 1 && DETW.test(ag[0]) && !PRON_SUBJ[ag[0].toLowerCase()]) return t;
+    if (LOCN.test(ag[ag.length - 1])) return t;
+    let pos = 0;
+    for (const w of ag) pos = after.indexOf(w, pos) + w.length;
+    const agent = ag.join(' '), rest = after.slice(pos);
+    if (/^\s+that\b/i.test(rest) || (lower === 'it' && /^\s+(?:to|that)\b/i.test(rest))) return t;
+    /* "... and was expected to ...": a second verb would lose its subject;
+       "..., which acquitted him": a relative clause would attach to the wrong noun */
+    if (/\b(?:and|but|or)\s+(?:(?:then|later|also|subsequently|eventually|soon|was|were|is|are|has|have|had|will|would|could|can|may|might)\b|[a-z]+ed\b)/i.test(rest)) return t;
+    if (/\b(?:who|whom|whose|which)\b/i.test(rest)) return t;
+    let doer = ag.length === 1 && PRON_SUBJ[agent.toLowerCase()] ? PRON_SUBJ[agent.toLowerCase()] : agent;
+    if (doer === 'i') doer = 'I';
+    if (!pre) doer = doer[0].toUpperCase() + doer.slice(1);
+    else if (DETW.test(ag[0]) || PRON_SUBJ[agent.toLowerCase()]) doer = doer === 'I' ? 'I' : doer[0].toLowerCase() + doer.slice(1);
+    const out = pre + doer + ' ' + (adv ? adv + ' ' : '') + vbd + ' ' + obj + rest;
+    note(t, out);
+    return out;
+  }
+  /* ---- neutral: words that tell the reader what to think ---- */
+  const STANCE = [
+    atStart('(?:obviously|clearly|undoubtedly|unquestionably|surely|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|needless to say|interestingly|remarkably|admittedly|frankly|honestly),\\s*'),
+    [/,\s*(?:obviously|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|frankly|honestly),\s*/gi, ' '],
+    [/\b(?:obviously|undoubtedly|unquestionably) (?=[a-z])/gi, '']
+  ];
+  /* ---- hedged to the evidence: claims of certainty made careful ---- */
+  const OVER = [
+    [/\b(prove|proves|proved)\b(?= (\w+))/gi, (m, v, next) => {
+      const that = next.toLowerCase() === 'that';
+      if (!that && !DETW.test(next) && !/^(?:it|them|this)$/i.test(next)) return m;
+      return keepCase((that ? { prove: 'suggest', proves: 'suggests', proved: 'suggested' } : { prove: 'support', proves: 'supports', proved: 'supported' })[v.toLowerCase()])(m);
+    }],
+    [/\b(?:clearly|conclusively|definitively|undeniably|unequivocally) (show|shows|showed|shown|demonstrate|demonstrates|demonstrated|establish|establishes|established|prove|proves|proved)\b/gi,
+      (m, v) => keepCase({ show: 'indicate', shows: 'indicates', showed: 'indicated', shown: 'indicated', demonstrate: 'indicate', demonstrates: 'indicates', demonstrated: 'indicated', establish: 'indicate', establishes: 'indicates', established: 'indicated', prove: 'suggest', proves: 'suggests', proved: 'suggested' }[v.toLowerCase()])(m)],
+    [/\bit is (?:clear|obvious|evident|undeniable|indisputable|beyond doubt) that\b/gi, keepCase('it appears that')],
+    [/\bit is (?:certain) that\b/gi, keepCase('it is likely that')],
+    [/\b(is|are|was|were) (?:certainly|definitely|undoubtedly|unquestionably|without (?:a )?doubt) /gi, '$1 probably '],
+    [new RegExp(S0 + '(?:undoubtedly|unquestionably|without (?:a )?doubt|beyond (?:any )?doubt|certainly|definitely),\\s*', 'gi'), (m, pre) => pre + (/,\s*$/.test(pre) ? 'probably, ' : 'Probably, ')],
+    [/\b(is|are) always\b/gi, '$1 usually'],
+    [/\ball (researchers|scholars|experts|studies|scientists|historians|critics|commentators|economists|linguists|philosophers|theorists)\b/gi, (m, w) => keepCase('most ' + w)(m)]
+  ];
+
+  /* 7.38: quotations found in the whole text, so one that runs across
+     sentences ("A proper analysis must take ... three!" Then ...) or is never
+     closed is protected too; a quotation is never reworded */
+  function quoteSpans(src) {
+    const out = [], re = /"[^"\n]*(?:"|$)|“[^”\n]*(?:”|$)/gm;
+    let m;
+    while ((m = re.exec(src))) { if (!m[0].length) { re.lastIndex++; continue; } out.push([m.index, m.index + m[0].length]); }
+    return out;
+  }
   function run(t, fn) {
-    const src = String(t || '');
+    const src = String(t || ''), Q = quoteSpans(src);
     /* sentences and their gaps, kept exactly: a marker after each end mark */
     const parts = src.replace(/([.!?]["”’)]?)(\s+)/g, '$1\u0001$2\u0001').replace(/(\n+)/g, '\u0001$1\u0001').split('\u0001');
+    let off = 0;
     return parts.map((p, i) => {
+      const at = off; off += p.length;
       if (i % 2 || !p.trim()) return p;
-      const o = outsideQuotes(p, fn);
+      /* the parts of this sentence outside every quotation */
+      let o = '', k = 0;
+      for (const [qs, qe] of Q) {
+        const s0 = Math.max(qs - at, 0), e0 = Math.min(qe - at, p.length);
+        if (e0 <= 0 || s0 >= p.length || s0 < k) continue;
+        o += fn(p.slice(k, s0)) + p.slice(s0, e0); k = e0;
+      }
+      o += k < p.length ? fn(p.slice(k)) : '';
       return o === p ? p : finish(p, o);
     }).join('');
   }
-  const concise = t => run(t, x => dropIntensifiers(apply(x, WORDY)));
-  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(x, WORDY))));
+  const concise = t => run(t, x => dropIntensifiers(apply(x, WORDY, 'wordy')));
+  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(x, WORDY, 'wordy'))));
   const confident = t => run(t, x => dropHedges(x));
-  const professional = t => run(t, x => apply(apply(x, CONTR), INFORMAL));
-  const scholarly = t => run(t, x => apply(apply(apply(apply(x, CONTR), INFORMAL), WORDY), ELEV));
-  const casual = t => run(t, x => apply(x, CASUAL));
-  const api = { concise, shorten, confident, professional, scholarly, casual, fixArticles, tidy };
+  const professional = t => run(t, x => apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'));
+  const scholarly = t => run(t, x => apply(apply(apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'), WORDY, 'wordy'), ELEV, 'exact'));
+  const casual = t => run(t, x => apply(x, CASUAL, 'casual'));
+  /* 7.38 */
+  const simplify = t => run(t, x => splitIdeas(dropIntensifiers(apply(apply(x, WORDY, 'wordy'), PLAIN, 'plain'))));
+  const split = t => run(t, x => splitIdeas(x));
+  const active = t => run(t, x => activeVoice(x));
+  const neutral = t => run(t, x => dropIntensifiers(apply(x, STANCE, 'stance')));
+  const hedge = t => run(t, x => apply(x, OVER, 'overclaim'));
+  /* why each kind of change was made, in the words the panel shows */
+  const WHYS = {
+    wordy: 'Shorter, and it means the same.',
+    filler: 'This opening only announces the point. Starting with the point is stronger.',
+    intensifier: 'Words like “very” and “really” rarely add meaning; the word they lean on carries it.',
+    hedge: 'A softener that weakens a claim the passage can make plainly.',
+    contraction: 'Formal writing spells contractions out.',
+    informal: 'Too informal for this register.',
+    exact: 'A more exact word, as academic writing prefers.',
+    casual: 'A plainer, more relaxed word.',
+    plain: 'A plainer word that means the same.',
+    split: 'Two ideas, two sentences: each is easier to hold in mind.',
+    active: 'Active voice: the one who acts comes first, so the reader sees who did what.',
+    stance: 'This word tells the reader what to think. Neutral writing lets the evidence speak.',
+    overclaim: 'A claim of certainty. A careful word matches what the evidence can show.'
+  };
+  /* the rewrite and, for each change, what it was and why */
+  function explain(mode, t) {
+    const prev = LOG; LOG = [];
+    let text, log;
+    try { text = api[mode](t); } finally { log = LOG; LOG = prev; }
+    const seen = {}, changes = [];
+    if (text !== t) log.forEach(c => {
+      const k = c.why + '\u0000' + c.from.toLowerCase().trim() + '\u0000' + c.to.toLowerCase().trim();
+      if (seen[k]) { seen[k].n++; return; }
+      seen[k] = { from: c.from, to: c.to, why: c.why, n: 1 }; changes.push(seen[k]);
+    });
+    return { text: text, changes: changes };
+  }
+  const api = { concise, shorten, confident, professional, scholarly, casual, simplify, split, active, neutral, hedge, explain, WHYS, fixArticles, tidy };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKRW = api;
+})(typeof self !== 'undefined' ? self : this);
+
+/* Inkwell's writing coach, offline (7.38). Some prompts ask for what rules
+   cannot write: "Show, don't tell", "Signpost the argument", "Synthesis, not
+   a list". For those the coach does not pretend. It reads the passage, points
+   to the exact words that answer the prompt, says how to change them in one
+   or two lines, and gives a short example that is marked as an example. Then
+   the writer tries one sentence and asks the coach to check it.
+   "Tell me and I forget. Teach me and I remember. Involve me and I learn."
+   plan(prompt) maps a prompt, from the library or the writer's own, to the
+   rule rewrites (INKRW modes) and the coaching that answer it. Each function
+   takes and returns plain data; tools/rewrite/coach_cases.js holds the tests.
+   No regular expression here uses a lookbehind (Safari before 16.4). */
+(function (root) {
+  /* ---- helpers ---- */
+  function sentences(t) {
+    const out = [], re = /[^.!?\n]+(?:[.!?]+["”’)]*|$)/g;
+    let m;
+    while ((m = re.exec(String(t || '')))) { const s = m[0].trim(); if (s) out.push(s); if (!m[0].length) re.lastIndex++; }
+    return out;
+  }
+  const words = s => String(s || '').match(/[A-Za-z0-9][A-Za-z0-9’'-]*/g) || [];
+  /* every match, with no repeats, as the writer wrote it */
+  function finds(t, re) {
+    const seen = {}, out = [];
+    let m;
+    re.lastIndex = 0;
+    while ((m = re.exec(t))) {
+      const k = m[0].toLowerCase();
+      if (!seen[k]) { seen[k] = 1; out.push(m[0]); }
+      if (!m[0].length) re.lastIndex++;
+    }
+    return out;
+  }
+  const q = s => '“' + s + '”';
+  const list = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+  const first = (s, n) => { const w = s.split(/\s+/); return w.length > n ? w.slice(0, n).join(' ') + '…' : s; };
+  /* the first sentence that holds one of the found words, for "Your turn" */
+  function sentenceWith(t, hits) {
+    const ss = sentences(t);
+    for (const s of ss) for (const h of hits) if (s.toLowerCase().indexOf(h.toLowerCase()) >= 0) return s;
+    return ss[0] || '';
+  }
+
+  /* ---- what each coach looks for ---- */
+  const FEEL = '(?:sad|happy|angry|nervous|anxious|afraid|scared|frightened|excited|tired|exhausted|bored|lonely|jealous|ashamed|embarrassed|proud|worried|upset|furious|calm|relieved|confused|surprised|shocked|disappointed|frustrated|hopeful|guilty|miserable|delighted|thrilled|terrified|overwhelmed|heartbroken|content|annoyed|irritated|grateful|desperate|hurt)';
+  const TELL = new RegExp('\\b(?:felt|feel|feels|feeling|was|were|is|are|am|seemed|seems|looked|looks|became|becomes|got|grew)\\s+(?:very |so |really |quite |extremely |a bit |rather |deeply |utterly )?' + FEEL + '\\b|\\b(?:with|in|out of) (?:anger|joy|fear|sadness|happiness|excitement|frustration|relief|despair|panic)\\b|\\b(?:angrily|sadly|happily|nervously|anxiously|excitedly|fearfully|joyfully|miserably)\\b', 'gi');
+  const VAGUE = /\b(?:things?|stuff|nice|good|bad|great|interesting|a lot|lots|very|really|big|small|something|somewhere|someone|somehow|kind of|sort of|beautiful|amazing|awesome|cool|fine|okay|ok)\b/gi;
+  const LINK = /^(?:However|Therefore|Thus|Hence|Moreover|Furthermore|Additionally|In addition|Also|First|Firstly|Second|Secondly|Third|Thirdly|Finally|Lastly|Next|Then|Meanwhile|For example|For instance|In particular|Specifically|Notably|In contrast|By contrast|Conversely|On the other hand|Similarly|Likewise|Consequently|As a result|Accordingly|Nevertheless|Nonetheless|Yet|Still|Instead|Indeed|In fact|In short|In sum|Overall|Above all|To this end|In turn|This|These|Such|That|Admittedly|Of course|Granted|Equally|Even so|Ultimately|Taken together|By extension)\b/;
+  const SOURCE = /^(?:[A-Z][A-Za-z’'-]+(?: (?:and|&) [A-Z][A-Za-z’'-]+| et al\.?)?\s*\(\d{4}[a-z]?\)|According to [A-Z]|[A-Z][A-Za-z’'-]+(?: (?:and|&) [A-Z][A-Za-z’'-]+| et al\.?)? (?:argues|argued|states|stated|claims|claimed|finds|found|shows|showed|suggests|suggested|notes|noted|says|said|writes|wrote|reports|reported|believes|believed|contends|maintains|observes|observed|proposes|proposed))/;
+  /* a sentence led by a source: "Smith (2019) found", "According to Lee";
+     not "One found" or "Research shows", whose first word is no name */
+  const NOTNAME = /^(?:One|Two|Three|Four|Five|This|That|These|Those|It|He|She|They|We|I|You|Research|Evidence|Work|Data|Study|Studies|Analysis|The|A|An|Each|Every|Most|Some|Many|Other|Others|Later|Earlier|Recent|Previous|Further|Both|Neither|Either|Such|Here|There|Experts|Scholars|Critics|Historians|Scientists|Researchers|Authors|Writers|Teachers|Students|Readers|Reviewers|Everyone|Nobody|Someone|Science|History|Theory|Literature)$/;
+  const isSource = s => SOURCE.test(s) && (/^According to/.test(s) || !NOTNAME.test((s.match(/^[A-Za-z’'-]+/) || [''])[0]));
+  const VAGUEQ = /\b(?:some|several|a few|many|various|numerous|a number of|approximately|roughly|around|about|a lot of|lots of|a while|a long time|recently|soon|later|eventually|at some point|regularly|often|sometimes|a little|a bit|quite a few)\b/gi;
+  const ORDER = /\b(?:first|firstly|second|secondly|then|next|after|afterwards|finally|subsequently|before|following)\b/i;
+  const HEDGES = /\b(?:may|might|could|perhaps|possibly|probably|somewhat|arguably|seems?|appears?|apparently|likely|tends? to|I think|I believe|it is possible|in a sense|to some extent|sort of|kind of)\b/gi;
+  const ABSOL = /\b(?:always|never|all|none|every|everyone|everything|nobody|no one|nothing|entirely|completely|totally|undoubtedly|definitely|certainly|proves?|proved|must|impossible|without exception)\b/gi;
+  const BLUNT = /\b(?:you must|you need to|you have to|you should|must|wrong|failed?|failure|unacceptable|immediately|asap|obviously|clearly|demand|insist|never|always|your fault|you did not|you didn['’]t)\b/gi;
+  const LOADED = /\b(?:amazing|incredible|terrible|awful|horrible|fantastic|wonderful|shocking|outrageous|ridiculous|absurd|disastrous|brilliant|pathetic|stupid|disgraceful|appalling|glorious|tragic|unbelievable|insane|crazy|perfect|worst|best)\b/gi;
+  const PASSIVE = /\b(?:is|are|was|were|be|been|being)\s+(?:\w+ly\s+)?(?:[a-z]+ed|written|taken|given|shown|seen|done|known|made|found|held|built|sent|told|sold|said|brought|thought|bought|caught|taught|led|read|put|set|chosen|driven|spoken|broken|drawn|grown|thrown|won|kept|lost|paid|understood|felt|heard|begun|hidden|stolen|forgotten)\b(?! by)/gi;
+  const REASON = /\b(?:because|since|as a result|so that|therefore|thus|for example|for instance|such as|this means|which means|in other words|that is|i\.e\.|e\.g\.)\b/i;
+  const PROBLEM = /\b(?:problem|gap|unclear|unknown|little is known|remains?|challenge|question|debate|however|yet|lack|limited|few studies|unresolved|contested)\b/i;
+  const APPROACH = /\b(?:we|this (?:study|paper|thesis|chapter|article|project)|using|uses?|examines?|investigates?|analy[sz]es|analy[sz]ed|method|interviews?|surveys?|data|sample|corpus|experiments?|trial|compares?|draws on)\b/i;
+  const FINDING = /\b(?:found|find|finds|shows?|showed|results?|reveals?|revealed|indicates?|indicated|suggests?|suggested|demonstrates?|identif(?:y|ies|ied))\b/i;
+  const IMPLIC = /\b(?:implications?|therefore|thus|contributes?|significance|significant for|matters?|future|policy|practice|informs?|calls? for|should|recommend)\b/i;
+
+  /* each coach: what it found in the passage, how to change it, an example,
+     and how to check the writer's own try. found() returns the words
+     ("hits") and a sentence to try on; nothing found means this coach has
+     nothing to say about the passage, and it says so plainly */
+  const C = {
+    show: {
+      title: 'Show, don’t tell',
+      found(t) { const h = finds(t, TELL); return { hits: h, say: h.length ? list(h.map(q)) + (h.length === 1 ? ' names a feeling.' : ' name feelings.') + ' The reader is told, not shown.' : 'No feeling is named outright. The passage already shows rather than tells.' }; },
+      how: 'Replace the named feeling with what a camera would catch: what the body does, what is said, what is done.',
+      ex: ['She was nervous before the interview.', 'She turned her ring twice and read the same line of her notes three times.'],
+      check(src, mine) { const h = finds(mine, TELL); return h.length ? q(h[0]) + ' still tells the feeling. What would someone watching see?' : 'No feeling is named now; it comes through what happens.'; }
+    },
+    vivid: {
+      title: 'Vivid and concrete',
+      found(t) { const h = finds(t, VAGUE); return { hits: h, say: h.length ? list(h.slice(0, 6).map(q)) + (h.length === 1 ? ' is' : ' are') + ' general. A reader cannot picture ' + (h.length === 1 ? 'it.' : 'them.') : 'No general words stand out. The detail is already concrete.' }; },
+      how: 'Ask “which one, exactly?” of each general word, and name it: the colour, the sound, the number, the kind.',
+      ex: ['The room had a lot of old stuff in it.', 'The room held three cracked violins and a stack of yellowed scores.'],
+      check(src, mine) { const before = finds(src, VAGUE).length, now = finds(mine, VAGUE); return now.length ? q(now[0]) + ' is still general. Which one, exactly?' : (before ? 'Every general word is now a particular one.' : 'Concrete throughout.'); }
+    },
+    signpost: {
+      title: 'Signpost the argument',
+      found(t) {
+        const ss = sentences(t);
+        if (ss.length < 2) return { hits: [], say: 'Signposts link sentences, so select at least two.' };
+        const bare = ss.slice(1).filter(s => !LINK.test(s));
+        return { hits: bare.map(s => first(s, 4)), on: bare[0], say: bare.length ? plural(ss.length - 1 - bare.length, 'of the later sentences opens', 'of the later sentences open') + ' with a link to the one before. ' + (bare.length === 1 ? 'This one does not: ' : 'These do not: ') + list(bare.slice(0, 3).map(s => q(first(s, 4)))) + '.' : 'Every later sentence opens with a link to the one before.' };
+      },
+      how: 'Open each step with how it relates to the last: adding (Moreover), contrasting (However), causing (Therefore), illustrating (For example), concluding (Thus).',
+      ex: ['The sample was small. The effect was large.', 'The sample was small. Even so, the effect was large.'],
+      check(src, mine) { return LINK.test(mine.trim()) ? 'It now opens with a link, so the reader knows how it follows.' : 'Start it with a link word that says how it follows from the sentence before.'; }
+    },
+    topic: {
+      title: 'A topic sentence',
+      found(t) {
+        const s = sentences(t)[0] || '';
+        const issues = [];
+        if (/\?$/.test(s)) issues.push('it is a question');
+        if (/^["“]/.test(s)) issues.push('it opens with a quotation');
+        if (/^[A-Z][A-Za-z’'-]+(?: et al\.?)?\s*\(\d{4}/.test(s) || /^According to/.test(s)) issues.push('it opens with a source, not your point');
+        if (words(s).length < 6) issues.push('it is very short');
+        return { hits: s ? [s] : [], on: s, say: s ? 'The passage opens: ' + q(first(s, 14)) + (issues.length ? ' Here ' + list(issues) + '.' : ' Check that it states the point the rest supports.') : 'There is no sentence to read yet.' };
+      },
+      how: 'State the paragraph’s point in your own words first: what will the reader know by the end? The evidence follows it.',
+      ex: ['In 2019, forty schools took part in a trial.', 'Smaller classes helped pupils less than better teaching did.'],
+      check(src, mine) { const s = sentences(mine)[0] || ''; if (/\?$/.test(s)) return 'A question opens a topic; a topic sentence answers it.'; if (/^[A-Z][A-Za-z’'-]+(?: et al\.?)?\s*\(\d{4}/.test(s)) return 'It still opens with a source. Lead with your point, then the source.'; return words(s).length < 6 ? 'A little more: what is the claim, and about what?' : 'It states a point the paragraph can now support.'; }
+    },
+    synthesis: {
+      title: 'Synthesis, not a list',
+      found(t) {
+        const ss = sentences(t), led = ss.filter(isSource);
+        return { hits: led.map(s => first(s, 3)), on: led[0], say: led.length >= 2 ? plural(led.length, 'sentence', 'sentences') + ' of ' + ss.length + ' begin with a source: ' + list(led.slice(0, 3).map(s => q(first(s, 3)))) + '. The paragraph reads as a list of who said what.' : 'The sentences lead with ideas, not with sources. That is already synthesis.' };
+      },
+      how: 'Group the sources by what they share or dispute, and lead with the idea: “Both X and Y find…”, “Whereas X…, Y…”. The names follow the idea.',
+      ex: ['Smith (2019) found a fall. Jones (2020) found a fall too.', 'Two studies found a fall (Smith 2019; Jones 2020).'],
+      check(src, mine) { const n = sentences(mine).filter(isSource).length; return n ? 'It still opens with a source. Start with the idea the sources share.' : 'It now leads with the idea; the sources support it.'; }
+    },
+    method: {
+      title: 'A precise method',
+      found(t) {
+        const h = finds(t, VAGUEQ), ord = ORDER.test(t), ss = sentences(t);
+        const say = (h.length ? list(h.slice(0, 6).map(q)) + (h.length === 1 ? ' is' : ' are') + ' not exact enough to repeat.' : 'The quantities are exact.') + (ss.length > 2 && !ord ? ' No word marks the order of the steps.' : '');
+        return { hits: h, say: say };
+      },
+      how: 'Write it so another researcher could repeat it: exact numbers, units and durations, and the order of the steps (First, Then, Finally).',
+      ex: ['Some participants were tested for a while.', 'Twenty-four participants were each tested for thirty minutes.'],
+      check(src, mine) { const h = finds(mine, VAGUEQ); return h.length ? q(h[0]) + ' could still be exact: how many, how long?' : 'Exact enough to repeat.'; }
+    },
+    abstract: {
+      title: 'Abstract style',
+      found(t) {
+        const parts = [['the problem', PROBLEM], ['the approach', APPROACH], ['the finding', FINDING], ['why it matters', IMPLIC]];
+        const has = parts.filter(p => p[1].test(t)).map(p => p[0]), miss = parts.filter(p => !p[1].test(t)).map(p => p[0]);
+        return { hits: miss, say: (has.length ? 'Present: ' + list(has) + '. ' : '') + (miss.length ? 'Not yet clear: ' + list(miss) + '.' : 'All four parts are there.') };
+      },
+      how: 'An abstract answers four questions in order, a sentence or two each: What problem? What did you do? What did you find? Why does it matter?',
+      ex: ['(problem) Little is known about … (approach) This study interviews … (finding) It finds that … (why it matters) This suggests that …', ''],
+      check(src, mine) { const miss = [['the problem', PROBLEM], ['the approach', APPROACH], ['the finding', FINDING], ['why it matters', IMPLIC]].filter(p => !p[1].test(mine)).map(p => p[0]); return miss.length ? 'Still to add: ' + list(miss) + '.' : 'Problem, approach, finding and why it matters are all there.'; }
+    },
+    rhythm: {
+      title: 'Rhythm and pace',
+      found(t) {
+        const ss = sentences(t), n = ss.map(s => words(s).length);
+        if (ss.length < 3) return { hits: [], say: 'Rhythm lives across sentences, so select three or more.' };
+        let flat = 0;
+        for (let i = 2; i < n.length; i++) if (Math.max(n[i], n[i - 1], n[i - 2]) - Math.min(n[i], n[i - 1], n[i - 2]) <= 3) flat++;
+        const open = {}; ss.forEach(s => { const w = (words(s)[0] || '').toLowerCase(); open[w] = (open[w] || 0) + 1; });
+        const rep = Object.keys(open).filter(w => open[w] >= 3 && w);
+        return { hits: rep, say: 'Sentence lengths: ' + n.join(', ') + ' words.' + (flat ? ' Runs of similar length make a steady drone.' : ' The lengths already vary.') + (rep.length ? ' ' + plural(open[rep[0]], 'sentence opens', 'sentences open') + ' with ' + q(rep[0][0].toUpperCase() + rep[0].slice(1)) + '.' : '') };
+      },
+      how: 'Vary the beat: after a long sentence, a short one lands. Read it aloud and listen for where you breathe.',
+      ex: ['We walked for hours. We were tired. We stopped at the inn.', 'We walked for hours, until the road blurred. Tired, we stopped at the inn.'],
+      check(src, mine) { const n = sentences(mine).map(s => words(s).length); if (n.length < 2) return 'Try two sentences of different lengths.'; return Math.max.apply(null, n) - Math.min.apply(null, n) >= 6 ? 'The lengths now vary; read it aloud to hear the change.' : 'The sentences are still close in length. Make one much shorter.'; }
+    },
+    expand: {
+      title: 'Expand without new facts',
+      found(t) {
+        const bare = sentences(t).filter(s => words(s).length > 4 && !REASON.test(s));
+        return { hits: bare.map(s => first(s, 4)), on: bare[0], say: 'Offline, Inkwell adds no words of its own, so the expansion is yours. ' + (bare.length ? plural(bare.length, 'sentence states', 'sentences state') + ' a point with no reason or example after it.' : 'Each sentence already gives a reason or an example.') };
+      },
+      how: 'After a claim, add one of three things from your own notes: the reason (because…), an example (for example…), or what it means (this means…).',
+      ex: ['Smaller classes did not help.', 'Smaller classes did not help, because the extra teachers were the least experienced.'],
+      check(src, mine) { return REASON.test(mine) ? 'It now says why, or shows an example.' : 'Add a reason (because…) or an example (for example…).'; }
+    },
+    warm: {
+      title: 'A warmer tone',
+      found(t) {
+        const you = /\b(?:you|your|we|our|us)\b/i.test(t), thanks = /\b(?:thank|thanks|please|glad|happy to|hope)\b/i.test(t);
+        const notes = [];
+        if (!you) notes.push('it does not speak to the reader (“you”, “we”)');
+        if (!thanks) notes.push('it has no thanks or “please”');
+        return { hits: notes, say: notes.length ? 'The passage sounds formal: ' + list(notes) + '.' : 'It already speaks to the reader warmly.' };
+      },
+      how: 'Write to one person: “you” and “we”, a contraction or two, and thanks where it is due.',
+      ex: ['Applicants must submit the form by Friday.', 'Please send us your form by Friday. Thank you!'],
+      check(src, mine) { return /\b(?:you|your|we|our)\b/i.test(mine) ? 'It now speaks to the reader.' : 'Try addressing the reader as “you”.'; }
+    },
+    diplomatic: {
+      title: 'A diplomatic tone',
+      found(t) { const h = finds(t, BLUNT); return { hits: h, say: h.length ? list(h.slice(0, 5).map(q)) + ' may sound blunt or blaming to the reader.' : 'Nothing reads as blunt. The tone is already courteous.' }; },
+      how: 'Keep the substance, soften the demand: “Could we…”, “It would help if…”, “I wonder whether…”. Name the issue, not the person.',
+      ex: ['You must fix this today.', 'Could you fix this today? It would help us finish on time.'],
+      check(src, mine) { const h = finds(mine, BLUNT); return h.length ? q(h[0]) + ' may still sound blunt.' : 'Courteous, and the request is still clear.'; }
+    },
+    absolutes: {
+      title: 'Claims that admit no exception',
+      found(t) { const h = finds(t, ABSOL); return { hits: h, say: h.length ? list(h.slice(0, 6).map(q)) + (h.length === 1 ? ' claims' : ' claim') + ' every case, or certainty. Does the evidence cover every case?' : 'No absolute words. The claims are already measured.' }; },
+      how: 'Keep an absolute word only where the evidence covers every case. Otherwise “often”, “most”, “rarely”, “suggests”.',
+      ex: ['Students always learn more in small classes.', 'Students often learn more in small classes.'],
+      check(src, mine) { const h = finds(mine, ABSOL); return h.length ? q(h[0]) + ' still claims every case: is that what the evidence shows?' : 'Measured: the claim now matches what the evidence can show.'; }
+    },
+    claim: {
+      title: 'A sharper claim',
+      found(t) {
+        const h = finds(t, HEDGES), ss = sentences(t);
+        return { hits: h, say: h.length ? plural(h.length, 'softener', 'softeners') + ' (' + list(h.slice(0, 5).map(q)) + ') in ' + plural(ss.length, 'sentence', 'sentences') + '. One careful hedge signals care; several blur the point.' : 'No softeners: the claim is stated plainly.' };
+      },
+      how: 'State the claim once, plainly, then the evidence for it: “X causes Y, because …”. Keep a hedge only where the evidence is uncertain.',
+      ex: ['It could perhaps be argued that class size may matter.', 'Class size matters, as the two trials show.'],
+      check(src, mine) { const h = finds(mine, HEDGES); return h.length > 1 ? plural(h.length, 'softener is', 'softeners are') + ' left. Which one does the evidence need?' : 'The claim is plain now.'; }
+    },
+    long: {
+      title: 'Long sentences',
+      found(t) {
+        const ss = sentences(t), lg = ss.filter(s => words(s).length > 28);
+        return { hits: lg.map(s => first(s, 4)), on: lg[0], say: lg.length ? plural(lg.length, 'sentence runs', 'sentences run') + ' past 28 words, the length at which readers start to lose the thread: ' + list(lg.slice(0, 2).map(s => q(first(s, 5)))) + '.' : 'No sentence runs past 28 words.' };
+      },
+      how: 'Find where a second idea begins (often at “and”, “which” or a semicolon) and start a new sentence there.',
+      ex: ['The trial ran for a year and it found that smaller classes helped, which surprised the team.', 'The trial ran for a year. It found that smaller classes helped, which surprised the team.'],
+      check(src, mine) { const n = sentences(mine).map(s => words(s).length); return n.some(x => x > 28) ? 'One sentence is still past 28 words.' : 'Each sentence now carries a load a reader can hold.'; }
+    },
+    passive: {
+      title: 'Who did it?',
+      found(t) { const h = finds(t, PASSIVE); return { hits: h, say: h.length ? list(h.slice(0, 4).map(q)) + ' hide' + (h.length === 1 ? 's' : '') + ' who acted. Inkwell can only turn a sentence round when it names the doer after “by”.' : 'Every action says who did it.' }; },
+      how: 'Ask who did it, and start with them: “The samples were analysed” becomes “We analysed the samples”. Keep the passive where the doer truly does not matter.',
+      ex: ['The results were checked twice.', 'Two reviewers checked the results twice.'],
+      check(src, mine) { const h = finds(mine, PASSIVE); return h.length ? q(h[0]) + ' still hides who acted.' : 'The doer now comes first.'; }
+    },
+    loaded: {
+      title: 'Words that judge',
+      found(t) { const h = finds(t, LOADED); return { hits: h, say: h.length ? list(h.slice(0, 5).map(q)) + (h.length === 1 ? ' is a judgement' : ' are judgements') + ', not a measure.' : 'No judging words remain. The tone is neutral.' }; },
+      how: 'Replace each judgement with the fact behind it: a number, a comparison, or what happened.',
+      ex: ['The results were terrible.', 'Two of the ten tests passed.'],
+      check(src, mine) { const h = finds(mine, LOADED); return h.length ? q(h[0]) + ' still judges. What is the fact behind it?' : 'Neutral: the facts carry the weight.'; }
+    },
+    cut: {
+      title: 'Shorter by a third',
+      found(t) {
+        const n = words(t).length, ss = sentences(t), target = Math.round(n * 2 / 3);
+        const longest = ss.slice().sort((a, b) => words(b).length - words(a).length)[0] || '';
+        return { hits: [longest], on: longest, n: n, target: target, say: 'The passage has ' + n + ' words; a third shorter is about ' + target + '. Rules can trim phrases, but a third usually means cutting a whole sentence or clause.' };
+      },
+      how: 'Find the sentence the argument could lose: a repeat, a detour, or a point made twice. Then trim the phrases in what is left.',
+      ex: ['', ''],
+      check(src, mine) { const a = words(src).length, b = words(mine).length; return b >= a ? 'It is not shorter yet.' : 'Shorter by ' + Math.round(100 * (a - b) / a) + '%.'; }
+    }
+  };
+
+  /* ---- a prompt, read for what it asks ---- */
+  const ASK = [
+    [/\bshow\b.*\btell\b|\bshow,? (?:don['’]t|do not)\b/i, [], ['show']],
+    [/\bvivid|concrete|imager|sensory|descriptive|paint a picture/i, [], ['vivid']],
+    [/\bsignpost|transition|link(?:s|ing)? (?:the )?(?:steps|sentences|ideas)|flow of the argument/i, [], ['signpost']],
+    [/\btopic sentence|opening sentence|first sentence/i, [], ['topic']],
+    [/\bsynthes/i, [], ['synthesis']],
+    [/\bmethod|replicab|reproducib/i, [], ['method']],
+    [/\babstract\b/i, [], ['abstract']],
+    [/\blyric|rhythm|poetic|musical|cadence/i, [], ['rhythm']],
+    [/\bpac(?:e|ing)\b/i, ['concise'], ['rhythm']],
+    [/\bexpand|elaborat|longer|develop (?:it|this)|flesh out/i, [], ['expand']],
+    [/\bwarm|friendly|approachable|kinder\b|gentle/i, ['casual'], ['warm']],
+    [/\bdiplomat|courteous|polite|tactful|softer|gentler/i, [], ['diplomatic']],
+    [/\bhedge|cautious|careful (?:claims?|wording)|tentative|match (?:the )?evidence|overclaim/i, ['hedge'], ['absolutes']],
+    [/\bsharpen|explicit|clear(?:er)? claim|central claim|thesis statement/i, ['confident'], ['claim']],
+    [/\bconfiden|assertive|decisive|stronger|bold/i, ['confident'], ['claim']],
+    [/\bneutral|objective|impartial|unbiased|balanced/i, ['neutral'], ['loaded']],
+    [/\bactive voice|active\b|passive/i, ['active'], ['passive']],
+    [/\bone idea|split|break (?:it )?up|shorter sentences|long sentences/i, ['split'], ['long']],
+    [/\bshorter by|a third|half|cut (?:it )?(?:down|by)|condense|trim/i, ['shorten'], ['cut']],
+    [/\bshort(?:er|en)?\b|brief|concise|tight|wordy|wordiness/i, ['concise', 'shorten'], []],
+    [/\bsimplif|simple|plain(?:er)?|easier|general reader|readab|accessible/i, ['simplify'], ['long']],
+    [/\bdphil|phd|doctoral|thesis|scholarly|academic|formal|register/i, ['scholarly'], []],
+    [/\bprofessional|polish|business|workplace/i, ['professional'], []],
+    [/\bcasual|relaxed|informal|conversational/i, ['casual'], []],
+    [/\bcorrect only|only (?:the )?(?:grammar|spelling)|proofread|fix (?:the )?(?:grammar|spelling|errors|mistakes)|grammar|spelling|punctuation/i, ['correct'], []],
+    [/\bnatural|native|fluent|idiomatic/i, [['correct', 'concise']], []],
+    [/\bimprove|better|clarity|clearer|clear\b/i, [['correct', 'concise']], ['long']]
+  ];
+  /* every rule rewrite and coach the prompt asks for, in order, without repeats.
+     A step that is a list is one rewrite made of several (correct, then concise). */
+  function plan(prompt) {
+    const p = String(prompt || ''), rw = [], coach = [], seen = {};
+    for (const [re, r, c] of ASK) if (re.test(p)) {
+      r.forEach(x => { const k = [].concat(x).join('+'); if (!seen['r' + k]) { seen['r' + k] = 1; rw.push(x); } });
+      c.forEach(x => { if (!seen['c' + x]) { seen['c' + x] = 1; coach.push(x); } });
+    }
+    return { rw: rw, coach: coach, known: !!(rw.length || coach.length) };
+  }
+  /* one coach's reading of a passage, ready for the panel */
+  function read(id, t) {
+    const c = C[id]; if (!c) return null;
+    const f = c.found(String(t || ''));
+    return { id: id, title: c.title, say: f.say, hits: f.hits, how: c.how, ex: c.ex, on: f.on || sentenceWith(t, f.hits || []), n: f.n, target: f.target };
+  }
+  function check(id, src, mine) { const c = C[id]; return c ? c.check(String(src || ''), String(mine || '')) : ''; }
+  const api = { plan: plan, read: read, check: check, ids: Object.keys(C), sentences: sentences };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKCOACH = api;
 })(typeof self !== 'undefined' ? self : this);
 
 </script>
@@ -10924,13 +11499,13 @@ document.addEventListener('keydown',e=>{
 /* 7.37: the offline rewrites live in src/lib/rewrite_core.js (INKRW), with tests */
 const DEMORW=(typeof INKRW!=='undefined')?INKRW:{};
 let ALTSEL=null,ALTS=[],ALTMODE=false;
-function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];renderCards();}
+function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];renderCards();}
 async function improveAlternatives(){
  const sel=inkTargetText();
  if(sel.whole){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
  if(sel.lost||!sel.t){toast('Select the text again, please: the selection was lost.');return hideBubble();}
  const s=sel.s,e2=sel.e2,t=sel.t;ALTSEL={s,e2,t,before:ed.value.slice(Math.max(0,s-60),s)};
- ALTS=[];ALTMODE=true;
+ ALTS=[];COACH=[];ALTMODE=true;
  hideBubble();
  if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');
@@ -10938,8 +11513,8 @@ async function improveAlternatives(){
  renderAlts('Thinking through stronger versions beside your selection…');
  const OFFWHY={concise:'Tighter without losing meaning',professional:'Polished for the workplace',scholarly:'Formal doctoral register',casual:'Relaxed and warm',confident:'Decisive: hedged words removed',shorten:'Keeps the strongest sentences'};
  for(const m of Object.keys(OFFWHY)){
-  try{const out=DEMORW[m]?DEMORW[m](t):null;
-   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.'});}catch(e){}}
+  try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
+   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.',changes:r.changes,off:true});}catch(e){}}
  renderAlts('');
  if(inkSrv()){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
   [['concise','Local model · concise'],['scholarly','Local model · '+S.reg]].forEach(async mv=>{try{
@@ -10998,7 +11573,7 @@ function inkPromptPanel(){
  const chip=(label,instr)=>'<button class="bchip" title="'+esc(instr)+'" onclick="inkPromptRun(this.title)">'+esc(label)+'</button>';
  return '<div class="pmBox" style="margin:2px 0 12px">'
   +'<div style="font-size:12px;color:var(--mut);margin-bottom:4px">How should the selected passage sound?</div>'
-  +'<textarea id="pmIn" rows="3" style="width:100%;box-sizing:border-box;font:13px/1.5 inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" placeholder="e.g. Make it read like the opening of a DPhil chapter: confident, precise, one clear claim" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){inkPromptRun(this.value);}"></textarea>'
+  +'<textarea id="pmIn" rows="3" style="width:100%;box-sizing:border-box;font:13px/1.5 inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)" placeholder="e.g. Make it read like the opening of a DPhil chapter: confident, precise, one clear claim" onkeydown="if(event.key===\'Enter\'&&(event.metaKey||event.ctrlKey)){inkPromptRun(this.value);}">'+esc(ALTSEL&&ALTSEL.instr||'')+'</textarea>'
   +'<div class="row" style="gap:6px;margin:6px 0"><button class="primary" onclick="inkPromptRun(document.getElementById(\'pmIn\').value)">Rewrite ▸</button>'
   +'<button class="lkbtn" onclick="inkPromptKeep()">☆ Save this prompt</button></div>'
   +(mine.length?'<div style="font-size:11px;color:var(--mut);margin:8px 0 3px">Your prompts</div><div>'+mine.map((m,i)=>chip(m.label,m.instr)+'<button class="lkbtn" title="Remove" onclick="inkPromptDrop('+i+')">×</button>').join('')+'</div>':'')
@@ -11032,17 +11607,111 @@ window.inkScribaAI={
   throw new Error('none');},
  facts(src,out){return inkFactCheck(src,out);}
 };
+/* 7.38: every prompt does something on this device, with no model. Rules
+   rewrite where a rule keeps the meaning, and say what each change was and
+   why; the coach answers what only the writer can write: it points to the
+   words, says how in a line, and checks the writer's own try. A writing
+   model, where there is one, adds its version above them. */
+const PROMPT_PLANS={
+ 'Scholarly register':{rw:['scholarly'],coach:[]},
+ 'Sharpen the claim':{rw:['confident'],coach:['claim']},
+ 'Hedge to the evidence':{rw:['hedge'],coach:['absolutes']},
+ 'Synthesis, not a list':{rw:[],coach:['synthesis']},
+ 'Signpost the argument':{rw:[],coach:['signpost']},
+ 'Topic sentence':{rw:[],coach:['topic']},
+ 'Methodology: precise':{rw:[],coach:['method']},
+ 'Abstract style':{rw:['scholarly'],coach:['abstract']},
+ 'Vivid and concrete':{rw:[],coach:['vivid']},
+ 'Show, don\'t tell':{rw:[],coach:['show']},
+ 'Tighten the pacing':{rw:['concise'],coach:['rhythm']},
+ 'More lyrical':{rw:[],coach:['rhythm']},
+ 'Improve it':{rw:[['correct','concise']],coach:['long']},
+ 'Simplify':{rw:['simplify'],coach:['long']},
+ 'One idea per sentence':{rw:['split'],coach:['long']},
+ 'Active voice':{rw:['active'],coach:['passive']},
+ 'Confident':{rw:['confident'],coach:['claim']},
+ 'Diplomatic':{rw:[],coach:['diplomatic']},
+ 'Neutral':{rw:['neutral'],coach:['loaded']},
+ 'Warm':{rw:['casual'],coach:['warm']},
+ 'Shorter by a third':{rw:['shorten'],coach:['cut']},
+ 'Expand, no new facts':{rw:[],coach:['expand']},
+ 'Sound natural':{rw:[['correct','concise']],coach:[]},
+ 'Correct only':{rw:['correct'],coach:[]}};
+const OFF_LABEL={scholarly:'Scholarly',confident:'Confident',hedge:'Hedged',concise:'Concise',shorten:'Shorter',simplify:'Simpler',split:'One idea per sentence',active:'Active voice',neutral:'Neutral',casual:'Warmer',professional:'Professional',correct:'Corrected'};
+let COACH=[];
+function inkPromptPlan(instr){
+ for(const g of PROMPT_LIBRARY)for(const x of g[1])if(x[1]===instr&&PROMPT_PLANS[x[0]])return Object.assign({known:true},PROMPT_PLANS[x[0]]);
+ const p=(typeof INKCOACH!=='undefined')?INKCOACH.plan(instr):{rw:[],coach:[],known:false};
+ return {rw:p.rw.slice(0,3),coach:p.coach.slice(0,2),known:p.known};}
+/* "Correct only", offline: the grammar rules and the spelling checker, and
+   nothing of style or clarity */
+function inkCorrectOnly(t){
+ let es=[];
+ try{es=inkRuleGate(t,ruleEdits(t));Array.prototype.push.apply(es,inkSpellEdits(t,es));}catch(e){es=[];}
+ es=es.filter(e=>typeof e.fix==='string'&&e.end>e.start&&t.slice(e.start,e.end)!==e.fix&&(e.cat==='g'||/^Spelling/.test(e.why||''))).sort((a,b)=>a.start-b.start);
+ const keep=[];let last=-1;for(const e of es)if(e.start>=last){keep.push(e);last=e.end;}
+ let out=t;keep.slice().reverse().forEach(e=>{out=out.slice(0,e.start)+e.fix+out.slice(e.end);});
+ const lesson=w=>{const L=LESSONS[w];const first=L&&String(L[0]).split(/(?:[.!?])\s/)[0];return w+(first?': '+first.replace(/[.!?]$/,'')+'.':'.');};
+ return {text:out,changes:keep.map(e=>({from:t.slice(e.start,e.end),to:e.fix,why:'correct',whyText:lesson(String(e.why||'Grammar').replace(/^Spelling: not in the dictionary$/,'Spelling'))}))};}
+function inkOfflineVersions(plan,t){
+ const out=[],seen={};
+ (plan.rw||[]).forEach(step=>{
+  const steps=[].concat(step);let text=t,changes=[];
+  try{for(const m of steps){const r=m==='correct'?inkCorrectOnly(text):(DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,text):null);if(!r)continue;changes=changes.concat(r.changes);text=r.text;}}catch(e){return;}
+  if(!text.trim()||text.trim()===t.trim()||seen[text])return;seen[text]=1;
+  out.push({kind:steps.map(m=>OFF_LABEL[m]||m).join(' + ')+' · offline',text:text,why:'Instant, on this device: rules, no model.',diff:true,changes:changes,off:true});});
+ return out;}
+function inkOfflineNote(plan){
+ const v=ALTS.filter(a=>a.off).length,c=COACH.filter(k=>k.hits&&k.hits.length).length;
+ if(!plan.known)return 'Offline, Inkwell rewrites by rules and coaches the rest. This prompt asks for writing only a model can do (⚙ Engine). Every prompt in the library works offline.';
+ if(!v&&!c)return 'The rules found nothing to change for this prompt, and the coach found nothing to point out: the passage may already do what it asks.';
+ return (v?(v===1?'One version':v+' versions')+' by rules':'')+(v&&c?', and notes':'')+(c&&!v?'Notes':'')+(c?' from the coach':'')+'. All on this device. A writing model (⚙ Engine) would add its own version.';}
 async function inkPromptRun(instr){
  instr=String(instr||'').trim();if(!instr)return toast('Write a prompt, or pick one below');
  if(!ALTSEL||!ALTSEL.t)return toast('Select the passage again, please');
- const box=document.getElementById('pmIn');if(box&&!box.value.trim())box.value=instr;
- const hist=inkPromptsMine();
- if(!S.connected&&!PRO){renderAlts('Rewriting with a prompt needs a writing model: on this device, '+(inkNative()?'start the tablet\u2019s own model (⚙ Engine), or connect to your laptop\u2019s':IS_TABLETAPP?'use Apple\u2019s on-device model where the iPhone or iPad has it, or connect to your laptop\u2019s model (⚙ Engine)':'install the writing model (⚙ Engine)')+'. The rules engine can correct, but it cannot rewrite to a brief.');return;}
- const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');
+ ALTSEL.instr=instr;
+ /* offline first: instant, on every device */
+ ALTS=ALTS.filter(a=>!a.off&&!a.mine);COACH=[];
+ const plan=inkPromptPlan(instr);
+ inkOfflineVersions(plan,ALTSEL.t).forEach(a=>ALTS.push(a));
+ (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
+ const toResults=()=>setTimeout(()=>{const f=document.querySelector('#cards .altOpt');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}},60);
+ if(!S.connected&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
+ const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
  try{const r=await inkWrite(instr,ALTSEL.t);
   if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
   renderAlts(ALTS.length>n0?'':'The model returned the passage unchanged.');}
- catch(e){renderAlts('The model did not answer: '+(e&&e.message||e));}}
+ catch(e){renderAlts('The model did not answer: '+(e&&e.message||e)+'. The offline versions still work.');}}
+/* what changed in an offline version, grouped by why: "Shorter, and it
+   means the same: in order to → to · due to the fact that → because" */
+function inkWhyList(a){
+ const cs=(a.changes||[]).filter(c=>c&&c.from!==c.to);if(!cs.length)return '';
+ const groups=[],at={};
+ cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||'A change the rules make.';if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
+ const item=c=>{const f=String(c.from).trim(),t=String(c.to).trim();
+  if(f.length>44||t.length>44)return '<span class="wq">“'+esc(f.split(/\s+/).slice(0,5).join(' '))+'…”</span>';
+  return t?'<del>'+esc(f)+'</del> → <ins>'+esc(t)+'</ins>':'<del>'+esc(f)+'</del> taken out';};
+ return '<div class="awhyl"><div class="awhyh">What changed, and why</div>'+groups.map(g=>'<div class="awg"><span class="awr">'+esc(g.why)+'</span> '+g.items.slice(0,4).map(item).join(' · ')+(g.items.length>4?' · and '+(g.items.length-4)+' more':'')+'</div>').join('')+'</div>';}
+/* the coach's card: what it noticed, how, an example, and the writer's turn */
+function inkCoachCard(k,i){
+ const quiet=!k.hits||!k.hits.length;
+ const ex=k.ex&&k.ex[0]?'<div class="cEx"><span class="cLab">For example</span>'+(k.ex[1]?'<del>'+esc(k.ex[0])+'</del> → <ins>'+esc(k.ex[1])+'</ins>':esc(k.ex[0]))+'</div>':'';
+ return '<div class="altOpt coachOpt'+(quiet?' quiet':'')+'"><span class="ak">🧭 Coach · '+esc(k.title)+'</span>'
+  +'<div class="cSay">'+esc(k.say)+'</div>'
+  +(quiet?'':'<div class="cHow"><span class="cLab">How</span>'+esc(k.how)+'</div>'+ex
+   +'<div class="cTry"><span class="cLab">Your turn</span><textarea id="cTry'+i+'" rows="3" aria-label="Your version" oninput="if(COACH['+i+'])COACH['+i+'].mine=this.value">'+esc(k.mine!=null?k.mine:(k.on||''))+'</textarea>'
+   +'<div class="row"><button onclick="inkCoachCheck('+i+')">Check mine</button><button class="primary" onclick="inkCoachUse('+i+')">Use mine ▸</button></div>'
+   +'<div class="cFb" id="cFb'+i+'" aria-live="polite">'+esc(k.fb||'')+'</div></div>')
+  +'</div>';}
+function inkCoachCheck(i){const k=COACH[i];if(!k)return;const el=document.getElementById('cTry'+i),v=el?el.value:'';
+ k.mine=v;k.fb=(String(v).trim()===String(k.on||'').trim())?'This is still the sentence as it was. Change it, then check.':INKCOACH.check(k.id,k.on||'',v);
+ const fb=document.getElementById('cFb'+i);if(fb)fb.textContent=k.fb;}
+function inkCoachUse(i){const k=COACH[i];if(!k||!ALTSEL)return;const el=document.getElementById('cTry'+i),v=(el?el.value:'').trim();
+ if(!v)return toast('Write your version first.');
+ const at=k.on?ALTSEL.t.indexOf(k.on):-1;
+ if(at<0)return toast('That sentence is no longer in the selection. Select the passage again, please.');
+ ALTS.push({kind:'Your version',text:ALTSEL.t.slice(0,at)+v+ALTSEL.t.slice(at+k.on.length),why:'Your own words.',diff:true,mine:true});
+ useAlt(ALTS.length-1);}
 /* the changes between the passage and a version, marked word by word */
 function inkDiffHTML(a,b){
  try{const A=GECFILTER.words(a),B=GECFILTER.words(b);if(A.length*B.length>400000)return esc(b);
@@ -11052,7 +11721,10 @@ function inkDiffHTML(a,b){
    /* 7.38: a word taken out keeps its space, so "does it really?" shows as
       "does it [really]?" and never as "does itreally?" */
    const gap=del&&A[h.i0].s>0&&/\s/.test(a[A[h.i0].s-1])&&!/\s$/.test(b.slice(0,h.j0<B.length?B[h.j0].s:b.length))?' ':'';
-   if(del)out+=gap+'<del style="color:#b03a2e;text-decoration:line-through;opacity:.75">'+esc(del)+'</del>'+(ins?' ':'');
+   /* and a word taken out with nothing in its place keeps the space after it,
+      so "is very clear" shows as "is [very] clear", not "is [very]clear" */
+   const nx=b.charAt(h.j0<B.length?B[h.j0].s:b.length),tail=del&&!ins&&/\w/.test(nx)&&/\s$/.test(out+gap)?' ':'';
+   if(del)out+=gap+'<del style="color:#b03a2e;text-decoration:line-through;opacity:.75">'+esc(del)+'</del>'+(ins?' ':tail);
    if(ins)out+='<ins style="color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px">'+esc(ins)+'</ins>';
    bi=h.j1>h.j0?B[h.j1-1].e:(h.j0<B.length?B[h.j0].s:b.length);}
   return out+esc(b.slice(bi));}catch(e){return esc(b);}}
@@ -11083,12 +11755,14 @@ function renderAlts(status){
  const c=document.getElementById('cards');
  let html='<div class="altHead">'+(ALTSEL&&ALTSEL.prompt?'✍ Rewrite with a prompt':'✨ Alternatives')+'<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
  if(ALTSEL&&ALTSEL.prompt)html+=inkPromptPanel();
- if(!ALTS.length)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
- else html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
+ const cards=ALTS.length+COACH.length;
+ if(!cards)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
+ else{html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
   '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
-  inkFactNote(a)+
-  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('');
- html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+(status||((ALTS.length===1?'One alternative':ALTS.length+' alternatives')+'. Your suggestions wait under ‹ Back.'))+'</div>';
+  inkWhyList(a)+inkFactNote(a)+
+  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('')
+  +COACH.map(inkCoachCard).join('');
+  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+esc(status||((ALTS.length?(ALTS.length===1?'One version':ALTS.length+' versions'):'')+(ALTS.length&&COACH.length?', and notes':'')+(COACH.length&&!ALTS.length?'Notes':'')+(COACH.length?' from the coach':'')+'. Your suggestions wait under ‹ Back.'))+'</div>';}
  c.innerHTML=html;}
 function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
 function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
@@ -11096,7 +11770,7 @@ function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
   +(f.lost.length?'it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '):'')+(f.lost.length&&f.added.length?'; ':'')
   +(f.added.length?'it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain':'')+'.</div>';}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
- pushUndo();inkAuthMark(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f');
+ pushUndo();inkAuthMark(a.mine?'t':(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f'));
  let text=a.text;
  if(ALTSEL.s===ALTSEL.e2){
   /* 7.30: an insertion (a draft) keeps a proper gap from its neighbours: a new
@@ -11171,7 +11845,7 @@ function inkSafeReplace(s,e,orig,repl,before){
  ed.value=t.slice(0,s)+repl+t.slice(e);
  return {s:s,e:s+repl.length};}
 function inkAltsOpen(sel,status){
- ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];ALTMODE=true;
+ ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];COACH=[];ALTMODE=true;
  hideBubble();if(S.panelFold)foldPanel();
  document.getElementById('right').classList.remove('hidden');setRTab('sugg');
  renderAlts(status);
@@ -11187,8 +11861,8 @@ function rewrite(mode){
  function done(){if(--pending<=0&&!ALTS.length){
   renderAlts(S.connected||PRO?'The engine returned no change for this text.'
    :(DEMORW[mode]?'This text is already tight for that style.':label+' needs a writing model: start the server (⚙ Engine) or install the Pro model.'));}}
- try{const out=DEMORW[mode]?DEMORW[mode](sel.t):null;
-  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine'});}catch(e){}
+ try{const r=DEMORW.explain&&DEMORW[mode]?DEMORW.explain(mode,sel.t):null,out=r&&r.text;
+  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine',changes:r.changes,off:true});}catch(e){}
  renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
  const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
  if(inkSrv()){pending++;
