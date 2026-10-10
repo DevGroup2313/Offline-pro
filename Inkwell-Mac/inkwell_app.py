@@ -804,6 +804,83 @@ def clipboard_write_text(text):
     return {"ok": False, "error": "not handled here"}
 
 
+
+def _version_tuple(v):
+    """'7.38' -> (7, 38); anything unreadable -> None."""
+    try:
+        return tuple(int(x) for x in str(v).strip().split("."))
+    except Exception:
+        return None
+
+
+def installer_disk_tidy():
+    """7.38: put away the installer disk that stays on the Mac's Desktop.
+
+    Opening the .dmg makes macOS mount it as a disk ("Inkwell 7.37"), and the
+    Finder shows that disk on the Desktop until it is ejected. The guide never
+    said to eject it, so it stayed. When Inkwell runs from anywhere else
+    (Applications), each Inkwell installer disk still mounted that holds this
+    version or an older one is ejected here. A disk holding a newer Inkwell is
+    left alone, because the writer is in the middle of updating. Nothing is
+    forced: a disk in use stays. The documents are never on that disk; they
+    live in ~/Library/Application Support/Inkwell.
+
+    Returns {"state": "none" | "put_away" | "running_from_disk" | "busy",
+    "names": [...]}."""
+    out = {"state": "none", "names": []}
+    if sys.platform != "darwin":
+        return out
+    import subprocess
+    import plistlib
+    here = [os.path.realpath(sys.executable)]
+    try:
+        here.append(os.path.realpath(__file__))
+    except Exception:
+        pass
+    # Opened straight from the disk or from Downloads, macOS runs a copy from
+    # a hidden read-only place (App Translocation), which only moving the app
+    # into Applications ends.
+    if any("/AppTranslocation/" in h for h in here):
+        out["state"] = "running_from_disk"
+        return out
+    try:
+        r = subprocess.run(["/usr/bin/hdiutil", "info", "-plist"], capture_output=True, timeout=20)
+        info = plistlib.loads(r.stdout) if r.returncode == 0 and r.stdout else {}
+    except Exception:
+        log_problem("installer_disk_tidy: hdiutil info failed", sys.exc_info())
+        return out
+    mounts = []
+    for image in info.get("images", []) or []:
+        for ent in image.get("system-entities", []) or []:
+            mp = ent.get("mount-point")
+            if (mp and mp.startswith("/Volumes/") and os.path.basename(mp).startswith("Inkwell")
+                    and os.path.isdir(os.path.join(mp, "Inkwell.app")) and mp not in mounts):
+                mounts.append(mp)
+    for mp in mounts:
+        root = os.path.realpath(mp) + os.sep
+        if any(h.startswith(root) for h in here):
+            return {"state": "running_from_disk", "names": [os.path.basename(mp)]}
+    mine = _version_tuple(LAUNCHER_BUILD)
+    gone, busy = [], []
+    for mp in mounts:
+        try:
+            with open(os.path.join(mp, "Inkwell.app", "Contents", "Info.plist"), "rb") as fh:
+                theirs = _version_tuple(plistlib.load(fh).get("CFBundleShortVersionString"))
+        except Exception:
+            theirs = None
+        if mine is None or theirs is None or theirs > mine:
+            continue
+        try:
+            r = subprocess.run(["/usr/bin/hdiutil", "detach", mp], capture_output=True, timeout=30)
+            (gone if r.returncode == 0 else busy).append(os.path.basename(mp))
+        except Exception:
+            busy.append(os.path.basename(mp))
+    if gone:
+        return {"state": "put_away", "names": gone}
+    if busy:
+        return {"state": "busy", "names": busy}
+    return out
+
 def save_bytes(win, name, mime, data_b64):
     """Write an exported file from Python.
 
@@ -1471,6 +1548,10 @@ class InkwellApi:
     def clipboard_write(self, text):
         return clipboard_write_text(text)
 
+    def installer_disk(self):
+        """7.38: the page asks once after start; see installer_disk_tidy."""
+        return installer_disk_tidy()
+
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)
 
@@ -1623,6 +1704,10 @@ class InkwellApiSingle:
 
     def clipboard_write(self, text):
         return clipboard_write_text(text)
+
+    def installer_disk(self):
+        """7.38: the page asks once after start; see installer_disk_tidy."""
+        return installer_disk_tidy()
 
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)

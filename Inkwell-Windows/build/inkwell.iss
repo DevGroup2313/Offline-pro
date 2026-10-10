@@ -39,14 +39,18 @@ RestartApplications=no
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Tasks]
-Name: "desktopicon"; Description: "Put Inkwell on the Desktop"; GroupDescription: "Shortcuts:"
+; 7.38: the Desktop shortcut is now unticked unless the writer ticks it. The
+; task has a new name because Inno Setup otherwise reuses the earlier answer
+; on an update; [InstallDelete] below removes the old shortcut first, so an
+; update with the box unticked clears the Desktop. The Start menu entry stays.
+Name: "desktopshortcut"; Description: "Also put Inkwell on the Desktop"; GroupDescription: "Shortcuts:"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{userprograms}\Inkwell"; Filename: "{app}\Inkwell.exe"; WorkingDir: "{app}"; Comment: "Inkwell {#AppVersion}"
-Name: "{userdesktop}\Inkwell"; Filename: "{app}\Inkwell.exe"; WorkingDir: "{app}"; Comment: "Inkwell {#AppVersion}"; Tasks: desktopicon
+Name: "{userdesktop}\Inkwell"; Filename: "{app}\Inkwell.exe"; WorkingDir: "{app}"; Comment: "Inkwell {#AppVersion}"; Tasks: desktopshortcut
 
 [InstallDelete]
 ; The program files of the older installer, which ran Inkwell through Python.
@@ -59,7 +63,8 @@ Type: files; Name: "{localappdata}\Inkwell\inkwell.ico"
 Type: files; Name: "{localappdata}\Inkwell\Inkwell.bat"
 Type: files; Name: "{localappdata}\Inkwell\Inkwell with console.bat"
 Type: filesandordirs; Name: "{localappdata}\Inkwell\vendor"
-; Its shortcuts pointed at Python, which may no longer be there.
+; Its shortcuts pointed at Python, which may no longer be there. The Desktop
+; one goes on every update too, and comes back only if the box is ticked.
 Type: files; Name: "{userdesktop}\Inkwell.lnk"
 Type: files; Name: "{userprograms}\Inkwell.lnk"
 

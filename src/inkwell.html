@@ -380,7 +380,7 @@ body[data-motion=minimal] #tipCard.min{animation:none}
 #tipCard .lbl{margin:0 0 6px;color:var(--gold)}
 #tipTxt{font-size:13.5px;line-height:1.65;font-family:Georgia,serif}
 #tipCard .row{margin-top:10px}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;font-size:13px;display:none;z-index:80;box-shadow:var(--sh-lg);animation:rise .3s var(--pop)}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;font-size:13px;max-width:min(620px,calc(100vw - 32px));box-sizing:border-box;text-align:center;line-height:1.45;display:none;z-index:80;box-shadow:var(--sh-lg);animation:rise .3s var(--pop)}
 #modal{position:fixed;inset:0;background:#0009;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:90}
 /* every card arrives as Tabula's paper arrives: a sheet pressed, then released —
    the overshoot, the settle, the deep layered cast, in day and in night dress */
@@ -10618,6 +10618,17 @@ function inkOfferOlderDocs(manual){
 }
 (function(){var done=false;function go(){if(done)return;var api=window.pywebview&&window.pywebview.api;if(!api||typeof api.older_docs!=='function')return;done=true;setTimeout(function(){try{inkOfferOlderDocs(false);}catch(e){}},2500);}
  window.addEventListener('pywebviewready',go);window.addEventListener('load',function(){setTimeout(go,1500);});})();
+/* 7.38: on the Mac, the installer disk that stayed on the Desktop is put away
+   once Inkwell runs from Applications (installer_disk_tidy in inkwell_app.py).
+   Run from the disk itself, Inkwell says once per build how to end that. */
+(function(){var done=false;function go(){if(done)return;var api=window.pywebview&&window.pywebview.api;if(!api||typeof api.installer_disk!=='function')return;done=true;
+ setTimeout(function(){Promise.resolve(api.installer_disk()).then(function(r){
+  if(!r||!r.state)return;var n=(r.names&&r.names[0])?'“'+r.names[0]+'” ':'';
+  if(r.state==='put_away')toast('The installer disk '+n+'is put away from your Desktop. Your documents were never on it.',6000);
+  else if(r.state==='running_from_disk'&&LS('diskTold')!==BUILD){SV('diskTold',BUILD);
+   toast('Inkwell is running from its installer disk, so the disk stays on your Desktop. Quit Inkwell, drag it onto Applications, and open it from there: Inkwell then puts the disk away. Your documents are safe either way.',16000);}
+ }).catch(function(){});},4000);}
+ window.addEventListener('pywebviewready',go);window.addEventListener('load',function(){setTimeout(go,1500);});})();
 function importLib(ev){
  var f=ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
  var r=new FileReader();
@@ -11689,8 +11700,8 @@ document.addEventListener('keydown',e=>{if(!tourOn||!document.getElementById('in
  if(e.key==='ArrowRight'){e.preventDefault();const b=document.querySelector('#inkTour .itNext');if(b)b.click();}
  else if(e.key==='ArrowLeft'){e.preventDefault();const b=[...document.querySelectorAll('#inkTour .itLink')].find(x=>x.textContent==='Back');if(b)b.click();}});
 window.addEventListener('resize',()=>{if(tourOn){TOURDRAG=null;tourPlace();}});
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
- clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2600);}
+function toast(msg,ms){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+ clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms||2600);}
 
 /* ================= KEYS ================= */
 ed.addEventListener('keydown',e=>{

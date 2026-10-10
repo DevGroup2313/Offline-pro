@@ -26,9 +26,13 @@ PART A. INSTALL (OR UPDATE) INKWELL
 
 4. Follow the installer. It needs no administrator password. It installs
    Inkwell for you only, into %LOCALAPPDATA%\Programs\Inkwell, puts Inkwell in
-   the Start menu (and on the Desktop if you tick the box), and removes the
-   old Python-based shortcuts and program files. It never removes your
-   documents.
+   the Start menu, and removes the old Python-based shortcuts and program
+   files. It never removes your documents.
+   The Desktop shortcut is optional: from 7.38 the box "Also put Inkwell on
+   the Desktop" is unticked, and an update with it unticked removes the old
+   Desktop shortcut. Removing that shortcut by hand is safe too: it is only a
+   link, and your documents are not in it. To pin Inkwell instead: Start,
+   right-click Inkwell, Pin to Start or Pin to taskbar.
 
 5. Open Inkwell. Look for "v7.34" beside the date at the top.
    If your documents are not there, choose File, Import library, and pick the

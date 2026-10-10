@@ -26,6 +26,10 @@ PART A. INSTALL (OR UPDATE) INKWELL
    could not verify..."), because the app is not signed with a paid Apple
    certificate. Then: System Settings, Privacy & Security, scroll down,
    press "Open Anyway" beside Inkwell, and confirm. Only once.
+   The disk "Inkwell" that the .dmg put on your Desktop is only the
+   installer; your documents are never on it. From 7.38, Inkwell puts it
+   away by itself when you open Inkwell from Applications. To put it away
+   by hand: right-click it on the Desktop and choose Eject.
 5. Look for "v7.34" beside the date at the top. If your documents are not
    there: File, Import library, and pick the file from step 1.
 6. Scriba: the first time you press Record, macOS asks for the microphone;
