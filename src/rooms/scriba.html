@@ -1906,7 +1906,7 @@ function sessSpkSide() {
   list.forEach(function (s) {
     var n = (r.cues || []).filter(function (c) { return c.spk === s.id; }).length;
     var it = document.createElement("div"); it.className = "spkItem spk-c" + (s.col || 0);
-    it.innerHTML = '<span class="dot"></span><input type="text" maxlength="60"><span class="n"></span><button type="button" data-a="go"></button><button type="button" data-a="x">×</button>';
+    it.innerHTML = '<span class="dot"></span><input type="text" maxlength="60"><span class="n"></span><button type="button" data-a="go"></button><button type="button" data-a="x" title="Remove">×</button>';
     var inp = it.querySelector("input"); inp.value = s.name; inp.setAttribute("aria-label", sessT("Speaker’s name", "Nom de l’intervenant"));
     it.querySelector(".n").textContent = n + " " + sessT(n === 1 ? "paragraph" : "paragraphs", n === 1 ? "paragraphe" : "paragraphes");
     var go = it.querySelector('[data-a="go"]'); go.textContent = sessT("First", "Premier"); go.title = sessT("Go to this speaker’s first paragraph", "Aller au premier paragraphe de cet intervenant"); go.disabled = !n;
@@ -2290,7 +2290,7 @@ function sessSlideView(list, k) {
     if (url) URL.revokeObjectURL(url); var sl = list[k]; url = URL.createObjectURL(sl.blob);
     ov.innerHTML = '<div class="svBar"><span class="svName"></span><span class="sp"></span>'
       + (sl.at != null ? '<button type="button" data-v="jump">' + sessEsc(sessT("Play from ", "Lire à ") + sessFmt(sl.at)) + "</button>" : "")
-      + '<button type="button" data-v="here">' + sessEsc(sessT("Tie to this moment", "Lier à ce moment")) + '</button><button type="button" data-v="del">' + sessEsc(sessT("Remove", "Retirer")) + '</button><button type="button" data-v="x">×</button></div>'
+      + '<button type="button" data-v="here">' + sessEsc(sessT("Tie to this moment", "Lier à ce moment")) + '</button><button type="button" data-v="del">' + sessEsc(sessT("Remove", "Retirer")) + '</button><button type="button" data-v="x" title="Close">×</button></div>'
       + '<div class="svImg"><button type="button" data-v="prev" aria-label="' + sessEsc(sessT("Previous", "Précédente")) + '">‹</button><img alt=""><button type="button" data-v="next" aria-label="' + sessEsc(sessT("Next", "Suivante")) + '">›</button></div>';
     ov.querySelector(".svName").textContent = sl.name + "  (" + (k + 1) + " / " + list.length + ")";
     ov.querySelector("img").src = url;

@@ -178,6 +178,18 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
     /// content; the app's are not. The answer returns as the promise's value.
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage,
                                replyHandler: @escaping (Any?, String?) -> Void) {
+        /* 7.38: the page's Paste and Copy menu items. WKWebView does not let a
+           page read the pasteboard on its own, so the menu used to ask for a
+           keyboard paste. iOS may ask once whether Inkwell may paste. */
+        if let body = message.body as? [String: Any], let op = body["op"] as? String, op == "clipRead" || op == "clipWrite" {
+            if op == "clipRead" {
+                replyHandler(["op": "clipRead", "text": UIPasteboard.general.string ?? ""], nil)
+            } else {
+                UIPasteboard.general.string = (body["text"] as? String) ?? ""
+                replyHandler(["op": "clipWrite", "ok": true], nil)
+            }
+            return
+        }
         /* 7.34: Apple's on-device model (AppleWritingModel.swift) */
         if let body = message.body as? [String: Any], let op = body["op"] as? String, op == "aiStatus" || op == "aiRespond" {
             if op == "aiStatus" { replyHandler(AppleWritingModel.status(), nil); return }

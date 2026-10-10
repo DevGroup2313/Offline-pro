@@ -705,6 +705,105 @@ def log_problem(tag, exc_info=None):
         pass
 
 
+# 7.38: the system clipboard for the page's own Paste and Copy menu items.
+# A web view will not let a page read the clipboard without a keyboard paste
+# (WKWebView on the Mac, WebView2 on Windows), so the menu used to tell the
+# writer to press the keys instead. The app reads and writes it here.
+def clipboard_read_text():
+    import subprocess
+    if sys.platform == "darwin":
+        try:
+            env = dict(os.environ)
+            env["LANG"] = env["LC_ALL"] = "en_US.UTF-8"
+            r = subprocess.run(["/usr/bin/pbpaste", "-Prefer", "txt"], capture_output=True, timeout=5, env=env)
+            if r.returncode == 0:
+                return {"ok": True, "text": r.stdout.decode("utf-8", "replace")}
+        except Exception:
+            pass
+        try:
+            from AppKit import NSPasteboard  # pyobjc, which the Mac window host already uses
+            t = NSPasteboard.generalPasteboard().stringForType_("public.utf8-plain-text")
+            return {"ok": True, "text": "" if t is None else str(t)}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:200]}
+    if sys.platform.startswith("win"):
+        try:
+            import ctypes
+            import time
+            from ctypes import wintypes
+            u32 = ctypes.WinDLL("user32", use_last_error=True)
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            u32.OpenClipboard.argtypes = [wintypes.HWND]
+            u32.OpenClipboard.restype = wintypes.BOOL
+            u32.CloseClipboard.restype = wintypes.BOOL
+            u32.IsClipboardFormatAvailable.argtypes = [wintypes.UINT]
+            u32.IsClipboardFormatAvailable.restype = wintypes.BOOL
+            u32.GetClipboardData.argtypes = [wintypes.UINT]
+            u32.GetClipboardData.restype = wintypes.HANDLE
+            k32.GlobalLock.argtypes = [wintypes.HGLOBAL]
+            k32.GlobalLock.restype = wintypes.LPVOID
+            k32.GlobalUnlock.argtypes = [wintypes.HGLOBAL]
+            k32.GlobalUnlock.restype = wintypes.BOOL
+            CF_UNICODETEXT = 13
+            for _ in range(20):  # another program may hold it for a moment
+                if u32.OpenClipboard(None):
+                    break
+                time.sleep(0.025)
+            else:
+                return {"ok": False, "error": "another program is using the clipboard"}
+            try:
+                if not u32.IsClipboardFormatAvailable(CF_UNICODETEXT):
+                    return {"ok": True, "text": ""}
+                h = u32.GetClipboardData(CF_UNICODETEXT)
+                if not h:
+                    return {"ok": True, "text": ""}
+                ptr = k32.GlobalLock(h)
+                if not ptr:
+                    return {"ok": False, "error": "the clipboard could not be read"}
+                try:
+                    text = ctypes.wstring_at(ptr)
+                finally:
+                    k32.GlobalUnlock(h)
+                return {"ok": True, "text": text}
+            finally:
+                u32.CloseClipboard()
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:200]}
+    import subprocess
+    for cmd in (["wl-paste", "--no-newline"], ["xclip", "-o", "-selection", "clipboard"], ["xsel", "-ob"]):
+        try:
+            r = subprocess.run(cmd, capture_output=True, timeout=5)
+            if r.returncode == 0:
+                return {"ok": True, "text": r.stdout.decode("utf-8", "replace")}
+        except Exception:
+            continue
+    return {"ok": False, "error": "no clipboard on this system"}
+
+
+def clipboard_write_text(text):
+    """Copy for the page's menu. On Windows the window host's own copy works,
+    so only the Mac and Linux are handled here; the page falls back."""
+    import subprocess
+    text = str(text if text is not None else "")
+    if sys.platform == "darwin":
+        try:
+            env = dict(os.environ)
+            env["LANG"] = env["LC_ALL"] = "en_US.UTF-8"
+            r = subprocess.run(["/usr/bin/pbcopy"], input=text.encode("utf-8"), timeout=5, env=env)
+            return {"ok": r.returncode == 0}
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:200]}
+    if sys.platform.startswith("linux"):
+        for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "-ib"]):
+            try:
+                r = subprocess.run(cmd, input=text.encode("utf-8"), timeout=5)
+                if r.returncode == 0:
+                    return {"ok": True}
+            except Exception:
+                continue
+    return {"ok": False, "error": "not handled here"}
+
+
 def save_bytes(win, name, mime, data_b64):
     """Write an exported file from Python.
 
@@ -1365,6 +1464,13 @@ class InkwellApi:
             self._wins.pop(which, None)
             return False
 
+    def clipboard_read(self):
+        """7.38: the page's Paste menu item reads the clipboard here."""
+        return clipboard_read_text()
+
+    def clipboard_write(self, text):
+        return clipboard_write_text(text)
+
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)
 
@@ -1510,6 +1616,13 @@ class InkwellApiSingle:
     def __init__(self, app_url):
         self._app_url = app_url
         self.main_window = None
+
+    def clipboard_read(self):
+        """7.38: the page's Paste menu item reads the clipboard here."""
+        return clipboard_read_text()
+
+    def clipboard_write(self, text):
+        return clipboard_write_text(text)
 
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)

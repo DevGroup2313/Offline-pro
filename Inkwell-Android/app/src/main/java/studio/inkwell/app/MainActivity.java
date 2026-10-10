@@ -7,6 +7,9 @@ package studio.inkwell.app;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -35,6 +38,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -400,6 +405,42 @@ public class MainActivity extends Activity {
                 return "false";
             }
             runOnUiThread(() -> startSave(name, mime, bytes));
+            return "true";
+        }
+
+        /** 7.38: the page's Paste and Copy menu items. A web view does not let
+         *  a page read the clipboard on its own, so the menu used to ask for a
+         *  keyboard paste; the app reads it instead, on the main thread, while
+         *  Inkwell is in front (Android allows nothing else). */
+        @JavascriptInterface
+        public String clipboardText() {
+            final String[] out = {""};
+            final CountDownLatch done = new CountDownLatch(1);
+            runOnUiThread(() -> {
+                try {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null && cm.hasPrimaryClip()) {
+                        ClipData clip = cm.getPrimaryClip();
+                        if (clip != null && clip.getItemCount() > 0) {
+                            CharSequence t = clip.getItemAt(0).coerceToText(MainActivity.this);
+                            if (t != null) out[0] = t.toString();
+                        }
+                    }
+                } catch (Exception ignored) { }
+                done.countDown();
+            });
+            try { done.await(2, TimeUnit.SECONDS); } catch (InterruptedException ignored) { }
+            return out[0];
+        }
+
+        @JavascriptInterface
+        public String clipboardSet(final String text) {
+            runOnUiThread(() -> {
+                try {
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (cm != null) cm.setPrimaryClip(ClipData.newPlainText("Inkwell", text == null ? "" : text));
+                } catch (Exception ignored) { }
+            });
             return "true";
         }
 
