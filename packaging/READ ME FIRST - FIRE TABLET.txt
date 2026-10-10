@@ -1,7 +1,24 @@
-INKWELL 7.36 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.38 FOR THE FIRE TABLET (ANDROID)
 ==========================================
+
+NEW IN 7.38
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Rewrite with a prompt now works with no writing model at all. Every
+  prompt in the library does something on this device: rules rewrite where
+  they can keep the meaning, and each change says what it was and why. For
+  what only you can write ("Show, don't tell", "Signpost the argument"), a
+  coach points to the exact words, says how, and checks your own try.
+- The seals are pressed into the wax; Schedae's button is a quill on
+  parchment. The app icons are redrawn.
+- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
+  colour's name shows when you hover over it, as do the names of the symbol
+  buttons everywhere.
+- Right-click Paste works with text copied from other apps.
+- "Your computer's model" connects to the Mac mini as well as a laptop.
+
 THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.36-buildN.apk
+THE FILE IT MAKES:   Inkwell-7.38-buildN.apk
 NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
 only a white page with the file name. Use the iPhone and iPad package instead.
 
@@ -51,7 +68,7 @@ PART B. BUILD THE APK
 7. Wait for the green tick (about 2 minutes; the first run can take longer).
 
 8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.36 (build N)", has the APK under "Assets".
+   newest release, "Inkwell 7.38 (build N)", has the APK under "Assets".
 
 
 PART C. INSTALL ON THE FIRE TABLET BY USB
@@ -87,7 +104,7 @@ PART E. UPDATING INKWELL LATER
 - New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
   (replace the old one). If the vendor files changed, upload those into
   app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.36'.
+- New version number: in app/build.gradle, change versionName '7.38'.
   (versionCode rises by itself with every build, so Android accepts each
   build as an update.)
 - New icon: replace the five ic_launcher.png files in app/src/main/res/

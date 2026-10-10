@@ -1,5 +1,25 @@
-INKWELL 7.34 FOR WINDOWS
+INKWELL 7.38 FOR WINDOWS
 ========================
+
+NEW IN 7.38
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Rewrite with a prompt now works with no writing model at all. Every
+  prompt in the library does something on this device: rules rewrite where
+  they can keep the meaning, and each change says what it was and why. For
+  what only you can write ("Show, don't tell", "Signpost the argument"), a
+  coach points to the exact words, says how, and checks your own try.
+- The seals are pressed into the wax; Schedae's button is a quill on
+  parchment. The app icons are redrawn.
+- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
+  colour's name shows when you hover over it, as do the names of the symbol
+  buttons everywhere.
+- Right-click Paste works with text copied from other apps.
+- The Desktop shortcut is now optional (the box is unticked); Inkwell stays
+  in the Start menu. Removing the shortcut never touches your documents.
+- This laptop can use the Mac mini's model: Engine, "Another computer's
+  model".
+
 New in 7.32: Inkwell for Windows is a normal Windows program. It no longer
 needs Python, and it has a real installer and a real uninstaller.
 
@@ -16,8 +36,8 @@ PART A. INSTALL (OR UPDATE) INKWELL
    %LOCALAPPDATA%\Inkwell\storage. The new installer keeps that folder and
    copies it to %LOCALAPPDATA%\Inkwell\backups before it changes anything.)
 
-2. Get the installer, Inkwell-7.34-Windows-Setup.exe:
-   from the GitHub release "Inkwell 7.34 for Windows (build N)" (under
+2. Get the installer, Inkwell-7.38-Windows-Setup.exe:
+   from the GitHub release "Inkwell 7.38 for Windows (build N)" (under
    Assets), or build it yourself (Part C).
 
 3. Double-click it. Windows may show "Windows protected your PC": choose
@@ -34,7 +54,7 @@ PART A. INSTALL (OR UPDATE) INKWELL
    link, and your documents are not in it. To pin Inkwell instead: Start,
    right-click Inkwell, Pin to Start or Pin to taskbar.
 
-5. Open Inkwell. Look for "v7.34" beside the date at the top.
+5. Open Inkwell. Look for "v7.38" beside the date at the top.
    If your documents are not there, choose File, Import library, and pick the
    file from step 1, or the newest backup in %LOCALAPPDATA%\Inkwell\backups.
 
@@ -70,7 +90,7 @@ This package also holds everything GitHub needs to build the installer.
 5. Actions tab: "Build Inkwell for Windows" runs by itself (or press "Run
    workflow"). It takes about 10 minutes. It builds Inkwell.exe, tests that
    its companion server starts and answers, and makes the installer.
-6. Releases (right-hand side): "Inkwell 7.34 for Windows (build N)", with
+6. Releases (right-hand side): "Inkwell 7.38 for Windows (build N)", with
    the installer under Assets.
    A red "Publish a release" step: Settings, Actions, General, Workflow
    permissions, "Read and write permissions", Save, and run it again.

@@ -1,14 +1,34 @@
-INKWELL 7.36 FOR THE MAC MINI (APPLE SILICON, 16 GB)
+INKWELL 7.38 FOR THE MAC MINI (APPLE SILICON, 16 GB)
 ====================================================
+
+NEW IN 7.38
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Rewrite with a prompt now works with no writing model at all. Every
+  prompt in the library does something on this device: rules rewrite where
+  they can keep the meaning, and each change says what it was and why. For
+  what only you can write ("Show, don't tell", "Signpost the argument"), a
+  coach points to the exact words, says how, and checks your own try.
+- The seals are pressed into the wax; Schedae's button is a quill on
+  parchment. The app icons are redrawn.
+- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
+  colour's name shows when you hover over it, as do the names of the symbol
+  buttons everywhere.
+- Right-click Paste works with text copied from other apps.
+- The installer disk that stayed on the Desktop is put away by itself
+  when you open Inkwell from Applications.
+- The Mac mini shares its model with every device now, the MacBook Pro and
+  Windows laptops included (Part C).
+
 THIS PACKAGE IS FOR: the Mac mini, and any Mac with an Apple chip (M1 and
 later). For an Intel Mac (the 2019 MacBook Pro) use the Mac package and its
 Intel disk image.
 
 WHAT IS INSIDE
 --------------
-- Inkwell-7.36-Mac-AppleSilicon.dmg: the ready-made app. No Python, no pip,
+- Inkwell-7.38-Mac-AppleSilicon.dmg: the ready-made app. No Python, no pip,
   no command line tools. (If the .dmg is not in this folder, download it
-  from the GitHub release "Inkwell 7.36 for Mac (build N)", under Assets.)
+  from the GitHub release "Inkwell 7.38 for Mac (build N)", under Assets.)
 - Everything GitHub needs to build it again (see the Mac READ ME).
 
 WHY THE OLD INSTALLER FAILED ON THIS MAC
@@ -26,7 +46,7 @@ Python for Inkwell.
 PART A. INSTALL
 ---------------
 1. If an older Inkwell opens: File, Export library. Keep the file.
-2. Open Inkwell-7.36-Mac-AppleSilicon.dmg. Drag Inkwell onto Applications.
+2. Open Inkwell-7.38-Mac-AppleSilicon.dmg. Drag Inkwell onto Applications.
    If asked, Replace.
 3. Open Inkwell from Applications. The first time, macOS refuses ("Apple
    could not verify..."): the app is not signed with a paid Apple
@@ -36,7 +56,7 @@ PART A. INSTALL
    installer; your documents are never on it. From 7.38, Inkwell puts it
    away by itself when you open Inkwell from Applications. To put it away
    by hand: right-click it on the Desktop and choose Eject.
-4. Look for "v7.36" beside the date at the top. If your documents are not
+4. Look for "v7.38" beside the date at the top. If your documents are not
    there: File, Import library, and choose the file from step 1.
 
 

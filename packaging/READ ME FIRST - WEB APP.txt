@@ -1,8 +1,28 @@
-INKWELL 7.36: THE HOME SCREEN WEB APP
+INKWELL 7.38: THE HOME SCREEN WEB APP
 =====================================
+
+NEW IN 7.38
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Rewrite with a prompt now works with no writing model at all. Every
+  prompt in the library does something on this device: rules rewrite where
+  they can keep the meaning, and each change says what it was and why. For
+  what only you can write ("Show, don't tell", "Signpost the argument"), a
+  coach points to the exact words, says how, and checks your own try.
+- The seals are pressed into the wax; Schedae's button is a quill on
+  parchment. The app icons are redrawn.
+- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
+  colour's name shows when you hover over it, as do the names of the symbol
+  buttons everywhere.
+- Right-click Paste works with text copied from other apps.
+- The home screen icon on an iPhone or iPad sits on the seal's own cream.
+- The web app cannot reach the Mac mini's model: a secure web page may
+  not call a plain address on the home network. The iPhone and iPad app
+  can.
+
 THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
 any browser. It is the fallback to the iPhone and iPad app.
-THE FILE IT MAKES:   Inkwell-7.36-web-buildN.zip (a ready web site)
+THE FILE IT MAKES:   Inkwell-7.38-web-buildN.zip (a ready web site)
 It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
 only add a page to the Home Screen from a web address, not from a file.
 
@@ -31,7 +51,7 @@ PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
 
 5. Actions tab: "Build the Inkwell web app" runs by itself (or press
    "Run workflow"). When it is green, open Releases: the newest
-   "Inkwell 7.36 web app" release has the site as a .zip under Assets.
+   "Inkwell 7.38 web app" release has the site as a .zip under Assets.
 
 
 PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)

@@ -6,7 +6,7 @@
 ; different folder that neither installing nor uninstalling ever touches.
 
 #ifndef AppVersion
-  #define AppVersion "7.32"
+  #define AppVersion "7.38"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\dist\Inkwell"

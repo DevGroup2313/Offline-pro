@@ -37,7 +37,7 @@ MIN_HEIGHT = 560
 ACCENT_BLUE = "#1F4F68"   # the Inkwell sigil blue
 
 # Build marker of this launcher, reported to the page by host_info().
-LAUNCHER_BUILD = "7.37"
+LAUNCHER_BUILD = "7.38"
 
 
 # ---------------------------------------------------------------------------
@@ -816,7 +816,7 @@ def _version_tuple(v):
 def installer_disk_tidy():
     """7.38: put away the installer disk that stays on the Mac's Desktop.
 
-    Opening the .dmg makes macOS mount it as a disk ("Inkwell 7.37"), and the
+    Opening the .dmg makes macOS mount it as a disk ("Inkwell 7.38"), and the
     Finder shows that disk on the Desktop until it is ejected. The guide never
     said to eject it, so it stayed. When Inkwell runs from anywhere else
     (Applications), each Inkwell installer disk still mounted that holds this
