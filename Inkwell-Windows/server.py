@@ -1921,7 +1921,9 @@ import socket
 
 LAN_PORT = int(os.environ.get("INKWELL_LAN_PORT", "8318"))
 LAN_PATH = os.path.join(DATA_DIR, "inkwell_lan.json")
-LAN_ROUTES = {"correct", "rewrite", "rewrite_preset", "rewrite_custom", "presets", "compose",
+# 7.38: "ask" too (Scriba's summaries and the rubric grader), so another
+# computer or a tablet using this one's model has every writing tool
+LAN_ROUTES = {"correct", "rewrite", "rewrite_preset", "rewrite_custom", "presets", "compose", "ask",
               "tone", "similarity", "socrat", "review", "reader", "transcribe", "stt_status",
               "stt_warm", "net_status"}
 LAN = {"server": None}

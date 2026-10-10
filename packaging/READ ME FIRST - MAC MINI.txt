@@ -66,15 +66,25 @@ number, or adds a name or number your text does not contain, is marked in
 red with exactly what changed, and its button reads "Use anyway".
 
 
-PART C. YOUR TABLETS USE THE MAC MINI'S MODEL
----------------------------------------------
-1. On the Mac mini: Engine, "Share with my tablets on this Wi-Fi". It shows
-   an address and a 6-digit code. If macOS asks to allow Inkwell on the
-   local network, choose Allow.
-2. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
-   model": enter the address and the code, then "Connect to my laptop".
-Only the writing tools are shared, and only with the code. Your documents
-are never reachable from the network. "Stop sharing" closes it again.
+PART C. YOUR OTHER DEVICES USE THE MAC MINI'S MODEL
+---------------------------------------------------
+1. On the Mac mini: Engine, "Share with my other devices on this Wi-Fi".
+   It shows an address and a 6-digit code. If macOS asks to allow Inkwell
+   on the local network, choose Allow. Keep Inkwell open on the Mac mini
+   (it may sit in the Dock); when it is closed, nothing is shared.
+2. On the Fire tablet, iPhone or iPad, on the same Wi-Fi: Engine, "Your
+   computer's model": enter the address and the code, then "Connect to my
+   computer".
+3. New in 7.38, on the MacBook Pro or a Windows laptop, on the same Wi-Fi:
+   Engine, "Another computer's model": enter the address and the code,
+   then "Use that computer's model". The pill at the top reads "Wi-Fi" and
+   the Mac mini's model. When the Mac mini is asleep or closed, the
+   laptop's own model stands in, and the writing goes back to the Mac mini
+   when it answers again. "Back to this computer's model" undoes it.
+Only the writing and voice tools are shared, and only with the code. Your
+documents are never reachable from the network. "Stop sharing" closes it.
+The web app in Safari cannot reach the Mac mini: a secure web page may not
+call a plain address on the home network. The iPhone and iPad app can.
 
 
 NEW IN 7.36: SPELLING, AND A CAREFUL GRAMMAR MODEL (OPTIONAL)

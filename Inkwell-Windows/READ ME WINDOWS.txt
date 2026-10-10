@@ -96,13 +96,20 @@ measured on 6 October 2026 (details in INKWELL_HANDOFF_v7p34.txt). It needs
 or number, or adds a name or number, is marked in red ("Use anyway").
 
 
-YOUR TABLETS CAN USE THIS COMPUTER'S MODEL
-------------------------------------------
-1. Open Inkwell here. Engine, under "Your laptop's model": press
-   "Share with my tablets on this Wi-Fi". It shows an address and a code.
-2. If Windows asks whether to allow Inkwell on the network, choose Allow
-   (Private networks only).
-3. On the Fire tablet or iPad, on the same Wi-Fi: Engine, "Your laptop's
-   model": type the address and the code, then "Connect to my laptop".
-Only the writing tools are shared, and only with the code. Your documents
-are never reachable from the network. "Stop sharing" closes it again.
+YOUR OTHER DEVICES CAN USE THIS COMPUTER'S MODEL, AND THIS ONE ANOTHER'S
+------------------------------------------------------------------------
+1. Open Inkwell here. Engine, under "Sharing this computer's model":
+   press "Share with my other devices on this Wi-Fi". It shows an address
+   and a code. Keep Inkwell open while others use it.
+2. If the computer asks whether to allow Inkwell on the network, choose
+   Allow (Private networks only).
+3. On the Fire tablet, iPhone or iPad, on the same Wi-Fi: Engine, "Your
+   computer's model": type the address and the code, then "Connect to my
+   computer".
+4. New in 7.38, the other way round: this computer can use a stronger
+   one's model, such as the Mac mini's. Engine, "Another computer's
+   model": type that computer's address and code, then "Use that
+   computer's model". When it is asleep or closed, this computer's own
+   model stands in until it answers again.
+Only the writing and voice tools are shared, and only with the code. Your
+documents are never reachable from the network. "Stop sharing" closes it again.

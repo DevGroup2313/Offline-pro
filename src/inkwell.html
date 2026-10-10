@@ -4711,7 +4711,7 @@ const IS_TABLETAPP=ON_ANDROID||/iPhone|iPad/.test(UA)||(/Macintosh/.test(UA)&&(n
 let WM_POLL=null;
 async function inkWmRefresh(){
  const box=document.getElementById('wmBox');if(!box)return;
- let c;try{c=await api('model_catalog',{});}catch(e){box.innerHTML='<span style="color:var(--mut)">The companion server is not answering, or it is older than 7.34. Reinstall Inkwell 7.34 on this computer.</span>';return;}
+ let c;try{c=await inkLocalApi('model_catalog',{});}catch(e){box.innerHTML='<span style="color:var(--mut)">The companion server is not answering, or it is older than 7.34. Reinstall Inkwell 7.34 on this computer.</span>';return;}
  const I=c.install||{},busy=I.state==='downloading'||I.state==='loading';
  let h='';
  if(c.active&&c.ready)h+='<div>✓ <b>'+esc(c.active.replace(/\.gguf$/i,''))+'</b> is running. Correct, Rewrite and Draft use it, offline; your tablets use it over the Wi-Fi when sharing is on.</div>';
@@ -4726,28 +4726,30 @@ async function inkWmRefresh(){
  clearTimeout(WM_POLL);if(busy&&document.getElementById('wmBox'))WM_POLL=setTimeout(inkWmRefresh,2000);
  else if(I.state==='done'&&!S.serverModel){ping();}}
 async function inkWmInstall(id){
- try{const r=await api('model_install',{id:id});if(!r.ok)return toast(r.error||'The install did not start');}catch(e){return toast('The companion server did not answer');}
+ try{const r=await inkLocalApi('model_install',{id:id});if(!r.ok)return toast(r.error||'The install did not start');}catch(e){return toast('The companion server did not answer');}
  toast('Downloading the writing model. This happens once and takes a few minutes.');inkWmRefresh();}
 async function inkLanRefresh(){
  const el=document.getElementById('lanBox');if(!el)return;
  if(IS_TABLETAPP){return;}
- if(!S.connected||!inkSrvLocal(S.server)){el.innerHTML='<span style="color:var(--mut)">The companion server is not running on this computer yet, so there is nothing to share.</span>';return;}
- try{const r=await fetch(S.server+'/api/lan_status',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});const j=await r.json();
+ let j=null;
+ try{j=await inkLocalApi('lan_status',{});}catch(e){j=null;}
+ if(!j){el.innerHTML='<span style="color:var(--mut)">The companion server is not running on this computer yet, so there is nothing to share.</span>';return;}
+ try{
   el.innerHTML=j.enabled
-   ?'<b>On.</b> On the tablet: Engine \u25B8 Your laptop\u2019s model, then enter<br>address <b style="font-size:15px">'+esc((j.addresses||[])[0]||'this computer\u2019s Wi-Fi address')+'</b> and code <b style="font-size:17px;letter-spacing:.12em">'+esc(j.code)+'</b>'
+   ?'<b>On.</b> On the other device: Engine \u25B8 Your computer\u2019s model (a tablet or phone) or Another computer\u2019s model (a laptop), then enter<br>address <b style="font-size:15px">'+esc((j.addresses||[])[0]||'this computer\u2019s Wi-Fi address')+'</b> and code <b style="font-size:17px;letter-spacing:.12em">'+esc(j.code)+'</b>'
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
-   :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my tablets on this Wi-Fi</button></div>';
+   :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my other devices on this Wi-Fi</button></div>';
  }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.35 on this computer.</span>';}
 }
 async function inkLanSet(on,newCode){
- try{await fetch(S.server+'/api/lan_enable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:!!on,new_code:!!newCode})});}catch(e){toast('The server did not answer.');}
+ try{await inkLocalApi('lan_enable',{on:!!on,new_code:!!newCode});}catch(e){toast('The server did not answer.');}
  inkLanRefresh();
  if(on)toast('Sharing on this Wi-Fi. If the computer asks whether to accept incoming connections, choose Allow.');
 }
 function engineAdvice(){
- if(inkNative())return 'On the '+deviceName()+', the writing model runs on the tablet itself, offline, with no other device: install it once below. Corrections also come from the rules engine. Your laptop\u2019s model over the Wi-Fi is an optional second engine.';
- if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your laptop\u2019s model over the same Wi-Fi (below).';
+ if(inkNative())return 'On the '+deviceName()+', the writing model runs on the tablet itself, offline, with no other device: install it once below. Corrections also come from the rules engine. Your computer\u2019s model over the Wi-Fi is an optional second engine.';
+ if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your computer\u2019s model over the same Wi-Fi (below).';
  return 'On this computer, the companion server runs the writing model; corrections come from the rules engine, offline.';}
 
 /* ================= HELPERS ================= */
@@ -8409,7 +8411,7 @@ async function installPro(){
  S.proAuto=false;SV('proAuto',false);
  return toast('The in-app Pro model was removed in 7.33: it made writing worse. Your laptop\u2019s model does rewriting and drafting.');
  if(!PRO_ALLOWED){S.proAuto=false;SV('proAuto',false);
-  instSay('Pro is not offered on phones and tablets: it needs more memory than the system gives an app, and the system closes the app. Use your laptop\u2019s model: Your laptop\u2019s model, below.');
+  instSay('Pro is not offered on phones and tablets: it needs more memory than the system gives an app, and the system closes the app. Use your computer\u2019s model: Your computer\u2019s model, below.');
   return toast('This needs a laptop. Connect to your laptop\u2019s model instead.');}
  if(PRO){toast('Pro model active: '+PRONAME+(PRODEVICE?' ('+PRODEVICE+')':''));return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('proBtn')||{textContent:''};
@@ -8432,7 +8434,7 @@ async function installPro(){
    toast('Pro installed on '+PRODEVICE+'; cached, offline from now on');return;
   }catch(e){/* installLoad logged each attempt */}}
  setPill();btn.textContent='⬇ Install Pro model';
- instSay(IS_TABLETAPP?'Pro failed on every known model. On a tablet, your laptop\u2019s model over Wi-Fi is the stronger path: Your laptop\u2019s model, below. The diagnostic report shows what this device lacks.':'Pro failed on every known model. On this machine, server.py is the better path.');
+ instSay(IS_TABLETAPP?'Pro failed on every known model. On a tablet, your computer\u2019s model over Wi-Fi is the stronger path: Your computer\u2019s model, below. The diagnostic report shows what this device lacks.':'Pro failed on every known model. On this machine, server.py is the better path.');
  toast('The model did not start. The Engine log says why; server.py is the other way.');}
 /* 7.34: the writing model inside the window, for laptops and desktops with
    WebGPU (Chrome, Edge; recent Safari). LFM2.5 1.2B Instruct (Liquid AI),
@@ -8586,30 +8588,57 @@ async function proChatDo(system,user,maxTok,onTok){
 /* 7.31: a server on another device (the laptop, over the home Wi-Fi) answers
    only with its pairing code, sent with every request */
 function inkSrvLocal(u){return /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:|\/|$)/i.test(String(u||''));}
-function inkSrvHeaders(json){const h={};if(json)h['Content-Type']='application/json';
- if(S.lanKey&&!inkSrvLocal(S.server))h['X-Inkwell-Key']=S.lanKey;return h;}
+/* 7.38: another computer's model. On the MacBook or a Windows laptop the
+   writing can go to a stronger computer at home (the Mac mini), while this
+   computer's own boxes (its model, its sharing, its shelf) stay with this
+   computer. When that computer stops answering, this computer's model is
+   used meanwhile, and its next answer switches the writing back to it. */
+const INK_LOCAL_SRV='http://127.0.0.1:8317';
+function inkLocalBase(){return IS_TABLETAPP||inkSrvLocal(S.server)?S.server:INK_LOCAL_SRV;}
+async function inkLocalApi(path,body){const r=await fetch(inkLocalBase()+'/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+ if(!r.ok)throw 0;return r.json();}
+function inkSrvHeaders(json,base){const h={};if(json)h['Content-Type']='application/json';
+ if(S.lanKey&&!inkSrvLocal(base||S.server))h['X-Inkwell-Key']=S.lanKey;return h;}
 /* the one door to the server: on the Fire, iPhone and iPad apps a laptop on
    the home network is reached by the app itself (window.InkwellNative.http),
    since the page's own requests from its secure address to a plain http
    address on the network are blocked or held for a permission the app window
    cannot show; on the laptop, and in a browser, the page asks directly */
-async function inkSrvFetch(path,opts){
- opts=opts||{};const url=S.server+path,method=opts.method||'GET',headers=inkSrvHeaders(!!opts.body);
+async function inkSrvFetch(path,opts,base){
+ opts=opts||{};base=base||S.srvActive||S.server;
+ const url=base+path,method=opts.method||'GET',headers=inkSrvHeaders(!!opts.body,base);
  const N=window.InkwellNative;
- if(N&&typeof N.http==='function'&&!inkSrvLocal(S.server)){
+ if(N&&typeof N.http==='function'&&!inkSrvLocal(base)){
   const r=await N.http(method,url,headers,opts.body||'');
   if(!r||!r.status)throw new Error((r&&r.text)||'no answer');
   return {ok:r.status>=200&&r.status<300,status:r.status,json:async()=>JSON.parse(r.text||'{}')};
  }
- return fetch(url,{method:method,headers:headers,body:opts.body});
+ /* a computer that is asleep never answers: the health check gives up after
+    a few seconds instead of waiting for the network to time out */
+ let ctl=null,tm=null;
+ if(opts.timeout&&typeof AbortController!=='undefined'){ctl=new AbortController();tm=setTimeout(()=>ctl.abort(),opts.timeout);}
+ try{return await fetch(url,{method:method,headers:headers,body:opts.body,signal:ctl?ctl.signal:undefined});}
+ finally{if(tm)clearTimeout(tm);}
 }
 async function api(path,body){const r=await inkSrvFetch('/api/'+path,{method:'POST',body:JSON.stringify(body||{})});
  if(!r.ok)throw 0;return r.json();}
-async function ping(){try{const r=await inkSrvFetch('/api/health');
- S.serverNeedsCode=(r.status===401);const j=await r.json();
- if(!j.ok)throw 0;S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;}catch(e){S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;}setPill();}
+async function ping(){
+ const one=async base=>{const r=await inkSrvFetch('/api/health',{timeout:5000},base);
+  if(base===S.server)S.serverNeedsCode=(r.status===401);const j=await r.json();if(!j.ok)throw 0;return j;};
+ let j=null,base=S.server;
+ try{j=await one(S.server);}catch(e){j=null;}
+ /* on a computer, its own model stands in for another computer's */
+ if(!j&&!IS_TABLETAPP&&!inkSrvLocal(S.server)){base=INK_LOCAL_SRV;try{j=await one(base);}catch(e){j=null;}}
+ if(j){S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;S.srvActive=base;}
+ else{S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;S.srvActive=null;}
+ setPill();}
+/* where the writing goes now: this computer, another computer, or this
+   computer standing in for another that is not answering */
+function inkSrvWhere(){if(!S.connected)return 'none';if(inkSrvLocal(S.srvActive||S.server))return inkSrvLocal(S.server)?'here':'standin';return 'other';}
 function setPill(){const p=document.getElementById('enginePill');
- if(S.connected){p.className='pill on';p.innerHTML='<i></i>'+(S.serverModel?'Server · '+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');}
+ if(S.connected){const w=inkSrvWhere();p.className='pill on';
+  p.innerHTML='<i></i>'+(w==='other'?'Wi-Fi · ':'')+(S.serverModel?(w==='other'?'':'Server · ')+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');
+  p.title=w==='other'?'The writing model of '+String(S.server).replace(/^https?:\/\//,'')+', over the Wi-Fi':w==='standin'?'That computer is not answering, so this computer\u2019s model is used meanwhile':'';}
  else if(PRO){p.className='pill on';p.innerHTML='<i></i>'+(PRO.apple?esc(PRONAME):'Pro · '+esc(PRONAME)+(PRODEVICE?' · '+esc(PRODEVICE):''));}
  else if(MINI){p.className='pill mini';p.innerHTML='<i></i>Grammar · '+esc(MININAME);}
  else{p.className='pill off';p.innerHTML='<i></i>Rules engine · offline';}}
@@ -11205,17 +11234,18 @@ function openModalDo(which){
  '<textarea id="diagOut" readonly style="display:none;width:100%;height:190px;font:11px/1.45 ui-monospace,monospace;margin-top:4px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>'+
  (IS_TABLETAPP?'':'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Writing model on this computer</h4>'
   +'<div id="wmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the companion server\u2026</div>')+
-'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Your laptop\u2019s model</h4>'+
+'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(IS_TABLETAPP?'Your computer\u2019s model':'Sharing this computer\u2019s model')+'</h4>'+
  (IS_TABLETAPP
-  ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">The laptop\u2019s model is stronger than anything a tablet can hold. On the laptop: Engine \u25B8 <i>Share with my tablets on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
-   +'<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input id="svUrl" placeholder="laptop address, e.g. 192.168.1.20:8318" value="'+esc(inkSrvLocal(S.server)?'':S.server.replace(/^https?:\/\//,''))+'" style="flex:1;min-width:200px">'
-   +'<input id="svKey" inputmode="numeric" maxlength="6" placeholder="6-digit code" value="'+esc(S.lanKey||'')+'" style="width:120px"></div>'
-   +'<div class="row"><button class="primary" onclick="saveServer()">Connect to my laptop</button>'
-   +(inkSrvLocal(S.server)?'':' <button onclick="document.getElementById(\'svUrl\').value=\'\';saveServer()">Forget the laptop</button>')+'</div>'
-   +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):''):(S.serverNeedsCode?'The laptop answered but the code is wrong: check the 6 digits on the laptop.':(inkSrvLocal(S.server)?'Not connected to a laptop.':'Not answering at '+esc(S.server)+': is the laptop awake, on the same Wi-Fi, with sharing on?')))+'</div>'
-  :'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your tablets on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
-   +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>')+
- '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Between your devices</h4>'+
+  ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">A computer\u2019s model (the Mac mini, or a laptop) is stronger than anything a tablet can hold. On that computer: Engine \u25B8 <i>Share with my other devices on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
+   +inkPeerForm('Connect to my computer','Forget the computer')
+   +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):''):(S.serverNeedsCode?'The computer answered but the code is wrong: check the 6 digits it shows.':(inkSrvLocal(S.server)?'Not connected to a computer.':'Not answering at '+esc(S.server)+': is the computer awake, on the same Wi-Fi, with sharing on?')))+'</div>'
+  :'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your other devices on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
+   +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>'
+   +'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Another computer\u2019s model</h4>'
+   +'<p style="font-size:13px;color:var(--mut);line-height:1.6">A stronger computer at home, such as the Mac mini, can do the writing for this one. On that computer: Engine \u25B8 <i>Share with my other devices on this Wi-Fi</i>, then enter the address and code it shows. Inkwell must be open there. Whenever it is not answering, this computer\u2019s own model stands in.</p>'
+   +inkPeerForm('Use that computer\u2019s model','Back to this computer\u2019s model')
+   +'<div id="peerSay" style="font-size:12px;margin-top:4px;color:var(--mut)">'+esc(inkPeerSay())+'</div>')+
+'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Between your devices</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">The laptop is the hub. Run server.py there, put its Wi-Fi address above and press Save &amp; reconnect. Push sends every document and pinned note up to the laptop; pull brings down what was last pushed, adding only what you do not already have here. One shared copy; the freshest push wins.</p>'+
  (inkSrvLocal(S.server)?'<div class="row"><button onclick="syncPush()">⇪ Push my library to the laptop</button> <button onclick="syncPull()">⇩ Pull the laptop’s library here</button></div>'
   :'<p style="font-size:12px;color:var(--mut);line-height:1.6">Over the home Wi-Fi, the laptop shares its model only, never your documents; sending the library between devices this way is the next stage. Until then: File \u25B8 Export library here, and File \u25B8 Import library on the other device.</p>')+
@@ -11293,6 +11323,18 @@ function inkNormServer(v){v=String(v||'').trim().replace(/\/+$/,'');if(!v)return
  if(!/^https?:\/\//i.test(v))v='http://'+v;
  if(!/:\d+$/.test(v.replace(/^https?:\/\//i,''))&&!inkSrvLocal(v))v+=':8318';
  return v;}
+function inkPeerForm(go,forget){
+ return '<div class="row" style="align-items:center;gap:8px;flex-wrap:wrap"><input id="svUrl" placeholder="its address, e.g. 192.168.1.20:8318" value="'+esc(inkSrvLocal(S.server)?'':S.server.replace(/^https?:\/\//,''))+'" style="flex:1;min-width:200px">'
+  +'<input id="svKey" inputmode="numeric" maxlength="6" placeholder="6-digit code" value="'+esc(S.lanKey||'')+'" style="width:120px"></div>'
+  +'<div class="row"><button class="primary" onclick="saveServer()">'+go+'</button>'
+  +(inkSrvLocal(S.server)?'':' <button onclick="document.getElementById(\'svUrl\').value=\'\';saveServer()">'+forget+'</button>')+'</div>';}
+function inkPeerSay(){
+ const w=inkSrvWhere(),at=String(S.server).replace(/^https?:\/\//,'');
+ if(inkSrvLocal(S.server))return S.connected?'Writing uses this computer\u2019s model.':'This computer\u2019s model is not running.';
+ if(S.serverNeedsCode)return 'That computer answered, but the code is wrong: check the 6 digits it shows.'+(w==='standin'?' Meanwhile this computer\u2019s model is used.':'');
+ if(w==='other')return '\u2713 Writing uses the model of '+at+(S.serverModel?' \u00b7 '+String(S.serverModel).replace(/\.gguf$/i,''):'')+'.';
+ if(w==='standin')return 'That computer ('+at+') is not answering, so this computer\u2019s model is used meanwhile. Is it awake, with Inkwell open and sharing on?';
+ return 'Not answering at '+at+': is that computer awake, on the same Wi-Fi, with Inkwell open and sharing on?';}
 function saveServer(){S.server=inkNormServer(document.getElementById('svUrl').value);SV('server',S.server);
  const kEl=document.getElementById('svKey');if(kEl){S.lanKey=kEl.value.replace(/\D/g,'').slice(0,6);SV('lanKey',S.lanKey);}
  S.modelRepo=document.getElementById('svRepo').value.trim();SV('modelRepo',S.modelRepo);
@@ -11445,7 +11487,7 @@ function upModelDir(inp){const files=Array.from(inp.files);inp.value='';if(!file
  mdlStat('Installing folder '+dir+'…');step();}
 function upModel(f,dir,rel,done){return new Promise(resolve=>{
  const x=new XMLHttpRequest();
- x.open('POST',S.server+'/api/upload_model?name='+encodeURIComponent(rel||f.name)+(dir?'&dir='+encodeURIComponent(dir):''));
+ x.open('POST',inkLocalBase()+'/api/upload_model?name='+encodeURIComponent(rel||f.name)+(dir?'&dir='+encodeURIComponent(dir):''));
  x.upload.onprogress=e=>{if(e.lengthComputable)mdlStat(f.name+': '+Math.round(100*e.loaded/e.total)+'%');};
  x.onload=()=>{try{const j=JSON.parse(x.responseText);
    if(j.ok){mdlStat(f.name+' installed ('+Math.round((j.bytes||0)/1048576)+' MB)');
@@ -11476,7 +11518,7 @@ async function refreshShelf(){
   +(window.pywebview?'<b>The desk is installed</b>; the engine answers from beside it from this line on.':'The desk is running in a browser; the engine lives in the installed app, which starts it itself.')
   +' <button class="lkbtn" style="margin-top:6px" onclick="inkStartServer(this)">▶ Start the engine</button>'
   +' <span id="svStartNote" style="font-size:11.5px;display:block;margin-top:6px;font-style:italic"></span></div>';return;}
- try{const r=await inkSrvFetch('/api/models');const j=await r.json();
+ try{const r=await fetch(inkLocalBase()+'/api/models');const j=await r.json();
   if(!j.found||!j.found.length){el.innerHTML='<div style="font-size:12px;color:var(--mut);font-style:italic">The shelf is empty. Import from your flash drive above.</div>';return;}
   el.innerHTML=j.found.map(m=>'<div class="rl"><b style="font-family:Georgia,serif">'+esc(m.name)+'</b>'+
    '<code style="font-size:10.5px">'+m.kind+'</code>'+
@@ -11485,12 +11527,12 @@ async function refreshShelf(){
    '<button class="lkbtn" onclick="mdlRemove(\''+m.name.replace(/'/g,"\\'")+'\')">Remove</button></div>').join('');
  }catch(e){el.innerHTML='<div style="font-size:12px;color:var(--mut)">Could not read the shelf.</div>';}}
 async function mdlUse(name){mdlStat('Loading '+name+'…');
- try{const r=await api('select_model',{name});
+ try{const r=await inkLocalApi('select_model',{name});
   if(r.ok){toast('Running '+name+' on this device');refreshShelf();ping();}
   else mdlStat('It would not load: '+(r.error||'see the server window for the exact line.'));}
  catch(e){mdlStat('Could not load it (see the server window).');}}
 async function mdlRemove(name){if(!confirm('Remove '+name+' from the shelf? The file is deleted.'))return;
- try{await api('remove_model',{name});toast('Removed');refreshShelf();ping();}catch(e){}}
+ try{await inkLocalApi('remove_model',{name});toast('Removed');refreshShelf();ping();}catch(e){}}
 
 /* drop a .gguf anywhere on the desk; it joins the shelf */
 let dropCount=0;

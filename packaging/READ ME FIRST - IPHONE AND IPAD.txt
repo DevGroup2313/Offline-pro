@@ -177,13 +177,14 @@ does. Open a recording (or "Import audio or video") and press Transcribe:
   plain, and they repeat the speech model's mishearings.
 
 
-YOUR LAPTOP'S MODEL
--------------------
-- Stronger rewriting and drafting come from your laptop over the same
-  Wi-Fi. On the laptop (Inkwell 7.36 for Mac or Windows): Engine, "Share
-  with my tablets on this Wi-Fi"; it shows an address and a 6-digit code.
-  On the tablet: Engine, "Your laptop's model": enter both, then "Connect
-  to my laptop".
+YOUR COMPUTER'S MODEL
+---------------------
+- Stronger rewriting and drafting come from a computer over the same
+  Wi-Fi: the Mac mini, or a laptop. On the computer (Inkwell for Mac or
+  Windows): Engine, "Share with my other devices on this Wi-Fi"; it shows
+  an address and a 6-digit code. Inkwell must stay open there. On this
+  device: Engine, "Your computer's model": enter both, then "Connect to my
+  computer".
 
 
 PART F. UPDATING INKWELL LATER
