@@ -38,6 +38,8 @@ import types
 import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+RUNTIME_FETCHED_ONCE = ("transformers.min.js", "ort-wasm-simd-threaded.jsep.mjs", "ort-wasm-simd-threaded.jsep.wasm")
+CHAT_LIMIT = 30 * 1024 * 1024
 REPO = os.path.dirname(HERE)
 
 # ---------------------------------------------------------------- the app's archive
@@ -263,6 +265,15 @@ def make_one(label, dmg, build, out, work):
     # the files the app carries, as the Actions build gathers them (mac.yml)
     shutil.copyfile(page, os.path.join(res, "Inkwell.html"))
     replace_tree(os.path.join(web, "vendor"), os.path.join(res, "vendor"))
+    # 7.41: the in-page model runtime stays out of the Mac app, so the zip fits
+    # a chat download (30 MB). The page fetches these once, when an in-page
+    # model first runs (it downloads itself then too), checks each against its
+    # SHA-256 and keeps it (INK_VENDOR_PIN in src/inkwell.html).
+    for name in RUNTIME_FETCHED_ONCE:
+        os.remove(os.path.join(res, "vendor", name))
+    # the current seal, not 7.37's icon
+    for name in ("inkwell.icns", "inkwell.png"):
+        shutil.copyfile(os.path.join(REPO, "Inkwell-Mac", name), os.path.join(res, name))
     for n in ("scriba_v729.html", "fontes_v729.html"):
         if os.path.exists(os.path.join(REPO, n)):
             shutil.copyfile(os.path.join(REPO, n), os.path.join(res, n))
@@ -318,6 +329,8 @@ def make_one(label, dmg, build, out, work):
     if os.path.exists(z):
         os.remove(z)
     run(["zip", "-qry9", "-X", z, name], cwd=work)
+    if os.path.getsize(z) >= CHAT_LIMIT:
+        raise SystemExit("%s is %.1f MiB, over the chat's 30 MiB limit" % (z, os.path.getsize(z) / 1048576))
     info.update({"zip": z, "version": version, "build": build})
     return info
 

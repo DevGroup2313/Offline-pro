@@ -1,4 +1,4 @@
-INKWELL 7.40 FOR MAC: THE READY-MADE APP
+INKWELL 7.41 FOR MAC: THE READY-MADE APP
 ========================================
 
 This zip holds Inkwell.app, ready to use. There is nothing to build, no
@@ -6,8 +6,8 @@ Terminal, and no disk image, so no disk icon stays on your Desktop.
 
 WHICH ZIP
 ---------
-  Inkwell-7.40-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
-  Inkwell-7.40-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
+  Inkwell-7.41-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
+  Inkwell-7.41-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
 To check: Apple menu, About This Mac. "Chip: Apple M..." is Apple Silicon.
 "Processor: ... Intel" is Intel.
 
@@ -20,7 +20,7 @@ INSTALL OR UPDATE
    documents are not inside the app, so they stay where they are
    (~/Library/Application Support/Inkwell).
 4. Open Inkwell from Applications, not from the Downloads folder.
-5. Look for "v7.40" beside the date at the top.
+5. Look for "v7.41" beside the date at the top.
 
 THE FIRST OPENING
 -----------------
@@ -53,6 +53,17 @@ Enter the address and the code. The pill at the top then names the Mac
 mini's model. If it says "computer linked, no model loaded", load a model on
 the Mac mini first (Engine there).
 
+NEW IN 7.41
+-----------
+- The Mac app is small enough to come straight in the chat again (under
+  30 MB). The program that runs the models inside the page (Scriba's
+  transcription and speakers, the grammar model) is fetched once, the first
+  time one of them runs, when that model downloads itself anyway. It is
+  checked against its fingerprint and kept, so it then works offline.
+- The Mac app has the new seal as its icon.
+- The web app shows the seal in the browser tab, and as the picture when you
+  send its link.
+
 NEW IN 7.40
 -----------
 - Inkwell keeps your library safe by itself. There is nothing to export,
@@ -82,7 +93,7 @@ settings. As a last resort only, Terminal can clear the download mark:
 HOW THIS APP WAS MADE, AND ITS LIMITS
 -------------------------------------
 GitHub Actions, which built the Mac app on a Mac, has not started since
-10 October. So this app is the last one Actions built (7.37), with the 7.40
+10 October. So this app is the last one Actions built (7.37), with the 7.41
 page, rooms, launcher and server put in, and the whole app sealed again
 (packaging/make_mac_prebuilt.py). The seal was checked file by file here
 (packaging/verify_mac_app.py), but this app has not yet been opened on a

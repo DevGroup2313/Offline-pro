@@ -1,11 +1,11 @@
-INKWELL 7.40 FOR IPHONE AND IPAD
+INKWELL 7.41 FOR IPHONE AND IPAD
 ================================
 
 TWO WAYS TO HAVE INKWELL ON AN IPHONE OR IPAD
 - TODAY: the web app, added to the Home Screen. Nothing to install; it opens
   like an app and works offline after the first visit.
 - LATER: the iPhone and iPad app (.ipa). GitHub builds it on one of its
-  Macs, and GitHub Actions has not started since 10 October, so no 7.40 .ipa
+  Macs, and GitHub Actions has not started since 10 October, so no 7.41 .ipa
   can be made yet. Its steps follow below, for when it works again. The app
   can use the Mac mini's model; the web app cannot (Safari does not let a
   secure web page call a computer on the home network).
@@ -19,7 +19,7 @@ TODAY: THE WEB APP ON THE HOME SCREEN
 2. On the iPhone or iPad, open that address in Safari.
 3. Share, "Add to Home Screen", Add.
 4. Open Inkwell from the Home Screen once while online, so it keeps its
-   files for offline use. Look for "v7.40" beside the date.
+   files for offline use. Look for "v7.41" beside the date.
 - Updating later: when the site is updated on Netlify, open Inkwell from the
   Home Screen while online; the new version shows at the first or second
   opening.
@@ -29,6 +29,17 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   copy on another device is wise for long work: File, Move the library to
   another device.
 
+
+NEW IN 7.41
+-----------
+- The Mac app is small enough to come straight in the chat again (under
+  30 MB). The program that runs the models inside the page (Scriba's
+  transcription and speakers, the grammar model) is fetched once, the first
+  time one of them runs, when that model downloads itself anyway. It is
+  checked against its fingerprint and kept, so it then works offline.
+- The Mac app has the new seal as its icon.
+- The web app shows the seal in the browser tab, and as the picture when you
+  send its link.
 
 NEW IN 7.40
 -----------
@@ -52,7 +63,7 @@ NEW IN 7.40
 THE IPHONE AND IPAD APP (.IPA), FOR WHEN GITHUB ACTIONS WORKS AGAIN
 =================================================================
 THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
-THE FILE IT MAKES:   Inkwell-7.40-ios-buildN.ipa
+THE FILE IT MAKES:   Inkwell-7.41-ios-buildN.ipa
 NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
 
 IMPORTANT, PLEASE READ FIRST
@@ -113,7 +124,7 @@ PART B. BUILD THE .IPA
 7. Wait for the green tick.
 
 8. On the main page, open "Releases" (right-hand side). The newest release,
-   "Inkwell 7.40 for iPhone and iPad (build N)", has the .ipa under "Assets".
+   "Inkwell 7.41 for iPhone and iPad (build N)", has the .ipa under "Assets".
 
 
 PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
@@ -242,7 +253,7 @@ PART F. UPDATING INKWELL LATER
 ------------------------------
 - New Inkwell page: upload the new Inkwell.html into web/ (replace the old
   one); new vendor files go into web/vendor/.
-- New version number: in project.yml, change MARKETING_VERSION: "7.40".
+- New version number: in project.yml, change MARKETING_VERSION: "7.41".
 - New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
   with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
   with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.

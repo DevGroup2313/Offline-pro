@@ -1,9 +1,9 @@
-INKWELL 7.40: THE WEB APP
+INKWELL 7.41: THE WEB APP
 =========================
 
 WHAT IS IN THIS PACKAGE
 -----------------------
-Unzipping this package gives one folder, "Inkwell_Web_App_v7p40". That
+Unzipping this package gives one folder, "Inkwell_Web_App_v7p41". That
 folder IS the finished web site: index.html is at its top, beside sw.js, the
 manifest, and the icons and vendor folders. There is nothing to build and no
 GitHub Actions is needed. No file in it is larger than 9 MB.
@@ -20,11 +20,11 @@ A. Netlify (free, and the simplest)
    1. On a computer, open  https://app.netlify.com/drop  in a browser and
       log in (free). A site dropped without an account is kept behind a
       temporary password until it is claimed.
-   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p40" onto the
+   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p41" onto the
       page. Drag the FOLDER, not the .zip file: Netlify asks for the
       unzipped folder.
    3. Netlify shows the address, ending in .netlify.app. Keep it. Open it:
-      Inkwell should appear, with "v7.40" beside the date at the top.
+      Inkwell should appear, with "v7.41" beside the date at the top.
    Netlify's guidance is that a drop works best under 50 MB; this site is
    about 66 MB, most of it the files for the optional models. If the drop
    stalls, try once more on a steady connection, or use B.
@@ -32,7 +32,7 @@ A. Netlify (free, and the simplest)
 B. GitHub Pages (free for a PUBLIC repository)
    1. github.com, "+", New repository, for example inkwell-site. Choose
       Public. Create repository.
-   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p40"
+   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p41"
       and drag in EVERYTHING INSIDE it (index.html, sw.js,
       manifest.webmanifest, and the icons and vendor folders). Commit.
    3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.40" beside the date at the top.
+Look for "v7.41" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,17 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.41
+-----------
+- The Mac app is small enough to come straight in the chat again (under
+  30 MB). The program that runs the models inside the page (Scriba's
+  transcription and speakers, the grammar model) is fetched once, the first
+  time one of them runs, when that model downloads itself anyway. It is
+  checked against its fingerprint and kept, so it then works offline.
+- The Mac app has the new seal as its icon.
+- The web app shows the seal in the browser tab, and as the picture when you
+  send its link.
 
 NEW IN 7.40
 -----------
@@ -190,7 +201,7 @@ PROBLEMS
   the files. See YOUR OWN ADDRESS above,
   and open the .netlify.app address meanwhile.
 - "Page not found" on Netlify: the folder dropped was not the one with
-  index.html at its top. Drop "Inkwell_Web_App_v7p40" itself.
+  index.html at its top. Drop "Inkwell_Web_App_v7p41" itself.
 - The address shows "404" on GitHub: wait a few minutes; check that
   index.html is at the top of the repository, not inside a folder.
 - The old version still shows: close Inkwell fully and open it again while

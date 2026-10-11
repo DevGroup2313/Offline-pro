@@ -822,6 +822,30 @@ var SCRIBA_BLOBS=null;
 /* 7.38: on the web app's site a large file may be kept in parts (name.parts
    holds the number; name.part1 and on hold the bytes), so that every file of
    the site can be put online by dragging it into a browser */
+/* 7.41: the model runtime, fetched once where a build leaves it out (the
+   Mac app). Byte for byte the published @huggingface/transformers 3.8.1
+   files, each checked against its SHA-256 before it is used or kept, and
+   kept in Inkwell's own cache (the desk does the same). */
+var SCRIBA_PIN={
+  "transformers.min.js":["https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js","aa5002b70e789798da263f5f99c62bd3e8fcd0c119258a493c40c180648365fa","text/javascript"],
+  "ort-wasm-simd-threaded.jsep.mjs":["https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs","08fb86ec433c78bfb032c5d84a68b8e8e5a8d81268fa39e24314179a5767a5b9","text/javascript"],
+  "ort-wasm-simd-threaded.jsep.wasm":["https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm","c46655e8a94afc45338d4cb2b840475f88e5012d524509916e505079c00bfa39","application/wasm"]
+};
+function scribaKept(name){
+  var pin=SCRIBA_PIN[name];
+  if(!pin||!(window.crypto&&crypto.subtle)) return Promise.reject(new Error(name));
+  function hex(b){ return crypto.subtle.digest("SHA-256",b).then(function(d){ return Array.prototype.map.call(new Uint8Array(d),function(x){ return ("0"+x.toString(16)).slice(-2); }).join(""); }); }
+  var cache=null;
+  var open=(typeof caches!=="undefined")?caches.open("inkwell-vendor-v1").catch(function(){ return null; }):Promise.resolve(null);
+  return open.then(function(c){ cache=c; return c?c.match(pin[0]).catch(function(){ return null; }):null; })
+    .then(function(hit){ return hit?hit.arrayBuffer().then(function(b){ return hex(b).then(function(h){ if(h===pin[1]) return b; return null; }); }):null; })
+    .then(function(b){ if(b) return b;
+      return fetch(pin[0]).then(function(r){ if(!r.ok) throw new Error(name+": HTTP "+r.status); return r.arrayBuffer(); })
+        .then(function(b2){ return hex(b2).then(function(h){
+          if(h!==pin[1]){ window.__inkVendorBad=true; throw new Error(name+": the downloaded copy is not the expected file"); }
+          if(cache){ try{ cache.put(pin[0],new Response(b2.slice(0),{headers:{"Content-Type":pin[2]}})); }catch(e){} }
+          return b2; }); }); });
+}
 function scribaVendorBytes(url){
   return fetch(url).then(function(r){ if(r.ok) return r.arrayBuffer(); throw new Error("whole"); })
     .catch(function(){
@@ -831,7 +855,8 @@ function scribaVendorBytes(url){
         function next(){ if(i>n) return new Blob(got).arrayBuffer();
           return fetch(url+".part"+(i++)).then(function(q){ if(!q.ok) throw new Error(url); return q.arrayBuffer(); }).then(function(b){ got.push(b); return next(); }); }
         return next(); });
-    });
+    })
+    .catch(function(e){ var name=url.split("/").pop(); if(SCRIBA_PIN[name]) return scribaKept(name); throw e; });
 }
 function scribaBlobUrls(cb){
   if(SCRIBA_BLOBS!==null){ cb(); return; }
@@ -845,7 +870,8 @@ function scribaPageUrls(){
   var base=document.baseURI||location.href, urls=[];
   if(SCRIBA_BLOBS) urls.push(SCRIBA_BLOBS);
   try{ urls.push({module:new URL("vendor/transformers.min.js",base).href, wasm:new URL("vendor/",base).href}); }catch(e){}
-  urls.push({module:"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1", wasm:null});
+  /* the published library, unchecked, only when no download has failed its check */
+  if(!window.__inkVendorBad) urls.push({module:"https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1", wasm:null});
   return urls;
 }
 function scribaPageWorker(){

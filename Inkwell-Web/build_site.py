@@ -17,6 +17,44 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# 7.41: the address people are sent (Inkwell-Web/SITE_URL.txt). Link previews
+# (Messages, WhatsApp, Mail, social sites) need the picture's full address.
+def site_url():
+    try:
+        with open(os.path.join(HERE, "SITE_URL.txt"), encoding="utf-8") as f:
+            return f.read().strip().rstrip("/")
+    except OSError:
+        return ""
+
+
+SHARE_DESC = "The writing desk that teaches as it corrects. Offline, private, on every device."
+
+
+def share_tags(site):
+    """The seal in every tab and in every shared link."""
+    tags = ['<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">',
+            '<link rel="shortcut icon" href="favicon.ico">',
+            '<meta name="description" content="%s">' % SHARE_DESC,
+            '<meta property="og:type" content="website">',
+            '<meta property="og:site_name" content="Inkwell">',
+            '<meta property="og:title" content="Inkwell">',
+            '<meta property="og:description" content="%s">' % SHARE_DESC,
+            '<meta name="twitter:card" content="summary_large_image">',
+            '<meta name="twitter:title" content="Inkwell">',
+            '<meta name="twitter:description" content="%s">' % SHARE_DESC]
+    if site:
+        img = site + "/icons/inkwell-share.png"
+        tags += ['<meta property="og:url" content="%s/">' % site,
+                 '<meta property="og:image" content="%s">' % img,
+                 '<meta property="og:image:type" content="image/png">',
+                 '<meta property="og:image:width" content="1200">',
+                 '<meta property="og:image:height" content="630">',
+                 '<meta property="og:image:alt" content="The Inkwell seal: a pen in an inkwell, in brass and midnight blue, on cream wax.">',
+                 '<meta name="twitter:image" content="%s">' % img]
+    return "\n".join(tags) + "\n"
+
+
 HEAD_TAGS = """<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -122,7 +160,7 @@ def main():
     os.makedirs(out)
 
     with open(os.path.join(assets, "Inkwell.html"), encoding="utf-8") as f:
-        page = inject_head(f.read(), HEAD_TAGS)
+        page = inject_head(f.read(), share_tags(site_url()) + HEAD_TAGS)
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
         f.write(page)
 
@@ -133,6 +171,7 @@ def main():
     if os.path.isdir(tf4):
         shutil.copytree(tf4, os.path.join(out, "vendor", "tf4"))
     shutil.copytree(os.path.join(HERE, "icons"), os.path.join(out, "icons"))
+    shutil.copyfile(os.path.join(HERE, "favicon.ico"), os.path.join(out, "favicon.ico"))
     split = split_large(out)
 
     manifest = {
@@ -151,7 +190,7 @@ def main():
     with open(os.path.join(out, "manifest.webmanifest"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
-    files = ["./", "index.html", "manifest.webmanifest"]
+    files = ["./", "index.html", "manifest.webmanifest", "favicon.ico"]
     # every file, in sub-folders too (vendor/csl holds the citation styles);
     # a folder in this list would make the whole offline install fail
     for folder in ("icons", "vendor"):

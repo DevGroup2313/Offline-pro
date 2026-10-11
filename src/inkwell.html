@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Inkwell; Offline Writing Studio</title>
+<title>Inkwell: Offline Writing Studio</title>
 <style>
 :root{
  --canvas:#d4d5d8;
@@ -1854,7 +1854,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.40 · XI · OCTOBRIS · MMXXVI';
+const BUILD='7.41 · XI · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -8843,11 +8843,35 @@ const INKAI={files:null,slots:{}};
    file there is larger than 9 MiB, so each can be put online by dragging it
    into a browser): name.parts holds the number of parts, name.part1 and on
    the bytes. The apps carry each file whole, and the first fetch finds it. */
+/* 7.41: the in-page model runtime, fetched once where a build leaves it out
+   (the Mac app does, to fit a download in the chat). These three files are
+   byte for byte the published @huggingface/transformers 3.8.1 files. Each is
+   checked against its SHA-256 before it is used or kept, and is kept in
+   Inkwell's own cache: it is needed only when an in-page model first runs,
+   and that model downloads itself at the same moment, so after that first
+   use everything works offline as before. Nothing else is fetched this way. */
+const INK_VENDOR_PIN={
+ 'transformers.min.js':['https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js','aa5002b70e789798da263f5f99c62bd3e8fcd0c119258a493c40c180648365fa','text/javascript'],
+ 'ort-wasm-simd-threaded.jsep.mjs':['https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs','08fb86ec433c78bfb032c5d84a68b8e8e5a8d81268fa39e24314179a5767a5b9','text/javascript'],
+ 'ort-wasm-simd-threaded.jsep.wasm':['https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm','c46655e8a94afc45338d4cb2b840475f88e5012d524509916e505079c00bfa39','application/wasm']};
+async function inkVendorKept(name){
+ const pin=INK_VENDOR_PIN[name];
+ if(!pin||!(window.crypto&&crypto.subtle))throw new Error(name+' is not in this build');
+ const hex=async b=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ let c=null;try{if(typeof caches!=='undefined')c=await caches.open('inkwell-vendor-v1');}catch(e){c=null;}
+ if(c){try{const hit=await c.match(pin[0]);if(hit){const b=await hit.arrayBuffer();if(await hex(b)===pin[1])return b;await c.delete(pin[0]);}}catch(e){}}
+ const r=await fetch(pin[0]);
+ if(!r.ok)throw new Error(name+': HTTP '+r.status+' from the published copy');
+ const b=await r.arrayBuffer();
+ if(await hex(b)!==pin[1]){const e=new Error(name+': the downloaded copy is not the expected file, so it was not used');e.inkIntegrity=true;window.__inkVendorBad=true;throw e;}
+ if(c){try{await c.put(pin[0],new Response(b.slice(0),{headers:{'Content-Type':pin[2]}}));}catch(e){}}
+ return b;}
 async function inkVendorBytes(url){
  let r=null;try{r=await fetch(url);}catch(e){r=null;}
  if(r&&r.ok)return r.arrayBuffer();
  const name=url.split('/').pop();let n=0;
  try{const p=await fetch(url+'.parts');if(p.ok)n=parseInt(await p.text(),10)||0;}catch(e){n=0;}
+ if(!n&&INK_VENDOR_PIN[name])return inkVendorKept(name);
  if(!n)throw new Error(name+': HTTP '+(r?r.status:'unreachable'));
  const bufs=[];
  for(let i=1;i<=n;i++){const q=await fetch(url+'.part'+i);if(!q.ok)throw new Error(name+', part '+i+' of '+n+': HTTP '+q.status);bufs.push(await q.arrayBuffer());}
@@ -8860,7 +8884,9 @@ async function inkAiFiles(){
  try{files={tf:await blob('transformers.min.js','text/javascript'),
   mjs:await blob('ort-wasm-simd-threaded.jsep.mjs','text/javascript'),
   wasm:await blob('ort-wasm-simd-threaded.jsep.wasm','application/wasm')};}
- catch(e){/* no vendor folder (should not happen): the published runtime, once */
+ catch(e){/* no vendor folder (should not happen): the published runtime, once;
+   never after a download failed its SHA-256 check */
+  if(e&&e.inkIntegrity)throw e;
   files={tf:'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1'};}
  return INKAI.files=files;}
 /* 7.34: Transformers.js 4 (vendor/tf4, carried by the web app) for the
