@@ -124,6 +124,11 @@ final class InkwellCore {
       + " window.pywebview={api:{\n"
       + "  save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},\n"
       + "  storage_set:function(k,v){try{A.storageSet(String(k),String(v));return P(true);}catch(e){return P(false);}},\n"
+      // 7.40: the keeping, whole copies of the library in the app's own folder (Keep.java)
+      + "  keep_copy:function(m,meta,body){try{return P(A.keepCopy(String(m),String(meta),String(body))==='true');}catch(e){return P(false);}},\n"
+      + "  keep_list:function(){try{return P(A.keepList());}catch(e){return P('[]');}},\n"
+      + "  keep_read:function(m){try{return P(A.keepRead(String(m)));}catch(e){return P('');}},\n"
+      + "  keep_drop:function(m){try{return P(A.keepDrop(String(m))==='true');}catch(e){return P(false);}},\n"
       + "  rescue_offer:function(){try{var st=JSON.parse(A.storeJson());if(!st.docs)return P('');\n"
       + "   var o={docs:JSON.parse(st.docs),active:st.active?JSON.parse(st.active):null,notes:st.notes?JSON.parse(st.notes):[],snaps:st.snaps?JSON.parse(st.snaps):{}};\n"
       + "   return P(o.docs&&o.docs.length?JSON.stringify(o):'');}catch(e){return P('');}},\n"

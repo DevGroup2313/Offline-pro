@@ -1913,13 +1913,13 @@ const LS=k=>{var raw=null;try{raw=localStorage.getItem('ink_'+k);}catch(e){}
  if(raw===null||raw===undefined)return null;
  try{return JSON.parse(raw);}catch(e){
   if(k==='docs'){var s=salvageDocs(raw);
-   if(s){setTimeout(function(){toast('Your document storage was damaged; Inkwell recovered what it could. Check the shelf, then File ▸ Export library now.');},1200);return s;}}
+   if(s){setTimeout(function(){toast('Your document storage was damaged; Inkwell recovered what it could. Check the shelf: File ▸ Earlier copies holds the library as it was before.');},1200);return s;}}
   console.warn('[inkwell] storage read failed for',k,e);return null;}};
 let STORWARN=false,STORBAD=false;
 /* the footer chip always answers "is my writing safe?" */
 function markSaved(bad){var el=document.getElementById('stSave');if(!el)return;
  if(bad){STORBAD=true;el.textContent='⚠ memory only';el.style.color='var(--red)';
-  el.title='Permanent storage failed on this device; File ▸ Export library right now to keep this work.';}
+  el.title='This device refused to store anything, so this session lives in memory only. Before you close Inkwell: File ▸ Move the library to another device ▸ Save the library as a file.';}
  else{STORBAD=false;el.textContent='✓ saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   el.style.color='var(--mut)';el.title='Everything on the page is written to this device.';}}
 /* 7.26: in the desktop app every library save is also written, a moment later,
@@ -1936,6 +1936,9 @@ function inkBridgeMirror(k,v){
     Promise.resolve(api.storage_set(key,j)).catch(function(){});}catch(e){}});},1500);
  }catch(e){}}
 const SV=(k,v)=>{var ok=false;
+ /* 7.40: while a copy of the library is being put back, the page that is about
+    to reload must not write its old library over it */
+ if(typeof KEEP!=='undefined'&&KEEP&&KEEP.reloading)return true;
  try{localStorage.setItem('ink_'+k,JSON.stringify(v));ok=true;inkBridgeMirror(k,v);}catch(e){}
  if(!ok){
   try{window.__inkBridgeStore=window.__inkBridgeStore||{};window.__inkBridgeStore[k]=JSON.stringify(v);
@@ -1948,7 +1951,7 @@ const SV=(k,v)=>{var ok=false;
   if(k==='docs'||k==='snaps'||k==='notes')queueMirror();
   if(k==='docs'){var d=(S.docs||[]).find(x=>x.id===S.active);markSaved(false);}
   return true;}
- if(!STORWARN){STORWARN=true;setTimeout(function(){toast('Storage is unavailable here, so this session lives in memory only. Use File ▸ Export library before you close.');},800);}
+ if(!STORWARN){STORWARN=true;setTimeout(function(){toast('This device refused to store anything, so this session lives in memory only. Before you close Inkwell: File ▸ Move the library to another device ▸ Save the library as a file.');},800);}
  markSaved(true);
  console.warn('[inkwell] storage write failed for',k);return false;};
 /* ---- the IndexedDB mirror ---- */
@@ -2018,7 +2021,7 @@ async function mirrorSyncOnce(){
 }
 /* if storage is memory-only, closing the window would burn the day's work */
 window.addEventListener('beforeunload',function(e){if(STORBAD){e.preventDefault();
- e.returnValue='Inkwell is holding your work in memory only. Export the library (File ▸ Export library) before closing.';return e.returnValue;}});
+ e.returnValue='Inkwell is holding your work in memory only, because this device refused to store it. Save the library as a file (File ▸ Move the library to another device) before closing.';return e.returnValue;}});
 /* an autosnap every quarter hour of live drafting, so a thesis chapter can
    always be walked back */
 var LASTTYPE=0,LASTAUTOSNAP=0;
@@ -2030,19 +2033,239 @@ setInterval(function(){
   LASTAUTOSNAP=Date.now();snap('Autosnap');
  }catch(e){}
 },60000);
-/* the quiet, truthful nudge: big library, stale backup */
-function backupNudge(){
- try{
-  var tot=(S.docs||[]).reduce(function(a,d){return a+wordCt(d.text||'');},0);
-  if(tot<2000)return;
-  var last=LS('lastExport')||0,nudge=LS('lastNudge')||0;
-  if(Date.now()-last<6*86400000)return;
-  if(Date.now()-nudge<86400000)return;
-  SV('lastNudge',Date.now());
-  setTimeout(function(){toast('Your library has not been exported for a while; File ▸ Export library takes twenty seconds.');},5000);
- }catch(e){}
-}
+/* 7.40: the export reminder is retired. Inkwell keeps its own copies (THE
+   KEEPING, below), so the writer is never asked to save a file. */
+function backupNudge(){}
 function markExported(){SV('lastExport',Date.now());}
+/* ================= THE KEEPING (7.40): Inkwell carries its own library =================
+   Nothing to export, and nothing left on the Desktop. Every room's work is
+   copied, whole, into Inkwell's own keeping: this device's browser database,
+   and in the Mac, Windows and Fire apps also the app's own folder (on a Mac,
+   ~/Library/Application Support/Inkwell/Earlier copies). A copy holds the
+   desk's documents, notes, sticky notes and versions; Tabula's documents;
+   Fontes' sources; Scriba's transcripts (not the sound, which is too large to
+   copy every few minutes); the prompts, the writer's own words and the
+   settings.
+   - A copy is taken when Inkwell opens, every ten minutes while the work has
+     changed, and when it is put away; never twice the same work.
+   - Kept: the last ten, then one a day for two weeks, then one a week for
+     two months.
+   - If Inkwell opens with its storage emptied where a library has been (the
+     storage cleared, a new web view), it fills in what is missing from the
+     newest copy, by itself, once; it never overwrites what is on the shelf.
+   - File, Earlier copies lists them, and puts any one back. The library of
+     that moment is copied first, so putting back can itself be undone. */
+var KEEP={db:null,hash:'',busy:false,where:''};
+var KEEP_MARK='ink_keepMark';
+var KEEP_SKIP=/^(ink_probe|ink_lasterr|ink_ai_loading|ink_lastNudge|ink_lastExport)$/;
+/* the keys whose change is a change of the work (settings ride along, but do not cause a copy) */
+var KEEP_WORK=/^(ink_(docs|active|notes|snaps|rules|muteWords|patterns|goals|prompts|spellDict|voice|profile|rubric|aiRules)|tabula_|fontes_|scriba_|cd_sign)/;
+var KEEP_DAY=86400000;
+function keepKeys(){var out=[];try{for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&!KEEP_SKIP.test(k))out.push(k);}}catch(e){}return out.sort();}
+function keepHash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36)+'.'+s.length.toString(36);}
+function keepIsSample(docs){try{var w=window.__inkWelcomeSample;
+ if(!docs||!docs.length)return true;
+ return docs.length===1&&!!docs[0]&&docs[0].id==='d1'&&docs[0].title==='Welcome'&&(!w||String(docs[0].text||'')===w);}catch(e){return false;}}
+function keepParse(s,dflt){try{var v=JSON.parse(s);return v==null?dflt:v;}catch(e){return dflt;}}
+/* which copies stay: the last ten; then the newest of each day for two weeks;
+   then the newest of each week for two months */
+function keepPrune(times){
+ var now=Date.now(),s=times.slice().sort(function(a,b){return b-a;}),keep={},days={},weeks={};
+ s.forEach(function(t,i){var d=Math.floor(t/KEEP_DAY),w=Math.floor(t/(7*KEEP_DAY)),age=now-t;
+  if(i<10){keep[t]=1;days[d]=1;weeks[w]=1;return;}
+  if(age<=14*KEEP_DAY&&!days[d]){days[d]=1;weeks[w]=1;keep[t]=1;return;}
+  if(age<=62*KEEP_DAY&&!weeks[w]){weeks[w]=1;keep[t]=1;}});
+ return keep;}
+/* ---- this device's database: 'meta' (small, listed) and 'copies' (whole) ---- */
+function keepDb(){return new Promise(function(res){
+ if(KEEP.db)return res(KEEP.db);
+ if(!window.indexedDB)return res(null);
+ try{var rq=indexedDB.open('inkwell-keep',1);
+  rq.onupgradeneeded=function(){try{var db=rq.result;
+   if(!db.objectStoreNames.contains('meta'))db.createObjectStore('meta',{keyPath:'made'});
+   if(!db.objectStoreNames.contains('copies'))db.createObjectStore('copies',{keyPath:'made'});}catch(e){}};
+  rq.onsuccess=function(){KEEP.db=rq.result;res(KEEP.db);};
+  rq.onerror=function(){res(null);};rq.onblocked=function(){res(null);};
+ }catch(e){res(null);}});}
+function keepMetaOf(c){return {made:c.made,build:c.build,why:c.why,docs:c.docs,words:c.words,tabula:c.tabula,sources:c.sources,recordings:c.recordings,titles:c.titles,hash:c.hash};}
+function keepIdbPut(c){return keepDb().then(function(db){if(!db)return false;return new Promise(function(res){
+ try{var tx=db.transaction(['meta','copies'],'readwrite'),m=tx.objectStore('meta'),cs=tx.objectStore('copies');
+  m.put(keepMetaOf(c));cs.put(c);
+  var ks=m.getAllKeys();ks.onsuccess=function(){var all=ks.result||[],keep=keepPrune(all);
+   all.forEach(function(t){if(!keep[t]){m.delete(t);cs.delete(t);}});};
+  tx.oncomplete=function(){res(true);};tx.onerror=tx.onabort=function(){res(false);};
+ }catch(e){res(false);}});});}
+function keepIdbList(){return keepDb().then(function(db){if(!db)return [];return new Promise(function(res){
+ try{var g=db.transaction('meta','readonly').objectStore('meta').getAll();
+  g.onsuccess=function(){res((g.result||[]).map(function(m){m.where='device';return m;}));};g.onerror=function(){res([]);};}catch(e){res([]);}});});}
+function keepIdbRead(made){return keepDb().then(function(db){if(!db)return null;return new Promise(function(res){
+ try{var g=db.transaction('copies','readonly').objectStore('copies').get(made);
+  g.onsuccess=function(){res(g.result||null);};g.onerror=function(){res(null);};}catch(e){res(null);}});});}
+/* ---- the app's own folder (Mac, Windows, Fire): keep_copy, keep_list, keep_read, keep_drop ---- */
+function keepApi(){try{var a=window.pywebview&&window.pywebview.api;return a&&typeof a.keep_copy==='function'&&typeof a.keep_list==='function'?a:null;}catch(e){return null;}}
+function keepNativePut(c){var a=keepApi();if(!a)return Promise.resolve(false);
+ return Promise.resolve(a.keep_copy(String(c.made),JSON.stringify(keepMetaOf(c)),JSON.stringify(c))).then(function(){
+  return keepNativeList().then(function(list){var keep=keepPrune(list.map(function(m){return m.made;}));
+   list.forEach(function(m){if(!keep[m.made]&&typeof a.keep_drop==='function'){try{a.keep_drop(String(m.made));}catch(e){}}});return true;});
+ }).catch(function(){return false;});}
+function keepNativeList(){var a=keepApi();if(!a)return Promise.resolve([]);
+ return Promise.resolve(a.keep_list()).then(function(raw){var l=typeof raw==='string'?keepParse(raw,[]):(raw||[]);
+  return (Array.isArray(l)?l:[]).filter(function(m){return m&&m.made;}).map(function(m){m.made=+m.made;m.where='folder';return m;});}).catch(function(){return [];});}
+function keepNativeRead(made){var a=keepApi();if(!a||typeof a.keep_read!=='function')return Promise.resolve(null);
+ return Promise.resolve(a.keep_read(String(made))).then(function(raw){return typeof raw==='string'?keepParse(raw,null):(raw||null);}).catch(function(){return null;});}
+/* every copy either place holds, newest first, one row per copy */
+function keepListAll(){return Promise.all([keepIdbList(),keepNativeList()]).then(function(r){
+ var by={};r[0].concat(r[1]).forEach(function(m){var p=by[m.made];if(!p){by[m.made]=m;m.places=[m.where];}else if(p.places.indexOf(m.where)<0)p.places.push(m.where);});
+ return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.made-a.made;});});}
+function keepRead(made){return keepIdbRead(made).then(function(c){return c||keepNativeRead(made);});}
+/* ---- Scriba's recordings: the transcripts and names are kept, never the sound ---- */
+function keepScribaRead(){return new Promise(function(res){
+ if(!window.indexedDB)return res([]);
+ try{var rq=indexedDB.open('scriba_db');
+  /* Scriba has never run on this device: create nothing in its name */
+  rq.onupgradeneeded=function(){try{rq.transaction.abort();}catch(e){}};
+  rq.onerror=function(){res([]);};
+  rq.onsuccess=function(){var db=rq.result;try{
+    if(!db.objectStoreNames.contains('recordings')){db.close();return res([]);}
+    var g=db.transaction('recordings','readonly').objectStore('recordings').getAll();
+    g.onsuccess=function(){var out=(g.result||[]).map(function(r){var o={};for(var k in r){var v=r[k];
+      if(typeof Blob!=='undefined'&&v instanceof Blob)continue;if(v instanceof ArrayBuffer||ArrayBuffer.isView(v))continue;o[k]=v;}return o;});
+     db.close();res(out);};
+    g.onerror=function(){db.close();res([]);};
+   }catch(e){try{db.close();}catch(x){}res([]);}};
+ }catch(e){res([]);}});}
+function keepScribaFill(list){return new Promise(function(res){
+ if(!list||!list.length||!window.indexedDB)return res(0);
+ try{var rq=indexedDB.open('scriba_db',1);
+  rq.onupgradeneeded=function(){try{rq.result.createObjectStore('recordings',{keyPath:'id'});}catch(e){}};
+  rq.onerror=function(){res(0);};
+  rq.onsuccess=function(){var db=rq.result,n=0;try{
+    var tx=db.transaction('recordings','readwrite'),st=tx.objectStore('recordings'),ga=st.getAllKeys();
+    ga.onsuccess=function(){var have={};(ga.result||[]).forEach(function(k){have[k]=1;});
+     list.forEach(function(r){if(!r||r.id==null||have[r.id])return;var o={};for(var k in r)o[k]=r[k];
+      o.blob=new Blob([],{type:'audio/webm'});o.name=(r.name||'Recording')+' (transcript only)';st.put(o);n++;});};
+    tx.oncomplete=function(){db.close();res(n);};tx.onerror=tx.onabort=function(){db.close();res(n);};
+   }catch(e){try{db.close();}catch(x){}res(0);}};
+ }catch(e){res(0);}});}
+/* ---- one copy of everything ---- */
+function keepGather(why){return keepScribaRead().then(function(sc){
+ var keys=keepKeys(),ls={};keys.forEach(function(k){try{ls[k]=localStorage.getItem(k);}catch(e){}});
+ var docs=keepParse(ls.ink_docs||'[]',[]);if(!Array.isArray(docs))docs=[];
+ var words=0;docs.forEach(function(d){try{words+=wordCt(String(d.text||''));}catch(e){}});
+ var td=keepParse(ls.tabula_docs||'{}',{}),fs=keepParse(ls.fontes_sources||'[]',[]);
+ var work=keys.filter(function(k){return KEEP_WORK.test(k);}).map(function(k){return k+'\u0001'+(ls[k]||'');}).join('\u0002')
+  +'\u0003'+sc.map(function(r){return r.id+':'+(r.name||'')+':'+(r.cues?JSON.stringify(r.cues).length:0);}).join(',');
+ return {v:1,made:Date.now(),build:(typeof BUILD!=='undefined'?BUILD:''),why:why||'',ls:ls,scriba:sc,
+  docs:keepIsSample(docs)?0:docs.length,words:keepIsSample(docs)?0:words,
+  tabula:(td&&typeof td==='object')?Object.keys(td).length:0,sources:Array.isArray(fs)?fs.length:0,recordings:sc.length,
+  titles:keepIsSample(docs)?[]:docs.slice(0,12).map(function(d){return String(d.title||'Untitled').slice(0,80);}),hash:keepHash(work)};});}
+function keepTake(why,force){
+ if(KEEP.busy)return Promise.resolve(null);KEEP.busy=true;
+ return keepGather(why).then(function(c){
+  if(!force&&c.hash===KEEP.hash)return null;
+  if(!c.docs&&!c.tabula&&!c.sources&&!c.recordings)return null;   /* nothing written yet: nothing to keep */
+  try{if(!localStorage.getItem(KEEP_MARK))localStorage.setItem(KEEP_MARK,String(c.made));c.ls[KEEP_MARK]=localStorage.getItem(KEEP_MARK);}catch(e){}
+  KEEP.hash=c.hash;
+  return Promise.all([keepIdbPut(c),keepNativePut(c)]).then(function(r){c.saved=r;return c;});
+ }).catch(function(e){console.warn('[inkwell] keeping',e);return null;}).then(function(r){KEEP.busy=false;return r;});}
+/* ---- putting a copy back ---- */
+function keepMergeDocs(curRaw,oldRaw){
+ var cur=keepParse(curRaw||'[]',[]),old=keepParse(oldRaw||'[]',[]);if(!Array.isArray(cur))cur=[];if(!Array.isArray(old))old=[];
+ if(keepIsSample(cur))return JSON.stringify(old);
+ var by={};cur.forEach(function(d){if(d&&d.id)by[d.id]=d;});
+ old.forEach(function(d){if(!d||!d.id)return;var c=by[d.id];if(!c||(d.updated||0)>(c.updated||0))by[d.id]=d;});
+ return JSON.stringify(Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return (b.updated||0)-(a.updated||0);}));}
+function keepFill(copy){
+ /* the automatic road: fill in what is missing, never overwrite. Documents
+    merge by their own time; a key already on this device is left as it is. */
+ var n=0;Object.keys(copy.ls||{}).forEach(function(k){try{
+  var cur=localStorage.getItem(k),v=copy.ls[k];if(v==null)return;
+  if(k==='ink_docs'){var m=keepMergeDocs(cur,v);if(m!==cur){localStorage.setItem(k,m);n++;}return;}
+  if(cur===null){localStorage.setItem(k,v);n++;}}catch(e){}});
+ return keepScribaFill(copy.scriba).then(function(s){return n+s;});}
+function keepReplace(copy){
+ /* the chosen road: the library as it was in the copy, every key */
+ var keys=keepKeys();keys.forEach(function(k){if(k!==KEEP_MARK&&!Object.prototype.hasOwnProperty.call(copy.ls||{},k)){try{localStorage.removeItem(k);}catch(e){}}});
+ Object.keys(copy.ls||{}).forEach(function(k){try{if(copy.ls[k]!=null)localStorage.setItem(k,copy.ls[k]);}catch(e){}});
+ return keepScribaFill(copy.scriba);}
+function keepWhen(t){try{var d=new Date(t),now=new Date(),day=d.toDateString()===now.toDateString()?'today':
+ (new Date(now-KEEP_DAY).toDateString()===d.toDateString()?'yesterday':d.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'}));
+ return day+' at '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}catch(e){return String(t);}}
+function keepPutBack(made){
+ return keepRead(+made).then(function(copy){
+  if(!copy||!copy.ls)return toast('That copy could not be read.');
+  return keepTake('before putting back the copy of '+keepWhen(copy.made),true).then(function(){
+   KEEP.reloading=true;return keepReplace(copy);}).then(function(){
+   try{sessionStorage.setItem('ink_keepSay','Your library is back as it was '+keepWhen(copy.made)+'. The library as it was a moment ago is in Earlier copies.');}catch(e){}
+   KEEP.reloading=true;location.reload();});});}
+/* on opening: fill in from the newest copy when this device's storage was emptied */
+function keepAutoFill(list){
+ var marked=false;try{marked=!!localStorage.getItem(KEEP_MARK);}catch(e){}
+ if(marked)return Promise.resolve(false);
+ try{if(sessionStorage.getItem('ink_keepAuto'))return Promise.resolve(false);}catch(e){}
+ var best=(list||[]).filter(function(m){return m.docs||m.tabula||m.sources||m.recordings;})[0];
+ if(!best)return Promise.resolve(false);
+ return keepRead(best.made).then(function(copy){
+  if(!copy||!copy.ls)return false;
+  try{sessionStorage.setItem('ink_keepAuto','1');}catch(e){}
+  KEEP.reloading=true;
+  return keepFill(copy).then(function(n){
+   try{localStorage.setItem(KEEP_MARK,String(Date.now()));}catch(e){}
+   if(!n){KEEP.reloading=false;return false;}
+   try{sessionStorage.setItem('ink_keepSay','Inkwell found its storage emptied and put your library back from its own copy of '+keepWhen(copy.made)+'. Nothing on the shelf was replaced.');}catch(e){}
+   KEEP.reloading=true;location.reload();return true;});});}
+function keepBoot(){
+ try{var say=sessionStorage.getItem('ink_keepSay');if(say){sessionStorage.removeItem('ink_keepSay');setTimeout(function(){toast(say,7000);},1500);}}catch(e){}
+ return keepListAll().then(function(list){
+  if(list[0]&&list[0].hash)KEEP.hash=list[0].hash;
+  return keepAutoFill(list);}).then(function(reloading){
+  if(reloading)return;
+  keepTake('when Inkwell opened');
+  setInterval(function(){keepTake('while you wrote');},600000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')keepTake('when Inkwell was put away');});
+  window.addEventListener('pagehide',function(){keepTake('when Inkwell was put away');});
+ }).catch(function(e){console.warn('[inkwell] keeping boot',e);});}
+/* ---- File, Earlier copies ---- */
+function keepRowText(m){
+ var bits=[];
+ bits.push(m.docs+' document'+(m.docs===1?'':'s')+(m.words?' ('+m.words.toLocaleString()+' words)':''));
+ if(m.tabula)bits.push(m.tabula+' in Tabula');
+ if(m.sources)bits.push(m.sources+' source'+(m.sources===1?'':'s'));
+ if(m.recordings)bits.push(m.recordings+' transcript'+(m.recordings===1?'':'s'));
+ return bits.join(' · ');}
+function openKeep(){
+ var b=document.getElementById('modalBody');
+ var native=!!keepApi();
+ var where=native?'on this device, in Inkwell’s own storage and in the app’s own folder':'on this device, in Inkwell’s own storage';
+ b.innerHTML='<h3>🕮 Earlier copies of your library</h3>'+
+  '<p style="font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 10px">Inkwell keeps these itself, '+where+'. It takes one when it opens, every ten minutes while you work, and when you put it away. You never need to save a file. It keeps the last ten, then one a day for two weeks, then one a week for two months.</p>'+
+  '<div id="keepList" style="max-height:52vh;overflow:auto;border-top:1px solid var(--line)"><p style="font-size:13px;color:var(--mut)">Looking…</p></div>'+
+  '<div class="choiceRow" style="margin-top:12px"><button onclick="keepTake(\'taken by hand\',true).then(function(c){toast(c?\'A copy of your library is kept.\':\'There is nothing to keep yet.\');openKeep();})">Keep a copy now</button>'+
+  '<button onclick="openModal(\'move\')">⇄ Move the library to another device</button><button onclick="closeModal()">Close</button></div>'+
+  '<p style="font-size:11.5px;color:var(--mut);line-height:1.5;margin-top:10px">Scriba’s recordings are kept as transcripts; their sound stays in Scriba. Putting a copy back keeps the library of that moment first, so you can always come back to it.</p>';
+ inkModalShow();
+ keepListAll().then(function(list){
+  var host=document.getElementById('keepList');if(!host)return;
+  if(!list.length){host.innerHTML='<p style="font-size:13px;color:var(--mut);padding:10px 0">No copies yet. Inkwell keeps the first one as soon as you have written something.</p>';return;}
+  host.innerHTML=list.map(function(m,i){
+   return '<div style="padding:9px 2px;border-bottom:1px solid var(--line)"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
+    '<div style="flex:1;min-width:180px"><div style="font-weight:600;font-size:13.5px">'+esc(keepWhen(m.made).replace(/^./,function(c){return c.toUpperCase();}))+(i===0?' <span style="font-weight:400;color:var(--mut)">(newest)</span>':'')+'</div>'+
+    '<div style="font-size:12px;color:var(--mut)">'+esc(keepRowText(m))+(m.why?' · '+esc(m.why):'')+'</div></div>'+
+    '<button onclick="var t=document.getElementById(\'keepT'+i+'\');t.style.display=t.style.display===\'none\'?\'block\':\'none\'">Look</button>'+
+    '<button onclick="if(confirm(\'Put back your library as it was '+esc(keepWhen(m.made)).replace(/\'/g,'')+'?\\n\\nYour library as it is now is kept first, so you can come back to it.\'))keepPutBack('+m.made+')">Put back</button></div>'+
+    '<div id="keepT'+i+'" style="display:none;font-size:12.5px;color:var(--ink);margin:6px 0 0 4px;line-height:1.55">'+
+    ((m.titles&&m.titles.length)?m.titles.map(function(t){return '• '+esc(t);}).join('<br>')+(m.docs>m.titles.length?'<br>• and '+(m.docs-m.titles.length)+' more':''):'(no documents on the desk)')+'</div></div>';
+  }).join('');
+ });}
+function openMove(){
+ var b=document.getElementById('modalBody');
+ b.innerHTML='<h3>⇄ Move your library to another device</h3>'+
+  '<p style="font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 10px">Each device keeps its own library, and Inkwell keeps it safe there by itself. A file is needed only to carry the library to another device: save it here, then open it there.</p>'+
+  '<div class="choiceRow"><button class="primary" onclick="exportLib()">⇪ Save the library as a file</button>'+
+  '<button onclick="document.getElementById(\'addFile\').click()">⇩ Open a library file from another device</button></div>'+
+  '<p style="font-size:12px;color:var(--mut);line-height:1.55;margin-top:10px">Opening a file adds what is new and never replaces anything on this device. When you have opened it on the other device, the file can be deleted.</p>'+
+  '<div class="choiceRow" style="margin-top:8px"><button onclick="openModal(\'keep\')">🕮 Earlier copies</button><button onclick="closeModal()">Close</button></div>';
+ inkModalShow();}
 let S={docs:LS('docs')||[],active:LS('active')||null,rules:LS('rules')||[],profile:LS('profile')||'',
 server:LS('server')||'http://127.0.0.1:8317',lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
 stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
@@ -5078,11 +5301,9 @@ const MENUS={
   ['📋 Copy all',()=>copyAll()],
   ['⬇ Export as Word (.docx)',()=>exportDocx()],
   ['⬇ Download .txt',()=>download()],
-  ['div'],['lbl','The library'],
-  ['⇪ Export library (JSON)',()=>exportLib()],
-  ['⇩ Import library (Inkwell JSON)',()=>document.getElementById('impFile').click()],
-  ['⊕ Add documents from a library file (keeps everything)',()=>document.getElementById('addFile').click()],
-  ['⟲ Recover documents from before an update',()=>inkOfferOlderDocs(true)],
+  ['div'],['lbl','Your library (Inkwell keeps it safe by itself)'],
+  ['🕮 Earlier copies of your library',()=>openModal('keep')],
+  ['⇄ Move the library to another device',()=>openModal('move')],
   ['div'],['🗑 Delete this document',()=>delDoc()]]};
 /* ================= WRITING FORM (document type per register) ================= */
 /* The register sets the family of rules; the form narrows the target.
@@ -11317,14 +11538,16 @@ function nativeSave(name,text){
 function exportLib(){
  try{
   var lib={inkwell:(typeof BUILD!=='undefined'?BUILD:'?'),exported:new Date().toISOString(),
-   docs:S.docs||[],active:S.active,notes:S.notes||[],snaps:SNAPS||{},goals:S.goals||null,rules:S.rules||[],muteWords:S.muteWords||[],patterns:S.patterns||null};
+   docs:S.docs||[],active:S.active,notes:S.notes||[],snaps:SNAPS||{},goals:S.goals||null,rules:S.rules||[],muteWords:S.muteWords||[],patterns:S.patterns||null,
+   /* 7.40: the other rooms ride along, so moving to another device carries everything */
+   rooms:inkRoomsOut()};
   var name='inkwell-library-'+new Date().toISOString().slice(0,10)+'.json';
   var txt=JSON.stringify(lib,null,2);
   if(nativeSave(name,txt))return toast('Saved '+name+' via the system dialog');
   var b=new Blob([txt],{type:'application/json'});var a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download=name;a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
-  toast('Library exported: every document, note and snapshot.');
+  toast('The library is saved as '+name+'. Open it on the other device with File ▸ Move the library to another device.');
  }catch(e){toast('The export failed: '+e.message);}
 }
 /* 7.29: documents come back WITHOUT anything being replaced. A document whose
@@ -11368,13 +11591,42 @@ function inkMergeSummary(r){
  if(!total)return 'Every document in it is already on your shelf.';
  return 'Added '+total+' document'+(total===1?'':'s')+(r.copies?(', '+r.copies+' marked “recovered” beside your newer version'):'')+'. Nothing on your shelf was changed or removed.';
 }
+/* 7.40: the rooms in a library file. Tabula's documents (by name), Fontes'
+   sources, the prompts and the writer's own words are added, never replaced:
+   a Tabula document whose name is taken but whose page differs arrives as
+   "name (from another device)". */
+function inkRoomsOut(){var o={};
+ ['tabula_docs','fontes_sources','ink_prompts','ink_spellDict'].forEach(function(k){try{var v=localStorage.getItem(k);if(v!=null)o[k]=JSON.parse(v);}catch(e){}});
+ return o;}
+function inkRoomsIn(rooms){
+ var said=[];
+ try{var td=rooms.tabula_docs;if(td&&typeof td==='object'&&!Array.isArray(td)){
+  var cur=keepParse(localStorage.getItem('tabula_docs')||'{}',{}),n=0;if(!cur||typeof cur!=='object')cur={};
+  Object.keys(td).forEach(function(name){var v=td[name];if(!v||typeof v!=='object')return;
+   if(!cur[name]){cur[name]=v;n++;return;}
+   if(cur[name].html===v.html)return;
+   var alt=name+' (from another device)',i=2;while(cur[alt]&&cur[alt].html!==v.html)alt=name+' (from another device '+(i++)+')';
+   if(!cur[alt]){cur[alt]=v;n++;}});
+  if(n){localStorage.setItem('tabula_docs',JSON.stringify(cur));said.push(n+' Tabula document'+(n===1?'':'s'));}}}catch(e){}
+ function unionList(key,one,many,idOf){try{var inc=rooms[key];if(!Array.isArray(inc))return;
+  var cur=keepParse(localStorage.getItem(key)||'[]',[]);if(!Array.isArray(cur))cur=[];
+  var have={};cur.forEach(function(x){have[idOf(x)]=1;});var n=0;
+  inc.forEach(function(x){var id=idOf(x);if(!have[id]){cur.push(x);have[id]=1;n++;}});
+  if(n){localStorage.setItem(key,JSON.stringify(cur));if(key==='ink_spellDict')S.spellDict=cur;said.push(n+' '+(n===1?one:many));}}catch(e){}}
+ unionList('fontes_sources','source','sources',function(x){return x&&x.id!=null?'id:'+x.id:JSON.stringify(x);});
+ unionList('ink_prompts','prompt','prompts',function(x){return JSON.stringify(x);});
+ unionList('ink_spellDict','word of your own','words of your own',function(x){return JSON.stringify(x);});
+ return said.length?'Also added: '+said.join(', ')+'.':'';}
 function addLibFile(ev){
  var f=ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
  var r=new FileReader();
  r.onload=function(){
   try{var d=JSON.parse(String(r.result||''));
-   if(!d||!Array.isArray(d.docs)||!d.docs.length){toast('That file is not an Inkwell library.');return;}
-   var res=inkMergeDocs(d.docs);inkMergeNotes(d.notes);toast(inkMergeSummary(res));
+   var hasDocs=d&&Array.isArray(d.docs)&&d.docs.length,hasRooms=d&&d.rooms&&typeof d.rooms==='object';
+   if(!hasDocs&&!hasRooms){toast('That file is not an Inkwell library.');return;}
+   var res=hasDocs?inkMergeDocs(d.docs):{added:0,copies:0,replaced:0};if(hasDocs)inkMergeNotes(d.notes);
+   var rr=hasRooms?inkRoomsIn(d.rooms):'';
+   toast(inkMergeSummary(res)+(rr?' '+rr:''));
   }catch(e){toast('That file could not be read: '+e.message);}
   try{ev.target.value='';}catch(_){}
  };
@@ -11386,7 +11638,7 @@ function addLibFile(ev){
 function inkOfferOlderDocs(manual){
  var api=window.pywebview&&window.pywebview.api;
  if(!api||typeof api.older_docs!=='function'){
-  if(manual)toast('Nothing to recover in this view. File ▸ Add documents from a library file brings in a backup without replacing anything.');return;}
+  if(manual)toast('Nothing to recover in this view. File ▸ Earlier copies holds the copies Inkwell keeps itself.');return;}
  Promise.resolve(api.older_docs()).then(function(raw){
   var lib=null;try{lib=raw?JSON.parse(raw):null;}catch(e){lib=null;}
   var docs=(lib&&Array.isArray(lib.docs))?lib.docs:[];
@@ -11805,6 +12057,8 @@ function inkModalShow(){const b=document.getElementById('modalBody');if(b&&b.inn
 function openModalDo(which){
  const b=document.getElementById('modalBody');
  b.classList.toggle('guide3D',which==='guide');
+ if(which==='keep'){b.innerHTML='';openKeep();return;}
+ if(which==='move'){b.innerHTML='';openMove();return;}
  if(which==='newdoc'){b.innerHTML='<h3>New document</h3><div class="choiceRow">'+
   '<button onclick="newDoc()">Blank page</button>'+
   '<button class="primary" onclick="newDoc(\'chapter\',SKELETONSTR)">🎓 Thesis chapter skeleton</button>'+
@@ -11829,7 +12083,7 @@ function openModalDo(which){
   ['Select, then choose','Select a word, a sentence or a paragraph: ✔ Fix corrects in place; ✨ Alternatives opens a card beside it, with words to use instead or the passage said another way; ↻ Rewrite does the same in a style you choose. Each version gives its reasons.'],
   ['The bank watches','Weak words earn a quiet blue line as you type. Open the card and the Scholar word bank\'s stronger choices are one tap away; a word that earns its keep can be muted for good.'],
   ['Pin stray thoughts','✏️ Schedae sits at the lower right; catch a thought, Send ▸ it onto the page later.'],
-  ['Never lose a page','Your writing saves to this device on every keystroke; the footer shows the save state ("✓ saved" means it is written to disk; "⚠ memory only" means export now). Versions snapshot every quarter hour of drafting and before every Fix-all. File ▸ Export library downloads the whole archive, snapshots included.'],
+  ['Never lose a page','Your writing saves to this device on every keystroke; the footer shows the save state ("✓ saved" means it is written to disk). Versions snapshot every quarter hour of drafting and before every Fix-all. Inkwell also keeps whole copies of your library by itself, every room included: File ▸ Earlier copies brings any one back. There is never a file to save.'],
   ['Tables, notes, contents','The ▦ key on the top bar (or Studio ▸ Tabula tools) lays down a table (Word tables on export), places footnotes that renumber themselves as you move them, and builds the Contents page from your # headings. As the document lengthens, page-turn bands and folio numbers mark the sheet.'],
   ['Check authenticity','Coach ▸ 🧭 Authenticity reads the texture of the hand (pacing, lexical variety, telltale connectives) and reports it honestly; 🛡 Originality catches shared passages against your library and echoes within the document itself.'],
   ['Send it onward','File ▸ exports a real Word .docx (headings, tables and footnote markers kept), plain text, or the whole library as JSON.']]
@@ -11884,7 +12138,7 @@ function openModalDo(which){
 '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Between your devices</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">The laptop is the hub. Run server.py there, put its Wi-Fi address above and press Save &amp; reconnect. Push sends every document and pinned note up to the laptop; pull brings down what was last pushed, adding only what you do not already have here. One shared copy; the freshest push wins.</p>'+
  (inkSrvLocal(S.server)?'<div class="row"><button onclick="syncPush()">⇪ Push my library to the laptop</button> <button onclick="syncPull()">⇩ Pull the laptop’s library here</button></div>'
-  :'<p style="font-size:12px;color:var(--mut);line-height:1.6">Over the home Wi-Fi, the laptop shares its model only, never your documents; sending the library between devices this way is the next stage. Until then: File \u25B8 Export library here, and File \u25B8 Import library on the other device.</p>')+
+  :'<p style="font-size:12px;color:var(--mut);line-height:1.6">Over the home Wi-Fi, the laptop shares its model only, never your documents; sending the library between devices this way is the next stage. Until then: File \u25B8 Move the library to another device, here and then on the other device.</p>')+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Your own models (GGUF / MLX)</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">Models downloaded from Ollama or LM Studio onto your flash drive move in from here, or by dropping the file anywhere onto Inkwell. They install once and stay until you swap or remove them. Every Inkwell package carries the llama.cpp runtime inside, so a GGUF runs with GPU offload and needs nothing installed. The shelf lives beside server.py.</p>'+
  '<div class="row"><button onclick="document.getElementById(\'mdlFile\').click()">⇩ Import a .gguf file</button>'+
@@ -12239,7 +12493,7 @@ const TOURCH={
  'Rewriting and drafting':{tease:'Rewrites that work offline, and drafting with a model.',close:'Nothing reaches the page until you press Use this. You always choose.'},
  'The coach':{tease:'The tests a good supervisor would run on a page.',close:'The coach asks the questions an examiner will ask, while there is still time to answer them.'},
  'Sources':{tease:'Citations, footnotes, and your library of sources.',close:'Your sources live in one place, and every citation comes from there.'},
- 'Your documents':{tease:'Opening, outlining, starting, and keeping your work safe.',close:'Your library is yours. File, Export library keeps a copy you can carry anywhere.'},
+ 'Your documents':{tease:'Opening, outlining, starting, and keeping your work safe.',close:'Your library is yours, and Inkwell keeps it safe by itself: File, Earlier copies brings back any earlier day.'},
  'Focus':{tease:'The water clock, a quieter desk, and settings for your senses.',close:'The desk can be as quiet as you need it to be, and the clock keeps time for you.'},
  'Notes':{tease:'Schedae, and notes you pin to the desk.',close:'A stray thought has a place to wait now, and the page keeps your place.'},
  'The rooms':{tease:'Tabula, Scriba and Fontes, the three rooms off the desk.',close:'Three rooms, one desk: the work moves freely among them.'},
@@ -12326,7 +12580,7 @@ const TOUR=[
   t:'+ New document',b:'New document offers a blank page, a thesis chapter skeleton, or a brainstorm, or opens a file from this device: Word, PDF, plain text and others.'},
  {chap:'Your documents',sub:'File',spot:'#menu',go:()=>tourMenu('file'),
   t:'File',b:'File holds versions, copying, Word export, and your library.',
-  tip:'Before you reinstall or update Inkwell, use File, Export library, and keep the file somewhere safe. It holds every document.'},
+  tip:'Inkwell keeps copies of your whole library by itself, so an update never costs a page. Earlier copies brings back any earlier day; nothing is ever saved to your Desktop.'},
  {chap:'Focus',sub:'Clepsydra',spot:'#clepBtn',go:()=>hideMenu(),
   t:'⏳ Clepsydra',b:'The water clock times a focus sprint, then a break. The time runs in the toolbar; press it again to stop.',
   tip:'Start a sprint before you feel ready. The first five minutes are the hardest, and the clock carries you through them.'},
@@ -12600,7 +12854,7 @@ function renderPatterns(){
  });
  step('mirror',function(){
   Promise.resolve().then(mirrorSyncOnce).catch(function(e){console.warn('[inkwell] mirror boot',e);});
-  Promise.resolve().then(backupNudge).catch(function(){});
+  setTimeout(function(){try{keepBoot();}catch(e){}},2500);
  });
  step('rescue',function(){
   if(!(S.docs&&S.docs.length)){

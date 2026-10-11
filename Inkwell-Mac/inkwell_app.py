@@ -1505,6 +1505,82 @@ def start_server_api():
     except Exception:
         return "error"
 
+# ---------------------------------------------------------------------------
+# 7.40: the keeping. The page hands over whole copies of the library (every
+# room: the desk, Tabula, Fontes, Scriba's transcripts) and Inkwell keeps them
+# in its own folder, never on the Desktop:
+#   macOS    ~/Library/Application Support/Inkwell/Earlier copies
+#   Windows  %LOCALAPPDATA%\Inkwell\Earlier copies
+# A copy is two files: <made>.json, the whole copy, and <made>.meta.json, what
+# the list shows. Which copies stay is the page's rule (keepPrune); it asks for
+# the others to be dropped. Nothing here ever reads or writes anywhere else.
+_KEEP_NAME = re.compile(r"^[0-9]{10,16}$")
+
+
+def _keep_dir():
+    base = os.path.dirname(storage_dir() or "") or os.path.join(os.path.expanduser("~"), "Inkwell")
+    d = os.path.join(base, "Earlier copies")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def keep_copy_write(made, meta_json, body_json):
+    made = str(made)
+    if not _KEEP_NAME.match(made):
+        return False
+    _json.loads(meta_json)  # the list must always be readable
+    d = _keep_dir()
+    # the whole copy first, then its line in the list: a listed copy always has its body
+    for name, text in ((made + ".json", body_json), (made + ".meta.json", meta_json)):
+        tmp = os.path.join(d, name + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(str(text))
+        os.replace(tmp, os.path.join(d, name))
+    return True
+
+
+def keep_list_read():
+    out = []
+    d = _keep_dir()
+    for name in sorted(os.listdir(d)):
+        if not name.endswith(".meta.json") or not _KEEP_NAME.match(name[:-10]):
+            continue
+        if not os.path.exists(os.path.join(d, name[:-10] + ".json")):
+            continue
+        try:
+            with open(os.path.join(d, name), "r", encoding="utf-8") as fh:
+                m = _json.load(fh)
+            if isinstance(m, dict):
+                out.append(m)
+        except Exception:
+            pass
+    return _json.dumps(out)
+
+
+def keep_read_one(made):
+    made = str(made)
+    if not _KEEP_NAME.match(made):
+        return ""
+    p = os.path.join(_keep_dir(), made + ".json")
+    if not os.path.exists(p):
+        return ""
+    with open(p, "r", encoding="utf-8") as fh:
+        return fh.read()
+
+
+def keep_drop_one(made):
+    made = str(made)
+    if not _KEEP_NAME.match(made):
+        return False
+    d = _keep_dir()
+    for name in (made + ".meta.json", made + ".json"):
+        try:
+            os.remove(os.path.join(d, name))
+        except FileNotFoundError:
+            pass
+    return True
+
+
 class InkwellApi:
     """JS API exposed to the main window as window.pywebview.api.
 
@@ -1620,6 +1696,37 @@ class InkwellApi:
     def rescue_offer(self):
         """The page asks for its library back when it woke to an empty shelf."""
         return _read_old_storage()
+
+    def keep_copy(self, made, meta_json, body_json):
+        """7.40: keep a whole copy of the library in Inkwell's own folder."""
+        try:
+            return bool(keep_copy_write(made, meta_json, body_json))
+        except Exception:
+            log_problem("keep: a copy could not be written", sys.exc_info())
+            return False
+
+    def keep_list(self):
+        """7.40: the copies in Inkwell's own folder, as a JSON list."""
+        try:
+            return keep_list_read()
+        except Exception:
+            log_problem("keep: the copies could not be listed", sys.exc_info())
+            return "[]"
+
+    def keep_read(self, made):
+        """7.40: one whole copy, as JSON text ('' when there is none)."""
+        try:
+            return keep_read_one(made)
+        except Exception:
+            log_problem("keep: a copy could not be read", sys.exc_info())
+            return ""
+
+    def keep_drop(self, made):
+        """7.40: drop a copy the page's keeping rule no longer keeps."""
+        try:
+            return keep_drop_one(made)
+        except Exception:
+            return False
 
     def close_app(self, which):
         """Close a native instrument window."""
@@ -1775,6 +1882,37 @@ class InkwellApiSingle:
     def rescue_offer(self):
         """The page asks for its library back when it woke to an empty shelf."""
         return _read_old_storage()
+
+    def keep_copy(self, made, meta_json, body_json):
+        """7.40: keep a whole copy of the library in Inkwell's own folder."""
+        try:
+            return bool(keep_copy_write(made, meta_json, body_json))
+        except Exception:
+            log_problem("keep: a copy could not be written", sys.exc_info())
+            return False
+
+    def keep_list(self):
+        """7.40: the copies in Inkwell's own folder, as a JSON list."""
+        try:
+            return keep_list_read()
+        except Exception:
+            log_problem("keep: the copies could not be listed", sys.exc_info())
+            return "[]"
+
+    def keep_read(self, made):
+        """7.40: one whole copy, as JSON text ('' when there is none)."""
+        try:
+            return keep_read_one(made)
+        except Exception:
+            log_problem("keep: a copy could not be read", sys.exc_info())
+            return ""
+
+    def keep_drop(self, made):
+        """7.40: drop a copy the page's keeping rule no longer keeps."""
+        try:
+            return keep_drop_one(made)
+        except Exception:
+            return False
 
 
 def _read_html_text(path):

@@ -66,6 +66,7 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private Store store;
+    private Keep keep;
     private ModelHost models;
     private PermissionRequest pendingPermission;
     private ValueCallback<Uri[]> fileCallback;
@@ -76,6 +77,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         store = new Store(new File(getFilesDir(), "store"));
+        keep = new Keep(new File(getFilesDir(), "earlier-copies"));
         // 7.35: the tablet's own writing model (started only when the page asks)
         models = new ModelHost(this, ev -> {
             if (web != null) web.evaluateJavascript("window.__inkModelEvent&&window.__inkModelEvent("
@@ -452,6 +454,27 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String storeJson() {
             return InkwellCore.storeJson(store.readAll());
+        }
+
+        /* 7.40: the keeping (Keep.java) */
+        @JavascriptInterface
+        public String keepCopy(String made, String meta, String body) {
+            return keep.put(made, meta, body) ? "true" : "false";
+        }
+
+        @JavascriptInterface
+        public String keepList() {
+            return keep.list();
+        }
+
+        @JavascriptInterface
+        public String keepRead(String made) {
+            return keep.read(made);
+        }
+
+        @JavascriptInterface
+        public String keepDrop(String made) {
+            return keep.drop(made) ? "true" : "false";
         }
 
         @JavascriptInterface
