@@ -74,10 +74,13 @@ def web(pkg):
     in parts). Before 7.38 it was a kit that GitHub Actions had to build,
     with a 26.9 MB file no browser upload to GitHub accepts. The kit stays in
     this repository (Inkwell-Web, and .github/workflows/web.yml)."""
+    # 7.39: the package's one folder IS the site, with index.html at its top,
+    # so the folder made by unzipping is the folder to drag into Netlify.
+    # (Before, the site sat in a folder inside it, and dragging the outer one
+    # published a site with no front page.)
+    subprocess.run([sys.executable, os.path.join(ROOT, "Inkwell-Web", "build_site.py"), ASSETS, pkg, version()], check=True)
     copy(os.path.join("packaging", "READ ME FIRST - WEB APP.txt"), os.path.join(pkg, "READ ME FIRST - WEB APP.txt"))
     copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
-    site = os.path.join(pkg, "Inkwell-web-" + version())
-    subprocess.run([sys.executable, os.path.join(ROOT, "Inkwell-Web", "build_site.py"), ASSETS, site, version()], check=True)
 
 
 def desktop_page(pkg):

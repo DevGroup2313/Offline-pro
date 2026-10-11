@@ -1,0 +1,117 @@
+INKWELL v7.39: HANDOFF NOTES
+============================
+Date: 11 October 2026. Read INKWELL_HANDOFF_v7p38.txt and the earlier notes
+for everything before 7.39.
+
+Look for "v7.39" beside the date at the top. If it is not there, the device
+is not running 7.39.
+
+BEFORE YOU INSTALL
+------------------
+On every device: File, Export library, and keep the file. Each new build
+installs over the old one and keeps your documents, but uninstalling
+deletes them. Keep this repository PRIVATE: the Fire package holds the
+app's signing key.
+
+WHAT CAME IN 7.39
+-----------------
+1. Results beside the selection. Alternatives (✨), Rewrite (the new ↻ in
+   the selection bubble, and Rewrite ▾) and Rewrite with a prompt (✍) open a
+   card next to the selected words; on a phone, a sheet at the foot of the
+   screen. Before, results were added to the side panel under the
+   suggestions, where they could be out of sight, so it looked as if
+   nothing had happened. Nothing changes until "Use this"; then Undo shows.
+   Esc, ✕ or a click outside puts the card away.
+2. Alternatives for a word: "Words to use instead", by meaning, each put
+   into the word's form ("showed" gives "demonstrated"; "bigger" gives
+   "larger"), from a list of common alternatives written for Inkwell (about
+   900 words and phrases, src/lib/synonyms_core.js); then WordNet's
+   meanings, each with its definition, for the writer to choose the one
+   meant (src/lib/lexicon_core.js, vendor/wordnet-lex.txt).
+3. Alternatives for a sentence: the sentence plainer, more formal, casual or
+   reordered, and idioms said three ways (73 idioms: "He lost his train of
+   thought" gives "He lost track of what he was saying", "He lost the thread
+   of his argument", "He forgot what he was going to say"), keeping the
+   tense and the pronoun. Below them, "Or change one word".
+4. Rewrite in a style, as tabs: Scholarly, Professional, Casual, Plainer,
+   Concise, Confident, Shorter, Other words. Up to three versions each
+   (light touch, fuller, reordered), every change with its reason. The
+   method, step by step (src/lib/paraphrase_core.js): idioms in the
+   register; 89 hand-checked word pairs, each used only where the
+   words around it allow ("try to" and "attempt to"; "set up a company" and
+   "establish a company", never "set up the camera"); sentence openers;
+   contractions for Casual; one change of order where the meaning holds;
+   then the style's rules. Names, quotations and citations are never
+   touched. With a writing model, the model adds its version; for
+   Alternatives it is asked for three (plainer, more formal, other words),
+   each through the fact guard.
+5. The web app package is the site itself: unzip, drag the folder into
+   Netlify. Its guide now explains connecting your own domain.
+6. Fixed on the way: Scholarly made "being shown to children" into "being
+   demonstrated to children"; Simplify made "the sufficient conditions"
+   into "the enough conditions".
+
+THE WEBSITE ERROR (carpediemofflinestudycompanion.com)
+------------------------------------------------------
+"This site can't be reached ... DNS_PROBE_FINISHED_NXDOMAIN" was not caused
+by Inkwell's files (no file names that address). Checked on 11 October
+through Google's and Cloudflare's public DNS:
+- the domain has two A records: 75.2.60.5 (Netlify) and 192.168.0.58, a
+  home network address no one outside that home can reach; www has the
+  same two;
+- Netlify answers at 75.2.60.5 but shows only its own *.netlify.app
+  certificate, so no certificate has been issued for the domain.
+The remedy is in the web app guide, "YOUR OWN ADDRESS": delete the
+192.168.0.58 records at Namecheap, point @ and www to Netlify as Netlify's
+guide says, and let Netlify issue the certificate. Meanwhile, the
+.netlify.app address works. The domain's name suggests it was set up for
+the Carpe Diem study companion: connecting it to Inkwell would take it away
+from that site; each project wants its own Netlify site and address.
+
+MEASURED IN 7.39
+----------------
+- Read by hand, every change on 600 Wikipedia sentences (151 changes, four
+  styles) and 600 sentences of native student essays (LOCNESS; 339
+  changes): 15 of the 339 were wrong (4.4%) and were fixed, with the
+  Wikipedia faults. Then on sentences not seen while fixing (383 LOCNESS
+  sentences and 89 thesis sentences): 8 of 317 changes were wrong (2.5%),
+  also fixed. The next unseen text may well show a rate near 2.5%, not 0.
+- How often a style has something to offer (unseen student essays /
+  Wikipedia): Scholarly 23% / 7% of sentences; Casual 36% / 13%; Plainer
+  15% / 8%; a sentence's Alternatives 51% / 19%; "Or change one word" 91% /
+  77%. The rules change only what they can keep; much text is left as it
+  is, and the card says so.
+- Word alternatives: the common list covers about half of the content
+  words in those texts (most of the rest are subject words such as
+  "computer"). WordNet's meanings come after it; for a word with many
+  meanings the first is not always the one meant, so each shows its
+  definition.
+- Tests: tools/rewrite/para_test.js 44 of 44, run.js 230 of 230,
+  coach_test.js 38 of 38; the browser test of the card at laptop, iPad and
+  phone sizes, by day and by night.
+- Grammar figures unchanged from 7.38 (no grammar rule changed).
+
+LIMITS, PLAINLY
+---------------
+- Offline, Inkwell does not write new sentences. It says idioms and words
+  again in another register, reorders where it is safe, and coaches the
+  rest. Free paraphrase ("in other words" for any sentence) needs a writing
+  model.
+- WordNet 3.0 is from 2006 and American: newer senses are missing, and its
+  spellings are American ("recognized"). Inkwell's own list avoids words
+  spelt differently in British and American English.
+- The lexicon takes about 35 MB of memory once read; it is read the first
+  time Alternatives or Rewrite is used, not at start.
+
+NOT TESTED ON YOUR DEVICES
+--------------------------
+Everything above was tested in a browser here (Chromium). Nothing has been
+tried on the real Mac mini, MacBook Pro, Windows laptop, Fire tablet,
+iPhone or iPad.
+
+GITHUB ACTIONS
+--------------
+As in 7.38: workflows did not start on 10 October ("startup_failure"); the
+failed run's page on GitHub says why. Until that is cleared, the .dmg, the
+Windows installer and the .ipa cannot be built; the Fire APK and the web
+site are built in the session instead.

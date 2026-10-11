@@ -1,5 +1,24 @@
-INKWELL 7.38 FOR MAC
+INKWELL 7.39 FOR MAC
 ====================
+
+NEW IN 7.39
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Alternatives and Rewrite open a card right beside the words you selected
+  (on a phone, at the foot of the screen), so you see at once what is
+  offered. Nothing changes until you press "Use this"; then Undo shows.
+- Alternatives for a word: words to use instead, by meaning, in the word's
+  own form ("bigger" gives "larger"). For a sentence: the sentence said
+  plainer, more formally and casually, and idioms said three ways ("He lost
+  his train of thought": "He lost track of what he was saying", "He lost the
+  thread of his argument", "He forgot what he was going to say").
+- Rewrite (the new ↻ button, or Rewrite ▾): Scholarly, Professional, Casual,
+  Plainer, Concise, Confident, Shorter and Other words, as tabs, each with up
+  to three versions and every change with its reason. All of it works with
+  no writing model; a model adds its own version.
+- The words come from WordNet 3.0 (Princeton University; licence in
+  vendor/WORDNET-LICENCE.txt) and a list of common alternatives written for
+  Inkwell.
 
 NEW IN 7.38
 -----------
@@ -34,11 +53,11 @@ PART A. INSTALL (OR UPDATE) INKWELL
 -----------------------------------
 1. If an older Inkwell opens: File, Export library, and keep the file.
    (Your documents also stay in ~/Library/Application Support/Inkwell.)
-2. Download the disk image from the GitHub release "Inkwell 7.38 for Mac
+2. Download the disk image from the GitHub release "Inkwell 7.39 for Mac
    (build N)", under Assets:
-     Inkwell-7.38-Mac-AppleSilicon.dmg   for M1, M2, M3, M4 and later
+     Inkwell-7.39-Mac-AppleSilicon.dmg   for M1, M2, M3, M4 and later
                                          (your Mac mini)
-     Inkwell-7.38-Mac-Intel.dmg          for Intel Macs (your 2019 MacBook Pro)
+     Inkwell-7.39-Mac-Intel.dmg          for Intel Macs (your 2019 MacBook Pro)
    Not sure? Apple menu, About This Mac: "Chip" means Apple Silicon,
    "Processor ... Intel" means Intel.
 3. Open the .dmg. Drag Inkwell onto Applications. If asked, Replace.
@@ -50,7 +69,7 @@ PART A. INSTALL (OR UPDATE) INKWELL
    installer; your documents are never on it. From 7.38, Inkwell puts it
    away by itself when you open Inkwell from Applications. To put it away
    by hand: right-click it on the Desktop and choose Eject.
-5. Look for "v7.38" beside the date at the top. If your documents are not
+5. Look for "v7.39" beside the date at the top. If your documents are not
    there: File, Import library, and pick the file from step 1.
 6. Scriba: the first time you press Record, macOS asks for the microphone;
    choose Allow.

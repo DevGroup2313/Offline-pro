@@ -1,5 +1,24 @@
-INKWELL 7.38 FOR WINDOWS
+INKWELL 7.39 FOR WINDOWS
 ========================
+
+NEW IN 7.39
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Alternatives and Rewrite open a card right beside the words you selected
+  (on a phone, at the foot of the screen), so you see at once what is
+  offered. Nothing changes until you press "Use this"; then Undo shows.
+- Alternatives for a word: words to use instead, by meaning, in the word's
+  own form ("bigger" gives "larger"). For a sentence: the sentence said
+  plainer, more formally and casually, and idioms said three ways ("He lost
+  his train of thought": "He lost track of what he was saying", "He lost the
+  thread of his argument", "He forgot what he was going to say").
+- Rewrite (the new ↻ button, or Rewrite ▾): Scholarly, Professional, Casual,
+  Plainer, Concise, Confident, Shorter and Other words, as tabs, each with up
+  to three versions and every change with its reason. All of it works with
+  no writing model; a model adds its own version.
+- The words come from WordNet 3.0 (Princeton University; licence in
+  vendor/WORDNET-LICENCE.txt) and a list of common alternatives written for
+  Inkwell.
 
 NEW IN 7.38
 -----------
@@ -36,8 +55,8 @@ PART A. INSTALL (OR UPDATE) INKWELL
    %LOCALAPPDATA%\Inkwell\storage. The new installer keeps that folder and
    copies it to %LOCALAPPDATA%\Inkwell\backups before it changes anything.)
 
-2. Get the installer, Inkwell-7.38-Windows-Setup.exe:
-   from the GitHub release "Inkwell 7.38 for Windows (build N)" (under
+2. Get the installer, Inkwell-7.39-Windows-Setup.exe:
+   from the GitHub release "Inkwell 7.39 for Windows (build N)" (under
    Assets), or build it yourself (Part C).
 
 3. Double-click it. Windows may show "Windows protected your PC": choose
@@ -54,7 +73,7 @@ PART A. INSTALL (OR UPDATE) INKWELL
    link, and your documents are not in it. To pin Inkwell instead: Start,
    right-click Inkwell, Pin to Start or Pin to taskbar.
 
-5. Open Inkwell. Look for "v7.38" beside the date at the top.
+5. Open Inkwell. Look for "v7.39" beside the date at the top.
    If your documents are not there, choose File, Import library, and pick the
    file from step 1, or the newest backup in %LOCALAPPDATA%\Inkwell\backups.
 
@@ -90,7 +109,7 @@ This package also holds everything GitHub needs to build the installer.
 5. Actions tab: "Build Inkwell for Windows" runs by itself (or press "Run
    workflow"). It takes about 10 minutes. It builds Inkwell.exe, tests that
    its companion server starts and answers, and makes the installer.
-6. Releases (right-hand side): "Inkwell 7.38 for Windows (build N)", with
+6. Releases (right-hand side): "Inkwell 7.39 for Windows (build N)", with
    the installer under Assets.
    A red "Publish a release" step: Settings, Actions, General, Workflow
    permissions, "Read and write permissions", Save, and run it again.

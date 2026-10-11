@@ -716,6 +716,24 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 #bubble .btones button{font-size:11.5px;padding:5px 10px}
 /* hover-to-see-it chip: the fix shows on the mark before any click */
 #hovFix{position:fixed;z-index:72;display:none;width:min(320px,88vw);background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:13px;padding:10px 13px;box-shadow:var(--sh-lg);animation:pup .18s var(--pop)}
+/* 7.39: the results card, beside the selection; a sheet on a phone */
+#altCard{position:fixed;z-index:72;display:none;width:min(480px,calc(100vw - 24px));max-height:min(72vh,640px);overflow:auto;overscroll-behavior:contain;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:16px;padding:8px 12px 12px;box-shadow:var(--sh-lg);animation:pup .18s var(--pop);color:var(--ink)}
+#altCard.sheet{left:0 !important;right:0;bottom:0;top:auto !important;width:auto;max-height:66vh !important;border-radius:18px 18px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+#altCard .acGrab{display:none;width:44px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 8px}
+#altCard.sheet .acGrab{display:block}
+#altCard .altHead{position:sticky;top:-8px;z-index:2;background:var(--glass);margin:-8px -12px 8px;padding:10px 12px 8px;border-bottom:1px solid var(--line);border-radius:16px 16px 0 0}
+#altCard .acSel{font:12.5px/1.5 Georgia,serif;color:var(--mut);margin:0 0 8px;padding-left:9px;border-left:3px solid var(--line);max-height:3.2em;overflow:hidden}
+#altCard .acTabs{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px}
+#altCard .acTabs button{padding:5px 11px;font-size:12px;border-radius:999px}
+#altCard .acTabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#altCard .acLab{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:10px 0 4px}
+#altCard .wg{background:var(--face);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:7px}
+#altCard .wg .wgl{font-size:11.5px;color:var(--mut);margin-bottom:5px;line-height:1.45}
+#altCard .wg .wgl b{color:var(--ink);font-weight:600}
+#altCard .wg button{padding:5px 11px;margin:0 5px 5px 0;font:13px Georgia,serif;border-radius:999px}
+#altCard .acNote{font-size:10.5px;color:var(--mut);margin:6px 0 2px;line-height:1.55}
+#altCard .acBusy{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:acspin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes acspin{to{transform:rotate(360deg)}}
 #undoChip{position:fixed;left:18px;bottom:64px;z-index:67;display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:11.5px;box-shadow:var(--sh-md);cursor:pointer;animation:rise .25s var(--pop)}
 #undoChip b{color:var(--acc)}
 #undoChip:hover{transform:translateY(-2px)}
@@ -1655,6 +1673,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
  <div class="brow">
   <button class="primary bdot" data-tip="Fix this selection" onclick="fixSelection()">✔</button>
   <button id="bubImp" class="bdot" data-tip="Alternatives: see them and choose" onclick="improveAlternatives()">✨</button>
+  <button class="bdot" data-tip="Rewrite in a style: scholarly, casual and more" onclick="rewrite(S.reg==='casual'?'casual':'scholarly')">↻</button>
   <button class="bdot" data-tip="Rewrite with a prompt: say how it should sound" onclick="openPromptRewrite()">✍</button>
   <button class="bdot" data-tip="Close" onclick="hideBubble()">✕</button>
  </div>
@@ -1672,6 +1691,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   <button onclick="rewrite('humanize')" title="Writes it as a person would: the same facts in a natural rhythm">Naturalise</button>
  </div>
 </div>
+<div id="altCard" role="dialog" aria-label="Alternatives and rewrites" aria-live="polite"></div>
 <button id="scheFab" class="b3seal" onclick="openStickyToggle()" title="Schedae: pin a thought to the desk" aria-label="Schedae"><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span><span class="b3-face" id="scheFace"></span><span class="fbadge" id="fbadge" style="display:none"></span></button>
 </div>
 <div id="sticky-pins"></div>
@@ -2708,7 +2728,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   /* ---- a plainer word for a more exact one, in the scholarly register ---- */
   const ELEV = [
     [/\b(show|shows|showed)\b(?= (?:that|how|what|why|whether|the|a|an|this|these|those|its|their|his|her|our|no|little|some|signs|evidence|significant|clear|strong|\d))/gi, (m, w) => keepCase({ show: 'demonstrate', shows: 'demonstrates', showed: 'demonstrated' }[w.toLowerCase()])(m)],
-    [/\bshown(?= (?:that|to|by|above|below|in (?:Table|Figure|Fig)))/gi, keepCase('demonstrated')],
+    /* "shown to be", "shown that"; never "shown to children", which is displayed */
+    [/\bshown(?= (?:that|to (?:be|have|work|cause|reduce|increase|improve|affect|lower|raise|play|contribute|correlate|predict|occur|exist|vary|decline|enhance|inhibit|protect|prevent|promote)\b|by (?:the|this|these|our|their|its) (?:data|results|analysis|analyses|study|studies|evidence|experiment|experiments|survey|model|models|findings)\b|above|below|in (?:Table|Figure|Fig)))/gi, keepCase('demonstrated')],
     [/\b(prove|proves|proved|proven|proving)\b(?! to be)/gi, (m, w) => keepCase({ prove: 'establish', proves: 'establishes', proved: 'established', proven: 'established', proving: 'establishing' }[w.toLowerCase()])(m)],
     [/\bfind out\b/gi, keepCase('determine')], [/\bfinds out\b/gi, keepCase('determines')], [/\bfound out\b/gi, keepCase('determined')], [/\bfinding out\b/gi, keepCase('determining')],
     [/\blook at\b/gi, keepCase('examine')], [/\blooks at\b/gi, keepCase('examines')], [/\blooked at\b/gi, keepCase('examined')], [/\blooking at\b/gi, keepCase('examining')],
@@ -2784,7 +2805,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     [/\bapproximately\b/gi, keepCase('about')],
     [/\bsubsequently\b/gi, keepCase('later')],
     [/\bnumerous\b/gi, keepCase('many')],
-    [/\bsufficient\b/gi, keepCase('enough')],
+    /* "the sufficient conditions" cannot be "the enough conditions" */
+    notAfter(/\bsufficient\b/gi, ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'his', 'her', 'our', 'my', 'your', 'necessary and'], keepCase('enough')),
     [/\bindividuals\b(?!['’])/gi, keepCase('people')],
     [/\bin excess of\b/gi, keepCase('more than')],
     [/\bwith the result that\b/gi, keepCase('so')],
@@ -3307,6 +3329,2009 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKCOACH = api;
 })(typeof self !== 'undefined' ? self : this);
 
+/* Inkwell's offline lexicon (7.39): alternatives for a word, by meaning.
+   Data: vendor/wordnet-lex.txt, made by tools/lexicon/make_lexicon.py from
+   Princeton WordNet 3.0 (licence in vendor/WORDNET-LICENCE.txt) and the SCOWL
+   levels of the spelling checker. WordNet gives each meaning of a word with
+   its synonyms, a short definition and how often the meaning is used; SCOWL
+   gives how common each word is. From those this module:
+   - finds the word's base form and its form in the text (plural, past, -ing);
+   - guesses its part of speech from the words around it;
+   - ranks its meanings by use and by the words of the sentence;
+   - offers, for each likely meaning, synonyms that are used in that meaning,
+     put into the same form ("lost" gives "mislaid", not "mislay");
+   - scores how formal a word is (-2 casual .. +2 formal), for styles.
+   No lookbehind in any regular expression (Safari before 16.4). */
+(function (root) {
+  const L = { ready: false, S: [], W: new Map(), N: new Map(), E: { n: new Map(), v: new Map(), a: new Map(), r: new Map() }, INV: { n: new Map(), v: new Map() } };
+
+  function load(text) {
+    L.S = []; L.W = new Map(); L.N = new Map();
+    for (const k of 'nvar') L.E[k] = new Map();
+    L.INV = { n: new Map(), v: new Map() };
+    const lines = String(text || '').split('\n');
+    for (const line of lines) {
+      const t = line.split('|');
+      if (t[0] === 'S') {
+        const lem = t[3] ? t[3].split(';').map(x => { const i = x.lastIndexOf(':'); return [x.slice(0, i), +x.slice(i + 1) || 0]; }) : [];
+        L.S.push({ pos: t[1], gloss: t[2], lem: lem, c: (t[4] || '').indexOf('c') >= 0, near: (t[4] || '').indexOf('n') >= 0 });
+      } else if (t[0] === 'W') {
+        const tot = {};
+        (t[4] || '').split(',').forEach(x => { const p = x.split(':'); if (p[0]) tot[p[0]] = +p[1] || 0; });
+        /* "h<id>:n": a meaning with no synonym of its own, by its broader one */
+        L.W.set(t[1], { lv: +t[2], reg: +t[3], tot: tot, senses: (t[5] || '').split(',').filter(Boolean).map(x => { const h = x[0] === 'h', p = (h ? x.slice(1) : x).split(':'); return [+p[0], +p[1] || 0, h]; }) });
+      } else if (t[0] === 'N') {
+        L.N.set(+t[1], t[2].split(',').map(Number));
+      } else if (t[0] === 'E') {
+        if (!L.E[t[1]]) continue;
+        L.E[t[1]].set(t[2], t[3]);
+        if (L.INV[t[1]]) { const m = L.INV[t[1]]; if (!m.has(t[3])) m.set(t[3], []); m.get(t[3]).push(t[2]); }
+      }
+    }
+    L.ready = L.S.length > 0;
+    return L.ready;
+  }
+
+  /* ---- forms ---- */
+  const SUF = {
+    n: [['ses', 's', 's'], ['xes', 'x', 's'], ['zes', 'z', 's'], ['ches', 'ch', 's'], ['shes', 'sh', 's'], ['men', 'man', 's'], ['ies', 'y', 's'], ['s', '', 's']],
+    v: [['ies', 'y', 's'], ['es', 'e', 's'], ['es', '', 's'], ['s', '', 's'], ['ied', 'y', 'ed'], ['ed', 'e', 'ed'], ['ed', '', 'ed'], ['ing', 'e', 'ing'], ['ing', '', 'ing']],
+    a: [['ier', 'y', 'er'], ['iest', 'y', 'est'], ['er', '', 'er'], ['est', '', 'est'], ['er', 'e', 'er'], ['est', 'e', 'est']],
+    r: []
+  };
+  /* "stopped" -> "stop", "running" -> "run": a doubled last consonant */
+  function undouble(b) { return /([bdfgklmnprtvz])\1$/.test(b) ? b.slice(0, -1) : null; }
+  function hasPos(base, pos) { const w = L.W.get(base); if (!w) return false; return w.tot[pos] !== undefined || w.senses.some(s => L.S[s[0]] && L.S[s[0]].pos === pos); }
+  /* every reading of a word as it stands: base form, part of speech, form */
+  function bases(word) {
+    const w = String(word || '').toLowerCase(), out = [], seen = {};
+    const add = (base, pos, form) => { const k = base + '|' + pos + '|' + form; if (!seen[k] && hasPos(base, pos)) { seen[k] = 1; out.push({ base: base, pos: pos, form: form }); } };
+    for (const pos of 'nvar') add(w, pos, '');
+    for (const pos of 'nvar') {
+      const ex = L.E[pos].get(w);
+      if (ex) add(ex, pos, pos === 'n' ? 's' : pos === 'v' ? (/(en|wn|ne|n)$/.test(w) && !/ran$|won$/.test(w) ? 'en' : 'ed') : pos === 'a' ? (/est$/.test(w) ? 'est' : 'er') : '');
+      for (const [suf, rep, form] of SUF[pos]) {
+        if (w.length > suf.length + 1 && w.endsWith(suf)) {
+          const b = w.slice(0, -suf.length) + rep;
+          add(b, pos, form);
+          if (!rep && (form === 'ed' || form === 'ing' || form === 'er' || form === 'est')) { const u = undouble(b); if (u) add(u, pos, form); }
+        }
+      }
+    }
+    return out;
+  }
+  const VOW = /[aeiou]/;
+  function doubleEnd(b) {
+    /* one vowel group, ending consonant-vowel-consonant: stop, plan, rob */
+    return (b.match(/[aeiouy]+/g) || []).length === 1 && /[^aeiou][aeiou][bdfgklmnprtvz]$/.test(b);
+  }
+  /* a base word put into a form; null where the form cannot be made safely */
+  function inflect(base, pos, form) {
+    if (!form) return base;
+    const parts = base.split(' ');
+    if (parts.length > 1) {
+      if (pos === 'v') { const h = inflect(parts[0], 'v', form); return h ? [h].concat(parts.slice(1)).join(' ') : null; }
+      if (pos === 'n' && form === 's') { const h = inflect(parts[parts.length - 1], 'n', 's'); return h ? parts.slice(0, -1).concat(h).join(' ') : null; }
+      return null;
+    }
+    const b = base;
+    if (pos === 'n' && form === 's') {
+      const ir = L.INV.n.get(b);
+      if (ir && ir.length) return ir[0];
+      if (/(s|x|z|ch|sh)$/.test(b)) return b + 'es';
+      if (/[^aeiou]y$/.test(b)) return b.slice(0, -1) + 'ies';
+      return b + 's';
+    }
+    if (pos === 'v') {
+      const IRR = { be: { s: 'is', ed: 'was', en: 'been', ing: 'being' }, have: { s: 'has', ed: 'had', en: 'had' }, do: { s: 'does', ed: 'did', en: 'done' }, go: { s: 'goes', ed: 'went', en: 'gone' } };
+      if (IRR[b] && IRR[b][form]) return IRR[b][form];
+      if (form === 's') { if (/(s|x|z|ch|sh|o)$/.test(b)) return b + 'es'; if (/[^aeiou]y$/.test(b)) return b.slice(0, -1) + 'ies'; return b + 's'; }
+      if (form === 'ing') { const iri = (L.INV.v.get(b) || []).filter(x => /ing$/.test(x))[0]; if (iri) return iri; if (/ie$/.test(b)) return b.slice(0, -2) + 'ying'; if (/[^aeioy]e$/.test(b) && b !== 'be') return b.slice(0, -1) + 'ing'; if (doubleEnd(b)) return b + b.slice(-1) + 'ing'; return b + 'ing'; }
+      if (form === 'ed' || form === 'en') {
+        /* WordNet's list of irregular forms also holds "-ing" and "-s" forms
+           ("getting", "vying"): only the pasts are pasts */
+        const ir = (L.INV.v.get(b) || []).filter(x => !/ing$/.test(x) && !(/s$/.test(x) && !/ss$/.test(x) && x !== 'was'));
+        /* British usage: "has got", not "has gotten" */
+        if (b === 'get') return 'got';
+        if (ir.length) {
+          const en = ir.filter(x => /(en|wn|ne|n)$/.test(x) && !/ran$/.test(x)), ed = ir.filter(x => en.indexOf(x) < 0);
+          if (form === 'en' && (en[0] || ed[0])) return en[0] || ed[0];
+          if (form === 'ed' && ed[0]) return ed[0];
+          /* "prove" has only the irregular "proven": its past is "proved" */
+        }
+        if (/e$/.test(b)) return b + 'd';
+        if (/[^aeiou]y$/.test(b)) return b.slice(0, -1) + 'ied';
+        if (doubleEnd(b)) return b + b.slice(-1) + 'ed';
+        return b + 'ed';
+      }
+    }
+    if (pos === 'a' && (form === 'er' || form === 'est')) return null;
+    return null;
+  }
+
+  /* ---- part of speech from the words around ---- */
+  const DET = /^(the|a|an|this|that|these|those|my|your|his|her|its|our|their|some|any|no|every|each|another|such|whose|many|few|several|much|all|both|one)$/;
+  const AUXV = /^(will|would|can|could|should|shall|may|might|must|do|does|did|to|cannot|let|please)$/;
+  const SUBJ = /^(i|you|he|she|it|we|they|who|people|everyone|nobody)$/;
+  const BE = /^(am|is|are|was|were|be|been|being|seem|seems|seemed|become|becomes|became|feel|feels|felt|look|looks|looked|remain|remains|remained|get|gets|got)$/;
+  const INTENS = /^(very|so|too|quite|rather|more|most|less|least|really|extremely|fairly|pretty|how)$/;
+  const PREP = /^(of|in|on|at|for|with|by|from|about|into|onto|over|under|between|among|through|during|without|within|against|towards?|like)$/;
+  const HAVE = /^(have|has|had|having|been|be|was|were|is|are|am|get|gets|got)$/;
+  /* a word used only, or almost only, as an adjective or as a noun */
+  function mostly(w, pos) {
+    const W = L.W.get(String(w || '').toLowerCase());
+    if (!W) return false;
+    const t = W.tot, all = Object.keys(t).reduce((a, k) => a + t[k], 0);
+    if (!(pos in t)) return false;
+    return all ? t[pos] / all >= 0.65 : Object.keys(t).length === 1;
+  }
+  const adjOnly = w => !!w && !DET.test(w) && mostly(w, 'a');
+  /* a noun, or a plural ("standards"): adjectives take no "-s" */
+  const nounOnly = w => !!w && (mostly(w, 'n') || (/[^s]s$/.test(w) && !L.W.has(w) && bases(w).some(b => b.pos === 'n' && b.form === 's') && !bases(w).some(b => b.pos === 'v' && mostly(b.base, 'v'))));
+  function choosePos(cands, prev, prev2, next) {
+    if (!cands.length) return null;
+    const pv = (prev || '').toLowerCase(), pv2 = (prev2 || '').toLowerCase(), nx = (next || '').toLowerCase();
+    let best = null, bestScore = -1e9;
+    for (const c of cands) {
+      const w = L.W.get(c.base), tot = w ? (w.tot[c.pos] || 0) : 0;
+      let s = Math.log(1 + tot) * 0.6;
+      if (DET.test(pv) || /'s$/.test(pv)) s += c.pos === 'n' ? 3 : c.pos === 'a' ? 2 : -3;
+      if (AUXV.test(pv)) s += c.pos === 'v' && !c.form ? 4 : -1;
+      if (SUBJ.test(pv)) s += c.pos === 'v' && c.form !== 'ing' && c.form !== 'en' ? 3 : -1;
+      /* "am tired", "was happy": after "be", an adjective where there is one */
+      if (BE.test(pv)) s += c.pos === 'a' ? 4.5 : (c.pos === 'v' && (c.form === 'ing' || c.form === 'en' || c.form === 'ed')) ? 2 : -0.5;
+      if (INTENS.test(pv)) s += c.pos === 'a' ? 3 : c.pos === 'r' ? 2 : -2;
+      if (PREP.test(pv)) s += c.pos === 'n' ? 2 : c.pos === 'v' && c.form === 'ing' ? 1 : -1;
+      if (DET.test(pv2) && c.pos === 'n') s += 1;
+      /* "a clear rise", "the long meeting": a noun after an adjective */
+      if (adjOnly(pv) && (c.pos === 'n')) s += 3;
+      if (adjOnly(pv) && c.pos === 'v') s -= 2;
+      /* "modern standards": an adjective before a noun */
+      if (nounOnly(nx) && c.pos === 'a') s += 2.5;
+      if (nounOnly(nx) && c.pos === 'n' && !DET.test(pv)) s -= 1;
+      if (DET.test(nx) && c.pos === 'v') s += 1.5;
+      if (/^(the|a|an|his|her|their|my|our|its|your)$/.test(nx) && c.pos !== 'v') s -= 1;
+      if (c.pos === 'r' && /ly$/.test(c.base)) s += 2;
+      if (c.form === 'ing' || c.form === 'ed' || c.form === 'en') s += c.pos === 'v' ? 1.5 : -1;
+      if (c.form === 's' && c.pos === 'n' && (DET.test(pv) || PREP.test(pv))) s += 1;
+      if (s > bestScore) { bestScore = s; best = c; }
+    }
+    return best;
+  }
+
+  /* ---- meanings ---- */
+  const STOP = new Set('a an the and or but if of in on at to for with by from as is are was were be been being it its this that these those he she they we you i his her their our my your me him them us not no so do does did have has had will would can could should may might must there here what which who whom whose when where why how all any some more most other such only own same than too very just into over under about after before again'.split(' '));
+  function contentWords(text) { return (String(text || '').toLowerCase().match(/[a-z][a-z'-]+/g) || []).filter(w => !STOP.has(w)); }
+  function senses(base, pos, ctx) {
+    const w = L.W.get(base);
+    if (!w) return [];
+    const tot = w.tot[pos] || 0, cw = new Set(contentWords(ctx));
+    cw.delete(base);
+    const out = [];
+    let rank = 0;
+    for (const [id, cnt, broad] of w.senses) {
+      const s = L.S[id];
+      if (!s || s.pos !== pos) continue;
+      /* a broader meaning helps a noun ("house": home, dwelling); a verb's
+         is far too general ("waste": use) */
+      if (broad && pos !== 'n') continue;
+      let lesk = 0;
+      contentWords(s.gloss).forEach(g => { if (cw.has(g)) lesk += 0.12; });
+      s.lem.forEach(([l]) => { if (l !== base && cw.has(l)) lesk += 0.15; });
+      const share = tot > 0 ? cnt / tot : Math.pow(0.5, rank + 1);
+      out.push({ id: id, share: share, lesk: Math.min(0.45, lesk), score: share + Math.min(0.45, lesk), gloss: s.gloss, colloquial: s.c, broader: !!broad });
+      rank++;
+    }
+    out.sort((a, b) => b.score - a.score);
+    return out;
+  }
+  function reg(word) { const w = L.W.get(String(word).toLowerCase()); return w ? w.reg : 0; }
+  function level(word) { const w = L.W.get(String(word).toLowerCase()); return w ? w.lv : 99; }
+  function matchCase(src, out) {
+    if (!out) return out;
+    if (src.length > 1 && src === src.toUpperCase() && /[A-Z]/.test(src)) return out.toUpperCase();
+    if (/^[A-Z]/.test(src)) return out[0].toUpperCase() + out.slice(1);
+    return out;
+  }
+  /* the synonyms of one meaning, used in that meaning, in the word's form */
+  function synonymsOf(id, base, pos, form, src, near) {
+    const s = L.S[id], out = [], seen = {};
+    const pool = s.lem.map(x => [x[0], x[1], false]);
+    if (pos === 'a' && near !== false && (s.near || s.lem.length < 3)) (L.N.get(id) || []).forEach(j => { const t = L.S[j]; if (t) t.lem.forEach(x => pool.push([x[0], x[1], true])); });
+    for (const [lem, cnt, isNear] of pool) {
+      const lw = lem.toLowerCase();
+      if (lw === base || seen[lw]) continue;
+      const W = L.W.get(lw), lv = W ? W.lv : 70;
+      if (lv > 60) continue;
+      /* a word used in this meaning, or one whose most used meaning this
+         is: "kid" for a child, never "fry" or "shaver" (never recorded as
+         nouns). A selected phrase is unambiguous, so its synonyms need no
+         record: "train of thought" gives "thread". */
+      const ofPos = W ? W.senses.filter(x => L.S[x[0]] && L.S[x[0]].pos === s.pos) : [];
+      const main = W && (W.tot[s.pos] || 0) > 0 && ofPos.length && ofPos.slice().sort((x, y) => y[1] - x[1])[0][0] === id;
+      if (cnt === 0 && !(lv <= 35 && (main || / /.test(base)))) continue;
+      if (isNear && cnt === 0) continue;
+      const f = inflect(lw, pos, form);
+      if (!f) continue;
+      seen[lw] = 1;
+      out.push({ text: matchCase(src, f), base: lw, count: cnt, level: lv, reg: W ? W.reg : 0, near: isNear });
+    }
+    out.sort((a, b) => (a.near - b.near) || (b.count - a.count) || (a.level - b.level));
+    let n = 0;
+    return out.filter(x => !x.near || ++n <= 4);
+  }
+  /* a word in its sentence: its readings, the chosen one, and its meanings */
+  function analyse(word, prev, prev2, next, ctx) {
+    const cands = bases(word);
+    const pick = choosePos(cands, prev, prev2, next);
+    if (!pick) return null;
+    /* "was shown", "has taken": after "have" or "be", the participle */
+    if (pick.pos === 'v' && pick.form === 'ed' && HAVE.test(String(prev || '').toLowerCase())) pick.form = 'en';
+    const W = L.W.get(pick.base), tot = W ? (W.tot[pick.pos] || 0) : 0;
+    const ss = senses(pick.base, pick.pos, ctx);
+    const kept = ss.reduce((a, s) => a + (tot > 0 ? s.share : 0), 0);
+    return { word: word, base: pick.base, pos: pick.pos, form: pick.form, senses: ss, total: tot, coverage: tot > 0 ? kept : 0 };
+  }
+  /* alternatives for a word or phrase in a sentence, grouped by meaning:
+     [{gloss, pos, share, fit, words: [{text, base, count, level, reg}]}] */
+  function alternatives(word, sentence, at) {
+    if (!L.ready) return [];
+    const src = String(word || '').trim();
+    if (!src) return [];
+    const sent = String(sentence || src);
+    const pos0 = typeof at === 'number' ? at : sent.indexOf(src);
+    const before = (sent.slice(0, Math.max(0, pos0)).match(/[A-Za-z'’]+/g) || []);
+    const after = (sent.slice(pos0 + src.length).match(/[A-Za-z'’]+/g) || []);
+    const prev = before[before.length - 1], prev2 = before[before.length - 2], next = after[0];
+    const lw = src.toLowerCase().replace(/’/g, "'");
+    let a = null;
+    if (/\s/.test(lw)) {
+      /* a phrase: as it stands, or with its first or last word in base form */
+      const ws = lw.split(/\s+/), tries = [{ base: ws.join(' '), form: '' }];
+      bases(ws[0]).forEach(b => { if (b.pos === 'v') tries.push({ base: [b.base].concat(ws.slice(1)).join(' '), form: b.form, pos: 'v' }); });
+      bases(ws[ws.length - 1]).forEach(b => { if (b.pos === 'n') tries.push({ base: ws.slice(0, -1).concat(b.base).join(' '), form: b.form, pos: 'n' }); });
+      for (const t of tries) {
+        const W = L.W.get(t.base);
+        if (!W) continue;
+        const pos = t.pos || (W.tot.n !== undefined ? 'n' : W.tot.v !== undefined ? 'v' : W.tot.a !== undefined ? 'a' : 'r');
+        a = { word: src, base: t.base, pos: pos, form: t.form, senses: senses(t.base, pos, sent), total: W.tot[pos] || 0 };
+        break;
+      }
+    } else a = analyse(lw, prev, prev2, next, sent);
+    if (!a || !a.senses.length) return [];
+    const groups = [];
+    for (const s of a.senses.slice(0, 5)) {
+      const words = synonymsOf(s.id, a.base, a.pos, a.form, src).slice(0, 6);
+      if (!words.length) continue;
+      groups.push({ gloss: s.gloss, pos: a.pos, share: s.share, fit: s.score, colloquial: s.colloquial, broader: s.broader, words: words });
+    }
+    /* the first group is the best fit only when its meaning is a likely one;
+       otherwise every group is offered as a possible meaning, to choose */
+    if (groups.length && !groups[0].broader && (groups[0].share >= 0.5 || groups[0].fit - groups[0].share > 0.2)) groups[0].best = true;
+    return groups;
+  }
+  /* the one alternative a style rewrite may use without asking: only where
+     the meaning is clear (one meaning carries most of the word's use) */
+  function confident(word, prev, prev2, next, ctx) {
+    const a = analyse(word, prev, prev2, next, ctx);
+    if (!a || !a.senses.length) return null;
+    const top = a.senses[0];
+    if (a.total < 3 || top.share < 0.6 || top.broader) return null;
+    return { analysis: a, sense: top, words: synonymsOf(top.id, a.base, a.pos, a.form, word, false) };
+  }
+  const api = { load: load, get ready() { return L.ready; }, bases: bases, inflect: inflect, analyse: analyse, senses: senses, alternatives: alternatives, confident: confident, reg: reg, level: level, synonymsOf: synonymsOf, _L: L };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKLEX = api;
+})(typeof self !== 'undefined' ? self : this);
+
+/* Inkwell's common alternatives (7.39): the everyday words a writer reaches
+   for, written for Inkwell, by meaning. WordNet (INKLEX) knows every meaning
+   of a word, but its synonyms for the commonest meaning are often rare or
+   missing ("happy" gives "golden, blissful"; "meeting" gives "encounter").
+   This list comes first: for each word, the words that can stand in its
+   place in a sentence, a meaning at a time, with a short note of the meaning
+   where the word has more than one ("bad: (poor in quality) poor, weak; (harmful)
+   harmful, damaging").
+   Each alternative is a drop-in: the same part of speech, taking the same
+   words around it, so "Use" keeps the grammar. Words spelt differently in
+   British and American English are left out of the alternatives, so a
+   suggestion never brings in the other spelling. Keys are base forms; the
+   card puts each alternative into the word's form (plural, past, -ing).
+   Format: one word a line, "word = alternatives | (meaning) alternatives". */
+(function (root) {
+  const RAW = {
+    a: `able = capable, competent, skilled
+absent = missing, away
+accurate = precise, exact, correct
+active = busy, lively, energetic
+actual = real, genuine, true
+afraid = scared, frightened, fearful
+angry = annoyed, cross, furious, irritated
+annoying = irritating, tiresome, bothersome
+anxious = worried, nervous, uneasy, apprehensive
+appropriate = suitable, fitting, proper, apt
+aware = conscious, mindful
+awful = terrible, dreadful, horrible
+bad = (poor in quality) poor, weak, inferior, substandard | (harmful) harmful, damaging | (unpleasant) unpleasant, nasty, horrible
+basic = fundamental, essential, elementary, simple
+beautiful = lovely, attractive, gorgeous, stunning, pretty
+best = finest, greatest, top
+better = superior, preferable
+big = large, huge, great, sizeable, substantial, vast
+boring = dull, tedious, uninteresting, monotonous
+brave = courageous, bold, fearless, daring
+brief = short, quick, concise
+bright = (full of light) brilliant, vivid, shining | (clever) clever, intelligent, smart
+broad = wide, extensive, sweeping
+busy = occupied, engaged, hectic
+calm = peaceful, tranquil, relaxed, composed
+careful = cautious, thorough, meticulous, attentive
+central = main, key, core, principal
+certain = sure, confident, convinced, positive
+cheap = inexpensive, affordable, low-cost
+clean = spotless, tidy, fresh
+clear = (easy to see or understand) plain, obvious, evident, unmistakable | (see-through) transparent, see-through
+clever = intelligent, bright, smart, sharp
+close = (near) near, nearby, adjacent | (intimate) intimate, dear
+cold = chilly, cool, freezing, icy
+common = frequent, widespread, usual, typical
+complete = whole, entire, total, full
+complex = complicated, intricate, involved
+confident = self-assured, sure, assured
+correct = right, accurate, proper, exact
+crucial = vital, critical, essential, key
+curious = inquisitive, interested
+current = present, existing, contemporary
+dangerous = hazardous, risky, unsafe, perilous
+dark = dim, gloomy, shadowy
+dead = deceased, lifeless
+deep = profound, intense
+definite = clear, certain, fixed, specific
+delicious = tasty, delectable, mouth-watering
+different = distinct, dissimilar, unlike, varied
+difficult = hard, tough, challenging, demanding
+direct = straight, immediate, straightforward
+dirty = filthy, grubby, soiled
+early = initial, first, premature
+easy = simple, straightforward, effortless, painless
+effective = successful, efficient, productive, useful
+empty = vacant, bare, hollow
+enormous = huge, immense, vast, massive
+entire = whole, complete, full
+essential = vital, necessary, crucial, key
+exact = precise, accurate, correct
+excellent = outstanding, superb, first-rate, exceptional
+exciting = thrilling, stimulating, exhilarating
+expensive = costly, pricey, dear
+extra = additional, further, spare
+fair = (just) just, reasonable, even-handed, impartial | (pale) light, pale
+false = untrue, incorrect, wrong, mistaken
+famous = well-known, renowned, celebrated, noted
+fast = quick, rapid, swift, speedy
+final = last, closing, concluding
+fine = (good enough) good, satisfactory, acceptable | (thin) thin, delicate
+firm = solid, stable, steady, secure
+flat = level, even, smooth
+formal = official, ceremonial
+fortunate = lucky
+fresh = new, recent, novel
+friendly = kind, warm, amiable, welcoming
+full = filled, packed, complete
+funny = amusing, humorous, comical, hilarious
+general = broad, overall, common, widespread
+gentle = mild, soft, tender, kind
+genuine = real, authentic, true, sincere
+glad = pleased, happy, delighted
+good = (of high quality) fine, excellent, high-quality, sound | (kind) kind, decent, virtuous | (skilled) skilled, capable, able
+great = (excellent) excellent, wonderful, superb | (large) huge, vast, enormous | (important) important, major, significant
+harmful = damaging, dangerous, detrimental, hurtful
+healthy = well, fit, sound, wholesome
+heavy = weighty, hefty, substantial
+helpful = useful, beneficial, valuable, handy
+hidden = concealed, secret, invisible
+high = tall, lofty, elevated
+honest = truthful, sincere, frank, candid
+hot = warm, heated, boiling, scorching
+huge = enormous, vast, immense, massive, giant
+ideal = perfect, model, best
+ill = sick, unwell, poorly
+immediate = instant, prompt, direct
+important = significant, crucial, key, major, vital, essential
+impossible = unachievable, unworkable, hopeless
+interesting = fascinating, intriguing, engaging, compelling
+kind = caring, generous, considerate, thoughtful
+large = big, sizeable, substantial, considerable
+late = delayed, overdue
+lazy = idle, inactive, sluggish
+likely = probable, expected
+little = small, tiny, slight
+lively = energetic, animated, spirited, vibrant
+local = nearby, regional
+lonely = isolated, alone, solitary
+long = lengthy, extended, prolonged
+loud = noisy, booming, deafening
+low = (not high) short, low-lying | (small in amount) small, modest, reduced, limited
+lucky = fortunate
+main = chief, principal, primary, central, key
+major = important, significant, main, principal, leading
+modern = contemporary, current, up-to-date, recent
+narrow = thin, slim, tight
+natural = normal, ordinary, innate
+necessary = essential, required, needed, vital
+nervous = anxious, worried, uneasy, tense
+new = (recently made) recent, fresh, latest | (unfamiliar) unfamiliar, novel, original
+nice = (pleasant) pleasant, lovely, delightful, enjoyable | (kind) kind, friendly, pleasant
+normal = ordinary, usual, typical, standard, regular
+obvious = clear, evident, plain, apparent
+old = (not young) elderly, aged | (from earlier) former, previous, earlier | (very old) ancient, antique
+open = (not closed) unlocked, ajar | (honest) frank, candid, honest
+original = (first) first, initial, earliest | (new) novel, innovative, fresh, creative
+perfect = ideal, flawless, faultless
+personal = private, individual
+pleasant = nice, agreeable, enjoyable, lovely
+polite = courteous, respectful, civil, well-mannered
+poor = (without money) needy, impoverished, deprived, hard-up | (low in quality) inferior, inadequate, weak, substandard
+possible = feasible, achievable, viable, conceivable
+powerful = strong, mighty, influential, potent
+precise = exact, accurate, specific
+pretty = attractive, lovely, beautiful, charming
+previous = earlier, former, prior, preceding
+private = personal, confidential, secret
+probable = likely
+proper = correct, appropriate, suitable, right
+proud = pleased, gratified
+quick = fast, rapid, swift, speedy, prompt
+quiet = (silent) silent, hushed, soft | (calm) calm, peaceful, tranquil
+rare = uncommon, unusual, scarce, infrequent
+ready = prepared, set
+real = genuine, actual, true, authentic
+reasonable = sensible, fair, rational, sound
+recent = new, latest, current
+relevant = pertinent, applicable, related
+reliable = dependable, trustworthy, consistent
+rich = wealthy, affluent, prosperous, well-off
+right = (correct) correct, accurate, true | (suitable) appropriate, suitable, proper
+rough = (uneven) uneven, bumpy, coarse | (approximate) approximate
+rude = impolite, discourteous, disrespectful
+sad = unhappy, sorrowful, downcast, miserable, gloomy
+safe = secure, protected, harmless
+same = identical, equivalent
+scared = afraid, frightened, fearful
+serious = (grave) grave, severe, major, significant | (not joking) solemn, earnest, sincere
+sharp = (with an edge) keen, pointed | (quick-witted) quick, astute, perceptive
+short = (in length or time) brief, quick, concise | (in height) small, little
+shy = timid, reserved, bashful
+sick = ill, unwell, poorly
+significant = important, notable, considerable, substantial, meaningful
+silly = foolish, daft, absurd, ridiculous
+similar = comparable, corresponding, related
+simple = easy, straightforward, basic, plain
+slow = gradual, unhurried, sluggish
+small = little, tiny, minor, modest, slight
+smart = clever, intelligent, bright, sharp
+soft = gentle, mild, tender, smooth
+special = particular, unique, exceptional, distinctive
+specific = particular, precise, exact, definite
+stable = steady, secure, firm, constant
+strange = odd, unusual, peculiar, curious, weird
+strict = firm, rigid, stern, rigorous
+strong = (powerful) powerful, mighty, sturdy | (convincing) convincing, compelling, persuasive, robust
+stupid = foolish, silly, unwise, senseless
+successful = effective, prosperous, thriving
+sudden = abrupt, unexpected, swift
+sure = certain, confident, positive, convinced
+surprising = unexpected, astonishing, remarkable, startling
+sweet = (in taste) sugary | (kind) kind, lovely, charming
+terrible = awful, dreadful, horrible, appalling
+thick = (wide) wide, broad, chunky | (dense) dense, heavy
+thin = slim, slender, lean, narrow
+tiny = small, minute, little
+tired = weary, exhausted, worn out, drained, fatigued
+tough = (difficult) hard, difficult, demanding | (strong) strong, sturdy, durable
+true = correct, accurate, right, factual
+typical = usual, normal, standard, characteristic
+ugly = unattractive, unsightly, hideous
+unusual = uncommon, rare, odd, strange, exceptional
+upset = distressed, troubled, unhappy, hurt
+useful = helpful, valuable, practical, handy, beneficial
+usual = normal, typical, customary, regular, habitual
+valuable = precious, prized, useful, worthwhile
+various = different, diverse, several, assorted
+vast = huge, enormous, immense, extensive
+violent = brutal, aggressive, fierce, savage
+visible = noticeable, apparent, evident
+vital = essential, crucial, critical, key
+warm = (in temperature) mild, heated, hot | (friendly) friendly, kind, welcoming, affectionate
+weak = feeble, frail, fragile, faint
+weird = strange, odd, bizarre, peculiar
+whole = entire, complete, full, total
+wide = broad, extensive, wide-ranging
+wise = sensible, prudent, sound, judicious
+wonderful = superb, splendid, fantastic, lovely
+worried = anxious, concerned, nervous, uneasy
+wrong = (incorrect) incorrect, mistaken, inaccurate, false | (unfair) unfair, unjust, immoral
+young = youthful, juvenile
+happy = glad, pleased, cheerful, content, delighted, joyful
+hard = (difficult) difficult, tough, challenging, demanding | (firm) firm, solid, rigid
+free = (costing nothing) complimentary, without charge | (not restricted) unrestricted, independent
+popular = well-liked, fashionable, widely liked, in demand
+foreign = overseas, international, alien
+widespread = common, extensive, prevalent, general, far-reaching
+contemporary = modern, current, present-day, recent
+single = (only one) sole, lone, solitary, one | (not married) unmarried, unattached
+former = previous, earlier, past, prior
+responsible = (in charge) in charge, accountable | (sensible) sensible, reliable, dependable
+beneficial = helpful, useful, advantageous, valuable
+individual = separate, single, particular, personal, distinct
+next = following, subsequent, upcoming
+human = mortal, personal
+public = (of everyone) common, general, shared, communal | (open to all) open, accessible
+moral = ethical, principled, virtuous, decent
+intellectual = mental, academic, scholarly, cerebral
+national = nationwide, countrywide, state
+political = governmental, civic
+traditional = conventional, customary, established, classic
+global = worldwide, international, universal`,
+    v: `accept = (agree to) agree to, approve, consent to | (take what is offered) receive, take
+achieve = accomplish, attain, reach, gain
+admit = confess, acknowledge, concede
+affect = influence, change, alter, shape
+agree = concur, consent, accept
+aim = intend, plan, mean
+allow = permit, enable
+appear = (seem) seem, look | (come into view) emerge, arise, surface
+argue = (quarrel) quarrel, disagree, fight | (claim) claim, contend, maintain, assert
+avoid = evade, dodge, sidestep, escape
+become = grow, turn
+begin = start, commence, initiate
+believe = think, trust, accept, consider
+break = smash, shatter, crack, damage
+bring = carry, take, fetch, deliver
+build = construct, make, assemble, erect
+buy = purchase, acquire, get
+call = (name) name, term, label | (telephone) phone, ring, contact
+carry = bring, take, transport, convey
+catch = capture, seize, grab
+cause = create, produce, bring about, trigger
+change = alter, modify, adjust, transform, amend
+check = examine, inspect, review, verify, test
+choose = select, pick, opt for, decide on
+claim = assert, state, maintain, allege, argue
+clean = wash, tidy, wipe, scrub
+close = (shut) shut, seal, lock | (end) end, conclude, finish
+collect = gather, assemble, accumulate, amass
+come = arrive, approach, appear
+compare = contrast, weigh up, match
+complain = grumble, object, protest
+complete = finish, conclude, end, accomplish
+concentrate = focus
+consider = think about, weigh, contemplate, examine
+contain = hold, include, comprise, incorporate
+continue = carry on, keep on, go on, persist
+create = make, produce, generate, develop, build, form
+cut = (with a blade) slice, chop, trim | (make smaller) reduce, lower, cut back
+damage = harm, hurt, injure, spoil, impair
+decide = choose, determine, resolve, settle
+decrease = reduce, lower, lessen, diminish, drop, fall
+defend = protect, guard, support, justify
+delay = postpone, put off, defer, hold up
+deliver = bring, hand over, supply, provide
+demand = require, insist on, call for, request
+deny = refute, reject, dispute, contradict
+describe = explain, portray, depict, outline, detail
+destroy = ruin, wreck, demolish, devastate, wipe out
+develop = grow, evolve, expand, build, create
+die = pass away, perish
+disappear = vanish, fade, evaporate
+discover = find, find out, uncover, detect, learn
+discuss = talk about, debate, examine, consider
+divide = split, separate, share
+do = perform, carry out, complete, undertake
+doubt = question, distrust, suspect
+draw = (make a picture) sketch, depict | (pull) pull, drag, attract
+drive = (a vehicle) steer, ride | (force) push, propel, force
+drop = (fall) fall, decline, decrease, sink | (let fall) let fall, release
+earn = make, gain, receive, get
+eat = consume, devour, have
+enable = allow, permit, empower
+encourage = support, urge, inspire, motivate, promote
+end = finish, conclude, stop, close, cease
+enjoy = like, love, appreciate, relish, delight in
+ensure = guarantee, make sure, secure
+enter = (go in) go into, come into | (take part) join, take part in
+establish = set up, found, create, form, start
+estimate = calculate, assess, judge, gauge
+examine = inspect, study, investigate, explore, review
+expect = anticipate, predict, await, foresee
+explain = clarify, describe, account for, interpret
+explore = examine, investigate, study, research
+express = state, voice, convey, communicate, articulate
+fail = fall short, collapse, founder, flop
+fall = drop, decline, tumble, plunge, decrease
+feel = sense, experience, perceive
+fight = battle, struggle, combat, oppose
+find = discover, locate, come across, identify
+finish = complete, end, conclude, wrap up
+fix = repair, mend, correct, sort out
+follow = (go after) pursue, trail, track | (obey) obey, observe, comply with
+forget = overlook, neglect, omit
+form = create, make, shape, establish, constitute
+gain = obtain, acquire, earn, achieve, get
+get = obtain, acquire, receive, gain
+give = provide, offer, supply, present, hand
+go = leave, depart, travel, move, head
+grow = increase, expand, develop, rise
+guess = estimate, suppose, assume, speculate
+happen = occur, take place, arise
+hate = dislike, detest, loathe, despise
+have = own, possess, hold
+hear = (listen) listen to, catch | (learn of) learn, discover, find out
+help = assist, aid, support
+hide = conceal, cover, mask, bury
+hit = strike, beat, punch, knock
+hold = (grip) grip, grasp, clutch | (contain) contain, keep
+hope = wish, expect, aspire
+hurt = injure, harm, wound, damage
+identify = pinpoint, spot, detect, name
+ignore = disregard, overlook, neglect, dismiss
+imagine = picture, envisage, conceive of, suppose
+improve = enhance, better, refine, strengthen, upgrade
+include = contain, cover, involve, incorporate, comprise
+increase = (make larger) raise, boost, expand, extend | (become larger) rise, grow, climb, expand
+indicate = show, suggest, signal, point to, reveal
+influence = affect, shape, sway, guide
+inform = tell, notify, advise, update
+introduce = present, launch, bring in
+invent = create, devise, design, originate
+investigate = examine, explore, look into, study, probe
+involve = include, entail, require, mean
+join = connect, link, unite, combine
+keep = (hold on to) retain, hold, save, preserve | (go on) continue, carry on
+kill = murder, slay, destroy
+laugh = chuckle, giggle, chortle
+lead = (guide) guide, direct, head, conduct | (cause) result in, cause
+learn = discover, find out, study, master
+leave = go, depart, exit, quit
+limit = restrict, confine, curb, cap, control
+live = reside, dwell, stay
+look = (direct the eyes) glance, gaze, stare, peer | (seem) seem, appear
+love = adore, cherish, treasure, enjoy
+maintain = (keep up) keep, preserve, sustain, uphold | (claim) claim, assert, insist
+make = create, produce, build, form, construct
+manage = run, direct, control, oversee, handle
+mean = signify, indicate, imply, suggest
+measure = gauge, assess, quantify, calculate
+meet = (come across) encounter, see, come across | (satisfy) satisfy, match
+mention = refer to, note, cite, raise
+move = shift, transfer, relocate, go
+need = require, want, call for, demand
+notice = see, observe, spot, detect, note
+obtain = get, acquire, gain, secure, gather
+occur = happen, take place, arise
+offer = provide, give, present, propose, suggest
+open = (unfasten) unlock, unfasten | (begin) start, begin, launch
+order = (command) command, instruct, direct | (ask for goods) request, book
+organise = arrange, plan, coordinate, sort out
+organize = arrange, plan, coordinate, sort out
+own = possess, have, hold
+pay = spend, settle, give
+perform = do, carry out, execute, conduct, undertake
+pick = choose, select, opt for
+plan = intend, aim, design, arrange, prepare
+play = (have fun) have fun | (compete) compete, take part | (act) act, perform, portray
+prepare = arrange, plan, set up
+present = show, offer, give, introduce, display
+prevent = stop, avoid, block, hinder, prohibit
+produce = make, create, generate, manufacture, yield
+promise = pledge, vow, guarantee, swear
+protect = defend, guard, shield, safeguard, preserve
+prove = show, demonstrate, confirm, establish, verify
+provide = give, supply, offer, deliver
+publish = issue, release, print, put out
+pull = drag, tug, haul, draw
+push = shove, press, force, propel
+put = place, set, position, lay
+raise = lift, increase, boost, elevate
+reach = arrive at, get to, achieve, attain
+read = study, peruse, scan, look through
+realise = understand, see, grasp
+realize = understand, see, grasp
+receive = get, obtain, accept, gain
+recognise = identify, know, acknowledge, accept
+recognize = identify, know, acknowledge, accept
+recommend = suggest, advise, propose, advocate
+reduce = decrease, lower, lessen, cut, diminish
+refuse = decline, reject, turn down, deny
+relax = rest, unwind, calm down
+remain = stay, continue, persist, endure
+remember = recall, recollect, think of
+remove = take away, eliminate, delete, get rid of, extract
+repeat = restate, reiterate, redo, echo
+replace = substitute, swap, change, succeed
+report = state, announce, describe, record, document
+represent = stand for, portray, depict
+require = need, demand, call for, necessitate
+rest = relax, pause, unwind
+return = (go back) come back, go back | (give back) give back, restore, hand back
+reveal = show, disclose, expose, uncover, display
+rise = climb, increase, grow, go up, ascend
+run = (move fast) sprint, race, dash, jog | (manage) manage, operate, direct, lead
+save = (rescue) rescue, protect, preserve | (keep for later) keep, store, reserve
+say = state, mention, remark, declare, comment
+see = (notice) notice, observe, spot, view | (understand) understand, grasp
+seem = appear, look, sound
+sell = trade, market
+send = dispatch, mail, post, forward, transmit
+separate = divide, split, part, detach, isolate
+share = divide, split, distribute
+show = (make visible) display, present, exhibit, reveal | (prove) demonstrate, prove, indicate, illustrate
+sleep = rest, nap, doze
+solve = resolve, settle, fix, work out
+speak = talk, say, address
+spend = use, invest, pay, consume
+start = begin, commence, launch, initiate
+state = say, declare, assert, announce, claim
+stay = remain, wait, linger, stop
+stop = halt, end, cease, discontinue, quit
+study = examine, investigate, research, learn, explore
+succeed = triumph, prosper, thrive, flourish
+suffer = endure, experience, undergo, bear
+suggest = propose, recommend, advise, indicate, imply
+supply = provide, give, deliver
+support = back, help, assist, encourage, endorse, uphold
+suppose = assume, presume, believe, think, imagine
+surprise = astonish, amaze, startle, shock
+take = (carry) carry, bring | (accept) accept, receive | (need) require, need
+talk = speak, chat, converse
+teach = educate, instruct, train, tutor
+tell = (let know) inform, notify | (narrate) narrate, recount, relate
+test = check, examine, assess, try, evaluate
+think = (believe) believe, consider, feel, suppose | (reflect) reflect, ponder, contemplate
+throw = toss, hurl, fling, pitch
+touch = feel, handle, contact
+train = teach, coach, instruct, educate, prepare
+travel = journey, go, tour, voyage
+treat = (regard) handle, deal with, regard | (care for the ill) cure, heal, care for
+try = attempt, strive, seek
+turn = (go round) rotate, spin, twist | (become) become, grow
+understand = grasp, comprehend, follow, see, appreciate
+use = employ, apply, exploit, draw on
+visit = see, call on, go to, tour
+wait = stay, remain, linger, hold on
+walk = stroll, wander, stride, march, step
+want = wish, desire, need
+warn = caution, alert, advise, notify
+waste = squander, misuse, throw away, fritter away
+watch = observe, view, look at, see, monitor
+win = (be the winner) triumph, prevail, succeed | (gain) gain, earn, secure, achieve
+wish = want, desire, hope, long
+write = compose, draft, pen, record, author
+lose = (no longer have) mislay, misplace | (stop having) shed, forfeit
+know = understand, grasp
+serve = (help) help, assist, aid | (work as) act, function, work
+work = (do a job) toil | (function) function, operate, run, succeed
+sustain = maintain, keep up, support, preserve, uphold
+decline = (fall) fall, drop, decrease, diminish, dwindle | (refuse) refuse, reject, turn down
+like = enjoy, love, appreciate
+contest = challenge, dispute, oppose, question
+assert = claim, state, declare, maintain, insist
+characterise = describe, portray, depict, define
+characterize = describe, portray, depict, define
+reshape = transform, remodel, restructure, reform, recast
+bear = (put up with) endure, tolerate, stand, withstand | (carry) carry, hold, support
+base = ground, found, rest, build
+transport = carry, move, convey, ship, transfer
+face = confront, meet, deal with, tackle
+release = (let go) free, liberate, discharge | (make public) publish, issue, launch, put out
+expand = grow, increase, extend, enlarge, broaden
+exist = be, live, survive, occur
+stand = (be upright) rise, stand up | (bear) bear, endure, tolerate
+retain = keep, hold, preserve, maintain
+regard = consider, view, see, treat
+adopt = (take up) take up, embrace, accept, choose | (take a child) foster
+concern = (be about) involve, relate to, affect, regard | (worry) worry, trouble, disturb
+apply = (use) use, employ, put to use | (ask) request, put in
+issue = publish, release, distribute, give out
+add = (put with) include, attach, append | (say more) continue, go on
+arrive = come, appear, turn up
+ask = (put a question) question, query, inquire | (request) request, appeal
+force = compel, make, oblige, drive, push
+name = call, title, label, identify`,
+    n: `ability = skill, talent, capacity, capability, competence
+accident = crash, collision, mishap
+action = act, deed, step, measure, move
+activity = action, pursuit, exercise, occupation
+advantage = benefit, strength, asset, plus, merit
+advice = guidance, counsel, recommendation
+aim = goal, objective, purpose, target, intention
+amount = quantity, sum, volume, level
+answer = reply, response, solution, explanation
+area = (place) region, zone, district | (field) field, domain, sphere, subject
+argument = (quarrel) quarrel, disagreement, row, dispute | (reasoning) case, reasoning, claim, line of reasoning
+attempt = try, effort, bid
+attention = notice, focus, regard, concentration
+attitude = outlook, view, stance, position, approach
+audience = crowd, public, viewers
+beginning = start, opening, outset, origin, onset
+belief = view, opinion, conviction, idea, faith
+benefit = advantage, gain, profit, merit, value
+book = volume, text, work, publication
+boss = manager, employer, supervisor, head, chief
+building = structure, premises, property
+business = (company) company, firm, enterprise | (trade) trade, commerce, industry
+care = attention, caution, concern, protection
+career = profession, occupation, vocation, job
+case = (instance) instance, example, situation, occurrence | (container) container, box
+cause = reason, source, origin, root
+chance = (opportunity) opportunity, possibility, occasion, opening | (luck) luck, fortune, fate
+change = alteration, shift, modification, adjustment, transformation
+character = (nature) nature, personality, temperament, quality | (in a story) figure, role, personality
+child = kid, youngster, minor, infant
+choice = option, alternative, selection, decision, preference
+claim = assertion, statement, argument, allegation
+class = (group) group, category, type, kind | (lesson) lesson, course, seminar
+comment = remark, observation, note, statement
+community = society, population, public, group
+company = (business) firm, business, enterprise, corporation | (being with others) companionship, presence
+condition = (state) state, shape, situation | (requirement) requirement, term, provision, stipulation
+conflict = dispute, clash, disagreement, struggle, war
+consequence = result, outcome, effect, repercussion
+control = power, authority, command, management, regulation
+cost = price, expense, charge, fee
+country = nation, state, land
+course = (of study) class, module | (path) path, route, direction
+crowd = mass, throng, horde, group
+culture = society, way of life, traditions
+customer = client, buyer, shopper, consumer
+damage = harm, injury, destruction, loss
+danger = risk, threat, hazard, peril
+data = information, figures, statistics, facts
+deal = agreement, arrangement, contract, bargain
+death = passing, demise, loss, end
+debate = discussion, argument, dispute, controversy
+decision = choice, conclusion, ruling, resolution
+degree = extent, level, measure, amount
+demand = need, call, request, requirement
+detail = point, element, feature, particular, fact
+development = growth, progress, advance, evolution, expansion
+difference = distinction, contrast, gap, variation, disparity
+difficulty = problem, challenge, obstacle, hardship, trouble
+direction = (way) way, course, route, path | (instruction) instruction, guidance
+discussion = conversation, debate, talk, dialogue, exchange
+disease = illness, sickness, condition, disorder, infection
+doubt = uncertainty, question, suspicion, reservation, misgiving
+dream = (ambition) ambition, aspiration, goal, hope, wish
+duty = responsibility, obligation, task, job, role
+education = schooling, teaching, learning, training, instruction
+effect = result, consequence, impact, outcome, influence
+effort = attempt, try, work, exertion
+emotion = feeling, sentiment, passion, reaction
+end = (finish) finish, close, conclusion, ending | (aim) aim, goal, purpose
+energy = strength, power, vitality, drive
+environment = (surroundings) surroundings, setting, context, conditions | (the natural world) nature, natural world
+error = mistake, fault, slip, inaccuracy, oversight
+event = occasion, occurrence, incident, happening, function
+evidence = proof, support, grounds, data, confirmation
+example = instance, case, illustration, sample, model
+experience = (knowledge) knowledge, practice, skill, background | (event) event, episode, incident, adventure
+expert = specialist, authority, professional, master
+explanation = account, reason, interpretation, description, clarification
+fact = detail, point, truth, reality
+factor = element, aspect, cause, influence, component
+failure = collapse, defeat, breakdown, flop, setback
+family = relatives, household, kin, relations
+fear = dread, anxiety, terror, worry, alarm
+feature = characteristic, quality, trait, aspect, attribute
+feeling = emotion, sense, sensation, impression, sentiment
+field = (of study) area, domain, discipline, sphere, subject | (land) meadow, pasture
+fight = battle, struggle, clash, conflict, brawl
+food = meals, nourishment, cooking
+freedom = liberty, independence, autonomy, choice
+friend = companion, ally, partner
+future = outlook, prospects, tomorrow
+game = match, contest, competition, sport
+gap = space, gulf, divide, opening, difference
+goal = aim, objective, target, purpose, ambition
+group = team, set, circle, body, collection, party
+growth = increase, expansion, rise, development, progress
+habit = routine, custom, practice, tendency
+help = assistance, support, aid, guidance, backing
+history = past, background, record, story
+home = house, dwelling, residence, household
+hope = wish, expectation, aspiration, ambition, desire
+house = home, dwelling, residence, property
+idea = (thought) notion, thought, concept, view | (plan) plan, proposal, suggestion, scheme
+image = (picture) picture, illustration, photo, likeness | (reputation) reputation, profile
+impact = effect, influence, consequence, impression
+importance = significance, value, weight, relevance
+improvement = advance, progress, development, gain, upgrade
+increase = rise, growth, gain, expansion, jump
+industry = business, trade, sector, manufacturing
+influence = effect, impact, power, sway, control
+information = data, facts, details, knowledge, news
+interest = (curiosity) curiosity, attention, enthusiasm, concern | (pastime) hobby, pastime, pursuit
+issue = problem, matter, question, concern, topic
+job = (work) work, position, post, role, occupation | (task) task, duty, assignment, chore
+journey = trip, voyage, expedition, tour
+knowledge = understanding, awareness, learning, expertise, information
+lack = shortage, absence, want, scarcity, deficiency
+land = (ground) ground, terrain, soil, territory | (country) country, nation
+language = tongue, speech, wording, vocabulary
+law = rule, regulation, legislation, act, statute
+leader = head, chief, boss, director, ruler
+level = (amount) degree, extent, amount, rate | (rank) rank, grade, standard, stage
+life = existence, being, lifetime, living
+limit = boundary, restriction, maximum, cap, border
+link = connection, relationship, tie, bond, association
+list = record, register, index, inventory
+loss = (losing something) disappearance, decline, deprivation | (defeat) defeat, failure
+luck = fortune, chance, fate
+majority = bulk, greater part
+manner = way, style, fashion, method, mode
+matter = issue, subject, topic, question, affair
+meaning = sense, significance, definition, message, point
+measure = step, action, procedure, means
+meeting = gathering, session, conference, assembly, discussion
+member = participant, associate, fellow
+memory = recollection, remembrance, recall
+message = (communication) note, communication, letter, statement | (meaning) point, meaning, theme
+method = approach, technique, procedure, way, process, system
+mind = brain, intellect, head, understanding
+mistake = error, fault, slip, blunder, oversight
+moment = instant, second, minute, point
+money = cash, funds, finance, capital, wealth
+mood = temper, spirit, frame of mind
+nature = (the natural world) environment, natural world, wildlife | (character) character, temperament, disposition, essence
+need = requirement, demand, necessity, want, call
+news = information, report, announcement, word
+number = (amount) amount, quantity, total, figure | (digit) figure, digit, numeral
+object = (thing) thing, item, article | (aim) aim, goal, purpose, objective
+opinion = view, belief, thought, position
+opportunity = chance, opening, occasion, possibility, prospect
+order = (sequence) sequence, arrangement, series | (command) command, instruction, direction
+outcome = result, consequence, effect, conclusion, upshot
+pain = ache, hurt, discomfort, suffering, agony
+part = piece, portion, section, element, component, share
+past = history, background, former times
+path = way, route, track, course, trail
+pattern = design, model, arrangement, trend, structure
+people = persons, individuals, public, population, folk
+period = time, era, phase, spell, stage
+person = individual, human being, someone
+picture = image, photograph, illustration, painting, drawing
+place = location, site, spot, area, position
+plan = scheme, strategy, idea, proposal, method, design
+point = (idea) idea, argument, issue, detail, aspect | (moment) moment, stage, time, instant | (purpose) purpose, aim, use
+policy = plan, strategy, approach, guidelines, rule
+position = (place) location, place, site, spot | (view) view, stance, opinion, attitude | (job) post, job, role
+possibility = chance, likelihood, prospect, option, potential
+power = (strength) strength, force, energy, might | (control) control, authority, influence, command
+practice = (habit) custom, habit, routine, tradition | (training) training, rehearsal, exercise
+pressure = stress, strain, burden, force, demand
+price = cost, charge, fee, rate, value
+principle = rule, standard, value, belief, law, idea
+problem = issue, difficulty, challenge, trouble, obstacle, complication
+process = procedure, method, system, operation, course
+product = item, commodity, merchandise, output
+progress = advance, development, growth, improvement, headway
+project = plan, scheme, task, undertaking, venture
+proof = evidence, confirmation, verification, demonstration
+property = (what is owned) possessions, belongings, assets | (building or land) building, estate, land | (quality) quality, feature, characteristic, attribute
+purpose = aim, goal, intention, objective, reason, point
+quality = (standard) standard, grade, value | (feature) feature, characteristic, trait, attribute
+question = query, inquiry, issue, problem, matter
+reason = cause, ground, explanation, motive, basis, rationale
+relationship = connection, link, association, bond, relation
+report = account, statement, record, review, article
+research = study, investigation, inquiry, analysis, exploration
+response = reply, answer, reaction, feedback, retort
+responsibility = (duty) duty, obligation, role, task | (blame) blame, fault, liability
+result = outcome, consequence, effect, finding
+rise = increase, growth, climb, jump, gain
+risk = danger, threat, hazard, chance, gamble
+role = part, function, position, job, duty
+rule = regulation, law, principle, guideline, standard
+safety = security, protection, welfare
+scene = setting, view, sight, picture, episode
+sense = (feeling) feeling, awareness, sensation, impression | (meaning) meaning, significance | (good judgment) wisdom, logic
+service = help, assistance, work, aid
+shape = form, outline, figure, structure, pattern
+situation = circumstances, position, state of affairs, condition, case
+size = scale, dimensions, extent, magnitude, measurements
+skill = ability, talent, expertise, competence, technique
+society = community, public, population
+solution = answer, remedy, resolution, fix, key
+source = origin, cause, root, basis, supply
+space = room, area, gap, place, capacity
+speech = talk, address, lecture, presentation
+stage = phase, step, point, period, level
+standard = level, quality, benchmark, norm, criterion
+state = (condition) condition, situation, shape | (nation) nation, country, government
+statement = declaration, announcement, comment, remark, claim
+step = stage, phase, move, action, measure
+story = tale, account, narrative, report, plot
+strategy = plan, approach, method, tactic, policy, scheme
+strength = (power) power, force, might | (advantage) advantage, asset, merit
+structure = framework, arrangement, form, construction
+struggle = fight, battle, effort, conflict, challenge
+student = pupil, learner, scholar, trainee
+study = research, investigation, analysis, examination, review
+style = manner, way, approach, fashion, method
+subject = topic, theme, matter, issue, field
+success = achievement, triumph, accomplishment, victory, win
+support = help, assistance, aid, backing, encouragement
+system = structure, method, process, network, framework, scheme
+task = job, duty, chore, assignment, mission
+teacher = tutor, instructor, educator, lecturer
+technique = method, approach, procedure, skill, way
+theme = subject, topic, idea, motif, focus
+theory = idea, hypothesis, view, belief, model
+thing = (object) object, item, article | (matter) matter, issue, point
+thought = idea, notion, reflection, view, consideration
+time = (period) period, era, age, phase | (occasion) occasion, moment, instance
+topic = subject, theme, issue, matter, question
+tradition = custom, practice, convention, habit, ritual
+trend = tendency, pattern, movement, direction, shift
+trip = journey, visit, tour, excursion, outing
+trouble = problem, difficulty, bother, worry, distress
+truth = fact, reality, accuracy, honesty
+type = kind, sort, category, class, variety
+understanding = comprehension, grasp, knowledge, insight, awareness
+use = application, purpose, function, utility
+value = (worth) worth, importance, merit, benefit, usefulness | (price) price, cost
+variety = range, assortment, mix, diversity, selection
+view = (opinion) opinion, belief, position, perspective, attitude | (what is seen) scene, sight, outlook, panorama
+war = conflict, fighting, combat, warfare, hostilities
+way = (method) method, manner, means, approach, technique | (route) route, path, road, direction
+weakness = flaw, fault, defect, shortcoming, weak point
+wealth = riches, fortune, money, affluence, prosperity
+word = (term) term, expression, name | (promise) promise, pledge, assurance
+work = (job) job, employment, occupation | (effort) effort, toil | (something made) piece, creation, composition, product
+world = (the earth) earth, globe, planet | (sphere) sphere, realm, domain, field
+worry = concern, anxiety, fear, unease, trouble
+writer = author, novelist, journalist, poet
+decline = fall, drop, decrease, downturn, slump
+access = entry, admission, admittance, approach
+reader = audience, viewer
+reasoning = logic, thinking, argument, rationale
+invention = creation, innovation, discovery, device
+judgment = (decision) decision, verdict, ruling, conclusion | (good sense) sense, wisdom, discernment
+judgement = (decision) decision, verdict, ruling, conclusion | (good sense) sense, wisdom, discernment
+distraction = interruption, diversion, disturbance
+hypothesis = theory, proposition, supposition, premise, assumption
+rationale = reasoning, reason, basis, grounds, logic
+violence = force, brutality, aggression, cruelty
+discovery = finding, breakthrough, revelation, detection
+movement = (motion) motion, action, gesture | (campaign) campaign, cause, crusade, drive
+form = (shape) shape, structure, format, layout | (kind) kind, type, sort, variety
+age = (period) era, period, time, epoch | (years lived) years, maturity
+force = (strength) strength, power, energy, might | (military) army, troops
+production = manufacture, making, creation, output
+rest = (break) break, pause, respite, relaxation | (the remainder) remainder, balance, others
+aspect = feature, element, facet, side, dimension
+term = (word) word, expression, name, phrase | (period) period, spell, session
+threat = danger, risk, menace, hazard
+respect = admiration, esteem, regard
+prejudice = bias, discrimination, bigotry, intolerance
+capacity = (amount held) volume, size, space | (ability) ability, capability, potential
+creation = making, production, formation, invention, work
+appearance = (look) look, aspect, image | (arrival) arrival, emergence, debut
+range = variety, selection, spread, scope, extent
+concern = worry, anxiety, unease, interest, issue`,
+    r: `actually = in fact, really, truly, indeed
+almost = nearly, practically, virtually, just about
+always = constantly, consistently, invariably, forever
+apparently = seemingly, evidently, reportedly
+badly = poorly, inadequately, terribly
+basically = essentially, fundamentally, mainly
+carefully = cautiously, thoroughly, attentively, closely
+certainly = definitely, surely, undoubtedly, clearly
+clearly = obviously, evidently, plainly, definitely
+completely = entirely, totally, fully, wholly, utterly
+constantly = always, continually, repeatedly, persistently
+currently = now, at present, presently, at the moment
+definitely = certainly, surely, undoubtedly, clearly
+directly = immediately, straight, personally
+easily = effortlessly, readily, simply, comfortably
+entirely = completely, totally, fully, wholly
+especially = particularly, notably, specially, above all
+eventually = finally, ultimately, in the end, at last
+exactly = precisely, accurately, just, correctly
+extremely = very, exceptionally, highly, remarkably, incredibly
+fairly = (quite) quite, rather, reasonably, moderately | (justly) justly, honestly, equitably
+finally = eventually, ultimately, at last, lastly
+frequently = often, regularly, commonly, repeatedly
+fully = completely, entirely, totally, wholly
+generally = usually, normally, mostly, typically, broadly
+gradually = slowly, steadily, progressively, bit by bit
+greatly = considerably, significantly, substantially, enormously
+happily = cheerfully, gladly, joyfully, merrily
+hardly = barely, scarcely, only just
+however = nevertheless, nonetheless, yet, still, even so
+immediately = at once, instantly, right away, straight away, promptly
+importantly = significantly, crucially, notably
+increasingly = more and more, progressively, steadily
+indeed = in fact, really, certainly, actually
+initially = at first, originally, first, to begin with
+instead = rather, alternatively, in its place
+largely = mostly, mainly, chiefly, primarily, generally
+later = afterwards, subsequently, next, then
+mainly = mostly, chiefly, primarily, largely, principally
+mostly = mainly, largely, chiefly, generally, primarily
+nearly = almost, practically, virtually, close to
+normally = usually, generally, typically, ordinarily
+obviously = clearly, evidently, plainly, of course
+often = frequently, regularly, commonly, repeatedly
+only = just, merely, simply, solely, purely
+particularly = especially, notably, specifically, chiefly
+perhaps = maybe, possibly, conceivably
+possibly = perhaps, maybe, conceivably
+previously = before, earlier, formerly, once
+probably = likely, most likely, presumably, in all likelihood
+quickly = rapidly, fast, swiftly, speedily, promptly
+quite = (fairly) fairly, rather, reasonably, somewhat | (completely) completely, entirely, totally
+rarely = seldom, infrequently, hardly ever
+rather = quite, fairly, somewhat, slightly
+really = (very) very, truly, extremely, genuinely | (in fact) actually, in fact, truly
+recently = lately, newly, of late
+regularly = often, frequently, routinely, habitually
+relatively = comparatively, fairly, rather, quite
+roughly = approximately, about, around, nearly
+seriously = severely, gravely, badly, earnestly
+significantly = considerably, substantially, markedly, notably
+simply = just, merely, only, plainly, easily
+slightly = a little, somewhat, marginally, a bit
+slowly = gradually, steadily, unhurriedly
+sometimes = occasionally, at times, now and then, from time to time
+soon = shortly, before long, presently
+specifically = particularly, especially, explicitly, precisely
+still = (even now) yet, even now | (however) nevertheless, however, even so
+strongly = firmly, forcefully, powerfully, intensely
+suddenly = abruptly, unexpectedly, all of a sudden
+surely = certainly, definitely, undoubtedly
+then = next, afterwards, later, subsequently
+therefore = so, thus, hence, consequently, as a result
+thus = so, therefore, hence, consequently
+together = jointly, collectively, as one
+totally = completely, entirely, fully, wholly, utterly
+truly = really, genuinely, honestly, sincerely
+ultimately = finally, eventually, in the end
+unfortunately = sadly, regrettably, unluckily
+usually = normally, generally, typically, commonly, ordinarily
+very = extremely, highly, really, exceptionally, particularly, truly
+merely = only, simply, just, purely
+early = soon, beforehand, ahead of time
+throughout = everywhere, all over, all through`,
+    /* phrases, each with its part of speech */
+    p: `train of thought = n: thread, line of thought, chain of reasoning, flow of thought
+a lot of = d: many, much, plenty of, lots of, a great deal of
+lots of = d: many, plenty of, a lot of, a great deal of
+in order to = x: to, so as to
+because of = x: owing to, due to, as a result of, on account of
+as well as = x: along with, in addition to, together with
+for example = x: for instance, to give an example
+in fact = x: indeed, actually, in reality, as a matter of fact
+at first = x: initially, originally, to begin with, at the start
+in the end = x: eventually, finally, ultimately, at last
+at the moment = x: now, currently, at present, right now
+find out = v: discover, learn, establish, ascertain
+look for = v: search for, seek, hunt for
+look at = v: examine, view, study, consider, inspect
+give up = v: stop, quit, abandon, surrender
+set up = v: establish, create, found, arrange
+carry out = v: conduct, perform, undertake, execute, do
+point out = v: note, observe, indicate, highlight, mention
+come up with = v: devise, think of, produce, propose, invent
+deal with = v: handle, address, tackle, manage, cope with
+get rid of = v: remove, eliminate, discard, dispose of, throw away
+put off = v: postpone, delay, defer
+make sure = v: ensure, check, confirm, see to it
+take part = v: participate, join in, be involved
+a few = d: several, some, a couple of, a handful of
+each other = x: one another
+such as = x: like, including`
+  };
+  const DATA = { a: new Map(), v: new Map(), n: new Map(), r: new Map(), p: new Map() };
+  function senses(spec) {
+    return spec.split('|').map(s => {
+      const m = /^\s*(?:\(([^)]*)\))?\s*(.*)$/.exec(s);
+      return { gloss: m[1] || '', words: m[2].split(',').map(w => w.trim()).filter(Boolean) };
+    }).filter(s => s.words.length);
+  }
+  for (const pos of Object.keys(RAW)) {
+    for (const line of RAW[pos].split('\n')) {
+      const i = line.indexOf(' = ');
+      if (i < 0) continue;
+      const key = line.slice(0, i).trim().toLowerCase();
+      let spec = line.slice(i + 3);
+      if (pos === 'p') { const k = spec.indexOf(':'); DATA.p.set(key, { pos: spec.slice(0, k).trim(), senses: senses(spec.slice(k + 1)) }); continue; }
+      DATA[pos].set(key, senses(spec));
+    }
+  }
+  const api = {
+    /* the senses of a base word in a part of speech: [{gloss, words}] */
+    get: (base, pos) => DATA[pos] ? DATA[pos].get(String(base || '').toLowerCase()) || null : null,
+    /* a fixed phrase: {pos, senses} */
+    phrase: p => DATA.p.get(String(p || '').toLowerCase().replace(/\s+/g, ' ')) || null,
+    has: (base, pos) => !!(DATA[pos] && DATA[pos].has(String(base || '').toLowerCase())),
+    count: () => DATA.a.size + DATA.v.size + DATA.n.size + DATA.r.size + DATA.p.size
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKSYN = api;
+})(typeof self !== 'undefined' ? self : this);
+
+/* Inkwell's offline paraphrasing (7.39): other ways to say a passage, in a
+   chosen style, with no writing model, and alternatives for a word by its
+   meaning. Built on INKRW (the rule rewrites) and INKLEX (WordNet meanings).
+   The method, step by step, the same steps a writing assistant shows:
+   1. Read the passage: its idioms and fixed phrases, how formal its words
+      are, and the words whose meaning is clear.
+   2. Idioms and fixed phrases are said again in the chosen register ("lost
+      his train of thought": "lost track of what he was saying", "lost the
+      thread of his argument", "forgot what he was going to say"), with the
+      verb kept in its tense and the pronoun kept in agreement.
+   3. Words move up or down in register, only from a hand-checked list of
+      pairs, each with a test of the words around it that holds in both
+      directions ("try to" is "attempt to"; "set up a company" is "establish
+      a company", but "set up the camera" is left alone).
+   4. Sentence openers and links in the register ("So" and "Therefore,";
+      ", but" and "; however,"), contractions for the casual register, and
+      one change of order where it keeps the meaning.
+   5. The rule rewrites of the style (contractions spelt out, wordy phrases).
+   Each option lists every change and the reason for it. Quotations,
+   citations and links are never touched.
+   What this does not do: it does not write new sentences, and it changes a
+   word by WordNet only when the writer chooses it, from a list grouped by
+   meaning. Automatic WordNet swaps were tried and changed the meaning too
+   often ("results" became "consequences", "breeze" became "air"). No
+   lookbehind is used (Safari before 16.4). */
+(function (root) {
+  const req = p => { try { return typeof require === 'function' ? require(p) : null; } catch (e) { return null; } };
+  const LEX = () => root.INKLEX || req('./lexicon_core.js');
+  const RW = () => root.INKRW || req('./rewrite_core.js');
+  const OPEN = '', SHUT = '';
+  const ESC = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const capFirst = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+
+  /* ---- verbs in every form, with no lexicon needed ---- */
+  const IRV = {
+    be: 'is was been being', have: 'has had had having', do: 'does did done doing', go: 'goes went gone going',
+    lose: 'loses lost lost losing', make: 'makes made made making', hit: 'hits hit hit hitting', keep: 'keeps kept kept keeping',
+    get: 'gets got got getting', beat: 'beats beat beaten beating', break: 'breaks broke broken breaking', cut: 'cuts cut cut cutting',
+    fall: 'falls fell fallen falling', take: 'takes took taken taking', come: 'comes came come coming', see: 'sees saw seen seeing',
+    steal: 'steals stole stolen stealing', think: 'thinks thought thought thinking', forget: 'forgets forgot forgotten forgetting',
+    become: 'becomes became become becoming', blow: 'blows blew blown blowing', find: 'finds found found finding', bear: 'bears bore borne bearing',
+    let: 'lets let let letting', set: 'sets set set setting', put: 'puts put put putting', buy: 'buys bought bought buying',
+    seek: 'seeks sought sought seeking', begin: 'begins began begun beginning', give: 'gives gave given giving', bring: 'brings brought brought bringing',
+    tell: 'tells told told telling', show: 'shows showed shown showing', run: 'runs ran run running', choose: 'chooses chose chosen choosing',
+    speak: 'speaks spoke spoken speaking', hold: 'holds held held holding', leave: 'leaves left left leaving', feel: 'feels felt felt feeling',
+    say: 'says said said saying', pay: 'pays paid paid paying', lead: 'leads led led leading', meet: 'meets met met meeting',
+    understand: 'understands understood understood understanding', draw: 'draws drew drawn drawing', grow: 'grows grew grown growing',
+    know: 'knows knew known knowing', write: 'writes wrote written writing', rise: 'rises rose risen rising', spend: 'spends spent spent spending',
+    send: 'sends sent sent sending', build: 'builds built built building', deal: 'deals dealt dealt dealing', mean: 'means meant meant meaning',
+    sell: 'sells sold sold selling', stand: 'stands stood stood standing', throw: 'throws threw thrown throwing', teach: 'teaches taught taught teaching',
+    catch: 'catches caught caught catching', win: 'wins won won winning', speed: 'speeds sped sped speeding', undertake: 'undertakes undertook undertaken undertaking',
+    fight: 'fights fought fought fighting', swim: 'swims swam swum swimming', sit: 'sits sat sat sitting', bite: 'bites bit bitten biting',
+    cost: 'costs cost cost costing', read: 'reads read read reading', bend: 'bends bent bent bending', wing: 'wings winged winged winging'
+  };
+  /* stress on the last syllable: the consonant doubles */
+  const DOUBLE = /^(occur|refer|prefer|commit|admit|omit|permit|submit|control|compel|regret|equip|incur|deter|confer|transfer|rebut|allot|concur|acquit|patrol|expel|dispel|repel|excel|propel|forbid|overcommit)$/;
+  const cvc = b => /^[^aeiou]*[aeiou][bdfgklmnprtvz]$/.test(b);
+  function regular(b, k) {
+    if (k === 's') return /(s|x|z|ch|sh|o)$/.test(b) ? b + 'es' : /[^aeiou]y$/.test(b) ? b.slice(0, -1) + 'ies' : b + 's';
+    const dbl = DOUBLE.test(b) || cvc(b);
+    if (k === 'ing') {
+      if (/ie$/.test(b)) return b.slice(0, -2) + 'ying';
+      if (/[^aeioy]e$/.test(b)) return b.slice(0, -1) + 'ing';
+      return dbl ? b + b.slice(-1) + 'ing' : b + 'ing';
+    }
+    if (/e$/.test(b)) return b + 'd';
+    if (/[^aeiou]y$/.test(b)) return b.slice(0, -1) + 'ied';
+    return dbl ? b + b.slice(-1) + 'ed' : b + 'ed';
+  }
+  const VF = {};
+  function verbForms(base) {
+    if (VF[base]) return VF[base];
+    const f = { '': base };
+    if (IRV[base]) { const p = IRV[base].split(' '); f.s = p[0]; f.ed = p[1]; f.en = p[2]; f.ing = p[3]; }
+    else {
+      for (const k of ['s', 'ed', 'ing']) f[k] = regular(base, k);
+      f.en = f.ed;
+      /* an irregular verb this list lacks: the lexicon knows its forms */
+      const X = LEX();
+      if (X && X.ready && X._L.INV.v.has(base)) { const a = X.inflect(base, 'v', 'ed'), b = X.inflect(base, 'v', 'en'); if (a) f.ed = a; if (b) f.en = b; }
+    }
+    return VF[base] = f;
+  }
+  /* the form of a verb as it stands, where one spelling serves two forms
+     ("hit", "lost"): read from the word before it and the sentence's tense */
+  function formOf(base, word, before, sentence) {
+    const f = verbForms(base), w = word.toLowerCase(), keys = Object.keys(f).filter(k => f[k].toLowerCase() === w);
+    if (keys.length <= 1) return keys[0] || '';
+    const pv = ((before.match(/([A-Za-z'’]+)[\s]*$/) || [])[1] || '').toLowerCase();
+    if (/^(have|has|had|having|'ve|'d|been|be|being|is|are|was|were|am|get|gets|got)$/.test(pv) && keys.indexOf('en') >= 0) return 'en';
+    if (/^(will|would|can|could|should|shall|may|might|must|to|do|does|did|don't|didn't|doesn't|won't|can't|cannot|let's|please)$/.test(pv) && keys.indexOf('') >= 0) return '';
+    if (keys.indexOf('ed') >= 0) {
+      /* "I hit", "they cut": present or past; the sentence's other verbs say */
+      const rest = sentence.toLowerCase().replace(w, ' ');
+      const past = /\b(was|were|had|did|went|came|said|told|made|took|got|saw|knew|thought|found|gave|left|felt|became|began|yesterday|ago|[a-z]{3,}ed)\b/.test(rest);
+      const now = /\b(is|are|am|has|does|will|can|now|today|always|usually|every)\b/.test(rest);
+      if (keys.indexOf('') >= 0 && now && !past) return '';
+      return 'ed';
+    }
+    return keys[0];
+  }
+
+  /* ---- spans never touched: quotations, citations, links ---- */
+  function protect(text) {
+    const spans = [];
+    const add = re => { let m; re.lastIndex = 0; while ((m = re.exec(text))) spans.push([m.index, m.index + m[0].length]); };
+    add(/"[^"\n]*"|“[^”\n]*”/g); add(/\([^()]*\d{4}[^()]*\)|\[[\d,\s–-]+\]/g); add(/https?:\/\/\S+/g);
+    /* a quotation still open at the end of the selection runs to its end */
+    const straight = (text.match(/"/g) || []).length, open = text.lastIndexOf('“');
+    if (straight % 2) spans.push([text.lastIndexOf('"'), text.length]);
+    if (open > text.lastIndexOf('”')) spans.push([open, text.length]);
+    return (a, b) => spans.some(s => a < s[1] && s[0] < b);
+  }
+  /* inside words an earlier step wrote: left alone, so no change is changed
+     again ("often" to "frequently" to "oftentimes") */
+  function fresh(t, at) {
+    let open = 0;
+    for (let i = 0; i < at; i++) { const c = t.charCodeAt(i); if (c === 0xE000) open++; else if (c === 0xE001) open--; }
+    return open > 0;
+  }
+  const strip = t => t.replace(/[]/g, '');
+  const WORD = "[A-Za-z0-9'’-]+", GAP = '[\\s\\uE000\\uE001]+';
+  const AFTER = new RegExp('^' + GAP + '(' + WORD + ')(?:' + GAP + '(' + WORD + '))?');
+  const BEFORE = new RegExp('(' + WORD + ')' + GAP + '$');
+  function around(t, a, b) {
+    const n = AFTER.exec(t.slice(b, b + 60)) || [], p = BEFORE.exec(t.slice(Math.max(0, a - 40), a)) || [];
+    return { n: (n[1] || '').toLowerCase(), n2: (n[2] || '').toLowerCase(), p: (p[1] || '').toLowerCase() };
+  }
+
+  /* ---- 2. idioms and fixed phrases, in three registers ---- */
+  const POSS = { my: 'I', your: 'you', his: 'he', her: 'she', its: 'it', our: 'we', their: 'they' };
+  const SELF = { my: 'myself', your: 'yourself', his: 'himself', her: 'herself', its: 'itself', our: 'ourselves', their: 'themselves' };
+  function beFor(subj, past) {
+    const s = String(subj || '').toLowerCase();
+    if (past) return /^(you|we|they)$/.test(s) ? 'were' : 'was';
+    return s === 'i' ? 'am' : /^(you|we|they)$/.test(s) ? 'are' : 'is';
+  }
+  /* [the idiom, said plainly, said formally, said casually]. {V:verb} is the
+     verb in the idiom's own form, {P} the possessive, {S} a pronoun subject,
+     {N:x} a word kept as written ("mind" or "minds"), {BE} "is" or "was" to
+     agree; a pattern may hold a regular expression */
+  const IDIOM_ROWS = [
+    ['{V:lose} {P} train of thought', '{V:lose} track of what {S} {BE} saying', '{V:lose} the thread of {P} argument', '{V:forget} what {S} {BE} going to say'],
+    ['{V:lose} track of time', '{V:forget} the time', '{V:lose} all sense of time', '{V:lose} track of the time'],
+    ['{V:lose} {P} temper', '{V:become} angry', '{V:become} visibly angry', '{V:blow} up'],
+    ['{V:make} up {P} {N:minds?}', '{V:decide}', '{V:reach} a decision', '{V:make} {P} {N} up'],
+    ['{V:change} {P} minds?', '{V:change} {P} view', '{V:revise} {P} position', '{V:have} second thoughts'],
+    ['at the end of the day', 'in the end', 'ultimately', "when all's said and done"],
+    ['a piece of cake', 'easy', 'straightforward', 'a breeze'],
+    ['{V:hit} the nail on the head', '{V:describe} it exactly', '{V:identify} the point precisely', '{V:get} it spot on'],
+    ['the tip of the iceberg', 'a small part of a larger problem', 'a small, visible part of a larger problem', 'just the start'],
+    ['in a nutshell', 'in short', 'in summary', 'basically'],
+    ['{V:keep} an eye on', '{V:watch}', '{V:monitor}', '{V:keep} tabs on'],
+    ['{V:get} the ball rolling', '{V:start} things', '{V:initiate} the process', '{V:kick} things off'],
+    ['{V:beat} around the bush', '{V:avoid} the point', '{V:avoid} the question', '{V:dodge} the issue'],
+    ['{V:break} the ice', '{V:ease} the tension', '{V:open} the conversation', '{V:get} things going'],
+    ['{V:cut} corners', '{V:skimp} on the work', '{V:compromise} on standards', '{V:take} shortcuts'],
+    ['on the same page', 'in agreement', 'in accord', 'on the same wavelength'],
+    ['once in a blue moon', 'rarely', 'very infrequently', 'hardly ever'],
+    ['under the weather', 'unwell', 'indisposed', 'a bit off'],
+    ['{V:call} it a day', '{V:stop} for the day', '{V:conclude} the work for the day', '{V:wrap} up'],
+    ['back to square one', 'back to the start', 'back to the beginning', 'back to scratch'],
+    ['a blessing in disguise', 'a hidden benefit', 'an unexpected advantage', 'a lucky break'],
+    ['the best of both worlds', 'the advantages of both', 'the benefits of both options', 'a win-win'],
+    ['{V:miss} the boat', '{V:miss} the chance', '{V:miss} the opportunity', '{V:blow} it'],
+    ['{V:spill} the beans', '{V:reveal} the secret', '{V:disclose} the information', '{V:let} it slip'],
+    ['by the skin of {P} teeth', 'only just', 'narrowly', 'barely'],
+    ['a drop in the ocean', 'a tiny amount', 'a negligible contribution', 'next to nothing'],
+    ['{V:jump} on the bandwagon', '{V:follow} the trend', '{V:adopt} a popular position', '{V:go} along with the crowd'],
+    ['{V:hit} the books', '{V:study}', '{V:study} intensively', '{V:get} studying'],
+    ['in the long run', 'over time', 'in the long term', 'eventually'],
+    ['at first glance', 'at first sight', 'on initial inspection', 'at first'],
+    ['the elephant in the room', 'the obvious problem no one mentions', 'the unacknowledged issue', 'the thing nobody wants to talk about'],
+    ['{V:think} outside the box', '{V:think} creatively', '{V:think} unconventionally', '{V:think} differently'],
+    ['a level playing field', 'a fair situation', 'equal conditions', 'a fair shot'],
+    ['{V:go} the extra mile', '{V:make} an extra effort', '{V:exceed} what is expected', '{V:go} above and beyond'],
+    ['{V:fall} through the cracks', '{V:go} unnoticed', '{V:escape} notice', '{V:slip} through the net'],
+    ['{V:raise} the bar', '{V:set} a higher standard', '{V:raise} the standard', '{V:set} the bar higher'],
+    ['on thin ice', 'at risk', 'in a precarious position', 'in a risky spot'],
+    ['a double-edged sword', 'something with good and bad effects', 'a mixed blessing', 'a mixed bag'],
+    ['{V:turn} a blind eye to', '{V:ignore}', '{V:disregard}', '{V:pretend} not to see'],
+    ['{V:get} to the bottom of', '{V:find} the cause of', '{V:determine} the cause of', '{V:figure} out'],
+    ['{V:take} into account', '{V:consider}', '{V:take} into consideration', '{V:think} about'],
+    ['as a matter of fact', 'in fact', 'indeed', 'actually'],
+    ['sooner or later', 'eventually', 'in due course', 'at some point'],
+    ['{V:come} to terms with', '{V:accept}', '{V:reconcile} {P}self to', '{V:get} used to'],
+    ['last but not least', 'finally', 'finally, and importantly', 'and last'],
+    ['{V:see} eye to eye', '{V:agree}', '{V:concur}', '{V:get} along'],
+    ['{V:pull} {P} weight', '{V:do} {P} share', '{V:contribute} {P} share', '{V:do} {P} bit'],
+    ['{V:face} the music', '{V:accept} the consequences', '{V:accept} responsibility', '{V:take} the heat'],
+    ['{V:steal} the show', '{V:attract} the most attention', '{V:dominate} the occasion', '{V:steal} the spotlight'],
+    ['a long shot', 'unlikely to succeed', 'improbable', 'a bit of a gamble'],
+    ['{V:get} out of hand', '{V:get} out of control', '{V:become} unmanageable', '{V:go} off the rails'],
+    ['{V:run} out of steam', '{V:lose} energy', '{V:lose} momentum', '{V:run} out of gas'],
+    ['{V:bite} off more than {S} can chew', '{V:take} on too much', '{V:overcommit}', '{V:take} on more than {S} can handle'],
+    ['{V:bite} off more than {S} could chew', '{V:take} on too much', '{V:overcommit}', '{V:take} on more than {S} could handle'],
+    ['{V:go} back to the drawing board', '{V:start} again', '{V:begin} anew', '{V:start} over'],
+    ['{V:hit} the ground running', '{V:start} quickly and well', '{V:begin} effectively at once', '{V:get} off to a flying start'],
+    ['{V:keep} {P} fingers crossed', '{V:hope} for the best', '{V:remain} hopeful', '{V:hope} for the best'],
+    ['{V:make} ends meet', '{V:manage} on {P} income', '{V:meet} {P} expenses', '{V:get} by'],
+    ['{V:take} it with a grain of salt', '{V:doubt} it a little', '{V:treat} it with some scepticism', '{V:take} it with a pinch of salt'],
+    ['in hot water', 'in trouble', 'in difficulty', 'in a fix'],
+    ['up in the air', 'undecided', 'unresolved', 'still open'],
+    ['a dime a dozen', 'very common', 'commonplace', 'ten a penny'],
+    ['the last straw', 'the final problem', 'the decisive provocation', 'the final straw'],
+    ['{V:cost} an arm and a leg', '{V:cost} a lot', '{V:cost} a great deal', '{V:cost} a fortune'],
+    ['{V:read} between the lines', '{V:see} the hidden meaning', '{V:infer} the implicit meaning', '{V:get} the hint'],
+    ['on the fence', 'undecided', 'uncommitted', 'in two minds'],
+    ['{V:bend} over backwards', '{V:try} very hard', '{V:make} every effort', '{V:go} out of {P} way'],
+    ['{V:pass} the buck', '{V:shift} the blame', '{V:evade} responsibility', '{V:dodge} the blame'],
+    ['{V:play} it by ear', '{V:decide} as {S} {BE} going', '{V:proceed} flexibly', '{V:wing} it'],
+    ['in the nick of time', 'just in time', 'at the last moment', 'just in time'],
+    ['{V:get} cold feet', '{V:lose} confidence', '{V:become} hesitant', '{V:chicken} out'],
+    ['{V:hit} the sack', '{V:go} to bed', '{V:retire} for the night', '{V:turn} in'],
+    ['on cloud nine', 'very happy', 'elated', 'over the moon']
+  ];
+  let IDIOMS = null;
+  function compileIdioms() {
+    IDIOMS = IDIOM_ROWS.map(r => {
+      const slots = [];
+      const src = r[0].replace(/\{V:([a-z]+)\}|\{N:([^}]+)\}|\{P\}|\{S\}|\s+/g, (m, v, nn) => {
+        if (v) { slots.push(['V', v]); const f = verbForms(v); return '(' + Array.from(new Set(Object.values(f))).sort((a, b) => b.length - a.length).join('|') + ')'; }
+        if (nn) { slots.push(['N']); return '(' + nn + ')'; }
+        if (m === '{P}') { slots.push(['P']); return '(my|your|his|her|its|our|their)'; }
+        if (m === '{S}') { slots.push(['S']); return '(I|you|he|she|it|we|they)'; }
+        return '\\s+';
+      });
+      return { pat: r[0], re: new RegExp('\\b' + src + '\\b', 'gi'), slots: slots, out: { plain: r[1], formal: r[2], casual: r[3] } };
+    });
+  }
+  const IDWHY = { plain: 'An idiom said plainly: every reader takes the meaning at once.', formal: 'The idiom in a formal register, as academic writing prefers.', casual: 'The idiom said the casual way.' };
+  function fill(tpl, form, poss, subj) {
+    const p = (poss || 'their').toLowerCase(), s = subj || POSS[p] || 'it';
+    const past = form === 'ed' || form === 'en';
+    return tpl.replace(/\{V:([a-z]+)\}/g, (m, v) => verbForms(v)[form || ''] || v)
+      .replace(/\{P\}self/g, SELF[p] || 'themselves').replace(/\{P\}/g, poss || 'their').replace(/\{S\}/g, s).replace(/\{BE\}/g, beFor(s, past));
+  }
+  function idioms(text, style, log) {
+    if (!IDIOMS) compileIdioms();
+    let t = text;
+    for (const id of IDIOMS) {
+      const prot = protect(t);
+      id.re.lastIndex = 0;
+      let m, out = '', last = 0, hit = false;
+      while ((m = id.re.exec(t))) {
+        if (prot(m.index, m.index + m[0].length) || fresh(t, m.index)) continue;
+        /* a title: "The Elephant in the Room" */
+        if (/[A-Z]/.test(m[0].slice(1).replace(/\bI\b/g, ''))) continue;
+        let form = '', poss = null, subj = null, noun = '', gi = 1;
+        for (const sl of id.slots) {
+          const v = m[gi++];
+          if (sl[0] === 'V') form = formOf(sl[1], v, t.slice(0, m.index), t);
+          else if (sl[0] === 'P') poss = v;
+          else if (sl[0] === 'N') noun = v;
+          else subj = v;
+        }
+        let rep = fill(id.out[style] || id.out.plain, form, poss, subj).replace(/\{N\}/g, noun);
+        if (/^[A-Z]/.test(m[0]) && !/^I\b/.test(m[0])) rep = capFirst(rep);
+        if (rep === m[0]) continue;
+        log.push({ from: m[0], to: rep, why: IDWHY[style] || IDWHY.plain });
+        out += t.slice(last, m.index) + OPEN + rep + SHUT; last = m.index + m[0].length; hit = true;
+      }
+      if (hit) t = out + t.slice(last);
+    }
+    return t;
+  }
+
+  /* ---- 3. register: hand-checked pairs ---- */
+  /* [kind, the everyday word, the formal word, test, direction]. kind: v a
+     verb (its first word takes the form), w a word or phrase as it stands,
+     n a noun with its plural. The test sees the next word (n), the one after
+     (n2) and the word before (p), and holds in both directions, so a pair is
+     used only where the two mean the same. Direction: b both; u only towards
+     the formal; d only towards the everyday; c the casual style's own words
+     ("kids"), used towards the formal by every style but towards the
+     everyday only by Casual; cr Casual's only, never back. */
+  const DET = /^(the|a|an|this|that|these|those|its|their|his|her|our|my|your|some|any|no|each|every|one|two|three|all|more|further|additional|new)$/;
+  const OBJ = /^(me|you|him|her|us|them|it)$/;
+  const WH = /^(how|what|why|whether|where|when|who|which|if)$/;
+  const nounAfter = list => { const re = new RegExp('^(' + list + ')$'); return c => re.test(c.n) || (DET.test(c.n) && re.test(c.n2)); };
+  const GROW = /^(grow|grows|grew|grown|growing|increase|increases|increased|increasing|expand|expands|expanded|expanding|rise|rises|rose|risen|rising|spread|spreads|spreading|decline|declines|declined|declining|change|changes|changed|changing|develop|develops|developed|developing|fall|falls|fell|falling|deteriorate|deteriorated|evolve|evolved|evolving|growth|expansion|decline|change|changes)$/;
+  const PLAINADJ = /^(big|good|large|small|long|old|strong|fast|high|far|well|bad|soon|early|late|hard|easy|clear|close|near|deep|wide|warm|cold|safe|sure|true|fair|rich|ready|able|serious|important|interesting|lucky|kind|brave|funny|smart|tall|short|young|quick|slow|loud|bright|often|much|little|clever|fortunate|generous|foolish|naive|silly)$/;
+  const PAIRS = [
+    ['v', 'buy', 'purchase', c => !/^(into|it|that)$/.test(c.n), 'b'],
+    /* "help them with", "help in": never "help defeat", which "assist" cannot take */
+    ['v', 'help', 'assist', c => /^(with|in)$/.test(c.n) || (OBJ.test(c.n) && /^(with|in|)$/.test(c.n2)), 'b'],
+    ['v', 'try', 'attempt', c => c.n === 'to', 'b'],
+    ['v', 'start', 'begin', c => /^(to|with|by)$/.test(c.n), 'b'],
+    ['v', 'seem', 'appear', c => /^(to|that|likely|unlikely|clear|certain|possible|unable|able|reasonable|strange|odd|plausible)$/.test(c.n), 'b'],
+    /* never back: "the species occurs in Africa" does not "happen" there */
+    ['v', 'happen', 'occur', c => !/^(to|upon|that|so)$/.test(c.n), 'u'],
+    ['v', 'check', 'verify', c => /^(that|whether|if)$/.test(c.n), 'b'],
+    ['v', 'end', 'conclude', c => /^(with|by)$/.test(c.n), 'b'],
+    /* "the Act required the storage of" is not "needed": back only before a or more */
+    ['v', 'need', 'require', c => (c.dir === 'up' ? /^(a|an|the|more|further|additional|no|some|access|help|support|time|care|attention)$/ : /^(a|an|more|further|additional|help|support|time|care|attention)$/).test(c.n) && c.n2 !== 'to', 'b'],
+    ['v', 'get', 'obtain', nounAfter('access|permission|data|results|approval|funding|information|evidence|samples|consent|estimates|measurements|degree|licence|license|visa|copy|copies|sample'), 'b'],
+    ['v', 'get', 'receive', nounAfter('letter|letters|email|emails|message|messages|reply|replies|response|responses|call|prize|award|grant|treatment|payment|feedback|support|training|attention'), 'b'],
+    ['v', 'give', 'provide', nounAfter('information|data|support|evidence|guidance|feedback|advice|help|assistance|overview|summary|details|access|account|insight|insights|services'), 'b'],
+    ['v', 'ask for', 'request', c => !/^(it|that|trouble|nothing|more)$/.test(c.n), 'b'],
+    ['v', 'bring up', 'raise', nounAfter('issue|issues|question|questions|concern|concerns|point|points|matter|subject|topic|problem|possibility|objection|objections'), 'b'],
+    ['v', 'figure out', 'determine', c => WH.test(c.n), 'b'],
+    ['v', 'work out', 'determine', c => WH.test(c.n), 'u'],
+    ['v', 'find out', 'discover', c => WH.test(c.n) || c.n === 'that', 'b'],
+    ['v', 'turn down', 'decline', nounAfter('offer|offers|invitation|invitations|request|requests|proposal|proposals|job|application|applications|chance|opportunity'), 'b'],
+    ['v', 'cut back on', 'reduce', () => true, 'u'],
+    ['v', 'get in touch with', 'contact', () => true, 'b'],
+    ['v', 'look into', 'investigate', () => true, 'b'],
+    ['v', 'put off', 'postpone', c => c.n !== 'by' && !/^(is|are|was|were|be|been|being|feel|felt|get|got)$/.test(c.p), 'b'],
+    ['v', 'come up with', 'devise', () => true, 'b'],
+    ['v', 'set up', 'establish', nounAfter('business|businesses|company|companies|committee|committees|school|schools|fund|funds|foundation|organisation|organization|society|trust|office|centre|center|programme|program|scheme|network|institute|council|commission|partnership|colony|mission|unit|agency|department|laboratory|practice|firm|charity|clinic|hospital'), 'b'],
+    ['v', 'make up for', 'compensate for', () => true, 'b'],
+    ['v', 'carry on', 'continue', c => c.n !== 'to' && c.n !== 'with' && c.n !== '', 'u'],
+    ['v', 'go back to', 'return to', () => true, 'b'],
+    ['v', 'show up', 'arrive', c => c.n !== 'the' && c.n !== 'as', 'u'],
+    ['v', 'give up', 'abandon', c => DET.test(c.n), 'b'],
+    ['v', 'pick', 'select', c => DET.test(c.n), 'b'],
+    ['v', 'talk about', 'discuss', c => DET.test(c.n) || WH.test(c.n), 'd'],
+    ['v', 'look at', 'examine', c => DET.test(c.n), 'd'],
+    ['v', 'think about', 'consider', c => (DET.test(c.n) && c.n !== 'that') || WH.test(c.n), 'd'],
+    ['v', 'deal with', 'address', nounAfter('problem|problems|issue|issues|question|questions|concern|concerns|need|needs|challenge|challenges|matter|matters|gap|gaps|risk|risks|threat|threats|shortage|shortages'), 'd'],
+    /* "ensure a safe fight" is not "make sure a safe fight" */
+    ['v', 'make sure', 'ensure', c => /^(that|they|we|you|he|she|it|everyone|everybody|nobody)$/.test(c.n), 'd'],
+    ['v', 'get rid of', 'eliminate', () => true, 'd'],
+    /* amounts go up and down; "awareness must increase" does not "go up" */
+    ['v', 'go up', 'increase', c => /^(by|to|from|sharply|steadily|rapidly|slightly|significantly|dramatically)$/.test(c.n), 'd'],
+    ['v', 'go down', 'decrease', c => /^(by|to|from|sharply|steadily|rapidly|slightly|significantly|dramatically)$/.test(c.n), 'd'],
+    ['v', 'point to', 'indicate', c => DET.test(c.n) && c.n !== 'that', 'd'],
+    ['v', 'carry out', 'conduct', nounAfter('study|studies|survey|surveys|research|experiment|experiments|interview|interviews|test|tests|analysis|analyses|investigation|investigations|review|reviews|trial|trials|audit|audits|inquiry|assessment|assessments|evaluation|evaluations|search|fieldwork'), 'd'],
+    ['v', 'make clear', 'clarify', c => DET.test(c.n) || WH.test(c.n), 'd'],
+    ['v', 'speed up', 'accelerate', () => true, 'd'],
+    ['v', 'rule out', 'exclude', c => c.n !== 'from', 'd'],
+    ['v', 'lead to', 'result in', () => true, 'd'],
+    ['v', 'try', 'endeavour', c => c.n === 'to', 'd'],
+    ['v', 'find out', 'ascertain', c => WH.test(c.n), 'd'],
+    ['v', 'have', 'possess', c => DET.test(c.n) && c.n !== 'that', 'd'],
+    ['v', 'ask', 'inquire', c => WH.test(c.n) || c.n === 'about', 'd'],
+    ['v', 'live', 'reside', c => c.n === 'in', 'd'],
+    ['v', 'stop', 'cease', c => c.n !== 'to' && c.n !== 'by', 'd'],
+    ['v', 'end', 'terminate', nounAfter('contract|contracts|agreement|agreements|employment|lease|pregnancy'), 'd'],
+    ['v', 'tell', 'inform', c => OBJ.test(c.n) && /^(that|about|of)$/.test(c.n2), 'b'],
+    ['w', 'enough', 'sufficient', c => !/^(the|a|an|this|that|these|those|its|their|his|her|our|my|your)$/.test(c.p) && /^[a-z]/.test(c.n) && !/^(of|that|and|or|is|was|are|were|for)$/.test(c.n) && !/(ly|er|est)$/.test(c.p) && !PLAINADJ.test(c.p), 'b'],
+    ['w', 'whole', 'entire', c => /^[a-z]/.test(c.n) && !/^(of|and|or|is|was|are|were|lot|thing|new)$/.test(c.n) && /^(the|this|that|these|those|its|their|his|her|our|my|your)$/.test(c.p), 'b'],
+    ['w', 'main', 'principal', c => /^(the|a|its|their|his|her|our|my|your|two|three)$/.test(c.p) && /^[a-z]/.test(c.n) && !/^(road|street|course|meal|line|land|entrance|door|gate|menu|stage|character|characters|page|event|square|office|building|hall|room|switch|bedroom|and|or|principal|principle|priority)$/.test(c.n), 'b'],
+    ['w', 'wrong', 'incorrect', c => /^(the|an?|this|that|these|those)$/.test(c.p) && /^(answer|answers|assumption|assumptions|conclusion|conclusions|figure|figures|value|values|result|results|spelling|date|address|number|numbers|information|data|calculation|calculations|interpretation|statement|statements|claim|claims|reading|estimate|estimates|label|labels|version|format|use|usage)$/.test(c.n), 'b'],
+    ['w', 'mainly', 'primarily', () => true, 'b'],
+    ['w', 'mostly', 'largely', c => c.n !== 'of', 'b'],
+    ['w', 'often', 'frequently', c => !/^(as|how|so|too|very|more|most|less|quite|fairly)$/.test(c.p), 'b'],
+    ['w', 'quickly', 'rapidly', c => GROW.test(c.n) || GROW.test(c.p), 'b'],
+    /* only at the start of a clause: "He is perhaps best known" keeps it */
+    ['w', 'maybe', 'perhaps', c => c.p === '', 'c'],
+    ['w', 'about', 'approximately', c => /^\d/.test(c.n), 'b'],
+    ['w', 'right away', 'immediately', c => c.n === '' && c.p !== '', 'b'],
+    ['w', 'hard to', 'difficult to', () => true, 'b'],
+    ['w', 'because of', 'owing to', () => true, 'b'],
+    ['w', 'it is clear that', 'it is evident that', () => true, 'b'],
+    ['w', 'point of view', 'perspective', c => c.p !== 'in' && c.n !== 'to', 'b'],
+    ['w', 'before', 'prior to', () => true, 'd'],
+    ['w', 'about', 'regarding', () => true, 'd'],
+    ['w', 'about', 'with regard to', () => true, 'd'],
+    ['w', 'while', 'whilst', () => true, 'd'],
+    ['w', 'among', 'amongst', () => true, 'd'],
+    /* "upon us" (coming soon) is not "on us" */
+    ['w', 'on', 'upon', c => c.p !== 'once' && !/^(which|whom|us|them|me|him|her|you|it)$/.test(c.n), 'd'],
+    ['w', 'a lot of', 'a considerable amount of', () => true, 'd'],
+    ['w', 'a lot of', 'a great deal of', () => true, 'd'],
+    ['w', 'a lot of', 'a large number of', () => true, 'd'],
+    ['w', 'many', 'numerous', () => true, 'd'],
+    ['w', 'people', 'individuals', () => true, 'd'],
+    ['w', 'most of', 'the majority of', c => DET.test(c.n) || /['’]s$/.test(c.n) || /^(them|us|you)$/.test(c.n), 'd'],
+    ['w', 'most', 'the majority of', () => true, 'd'],
+    ['w', 'help', 'assistance', c => /^(the|your|their|his|her|our|my|for|with|of|some|any|no)$/.test(c.p), 'd'],
+    ['w', 'very', 'highly', c => /^(important|significant|likely|unlikely|effective|successful|relevant|competitive|sensitive|variable|controversial|unusual|influential|specific|accurate|efficient|reliable|profitable|valuable|technical|toxic|contagious|dependent|visible|critical|desirable|problematic|complex|probable|improbable|flexible|selective|productive|beneficial|unstable|active|charged|concentrated|diverse|correlated|skilled|qualified|regarded|recommended|educated|trained|respected|motivated|developed|structured|specialised|specialized)$/.test(c.n), 'u'],
+    ['w', 'really', 'highly', c => /^(important|significant|likely|unlikely|effective|successful|relevant|competitive|sensitive|controversial|unusual|influential|accurate|efficient|reliable|valuable|critical|desirable|complex|flexible|productive|beneficial)$/.test(c.n), 'u'],
+    /* "improved a lot", "a lot better"; never "a lot more companies" or "thanks a lot" */
+    ['w', 'a lot', 'considerably', c => (c.n === '' && /[a-z]{3,}ed$/.test(c.p)) || /^(better|worse|faster|slower|higher|lower|larger|smaller|easier|harder|longer|shorter|greater|cheaper|safer|stronger|weaker)$/.test(c.n), 'u'],
+    ['w', 'really', 'very', c => /^(good|bad|useful|helpful|difficult|hard|easy|clear|different|similar|common|rare|high|low|large|small|strong|weak|close|interesting|old|new|long|short|fast|slow|busy|tired|happy|sad|nice|quiet|loud|cold|hot|warm|expensive|cheap|popular|serious|simple|careful|lucky|proud|sure|keen|kind)$/.test(c.n) && c.p !== 'not', 'u'],
+    ['w', 'really', 'very', c => /^[a-z]/.test(c.n) && !/^(much|many|few|little|same|first|last|best|least|most|end|beginning|start|top|bottom|idea|thing|moment|day|person|man|woman|reason|word|words|nature|heart|core|essence|own|well|and|or)$/.test(c.n) && !DET.test(c.p) && c.p !== 'not', 'cr'],
+    ['w', 'really', 'extremely', c => /^[a-z]/.test(c.n), 'cr'],
+    ['w', 'big', 'large', c => /^[a-z]/.test(c.n) && !/^(data|bang|picture|deal|brother|sister|tech|five|ten|apple|city|cat|game|screen|toe|top|shot|wig|business|pharma|name|names|day|break|moment|time|and|or|language|intestine|print|scale|cap|caps|hadron|number|numbers)$/.test(c.n), 'c'],
+    ['n', 'kid', 'child', c => !/^(gloves?|leather|brother|brothers|sister|sisters|stuff)$/.test(c.n), 'c']
+  ];
+  /* sentence openers: [everyday, formal, test of the next word, direction] */
+  const STARTS = [
+    ['So', 'Therefore,', c => !/^(far|many|much|long|few|little|that|too|as|is|was|are|were|do|does|did|what|why|how|i)$/.test(c.n), 'b'],
+    ['But', 'However,', c => !/^(also|for|then|not|only|why|what|how|i)$/.test(c.n), 'b'],
+    ['Also,', 'In addition,', () => true, 'b'],
+    ['Also,', 'Furthermore,', () => true, 'd'],
+    ['Also,', 'Moreover,', () => true, 'd'],
+    ['Also,', 'Additionally,', () => true, 'd'],
+    ['So', 'Thus,', () => true, 'd'],
+    ['So', 'Hence,', () => true, 'd'],
+    ['So', 'Consequently,', () => true, 'd'],
+    ['Still,', 'Nevertheless,', () => true, 'b'],
+    ['Still,', 'Nonetheless,', () => true, 'd'],
+    ['In the end,', 'Ultimately,', () => true, 'b'],
+    ['Basically,', 'Essentially,', () => true, 'c'],
+    ['Luckily,', 'Fortunately,', () => true, 'c'],
+    ['Later,', 'Subsequently,', () => true, 'd'],
+    ['Besides,', 'Moreover,', () => true, 'u'],
+    ['Plus,', 'Moreover,', () => true, 'c'],
+    ['Anyway,', 'In any case,', () => true, 'c']
+  ];
+  const REGWHY = { up: 'A more formal word with the same meaning.', down: 'A plainer, more everyday word with the same meaning.', link: 'A linking word in the register of the passage.', intens: 'An intensifier in the register of the passage.' };
+  /* every spelling of a pair: [from, to] for each form */
+  function pairForms(kind, from, to) {
+    if (kind === 'v') {
+      const fw = from.split(' '), tw = to.split(' '), F = verbForms(fw[0]), T = verbForms(tw[0]), out = [];
+      const seen = {};
+      for (const k of Object.keys(F)) {
+        if (seen[F[k]]) continue;
+        seen[F[k]] = 1;
+        const same = Object.keys(F).filter(j => F[j] === F[k]);
+        /* a spelling two forms share ("put", "set", "hit") whose partner's
+           forms differ: the form is read where it stands */
+        const one = same.every(j => T[j] === T[k]);
+        out.push([[F[k]].concat(fw.slice(1)).join(' '), one ? [T[k]].concat(tw.slice(1)).join(' ') : null, one ? null : { base: fw[0], T: T, rest: tw.slice(1) }]);
+      }
+      return out;
+    }
+    if (kind === 'n') return [[from, to], [PLURAL[from] || regular(from, 's'), PLURAL[to] || regular(to, 's')]];
+    return [[from, to]];
+  }
+  const PLURAL = { child: 'children', person: 'people', man: 'men', woman: 'women' };
+  /* "u" towards the formal only, "d" towards the everyday only, "c" the
+     casual style's words, "cr" casual only and one way */
+  function usable(dir, flag, casual) {
+    if (flag === 'b') return true;
+    if (flag === 'u') return dir === 'up';
+    if (flag === 'd') return dir === 'down';
+    if (flag === 'c') return casual ? dir === 'down' : dir === 'up';
+    if (flag === 'cr') return casual && dir === 'down';
+    return false;
+  }
+  const BEW = /^(is|are|was|were|be|been|being|am|get|gets|got)$/;
+  const DETW = /^(the|a|an|this|that|these|those|its|their|his|her|our|my|your|some|any|no|each|every)$/;
+  function pairs(text, dir, casual, log) {
+    const X = LEX();
+    let t = text;
+    for (const [kind, cas, frm, ok, flag] of PAIRS) {
+      if (!usable(dir, flag, casual)) continue;
+      const from = dir === 'up' ? cas : frm, to = dir === 'up' ? frm : cas;
+      for (const [f, rep1, amb] of pairForms(kind, from, to)) {
+        const re = new RegExp('\\b' + ESC(f).replace(/ /g, '\\s+') + '\\b', 'gi');
+        const prot = protect(t);
+        let m, out = '', last = 0;
+        while ((m = re.exec(t))) {
+          const a = m.index, b = a + m[0].length;
+          if (prot(a, b) || fresh(t, a)) continue;
+          /* a capital mid-sentence is a name or a title ("Children's Crusade") */
+          if (/[A-Z]/.test(m[0]) && !/(^|[.!?:]["”’)]?[\s\uE000\uE001]+|\n[\s\uE000\uE001]*)$/.test(t.slice(0, a)) && t.slice(0, a).trim() !== '') continue;
+          const c = around(t, a, b);
+          c.dir = dir;
+          if (!ok(c)) continue;
+          if (kind === 'v') {
+            /* a verb here, not a noun: "the end", "a check", "the help" */
+            if (DETW.test(c.p)) continue;
+            /* not a passive ("was put off by") turned into an everyday verb */
+            if (dir === 'down' && (BEW.test(c.p) || (/^(also|not|never|already|often|then|first|recently|later|soon|still|always|widely|commonly|usually|generally|frequently|successfully|repeatedly)$/.test(c.p) && BEW.test(around(t, a - c.p.length - 1, a - c.p.length - 1).p)))) continue;
+            if (X && X.ready && !/ /.test(f)) {
+              const pp = around(t, a - c.p.length - 1, a - c.p.length - 1).p;
+              const an = X.analyse(f.toLowerCase(), c.p, pp, c.n, t);
+              if (an && an.pos !== 'v') continue;
+            }
+          }
+          let rep = rep1;
+          if (amb) { const k = formOf(amb.base, m[0].split(/\s+/)[0], t.slice(0, a), t); rep = [amb.T[k]].concat(amb.rest).join(' '); }
+          if (/^[A-Z]/.test(m[0])) rep = capFirst(rep);
+          const why = /^(very|really|extremely|highly)$/.test(f.toLowerCase()) ? REGWHY.intens : REGWHY[dir];
+          log.push({ from: m[0], to: rep, why: why });
+          out += t.slice(last, a) + OPEN + rep + SHUT; last = b;
+        }
+        if (last) t = out + t.slice(last);
+      }
+    }
+    /* sentence openers */
+    for (const [cas, frm, ok, flag] of STARTS) {
+      if (!usable(dir, flag, casual)) continue;
+      const from = dir === 'up' ? cas : frm, to = dir === 'up' ? frm : cas;
+      const core = ESC(from.replace(/,$/, ''));
+      const re = new RegExp('(^|[.!?]["”’)]?\\s+|\\n\\s*)' + core + (from.endsWith(',') ? ',\\s*' : ',?\\s+'), 'g');
+      t = t.replace(re, function (m, pre, off, str) {
+        const at = off + pre.length;
+        if (fresh(str, at) || str.charCodeAt(at) === 0xE000) return m;
+        const n = around(str, at, off + m.length - 1).n;
+        if (!ok({ n: n })) return m;
+        log.push({ from: m.slice(pre.length).trim(), to: to, why: REGWHY.link });
+        return pre + OPEN + to + SHUT + ' ';
+      });
+    }
+    return t;
+  }
+
+  /* ---- 4. contractions, for the casual register ---- */
+  const WHB = /\b(?:who|what|where|how|whatever|whoever|wherever)\s+$/i;
+  const CONTRACT = [
+    [/\b(it|that|there|what|here|who|he|she) is (?=[a-z])/gi, (m, p) => p + "'s ", n => !/^to\b/.test(n)],
+    [/\bI am (?=[a-z])/g, () => "I'm "],
+    [/\b(you|we|they) are (?=[a-z])/gi, (m, p) => p + "'re "],
+    [/\b(I|you|we|they) have (?=(?:been|got|had|done|seen|made|taken|given|gone|known|found|heard|never|always|just|already|[a-z]{3,}ed)\b)/gi, (m, p) => p + "'ve "],
+    [/\b(I|you|we|they|he|she|it) will (?=[a-z])/gi, (m, p) => p + "'ll "],
+    [/\b(has|have|had|was|were|would|could|should) not\b/gi, (m, v) => v + "n't"],
+    [/\b(L|l)et us (?=(?:consider|look|begin|start|turn|now|see|assume|suppose|take|go|try|move|think)\b)/g, (m, l) => l + "et's "]
+  ];
+  function contract(text, log) {
+    let t = text;
+    for (const [re, rep, ok] of CONTRACT) {
+      const prot = protect(t);
+      t = t.replace(re, function () {
+        const a = arguments, m = a[0], off = a[a.length - 2], str = a[a.length - 1];
+        if (prot(off, off + m.length) || fresh(str, off)) return m;
+        if (WHB.test(str.slice(Math.max(0, off - 20), off))) return m;
+        /* "what they make of it is theirs": "it" belongs to "of", not to "is" */
+        if (/\b(?:of|to|for|with|from|about|in|on|at|by|into|than|make|makes|made|do|did|does)\s+$/i.test(str.slice(Math.max(0, off - 12), off)) && /^it /i.test(m)) return m;
+        if (ok && !ok(str.slice(off + m.length, off + m.length + 12))) return m;
+        const r = rep.apply(null, a), core = r.replace(/ $/, '');
+        log.push({ from: m.trim(), to: core, why: 'A contraction, as relaxed writing uses them.' });
+        return OPEN + core + SHUT + (r.length > core.length ? ' ' : '');
+      });
+    }
+    return t;
+  }
+
+  /* ---- 5. one change of order that keeps the meaning ---- */
+  /* the second half of ", but" must be a clause with its own subject:
+     "but it was never produced", never "but chose to attend" */
+  /* and a verb of its own: "not a corrupt, but an essential part" has none */
+  const FINITE2 = /\b(is|are|was|were|be|been|has|have|had|will|would|can|could|should|may|might|must|do|does|did|[a-z]{3,}ed|[a-z]{3,}s)\b/;
+  const SUBJ2 = /^(?:(?:then|now|eventually|later|still|instead|soon)\s+)?(?:I|you|he|she|it|we|they|this|that|these|those|there|the|a|an|his|her|its|their|our|my|your|both|all|some|many|most|no|each|every|one|[A-Z][a-z]+)\b/;
+  /* the first word loses its capital only if it is an ordinary word */
+  const COMMON1 = /^(The|A|An|This|That|These|Those|Some|Many|Most|All|Our|My|His|Her|Their|Its|Your|We|They|He|She|You|It|People|Children|Students|Each|Every|No|One|Both|Such|Several|Few|Other|Another|Any|Much|More|Less|Few|Everyone|Nobody|Someone|Television|Computers?|Science|Society|Women|Men)\b/;
+  function lowerStart(x) {
+    const w = (x.match(/^[A-Za-z]+/) || [''])[0], X = LEX();
+    const common = COMMON1.test(x) || (X && X.ready && X._L.W.has(w.toLowerCase()));
+    return common ? x[0].toLowerCase() + x.slice(1) : x;
+  }
+  function restructure(s, dir, log) {
+    const t = s.trim();
+    /* a quotation is never reordered, and a long sentence is left as it is */
+    if (/["“”]/.test(t) || (t.match(/\S+/g) || []).length > 32) return t;
+    if (dir === 'up') {
+      /* "X because Y." -> "Because Y, X." */
+      const m = /^([A-Z][^,;:.!?]{12,}?) because ([^,;:.!?]{10,})([.!?])$/.exec(t);
+      /* "and" on either side could belong to the other half: left alone */
+      if (m && !/\bbecause\b/i.test(m[1]) && !/^(I|It|There)\b/.test(m[1]) && (m[1].match(/\S+/g) || []).length <= 16 && !/\b(and|or|but|yet)\b/i.test(m[1] + ' ' + m[2])) {
+        const out = 'Because ' + m[2] + ', ' + lowerStart(m[1]) + m[3];
+        log.push({ from: t, to: out, why: 'The reason first, as formal writing often orders it.' }); return out;
+      }
+      const n = /^([^;]{12,}), but ([A-Za-z][^;]{8,})$/.exec(t);
+      if (n && SUBJ2.test(n[2]) && FINITE2.test(n[2]) && !/, but /.test(n[2]) && !/\bnot (?:only|just|merely|simply)\b/i.test(n[1])) { const out = n[1] + '; however, ' + n[2]; log.push({ from: t, to: out, why: 'A formal link between the two halves: "; however,".' }); return out; }
+      const so = /^([^;]{12,}), so ([A-Za-z][^;]{8,})$/.exec(t);
+      if (so && SUBJ2.test(so[2]) && FINITE2.test(so[2]) && !/^(that|much|many|far)\b/.test(so[2])) { const out = so[1] + '; therefore, ' + so[2]; log.push({ from: t, to: out, why: 'A formal link between cause and result: "; therefore,".' }); return out; }
+    } else if (dir === 'down') {
+      const n = /^([^;]{8,}); however, ([^;]{6,})$/.exec(t);
+      if (n) { const out = n[1] + ', but ' + n[2]; log.push({ from: t, to: out, why: 'A plainer link: ", but".' }); return out; }
+      const th = /^([^;]{8,}); therefore, ([^;]{6,})$/.exec(t);
+      if (th) { const out = th[1] + ', so ' + th[2]; log.push({ from: t, to: out, why: 'A plainer link: ", so".' }); return out; }
+      const R = RW();
+      if (R && R.explain) { const r = R.explain('active', t); if (r.text !== t) { r.changes.forEach(c => log.push({ from: c.from, to: c.to, why: R.WHYS.active })); return r.text; } }
+    }
+    return t;
+  }
+
+  /* ---- the styles ---- */
+  const STYLE = {
+    scholarly: { dir: 'up', idiom: 'formal', rw: 'scholarly', label: 'Scholarly', order: 'up' },
+    professional: { dir: 'up', idiom: 'formal', rw: 'professional', label: 'Professional', order: '' },
+    casual: { dir: 'down', idiom: 'casual', rw: 'casual', label: 'Casual', casual: true, contract: true, order: 'down' },
+    plain: { dir: 'down', idiom: 'plain', rw: 'simplify', label: 'Plainer', order: 'down' },
+    concise: { dir: '', idiom: 'plain', rw: 'concise', label: 'Concise', order: '' },
+    confident: { dir: '', idiom: '', rw: 'confident', label: 'Confident', order: '' }
+  };
+  const STYLE_WHY = {
+    scholarly: 'Formal words, ideas linked explicitly, no contractions or idioms.',
+    professional: 'Clear and polished: formal words, no slang or contractions.',
+    casual: 'Everyday words, contractions and a relaxed voice.',
+    plain: 'Plainer words and shorter sentences, for any reader.',
+    concise: 'The same meaning in fewer words.',
+    confident: 'Softening words taken out where the claim can stand.'
+  };
+  function withRules(text, mode, log) {
+    const R = RW();
+    if (!R || !R[mode]) return text;
+    const r = R.explain(mode, text);
+    r.changes.forEach(c => log.push({ from: c.from, to: c.to, why: (R.WHYS && R.WHYS[c.why]) || c.why }));
+    return r.text;
+  }
+  function sentences(text) { return String(text).match(/[^.!?\n]+(?:[.!?]+["”’)]*|$)\s*|\n+/g) || [String(text)]; }
+  function perSentence(text, fn) {
+    return sentences(text).map(s => { const lead = s.match(/^\s*/)[0], tail = s.match(/\s*$/)[0], core = s.slice(lead.length, s.length - tail.length); return core ? lead + fn(core) + tail : s; }).join('');
+  }
+  /* one option. Depth 1: the style's rules and its idioms; 2: also the word
+     pairs, the openers and (casual) contractions; 3: also a change of order */
+  function option(text, st, depth) {
+    const log = [];
+    let t = withRules(text, st.rw, log);
+    if (st.idiom) t = idioms(t, st.idiom, log);
+    if (depth >= 2 && st.dir) t = pairs(t, st.dir, !!st.casual, log);
+    if (depth >= 2 && st.contract) t = contract(t, log);
+    t = strip(t);
+    if (depth >= 3 && st.order) t = perSentence(t, s => restructure(s, st.order, log));
+    const R = RW();
+    if (R && R.fixArticles) t = R.fixArticles(text, t);
+    return { text: t, changes: log };
+  }
+  const DEPTH = [[1, 'light touch'], [2, 'fuller'], [3, 'reordered']];
+  /* a style rewrite: up to three options, each different from the text and
+     from one another, the lightest first */
+  function restyle(text, style) {
+    const st = STYLE[style] || STYLE.plain, out = [], seen = new Set([String(text).trim()]);
+    for (const [d, label] of DEPTH) {
+      const o = option(text, st, d);
+      if (!o.text.trim() || seen.has(o.text.trim())) continue;
+      seen.add(o.text.trim());
+      out.push({ label: st.label + ' · ' + label, style: style, text: o.text, changes: o.changes, why: STYLE_WHY[style] || '' });
+    }
+    return out;
+  }
+  /* alternatives for a passage with no style chosen: the passage plainer,
+     more formal, casual and reordered */
+  function alternatives(text) {
+    const out = [], seen = new Set([String(text).trim()]);
+    const add = (label, why, o) => { const k = o.text.trim(); if (k && !seen.has(k)) { seen.add(k); out.push({ label: label, why: why, text: o.text, changes: o.changes }); } };
+    add('Plainer', STYLE_WHY.plain, option(text, STYLE.plain, 2));
+    add('More formal', STYLE_WHY.scholarly, option(text, STYLE.scholarly, 2));
+    add('Casual', STYLE_WHY.casual, option(text, STYLE.casual, 2));
+    const log = [];
+    add('Reordered', 'The same words in another order.', { text: perSentence(text, s => restructure(s, 'up', log)), changes: log });
+    return out;
+  }
+
+  /* ---- alternatives for a word or a phrase, by meaning ---- */
+  /* Sources, in order: an idiom said three ways; the common alternatives
+     (INKSYN, written for Inkwell); then WordNet's meanings (INKLEX), each
+     with its definition, for the writer to choose the one meant. */
+  const SYN = () => root.INKSYN || req('./synonyms_core.js');
+  const POSNAME = { n: 'noun', v: 'verb', a: 'adjective', r: 'adverb' };
+  const matchCase = (src, out) => !out ? out : (src.length > 1 && src === src.toUpperCase() && /[A-Z]{2}/.test(src)) ? out.toUpperCase() : /^[A-Z]/.test(src) ? capFirst(out) : out;
+  /* "bigger" gives "larger" but "more substantial": short words take -er */
+  const ER = new Set('large great small big fast quick slow long short high low wide broad deep strong weak hard easy simple clear close near rich poor young old new safe cheap tall thin thick warm cool cold hot kind nice fine bright dark light late early busy happy sad calm firm wise rare pure true sure tough rough smooth soft loud quiet heavy lucky pretty funny angry dirty healthy friendly lively mild keen plain brief sharp slim tight full odd'.split(' '));
+  function compare(w, form) {
+    if (/ /.test(w) || !ER.has(w)) return (form === 'er' ? 'more ' : 'most ') + w;
+    const suf = form;
+    if (/e$/.test(w)) return w + suf.slice(1);
+    if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'i' + suf;
+    if (cvc(w) && !/[wxy]$/.test(w)) return w + w.slice(-1) + suf;
+    return w + suf;
+  }
+  /* a word put into a form: "purchase" as "purchased"; null if it cannot be */
+  function inflectAs(w, pos, form) {
+    if (!form) return w;
+    const parts = w.split(' ');
+    if (pos === 'v') { const f = verbForms(parts[0])[form]; return f ? [f].concat(parts.slice(1)).join(' ') : null; }
+    if (pos === 'a' && (form === 'er' || form === 'est')) return compare(w, form);
+    if (pos === 'n' && form === 's') {
+      const last = parts[parts.length - 1], X = LEX();
+      const pl = PLURAL[last] || (X && X.ready ? X.inflect(last, 'n', 's') : regular(last, 's'));
+      return pl ? parts.slice(0, -1).concat(pl).join(' ') : null;
+    }
+    return null;
+  }
+  /* the word's readings, from the lexicon or, without it, from its spelling */
+  function readings(word, prev, prev2, next, ctx) {
+    const X = LEX(), w = word.toLowerCase();
+    if (X && X.ready) {
+      const a = X.analyse(w, prev, prev2, next, ctx), all = X.bases(w);
+      const out = a ? [{ base: a.base, pos: a.pos, form: a.form }] : [];
+      all.forEach(b => { if (!out.some(o => o.base === b.base && o.pos === b.pos)) out.push(b); });
+      return out;
+    }
+    const S = SYN(), out = [], add = (b, pos, form) => { if (S && S.has(b, pos) && !out.some(o => o.base === b && o.pos === pos)) out.push({ base: b, pos: pos, form: form }); };
+    for (const pos of 'avnr') add(w, pos, '');
+    const tries = [[/ies$/, 'y', 's'], [/(ch|sh|ss|x|z)es$/, '$1', 's'], [/([^s])s$/, '$1', 's'], [/ied$/, 'y', 'ed'], [/([^e])ed$/, '$1', 'ed'], [/ed$/, 'e', 'ed'], [/(.)\1ed$/, '$1', 'ed'], [/ing$/, '', 'ing'], [/ing$/, 'e', 'ing'], [/(.)\1ing$/, '$1', 'ing']];
+    for (const [re, r, form] of tries) if (re.test(w)) { const b = w.replace(re, r); add(b, 'v', form); if (form === 's') add(b, 'n', 's'); }
+    for (const [irr, list] of Object.entries(IRV)) { const p = list.split(' '); if (p[1] === w) add(irr, 'v', 'ed'); if (p[2] === w && p[2] !== p[1]) add(irr, 'v', 'en'); }
+    return out;
+  }
+  /* idioms inside the selection: the whole selection said three ways */
+  function idiomVersions(text) {
+    if (!IDIOMS) compileIdioms();
+    const out = [];
+    for (const [style, label] of [['plain', 'Plainly'], ['formal', 'Formally'], ['casual', 'Casually']]) {
+      const log = [], t = strip(idioms(text, style, log));
+      if (log.length && t !== text && !out.some(o => o.text === t)) out.push({ label: label, text: t, changes: log });
+    }
+    return out;
+  }
+  function wordAlternatives(sel, ctx, at) {
+    const src = String(sel || '').trim();
+    if (!src) return [];
+    const text = String(ctx || src), pos0 = typeof at === 'number' ? at : text.indexOf(src);
+    const before = text.slice(0, Math.max(0, pos0)).match(/[A-Za-z'’]+/g) || [], after = text.slice(pos0 + src.length).match(/[A-Za-z'’]+/g) || [];
+    const prev = before[before.length - 1], prev2 = before[before.length - 2], next = after[0];
+    const groups = [], seen = new Set([src.toLowerCase()]);
+    const push = (g) => {
+      const words = g.words.filter(w => w && !seen.has(w.toLowerCase()));
+      words.forEach(w => seen.add(w.toLowerCase()));
+      if (words.length) groups.push(Object.assign({}, g, { words: words }));
+    };
+    const S = SYN(), X = LEX();
+    /* a phrase the list knows ("train of thought", "a lot of") */
+    if (/\s/.test(src) && S) {
+      const low = src.toLowerCase().replace(/\s+/g, ' ');
+      let ph = S.phrase(low), form = '';
+      if (!ph) {
+        /* a phrasal verb in a form: "found out", "carried out" */
+        const ws = low.split(' ');
+        for (const r of readings(ws[0], prev, prev2, ws[1], text)) if (r.pos === 'v') { const p = S.phrase([r.base].concat(ws.slice(1)).join(' ')); if (p && p.pos === 'v') { ph = p; form = r.form; break; } }
+      }
+      if (ph) for (const s of ph.senses) push({ source: 'common', gloss: s.gloss, pos: ph.pos, words: s.words.map(w => { const f = ph.pos === 'v' ? inflectAs(w, 'v', form) : w; return f ? matchCase(src, f) : null; }) });
+    }
+    if (!/\s/.test(src) && S) {
+      const rs = readings(src, prev, prev2, next, text);
+      rs.forEach((r, k) => {
+        const ss = S.get(r.base, r.pos);
+        if (!ss) return;
+        ss.forEach(s => push({ source: 'common', gloss: s.gloss, pos: r.pos, other: k > 0 && r.pos !== rs[0].pos ? 'As ' + (/^[aeiou]/.test(POSNAME[r.pos]) ? 'an ' : 'a ') + POSNAME[r.pos] : '', words: s.words.map(w => { const f = inflectAs(w, r.pos, r.form); return f ? matchCase(src, f) : null; }) }));
+      });
+    }
+    /* WordNet's meanings, after: each with its definition */
+    if (X && X.ready) {
+      X.alternatives(src, text, pos0).forEach(g => push({ source: 'wordnet', gloss: g.gloss, pos: g.pos, broader: g.broader, common: g.best, words: g.words.map(w => w.text) }));
+    }
+    return groups;
+  }
+  /* up to max words of a passage with one clear set of common alternatives
+     (one meaning in the list for the word's part of speech here):
+     [{text, at, pos, gloss, words}] */
+  const SKIP = /^(a|an|the|and|or|but|if|of|in|on|at|to|for|with|by|from|as|is|are|was|were|be|been|being|am|it|its|this|that|these|those|he|she|they|we|you|i|his|her|their|our|my|your|me|him|them|us|not|no|so|do|does|did|done|have|has|had|will|would|can|could|should|may|might|must|there|here|what|which|who|whom|whose|when|where|why|how|all|any|some|more|most|other|such|only|own|same|than|too|just|into|over|under|about|after|before|again|also|then|now|one|two|three|first|last|each|every|both|either|neither|many|much|few|little|less|least|get|got|make|made|take|took|go|went|gone|come|came|say|said|let|put|set|thing|things|way|lot|kind|sort|yes|yet|still|even|ever|never|well|up|out|off|down|back|through|while|because|though|although|since|until|unless|whether)$/i;
+  function wordChoices(text, max) {
+    const X = LEX(), S = SYN();
+    if (!X || !X.ready || !S) return [];
+    const prot = protect(text), ws = [], re = /[A-Za-z][A-Za-z'’-]*/g;
+    let m;
+    while ((m = re.exec(text))) ws.push({ w: m[0], s: m.index, e: m.index + m[0].length });
+    /* a word inside an idiom or a fixed phrase is never changed alone
+       ("train of thought" keeps its "thought") */
+    if (!IDIOMS) compileIdioms();
+    const fixed = [];
+    for (const id of IDIOMS) { id.re.lastIndex = 0; let q; while ((q = id.re.exec(text))) fixed.push([q.index, q.index + q[0].length]); }
+    for (let i = 0; i < ws.length; i++) {
+      for (let n = 4; n >= 2; n--) {
+        if (i + n > ws.length) continue;
+        const ph = text.slice(ws[i].s, ws[i + n - 1].e);
+        if (/[.,;:!?]/.test(ph)) continue;
+        const low = ph.toLowerCase().replace(/\s+/g, ' ');
+        if (S.phrase(low) || X._L.W.has(low) || (n > 1 && X.bases(ws[i + n - 1].w.toLowerCase()).some(b => b.pos === 'n' && X._L.W.has(low.split(' ').slice(0, -1).concat(b.base).join(' '))))) { fixed.push([ws[i].s, ws[i + n - 1].e]); break; }
+      }
+    }
+    const inFixed = (a, b) => fixed.some(f => a < f[1] && f[0] < b);
+    const out = [];
+    for (let i = 0; i < ws.length && out.length < (max || 6); i++) {
+      const k = ws[i];
+      if (prot(k.s, k.e) || inFixed(k.s, k.e) || k.w.length < 3 || SKIP.test(k.w)) continue;
+      const startSent = i === 0 || /[.!?]["”’)]?\s*$/.test(text.slice(0, k.s));
+      if (/^[A-Z]/.test(k.w) && !startSent) continue; /* a name */
+      const a = X.analyse(k.w.toLowerCase(), ws[i - 1] && ws[i - 1].w, ws[i - 2] && ws[i - 2].w, ws[i + 1] && ws[i + 1].w, text);
+      if (!a) continue;
+      const ss = S.get(a.base, a.pos);
+      if (!ss || ss.length !== 1) continue;
+      const words = ss[0].words.map(w => inflectAs(w, a.pos, a.form)).filter(Boolean).slice(0, 4).map(w => matchCase(k.w, w));
+      if (words.length) out.push({ text: k.w, at: k.s, pos: a.pos, gloss: ss[0].gloss, words: words });
+    }
+    return out;
+  }
+
+  const api = {
+    restyle: restyle, alternatives: alternatives, wordChoices: wordChoices, wordAlternatives: wordAlternatives, idiomVersions: idiomVersions,
+    idioms: (t, s) => { const l = []; return { text: strip(idioms(t, s || 'plain', l)), changes: l }; },
+    verbForms: verbForms, STYLES: Object.keys(STYLE), STYLE_LABEL: Object.keys(STYLE).reduce((o, k) => (o[k] = STYLE[k].label, o), {}), STYLE_WHY: STYLE_WHY,
+    IDIOM_COUNT: IDIOM_ROWS.length, PAIR_COUNT: PAIRS.length
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKPARA = api;
+})(typeof self !== 'undefined' ? self : this);
+
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -3535,7 +5560,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.38 · X · OCTOBRIS · MMXXVI';
+const BUILD='7.39 · XI · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -6266,7 +8291,7 @@ const MENUS={
   ['🧭 Authenticity: machine-trace reading',()=>textureCheck()]],
  rewrite:[['✍ Rewrite with a prompt…',()=>openPromptRewrite()],['div'],['lbl','The selection'],
   ['Scholarly',()=>rewrite('scholarly')],['Professional',()=>rewrite('professional')],
-  ['Casual',()=>rewrite('casual')],['Concise',()=>rewrite('concise')],
+  ['Casual',()=>rewrite('casual')],['Plainer',()=>rewrite('plain')],['Concise',()=>rewrite('concise')],
   ['Confident',()=>rewrite('confident')],['Shorten',()=>rewrite('shorten')],
   ['Summarize',()=>rewrite('summarize')],['Expand',()=>rewrite('expand')],['Paraphrase',()=>rewrite('paraphrase')],['Naturalise',()=>rewrite('humanize')],
   ['div'],
@@ -9233,7 +11258,6 @@ function expandRow(i){EXPID=(EXPID===i?-1:i);renderCards();}
 function inkStyleSwitch(){
  return '<div style="margin:0 2px 10px"><button class="lkbtn" onclick="inkToggleStyle()">'+(S.showStyle?'Hide clarity and style notes':'Show clarity and style notes'+(INK_STYLE_HIDDEN?' ('+INK_STYLE_HIDDEN+')':''))+'</button></div>';}
 function renderCards(){
- if(ALTMODE){renderAlts('');return;}
  const c=document.getElementById('cards');
  document.getElementById('stCerr').textContent=EDITS.length+' issue'+(EDITS.length===1?'':'s');
  document.getElementById('rhCount').textContent=EDITS.length;
@@ -11438,7 +13462,7 @@ document.addEventListener('selectionchange',()=>{
  clearTimeout(selTimer);
  selTimer=setTimeout(()=>{
   if(document.activeElement!==ed)return;
-  if(bub.style.display!=='none')return;
+  if(bub.style.display!=='none'||ALTMODE)return;
   const s=ed.selectionStart,e2=ed.selectionEnd;if(e2-s<2)return;
   if(bub._viaMouse){bub._viaMouse=false;return;}
   bubbleAtCaret(e2);},320);});
@@ -11540,32 +13564,116 @@ document.addEventListener('keydown',e=>{
 /* 7.37: the offline rewrites live in src/lib/rewrite_core.js (INKRW), with tests */
 const DEMORW=(typeof INKRW!=='undefined')?INKRW:{};
 let ALTSEL=null,ALTS=[],ALTMODE=false;
-function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];renderCards();}
+/* 7.39: results show in a card beside the selection (a sheet at the foot of
+   a phone's screen), so nothing appears out of sight. Before, they were
+   added to the side panel under the suggestions, where a writer could miss
+   that anything had been offered. ACST holds what the card shows: mode
+   "alts" (Alternatives), "rewrite" (a style, with tabs) or "prompt"; the
+   word groups for a single word; the "change a word" chips for a passage. */
+let ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ const c=document.getElementById('altCard');if(c){c.style.display='none';c.innerHTML='';}}
+/* the offline lexicon (WordNet, about 5 MB, 35 MB in memory once read): read
+   the first time Alternatives or Rewrite is used, never before */
+let LEXLOAD=null;
+function inkLexLoad(){
+ if(typeof INKLEX==='undefined')return Promise.resolve(false);
+ if(INKLEX.ready)return Promise.resolve(true);
+ if(LEXLOAD)return LEXLOAD;
+ LEXLOAD=inkVendorBytes(new URL('vendor/wordnet-lex.txt',document.baseURI||location.href).href)
+  .then(b=>{const t=new TextDecoder('utf-8').decode(b);
+   /* a server that answers a missing file with a web page is not a lexicon */
+   if(!/^# Inkwell lexicon/.test(t))return false;
+   return INKLEX.load(t);})
+  .catch(()=>false);
+ return LEXLOAD;}
+/* the sentence around the selection, and where the selection starts in it */
+function inkSentenceAround(s,e){
+ const t=ed.value;let a=s,b=e;
+ while(a>0&&!/[.!?\n]/.test(t[a-1]))a--;
+ while(a<s&&/\s/.test(t[a]))a++;
+ while(b<t.length&&!/[.!?\n]/.test(t[b]))b++;
+ if(b<t.length&&t[b]!=='\n')b++;
+ return {text:t.slice(a,b),at:s-a};}
+/* where the selection is on screen */
+function inkCardAnchor(){
+ if(!ALTSEL)return null;
+ try{const pa=_fPointFromGlobal(ALTSEL.s),pb=_fPointFromGlobal(Math.max(ALTSEL.s,ALTSEL.e2));
+  if(pa&&pb){const r=document.createRange();r.setStart(pa.node,pa.off);r.setEnd(pb.node,pb.off);
+   const rs=[...r.getClientRects()].filter(x=>x.width>0||x.height>0);
+   if(rs.length)return {top:Math.min(...rs.map(x=>x.top)),bottom:Math.max(...rs.map(x=>x.bottom)),left:rs[0].left};
+   const q=r.getBoundingClientRect();if(q&&(q.top||q.left))return {top:q.top,bottom:q.bottom||q.top+18,left:q.left};}}catch(e){}
+ return null;}
+function inkCardPlace(){
+ const c=document.getElementById('altCard');if(!c||c.style.display==='none')return;
+ const narrow=innerWidth<700;c.classList.toggle('sheet',narrow);
+ if(narrow){c.style.left='';c.style.top='';c.style.maxHeight='';return;}
+ const w=Math.min(480,innerWidth-24),hd=document.querySelector('header');
+ const floor=hd?Math.max(0,hd.getBoundingClientRect().bottom)+8:8,a=inkCardAnchor();
+ const want=Math.min(c.scrollHeight+2,Math.min(innerHeight*0.72,640));
+ let left=(innerWidth-w)/2,top=Math.max(floor,innerHeight*0.16),maxH=Math.min(innerHeight*0.72,640);
+ if(a&&a.bottom>floor&&a.top<innerHeight){
+  left=Math.min(innerWidth-w-12,Math.max(12,a.left-12));
+  const below=innerHeight-a.bottom-16,above=a.top-floor-12;
+  if(below>=Math.min(want,300)||below>=above){top=a.bottom+10;maxH=Math.max(200,below);}
+  else{maxH=Math.max(200,above);top=Math.max(floor,a.top-10-Math.min(want,maxH));}}
+ c.style.left=left+'px';c.style.top=top+'px';c.style.maxHeight=maxH+'px';}
+window.addEventListener('resize',()=>{try{inkCardPlace();}catch(e){}});
+/* a click outside the card, on the page or the panels, puts it away; the
+   bubble and the card itself keep it */
+document.addEventListener('mousedown',e=>{if(!ALTMODE)return;const c=document.getElementById('altCard');
+ if(c&&!c.contains(e.target)&&!e.target.closest('#bubble')&&!e.target.closest('#menu')&&!e.target.closest('#modal')&&!e.target.closest('#cd-em-menu')&&!e.target.closest('#undoChip'))closeAlts();},true);
 async function improveAlternatives(){
  const sel=inkTargetText();
  if(sel.whole){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
  if(sel.lost||!sel.t){toast('Select the text again, please: the selection was lost.');return hideBubble();}
- const s=sel.s,e2=sel.e2,t=sel.t;ALTSEL={s,e2,t,before:ed.value.slice(Math.max(0,s-60),s)};
- ALTS=[];COACH=[];ALTMODE=true;
- hideBubble();
- if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');
- setRTab('sugg');
- renderAlts('Thinking through stronger versions beside your selection…');
- const OFFWHY={concise:'Tighter without losing meaning',professional:'Polished for the workplace',scholarly:'Formal doctoral register',casual:'Relaxed and warm',confident:'Decisive: hedged words removed',shorten:'Keeps the strongest sentences'};
- for(const m of Object.keys(OFFWHY)){
-  try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
-   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.',changes:r.changes,off:true});}catch(e){}}
- renderAlts('');
- if(inkSrv()){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
-  [['concise','Local model · concise'],['scholarly','Local model · '+S.reg]].forEach(async mv=>{try{
-   const r=await api('rewrite',{text:t,mode:mv[0],style:sysNote});
-   if(r&&r.text&&r.text.trim()&&r.text.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r.text,why:'Written by '+((S.serverModel||'the local model'))+'. '+OFFWHY[mv[0]]+'.'});
-    if(r.think)maybeShowThink(r.think);renderAlts('');}}catch(e){}});
- }else if(PRO){[['concise','On-device model · concise'],[S.reg==='casual'?'casual':'scholarly','On-device model · '+S.reg]].forEach(mv=>{
-   proChat(SYS_RW[mv[0]]||SYS_RW.concise,t,Math.min(900,wordCt(t)*2+120)).then(r=>{
-    if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r,why:'Written by '+inkProLabel()+'.'});renderAlts('');}});});}
- if(!S.connected&&!PRO)setTimeout(()=>{if(ALTMODE&&!S.connected&&!PRO)renderAlts(ALTS.length?((ALTS.length===1?'One offline alternative':ALTS.length+' offline alternatives')+'. A writing model (⚙ Engine) would add more.'):'This selection is already tight. The offline rules found nothing to change.');},300);}
+ inkAltsOpen(sel,'');ACST.mode='alts';
+ const t=sel.t,core=t.trim(),one=/^[A-Za-z][A-Za-z'’-]*$/.test(core);
+ const around=inkSentenceAround(sel.s,sel.e2),lead=t.match(/^\s*/)[0].length;
+ const fill=()=>{if(!ALTMODE||ALTSEL.t!==t)return;
+  const P=(typeof INKPARA!=='undefined')?INKPARA:null;
+  ALTS=ALTS.filter(a=>!a.off);ACST.words=null;ACST.chips=null;
+  if(P){
+   /* a word, or a short fixed phrase: its alternatives by meaning */
+   const groups=(one||core.split(/\s+/).length<=4)?P.wordAlternatives(core,around.text,around.at+lead):[];
+   if(groups.length)ACST.words=groups;
+   /* an idiom, or a passage: the whole selection said again */
+   const idv=P.idiomVersions(t);
+   idv.forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:'The idiom said '+o.label.toLowerCase()+'.',changes:o.changes,off:true}));
+   if(!one){
+    P.alternatives(t).forEach(o=>{if(!ALTS.some(a=>a.text===o.text))ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true});});
+    const OFFWHY={concise:'Tighter, the same meaning.',confident:'Decisive: softening words taken out.',shorten:'Keeps the strongest sentences.'};
+    for(const m of Object.keys(OFFWHY)){try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
+     if(out&&out.trim()&&out.trim()!==t.trim()&&!ALTS.some(a=>a.text===out))ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m],changes:r.changes,off:true});}catch(e){}}
+    ACST.chips=P.wordChoices(t,6);}
+  }
+  renderAlts('');};
+ fill();
+ /* the lexicon adds WordNet's meanings when it is read (once) */
+ if(typeof INKLEX!=='undefined'&&!INKLEX.ready){ACST.busy='Reading the word list (once)…';renderAlts('');
+  inkLexLoad().then(()=>{ACST.busy='';fill();});}
+ /* a writing model, where there is one, adds its own versions of a passage */
+ if(!one&&(inkSrv()||PRO))inkAiAlternatives(t);}
+/* three versions from the writing model: plainer, more formal, in other
+   words; each goes through the fact guard like every other version */
+async function inkAiAlternatives(t){
+ const instr='Give three different rewordings of the passage, each on its own line, numbered 1 to 3: 1. plainer, 2. more formal, 3. in other words. Keep the meaning and every fact, name, number and citation; add nothing new. Output only the three numbered lines.';
+ ACST.busy='The writing model is writing its versions…';renderAlts('');
+ try{const r=await inkWrite(instr,t);if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;
+  const lines=[],re=/^\s*([123])[.)]\s*(.+)$/gm;let m;
+  while((m=re.exec(r.text)))lines.push(m[2].trim().replace(/^(?:plainer|more formal|in other words)\s*[:\-–]\s*/i,''));
+  const labels=['Plainer','More formal','In other words'];
+  (lines.length?lines:[r.text.trim()]).slice(0,3).forEach((x,i)=>{if(x&&x!==t.trim()&&!ALTS.some(a=>a.text===x))ALTS.push({kind:(lines.length?labels[i]:'Reworded')+' · '+r.by,text:x,why:'Written by '+r.by+'.',diff:true});});
+  ACST.busy='';renderAlts('');}
+ catch(e){ACST.busy='';renderAlts(e&&e.message==='none'?'':'The writing model did not answer. The offline versions still work.');}}
+/* a word from the card: it takes the selection's place */
+function inkUseWord(g,i){const G=ACST.words&&ACST.words[g],w=G&&G.words[i];if(!w||!ALTSEL)return;
+ const t=ALTSEL.t,lead=t.match(/^\s*/)[0],tail=t.match(/\s*$/)[0];
+ ALTS.push({kind:'Word',text:lead+w+tail,why:'',off:true});useAlt(ALTS.length-1);}
+/* a word inside the passage, changed alone */
+function inkUseChip(c,i){const C=ACST.chips&&ACST.chips[c],w=C&&C.words[i];if(!w||!ALTSEL)return;
+ const t=ALTSEL.t;if(t.slice(C.at,C.at+C.text.length)!==C.text)return toast('Select the passage again, please');
+ ALTS.push({kind:'Word',text:t.slice(0,C.at)+w+t.slice(C.at+C.text.length),why:'',off:true});useAlt(ALTS.length-1);}
 /* ===== 7.34: rewrite with your own prompt, and a library of prompts =====
    As in Grammarly: say how the passage should sound, or pick a prepared
    prompt; each version comes back with its changes marked, and nothing
@@ -11607,7 +13715,7 @@ function openPromptRewrite(){
  const sel=inkTargetText();
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences or paragraph to rewrite first.');return;}
- inkAltsOpen(sel,'');ALTSEL.prompt=true;renderAlts('');
+ inkAltsOpen(sel,'');ACST.mode='prompt';ALTSEL.prompt=true;renderAlts('');
  setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
 function inkPromptPanel(){
  const mine=inkPromptsMine();
@@ -11716,7 +13824,7 @@ async function inkPromptRun(instr){
  const plan=inkPromptPlan(instr);
  inkOfflineVersions(plan,ALTSEL.t).forEach(a=>ALTS.push(a));
  (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
- const toResults=()=>setTimeout(()=>{const f=document.querySelector('#cards .altOpt');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}},60);
+ const toResults=()=>setTimeout(()=>{const f=document.querySelector('#altCard .altOpt');if(f)try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}},60);
  if(!S.connected&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
  const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
  try{const r=await inkWrite(instr,ALTSEL.t);
@@ -11728,7 +13836,7 @@ async function inkPromptRun(instr){
 function inkWhyList(a){
  const cs=(a.changes||[]).filter(c=>c&&c.from!==c.to);if(!cs.length)return '';
  const groups=[],at={};
- cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||'A change the rules make.';if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
+ cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||(c.why&&/\s/.test(c.why)?c.why:'A change the rules make.');if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
  const item=c=>{const f=String(c.from).trim(),t=String(c.to).trim();
   if(f.length>44||t.length>44)return '<span class="wq">“'+esc(f.split(/\s+/).slice(0,5).join(' '))+'…”</span>';
   return t?'<del>'+esc(f)+'</del> → <ins>'+esc(t)+'</ins>':'<del>'+esc(f)+'</del> taken out';};
@@ -11791,20 +13899,48 @@ function inkFactCheck(src,out){
  for(const k in nb)if(!na[k])added.push(k);
  b.caps.forEach(w=>{if(low.indexOf(w.toLowerCase())<0&&added.indexOf(w)<0)added.push(w);});
  return {ok:!lost.length&&!added.length,lost:lost,added:added};}
+/* the style tabs of the Rewrite card */
+const AC_TABS=[['scholarly','Scholarly'],['professional','Professional'],['casual','Casual'],['plain','Plainer'],['concise','Concise'],['confident','Confident'],['shorten','Shorter'],['paraphrase','Other words']];
 function renderAlts(status){
  if(!ALTMODE)return;
- const c=document.getElementById('cards');
- let html='<div class="altHead">'+(ALTSEL&&ALTSEL.prompt?'✍ Rewrite with a prompt':'✨ Alternatives')+'<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
- if(ALTSEL&&ALTSEL.prompt)html+=inkPromptPanel();
- const cards=ALTS.length+COACH.length;
- if(!cards)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
- else{html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
-  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
+ const c=document.getElementById('altCard');if(!c)return;
+ const prompt=ALTSEL&&ALTSEL.prompt,mode=prompt?'prompt':ACST.mode;
+ const title=mode==='prompt'?'✍ Rewrite with a prompt':mode==='rewrite'?'↻ Rewrite':'✨ Alternatives';
+ let html='<div class="acGrab" aria-hidden="true"></div><div class="altHead">'+title+'<button class="lkbtn" onclick="closeAlts()" title="Close (Esc)" aria-label="Close">✕</button></div>';
+ if(ALTSEL&&ALTSEL.t)html+='<div class="acSel">'+esc(ALTSEL.t.trim().length>160?ALTSEL.t.trim().slice(0,157)+'…':ALTSEL.t.trim())+'</div>';
+ if(mode==='rewrite'||mode==='prompt')html+='<div class="acTabs" role="tablist">'+AC_TABS.map(x=>'<button role="tab" aria-selected="'+(mode==='rewrite'&&ACST.style===x[0])+'" class="'+(mode==='rewrite'&&ACST.style===x[0]?'on':'')+'" onclick="inkRewriteTab(\''+x[0]+'\')">'+x[1]+'</button>').join('')
+  +'<button class="'+(mode==='prompt'?'on':'')+'" onclick="inkPromptTab()" title="Say in your own words how it should sound">✍ Prompt</button></div>';
+ if(mode==='prompt')html+=inkPromptPanel();
+ /* a word: its alternatives, a meaning at a time */
+ if(ACST.words&&ACST.words.length){
+  const common=ACST.words.filter(g=>g.source==='common'),wn=ACST.words.filter(g=>g.source!=='common');
+  const grp=(g,gi)=>'<div class="wg"><div class="wgl">'+(g.other?'<b>'+esc(g.other)+'</b>'+(g.gloss?': ':''):'')+(g.gloss?esc(g.gloss):(g.other?'':'<b>Common alternatives</b>'))+(g.broader?' <i>(more general words)</i>':'')+'</div>'
+   +g.words.map((w,i)=>'<button onclick="inkUseWord('+gi+','+i+')" title="Use this word">'+esc(w)+'</button>').join('')+'</div>';
+  if(common.length)html+='<div class="acLab">Words to use instead</div>'+common.map(g=>grp(g,ACST.words.indexOf(g))).join('');
+  if(wn.length)html+='<div class="acLab">'+(common.length?'Other meanings':'By meaning')+' (WordNet): choose the one you mean</div>'+wn.slice(0,5).map(g=>grp(g,ACST.words.indexOf(g))).join('');}
+ const cards=ALTS.filter(a=>a.kind!=='Word').length+COACH.length;
+ if(cards){
+  if(ACST.words&&ACST.words.length)html+='<div class="acLab">The whole selection</div>';
+  html+=ALTS.map((a,i)=>a.kind==='Word'?'':'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
+  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div>'+(a.why?'<div class="awhy">'+esc(a.why)+'</div>':'')+
   inkWhyList(a)+inkFactNote(a)+
   '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('')
-  +COACH.map(inkCoachCard).join('');
-  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+esc(status||((ALTS.length?(ALTS.length===1?'One version':ALTS.length+' versions'):'')+(ALTS.length&&COACH.length?', and notes':'')+(COACH.length&&!ALTS.length?'Notes':'')+(COACH.length?' from the coach':'')+'. Your suggestions wait under ‹ Back.'))+'</div>';}
- c.innerHTML=html;}
+  +COACH.map(inkCoachCard).join('');}
+ /* a passage: a word in it changed alone */
+ if(ACST.chips&&ACST.chips.length)html+='<div class="acLab">Or change one word</div>'+ACST.chips.map((k,ci)=>'<div class="wg"><div class="wgl"><b>'+esc(k.text)+'</b></div>'+k.words.map((w,i)=>'<button onclick="inkUseChip('+ci+','+i+')" title="Use this word in the passage">'+esc(w)+'</button>').join('')+'</div>').join('');
+ const any=cards||(ACST.words&&ACST.words.length)||(ACST.chips&&ACST.chips.length);
+ if(ACST.busy)html+='<div class="acNote"><span class="acBusy" aria-hidden="true"></span>'+esc(ACST.busy)+'</div>';
+ if(!any&&!ACST.busy&&!(mode==='prompt'&&!status))html+='<div class="aempty">'+esc(status||inkCardEmpty(mode))+'</div>';
+ else if(status)html+='<div class="acNote">'+esc(status)+'</div>';
+ if(any)html+='<div class="acNote">'+(cards?'Nothing changes until you choose “Use this”. ':'')+'Offline versions come from Inkwell’s own rules and word lists; '+(inkSrv()||PRO?'the writing model adds its own.':'a writing model (⚙ Engine) would add more.')+'</div>';
+ const keep=c.scrollTop;c.innerHTML=html;c.style.display='block';c.scrollTop=keep;
+ inkCardPlace();}
+/* why there is nothing to show, said plainly */
+function inkCardEmpty(mode){
+ if(mode==='rewrite'){const st=ACST.style;
+  if(/^(summarize|expand|humanize)$/.test(st))return (RW_LABEL[st]||st)+' needs a writing model (⚙ Engine): it writes new sentences, which rules cannot do. The other styles work offline.';
+  return 'No change found that keeps the meaning in this style: the passage may already read this way. Try another style above, or ✍ Prompt.';}
+ return 'No alternative found that keeps the meaning. Select a single word to see words to use instead, or a sentence to see it said another way.';}
 function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
 function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
  return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '
@@ -11825,14 +13961,14 @@ function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  const r=inkSafeReplace(ALTSEL.s,ALTSEL.e2,ALTSEL.t,text,ALTSEL.before);
  if(!r)return;
  ed.setSelectionRange(r.s,r.e);afterChange();
- closeAlts();toast('Applied ✔');}
+ closeAlts();try{showUndoChip();}catch(e){toast('Applied ✔');}}
 /* ===== 7.30: Rewrite ▾ and ✨ Draft =====
    Both menus called rewrite() and compose(), which no longer existed, so every
    Rewrite item and the Draft button stopped with an error. Restored here on
    the same pattern as Alternatives: the offline rules engine answers at once
    where it can, the local server or the Pro model adds its version, and the
    writer chooses in the side panel. Nothing changes the page until "Use this". */
-const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',concise:'Concise',confident:'Confident',
+const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',plain:'Plainer',concise:'Concise',confident:'Confident',
  shorten:'Shorter',summarize:'Summary',expand:'Expanded',paraphrase:'Paraphrase',humanize:'Natural'};
 function inkTargetText(){
  /* the selection, or the whole page when nothing is selected; the range is
@@ -11887,37 +14023,48 @@ function inkSafeReplace(s,e,orig,repl,before){
  return {s:s,e:s+repl.length};}
 function inkAltsOpen(sel,status){
  ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];COACH=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts(status);
 }
+/* 7.39: Rewrite opens the card on a style, with tabs for the others. The
+   offline versions come at once (INKPARA: idioms, register pairs, openers,
+   one change of order, and the style's rules), up to three of them, from the
+   lightest touch to a reordered sentence; a writing model adds its own. */
+const AC_OFFLINE={scholarly:1,professional:1,casual:1,plain:1,concise:1,confident:1};
 function rewrite(mode){
- const label=RW_LABEL[mode]||mode;
  const sel=inkTargetText();
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!sel.t.trim()){toast('Type or select something to rewrite first.');return;}
- inkAltsOpen(sel,'Rewriting'+(sel.whole?' the whole page':' the selection')+': '+label+'…');
- let pending=0;
- function done(){if(--pending<=0&&!ALTS.length){
-  renderAlts(S.connected||PRO?'The engine returned no change for this text.'
-   :(DEMORW[mode]?'This text is already tight for that style.':label+' needs a writing model: start the server (⚙ Engine) or install the Pro model.'));}}
- try{const r=DEMORW.explain&&DEMORW[mode]?DEMORW.explain(mode,sel.t):null,out=r&&r.text;
-  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine',changes:r.changes,off:true});}catch(e){}
- renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
- const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
- if(inkSrv()){pending++;
-  api('rewrite',{text:sel.t,mode:mode,style:sysNote}).then(r=>{
-   if(r&&r.text&&r.text.trim()&&r.text.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')});
-    if(r.think)maybeShowThink(r.think);renderAlts('');}
-  }).catch(()=>{}).finally(done);
- }else if(PRO&&SYS_RW[mode]){pending++;
-  proChat(SYS_RW[mode]+sysNote,sel.t,Math.min(1200,wordCt(sel.t)*(mode==='expand'?4:2)+150)).then(r=>{
-   if(r&&r.trim()&&r.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.trim(),why:'Written by '+inkProLabel()});renderAlts('');}
-  }).catch(()=>{}).finally(done);
- }
- if(!pending){pending=1;done();}
-}
+ inkAltsOpen(sel,'');ACST.mode='rewrite';
+ inkRewriteTab(mode);
+ if(typeof INKLEX!=='undefined'&&!INKLEX.ready)inkLexLoad();}
+function inkRewriteTab(mode){
+ if(!ALTSEL||!ALTSEL.t)return;
+ ALTSEL.prompt=false;ACST.mode='rewrite';ACST.style=mode;ACST.words=null;ACST.chips=null;
+ const t=ALTSEL.t,label=RW_LABEL[mode]||mode;
+ ALTS=ALTS.filter(a=>!a.off&&a.mode===mode);COACH=[];
+ const P=(typeof INKPARA!=='undefined')?INKPARA:null;
+ try{
+  if(P&&AC_OFFLINE[mode])P.restyle(t,mode).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
+  else if(P&&mode==='paraphrase')P.alternatives(t).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
+  if(DEMORW.explain&&DEMORW[mode]&&!ALTS.some(a=>a.off)){const r=DEMORW.explain(mode,t);
+   if(r.text&&r.text.trim()&&r.text.trim()!==t.trim())ALTS.push({kind:label+' · offline',text:r.text,why:'Instant, offline: the rules engine.',changes:r.changes,off:true,mode:mode});}}catch(e){}
+ ACST.busy='';renderAlts('');
+ inkRewriteAI(mode,t);}
+function inkRewriteAI(mode,t){
+ const label=RW_LABEL[mode]||mode,sysNote=' Register target: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes();
+ const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==t||ACST.style!==mode)return;ACST.busy='';
+  if(txt&&txt.trim()&&txt.trim()!==t.trim()&&!ALTS.some(a=>a.text===txt.trim()))ALTS.unshift({kind:label+' · '+by,text:txt.trim(),why:'Written by '+by+'.',mode:mode});
+  renderAlts('');};
+ const sysMode=mode==='plain'?'simplify':mode;
+ if(inkSrv()){ACST.busy='The writing model is writing its version…';renderAlts('');
+  api('rewrite',{text:t,mode:sysMode==='simplify'?'concise':sysMode,style:sysNote}).then(r=>{if(r&&r.think)maybeShowThink(r.think);done(r&&r.text,S.serverModel||'the local model');}).catch(()=>done('',''));}
+ else if(PRO&&(SYS_RW[mode]||mode==='plain')){ACST.busy='The writing model is writing its version…';renderAlts('');
+  proChat((SYS_RW[mode]||'Rewrite the passage in plainer words and shorter sentences for any reader; keep every fact, name, number and citation. Output only the rewritten text.')+sysNote,t,Math.min(1200,wordCt(t)*(mode==='expand'?4:2)+150)).then(r=>done(r,inkProLabel())).catch(()=>done('',''));}}
+function inkPromptTab(){if(!ALTSEL)return;ALTSEL.prompt=true;ACST.mode='prompt';ACST.style='';ACST.words=null;ACST.chips=null;renderAlts('');
+ setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
 function compose(){
  const mb=document.getElementById('modalBody');if(!mb)return;
  mb.innerHTML='<h3>✨ Draft</h3>'
@@ -11957,9 +14104,8 @@ function rewritePreset(preset){
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];COACH=[];ALTMODE=true;ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts('Rewriting with preset: '+preset+'…');
  if(inkSrv()){
   api('rewrite_preset',{text:t,preset:preset,context:ed.value.slice(Math.max(0,s-500),Math.min(ed.value.length,e+500))}).then(r=>{
@@ -12022,9 +14168,8 @@ function rewriteCustom(instruction){
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];COACH=[];ALTMODE=true;ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts('Rewriting with your instruction…');
  if(inkSrv()){
   api('rewrite_custom',{text:t,instruction:instruction}).then(r=>{
@@ -13410,7 +15555,7 @@ const TOUR=[
   t:'Your patterns',b:'Every fix you accept is counted. Your commonest slips become your syllabus, each with a short lesson. Mastery is the count going down to zero.'},
  {chap:'Rewriting and drafting',sub:'Rewrite',spot:'#menu',go:()=>{setRTab('sugg');tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');tourMenu('rewrite');},
   t:'↻ Rewrite',b:'Select a passage, then open Rewrite. We have selected a wordy sentence on the sample page. The first group rewrites the selection; the presets give paragraph styles; the last item rewrites it your way, from your own prompt.'},
- {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#right',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
+ {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#altCard',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
   t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device. A rewrite never touches the page until you press Use this. With a writing model, more versions appear beside it.',
   tip:'Read both versions aloud. The one you can say in a breath usually wins.'},
  {chap:'Rewriting and drafting',sub:'Draft',spot:'.hdr .draftBtn',go:()=>{try{closeAlts();}catch(e){}},

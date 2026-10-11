@@ -1,5 +1,24 @@
-INKWELL 7.38 FOR IPHONE AND IPAD
+INKWELL 7.39 FOR IPHONE AND IPAD
 ================================
+
+NEW IN 7.39
+-----------
+- Before you install: in the old Inkwell, File, Export library. Keep the file.
+- Alternatives and Rewrite open a card right beside the words you selected
+  (on a phone, at the foot of the screen), so you see at once what is
+  offered. Nothing changes until you press "Use this"; then Undo shows.
+- Alternatives for a word: words to use instead, by meaning, in the word's
+  own form ("bigger" gives "larger"). For a sentence: the sentence said
+  plainer, more formally and casually, and idioms said three ways ("He lost
+  his train of thought": "He lost track of what he was saying", "He lost the
+  thread of his argument", "He forgot what he was going to say").
+- Rewrite (the new ↻ button, or Rewrite ▾): Scholarly, Professional, Casual,
+  Plainer, Concise, Confident, Shorter and Other words, as tabs, each with up
+  to three versions and every change with its reason. All of it works with
+  no writing model; a model adds its own version.
+- The words come from WordNet 3.0 (Princeton University; licence in
+  vendor/WORDNET-LICENCE.txt) and a list of common alternatives written for
+  Inkwell.
 
 NEW IN 7.38
 -----------
@@ -19,7 +38,7 @@ NEW IN 7.38
 - "Your computer's model" connects to the Mac mini as well as a laptop.
 
 THIS PACKAGE IS FOR: iPhone and iPad (one app for both).
-THE FILE IT MAKES:   Inkwell-7.38-ios-buildN.ipa
+THE FILE IT MAKES:   Inkwell-7.39-ios-buildN.ipa
 NOT FOR: the Fire tablet (use the Fire tablet package and its .apk).
 
 IMPORTANT, PLEASE READ FIRST
@@ -80,7 +99,7 @@ PART B. BUILD THE .IPA
 7. Wait for the green tick.
 
 8. On the main page, open "Releases" (right-hand side). The newest release,
-   "Inkwell 7.38 for iPhone and iPad (build N)", has the .ipa under "Assets".
+   "Inkwell 7.39 for iPhone and iPad (build N)", has the .ipa under "Assets".
 
 
 PART C. INSTALL BY USB (FROM A WINDOWS COMPUTER)
@@ -209,7 +228,7 @@ PART F. UPDATING INKWELL LATER
 ------------------------------
 - New Inkwell page: upload the new Inkwell.html into web/ (replace the old
   one); new vendor files go into web/vendor/.
-- New version number: in project.yml, change MARKETING_VERSION: "7.38".
+- New version number: in project.yml, change MARKETING_VERSION: "7.39".
 - New icon: replace Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png
   with a 1024 x 1024 PNG with NO transparency (iOS fills transparent parts
   with black). "artwork/inkwell-seal-1024.png" is the seal to make it from.

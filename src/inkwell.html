@@ -716,6 +716,24 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 #bubble .btones button{font-size:11.5px;padding:5px 10px}
 /* hover-to-see-it chip: the fix shows on the mark before any click */
 #hovFix{position:fixed;z-index:72;display:none;width:min(320px,88vw);background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:13px;padding:10px 13px;box-shadow:var(--sh-lg);animation:pup .18s var(--pop)}
+/* 7.39: the results card, beside the selection; a sheet on a phone */
+#altCard{position:fixed;z-index:72;display:none;width:min(480px,calc(100vw - 24px));max-height:min(72vh,640px);overflow:auto;overscroll-behavior:contain;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:16px;padding:8px 12px 12px;box-shadow:var(--sh-lg);animation:pup .18s var(--pop);color:var(--ink)}
+#altCard.sheet{left:0 !important;right:0;bottom:0;top:auto !important;width:auto;max-height:66vh !important;border-radius:18px 18px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+#altCard .acGrab{display:none;width:44px;height:5px;border-radius:3px;background:var(--line);margin:2px auto 8px}
+#altCard.sheet .acGrab{display:block}
+#altCard .altHead{position:sticky;top:-8px;z-index:2;background:var(--glass);margin:-8px -12px 8px;padding:10px 12px 8px;border-bottom:1px solid var(--line);border-radius:16px 16px 0 0}
+#altCard .acSel{font:12.5px/1.5 Georgia,serif;color:var(--mut);margin:0 0 8px;padding-left:9px;border-left:3px solid var(--line);max-height:3.2em;overflow:hidden}
+#altCard .acTabs{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px}
+#altCard .acTabs button{padding:5px 11px;font-size:12px;border-radius:999px}
+#altCard .acTabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+#altCard .acLab{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:10px 0 4px}
+#altCard .wg{background:var(--face);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:7px}
+#altCard .wg .wgl{font-size:11.5px;color:var(--mut);margin-bottom:5px;line-height:1.45}
+#altCard .wg .wgl b{color:var(--ink);font-weight:600}
+#altCard .wg button{padding:5px 11px;margin:0 5px 5px 0;font:13px Georgia,serif;border-radius:999px}
+#altCard .acNote{font-size:10.5px;color:var(--mut);margin:6px 0 2px;line-height:1.55}
+#altCard .acBusy{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:acspin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes acspin{to{transform:rotate(360deg)}}
 #undoChip{position:fixed;left:18px;bottom:64px;z-index:67;display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:11.5px;box-shadow:var(--sh-md);cursor:pointer;animation:rise .25s var(--pop)}
 #undoChip b{color:var(--acc)}
 #undoChip:hover{transform:translateY(-2px)}
@@ -1401,6 +1419,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
  <div class="brow">
   <button class="primary bdot" data-tip="Fix this selection" onclick="fixSelection()">✔</button>
   <button id="bubImp" class="bdot" data-tip="Alternatives: see them and choose" onclick="improveAlternatives()">✨</button>
+  <button class="bdot" data-tip="Rewrite in a style: scholarly, casual and more" onclick="rewrite(S.reg==='casual'?'casual':'scholarly')">↻</button>
   <button class="bdot" data-tip="Rewrite with a prompt: say how it should sound" onclick="openPromptRewrite()">✍</button>
   <button class="bdot" data-tip="Close" onclick="hideBubble()">✕</button>
  </div>
@@ -1418,6 +1437,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   <button onclick="rewrite('humanize')" title="Writes it as a person would: the same facts in a natural rhythm">Naturalise</button>
  </div>
 </div>
+<div id="altCard" role="dialog" aria-label="Alternatives and rewrites" aria-live="polite"></div>
 <button id="scheFab" class="b3seal" onclick="openStickyToggle()" title="Schedae: pin a thought to the desk" aria-label="Schedae"><span class="b3-cast" aria-hidden="true"></span><span class="b3-side" aria-hidden="true"></span><span class="b3-face" id="scheFace"></span><span class="fbadge" id="fbadge" style="display:none"></span></button>
 </div>
 <div id="sticky-pins"></div>
@@ -1573,6 +1593,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_SPELL_CORE@@
 @@LIB_REWRITE_CORE@@
 @@LIB_COACH_CORE@@
+@@LIB_LEXICON_CORE@@
+@@LIB_SYNONYMS_CORE@@
+@@LIB_PARAPHRASE_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -1801,7 +1824,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.38 · X · OCTOBRIS · MMXXVI';
+const BUILD='7.39 · XI · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -4532,7 +4555,7 @@ const MENUS={
   ['🧭 Authenticity: machine-trace reading',()=>textureCheck()]],
  rewrite:[['✍ Rewrite with a prompt…',()=>openPromptRewrite()],['div'],['lbl','The selection'],
   ['Scholarly',()=>rewrite('scholarly')],['Professional',()=>rewrite('professional')],
-  ['Casual',()=>rewrite('casual')],['Concise',()=>rewrite('concise')],
+  ['Casual',()=>rewrite('casual')],['Plainer',()=>rewrite('plain')],['Concise',()=>rewrite('concise')],
   ['Confident',()=>rewrite('confident')],['Shorten',()=>rewrite('shorten')],
   ['Summarize',()=>rewrite('summarize')],['Expand',()=>rewrite('expand')],['Paraphrase',()=>rewrite('paraphrase')],['Naturalise',()=>rewrite('humanize')],
   ['div'],
@@ -7499,7 +7522,6 @@ function expandRow(i){EXPID=(EXPID===i?-1:i);renderCards();}
 function inkStyleSwitch(){
  return '<div style="margin:0 2px 10px"><button class="lkbtn" onclick="inkToggleStyle()">'+(S.showStyle?'Hide clarity and style notes':'Show clarity and style notes'+(INK_STYLE_HIDDEN?' ('+INK_STYLE_HIDDEN+')':''))+'</button></div>';}
 function renderCards(){
- if(ALTMODE){renderAlts('');return;}
  const c=document.getElementById('cards');
  document.getElementById('stCerr').textContent=EDITS.length+' issue'+(EDITS.length===1?'':'s');
  document.getElementById('rhCount').textContent=EDITS.length;
@@ -9704,7 +9726,7 @@ document.addEventListener('selectionchange',()=>{
  clearTimeout(selTimer);
  selTimer=setTimeout(()=>{
   if(document.activeElement!==ed)return;
-  if(bub.style.display!=='none')return;
+  if(bub.style.display!=='none'||ALTMODE)return;
   const s=ed.selectionStart,e2=ed.selectionEnd;if(e2-s<2)return;
   if(bub._viaMouse){bub._viaMouse=false;return;}
   bubbleAtCaret(e2);},320);});
@@ -9806,32 +9828,116 @@ document.addEventListener('keydown',e=>{
 /* 7.37: the offline rewrites live in src/lib/rewrite_core.js (INKRW), with tests */
 const DEMORW=(typeof INKRW!=='undefined')?INKRW:{};
 let ALTSEL=null,ALTS=[],ALTMODE=false;
-function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];renderCards();}
+/* 7.39: results show in a card beside the selection (a sheet at the foot of
+   a phone's screen), so nothing appears out of sight. Before, they were
+   added to the side panel under the suggestions, where a writer could miss
+   that anything had been offered. ACST holds what the card shows: mode
+   "alts" (Alternatives), "rewrite" (a style, with tabs) or "prompt"; the
+   word groups for a single word; the "change a word" chips for a passage. */
+let ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ const c=document.getElementById('altCard');if(c){c.style.display='none';c.innerHTML='';}}
+/* the offline lexicon (WordNet, about 5 MB, 35 MB in memory once read): read
+   the first time Alternatives or Rewrite is used, never before */
+let LEXLOAD=null;
+function inkLexLoad(){
+ if(typeof INKLEX==='undefined')return Promise.resolve(false);
+ if(INKLEX.ready)return Promise.resolve(true);
+ if(LEXLOAD)return LEXLOAD;
+ LEXLOAD=inkVendorBytes(new URL('vendor/wordnet-lex.txt',document.baseURI||location.href).href)
+  .then(b=>{const t=new TextDecoder('utf-8').decode(b);
+   /* a server that answers a missing file with a web page is not a lexicon */
+   if(!/^# Inkwell lexicon/.test(t))return false;
+   return INKLEX.load(t);})
+  .catch(()=>false);
+ return LEXLOAD;}
+/* the sentence around the selection, and where the selection starts in it */
+function inkSentenceAround(s,e){
+ const t=ed.value;let a=s,b=e;
+ while(a>0&&!/[.!?\n]/.test(t[a-1]))a--;
+ while(a<s&&/\s/.test(t[a]))a++;
+ while(b<t.length&&!/[.!?\n]/.test(t[b]))b++;
+ if(b<t.length&&t[b]!=='\n')b++;
+ return {text:t.slice(a,b),at:s-a};}
+/* where the selection is on screen */
+function inkCardAnchor(){
+ if(!ALTSEL)return null;
+ try{const pa=_fPointFromGlobal(ALTSEL.s),pb=_fPointFromGlobal(Math.max(ALTSEL.s,ALTSEL.e2));
+  if(pa&&pb){const r=document.createRange();r.setStart(pa.node,pa.off);r.setEnd(pb.node,pb.off);
+   const rs=[...r.getClientRects()].filter(x=>x.width>0||x.height>0);
+   if(rs.length)return {top:Math.min(...rs.map(x=>x.top)),bottom:Math.max(...rs.map(x=>x.bottom)),left:rs[0].left};
+   const q=r.getBoundingClientRect();if(q&&(q.top||q.left))return {top:q.top,bottom:q.bottom||q.top+18,left:q.left};}}catch(e){}
+ return null;}
+function inkCardPlace(){
+ const c=document.getElementById('altCard');if(!c||c.style.display==='none')return;
+ const narrow=innerWidth<700;c.classList.toggle('sheet',narrow);
+ if(narrow){c.style.left='';c.style.top='';c.style.maxHeight='';return;}
+ const w=Math.min(480,innerWidth-24),hd=document.querySelector('header');
+ const floor=hd?Math.max(0,hd.getBoundingClientRect().bottom)+8:8,a=inkCardAnchor();
+ const want=Math.min(c.scrollHeight+2,Math.min(innerHeight*0.72,640));
+ let left=(innerWidth-w)/2,top=Math.max(floor,innerHeight*0.16),maxH=Math.min(innerHeight*0.72,640);
+ if(a&&a.bottom>floor&&a.top<innerHeight){
+  left=Math.min(innerWidth-w-12,Math.max(12,a.left-12));
+  const below=innerHeight-a.bottom-16,above=a.top-floor-12;
+  if(below>=Math.min(want,300)||below>=above){top=a.bottom+10;maxH=Math.max(200,below);}
+  else{maxH=Math.max(200,above);top=Math.max(floor,a.top-10-Math.min(want,maxH));}}
+ c.style.left=left+'px';c.style.top=top+'px';c.style.maxHeight=maxH+'px';}
+window.addEventListener('resize',()=>{try{inkCardPlace();}catch(e){}});
+/* a click outside the card, on the page or the panels, puts it away; the
+   bubble and the card itself keep it */
+document.addEventListener('mousedown',e=>{if(!ALTMODE)return;const c=document.getElementById('altCard');
+ if(c&&!c.contains(e.target)&&!e.target.closest('#bubble')&&!e.target.closest('#menu')&&!e.target.closest('#modal')&&!e.target.closest('#cd-em-menu')&&!e.target.closest('#undoChip'))closeAlts();},true);
 async function improveAlternatives(){
  const sel=inkTargetText();
  if(sel.whole){toast('Select some words first; ✨ then offers alternatives');return hideBubble();}
  if(sel.lost||!sel.t){toast('Select the text again, please: the selection was lost.');return hideBubble();}
- const s=sel.s,e2=sel.e2,t=sel.t;ALTSEL={s,e2,t,before:ed.value.slice(Math.max(0,s-60),s)};
- ALTS=[];COACH=[];ALTMODE=true;
- hideBubble();
- if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');
- setRTab('sugg');
- renderAlts('Thinking through stronger versions beside your selection…');
- const OFFWHY={concise:'Tighter without losing meaning',professional:'Polished for the workplace',scholarly:'Formal doctoral register',casual:'Relaxed and warm',confident:'Decisive: hedged words removed',shorten:'Keeps the strongest sentences'};
- for(const m of Object.keys(OFFWHY)){
-  try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
-   if(out&&out.trim()&&out.trim()!==t.trim())ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m]+'.',changes:r.changes,off:true});}catch(e){}}
- renderAlts('');
- if(inkSrv()){const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
-  [['concise','Local model · concise'],['scholarly','Local model · '+S.reg]].forEach(async mv=>{try{
-   const r=await api('rewrite',{text:t,mode:mv[0],style:sysNote});
-   if(r&&r.text&&r.text.trim()&&r.text.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r.text,why:'Written by '+((S.serverModel||'the local model'))+'. '+OFFWHY[mv[0]]+'.'});
-    if(r.think)maybeShowThink(r.think);renderAlts('');}}catch(e){}});
- }else if(PRO){[['concise','On-device model · concise'],[S.reg==='casual'?'casual':'scholarly','On-device model · '+S.reg]].forEach(mv=>{
-   proChat(SYS_RW[mv[0]]||SYS_RW.concise,t,Math.min(900,wordCt(t)*2+120)).then(r=>{
-    if(r&&r.trim()&&r.trim()!==t.trim()){ALTS.push({kind:mv[1],text:r,why:'Written by '+inkProLabel()+'.'});renderAlts('');}});});}
- if(!S.connected&&!PRO)setTimeout(()=>{if(ALTMODE&&!S.connected&&!PRO)renderAlts(ALTS.length?((ALTS.length===1?'One offline alternative':ALTS.length+' offline alternatives')+'. A writing model (⚙ Engine) would add more.'):'This selection is already tight. The offline rules found nothing to change.');},300);}
+ inkAltsOpen(sel,'');ACST.mode='alts';
+ const t=sel.t,core=t.trim(),one=/^[A-Za-z][A-Za-z'’-]*$/.test(core);
+ const around=inkSentenceAround(sel.s,sel.e2),lead=t.match(/^\s*/)[0].length;
+ const fill=()=>{if(!ALTMODE||ALTSEL.t!==t)return;
+  const P=(typeof INKPARA!=='undefined')?INKPARA:null;
+  ALTS=ALTS.filter(a=>!a.off);ACST.words=null;ACST.chips=null;
+  if(P){
+   /* a word, or a short fixed phrase: its alternatives by meaning */
+   const groups=(one||core.split(/\s+/).length<=4)?P.wordAlternatives(core,around.text,around.at+lead):[];
+   if(groups.length)ACST.words=groups;
+   /* an idiom, or a passage: the whole selection said again */
+   const idv=P.idiomVersions(t);
+   idv.forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:'The idiom said '+o.label.toLowerCase()+'.',changes:o.changes,off:true}));
+   if(!one){
+    P.alternatives(t).forEach(o=>{if(!ALTS.some(a=>a.text===o.text))ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true});});
+    const OFFWHY={concise:'Tighter, the same meaning.',confident:'Decisive: softening words taken out.',shorten:'Keeps the strongest sentences.'};
+    for(const m of Object.keys(OFFWHY)){try{const r=DEMORW.explain&&DEMORW[m]?DEMORW.explain(m,t):null,out=r&&r.text;
+     if(out&&out.trim()&&out.trim()!==t.trim()&&!ALTS.some(a=>a.text===out))ALTS.push({kind:(RW_LABEL[m]||m)+' · offline',text:out,why:OFFWHY[m],changes:r.changes,off:true});}catch(e){}}
+    ACST.chips=P.wordChoices(t,6);}
+  }
+  renderAlts('');};
+ fill();
+ /* the lexicon adds WordNet's meanings when it is read (once) */
+ if(typeof INKLEX!=='undefined'&&!INKLEX.ready){ACST.busy='Reading the word list (once)…';renderAlts('');
+  inkLexLoad().then(()=>{ACST.busy='';fill();});}
+ /* a writing model, where there is one, adds its own versions of a passage */
+ if(!one&&(inkSrv()||PRO))inkAiAlternatives(t);}
+/* three versions from the writing model: plainer, more formal, in other
+   words; each goes through the fact guard like every other version */
+async function inkAiAlternatives(t){
+ const instr='Give three different rewordings of the passage, each on its own line, numbered 1 to 3: 1. plainer, 2. more formal, 3. in other words. Keep the meaning and every fact, name, number and citation; add nothing new. Output only the three numbered lines.';
+ ACST.busy='The writing model is writing its versions…';renderAlts('');
+ try{const r=await inkWrite(instr,t);if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;
+  const lines=[],re=/^\s*([123])[.)]\s*(.+)$/gm;let m;
+  while((m=re.exec(r.text)))lines.push(m[2].trim().replace(/^(?:plainer|more formal|in other words)\s*[:\-–]\s*/i,''));
+  const labels=['Plainer','More formal','In other words'];
+  (lines.length?lines:[r.text.trim()]).slice(0,3).forEach((x,i)=>{if(x&&x!==t.trim()&&!ALTS.some(a=>a.text===x))ALTS.push({kind:(lines.length?labels[i]:'Reworded')+' · '+r.by,text:x,why:'Written by '+r.by+'.',diff:true});});
+  ACST.busy='';renderAlts('');}
+ catch(e){ACST.busy='';renderAlts(e&&e.message==='none'?'':'The writing model did not answer. The offline versions still work.');}}
+/* a word from the card: it takes the selection's place */
+function inkUseWord(g,i){const G=ACST.words&&ACST.words[g],w=G&&G.words[i];if(!w||!ALTSEL)return;
+ const t=ALTSEL.t,lead=t.match(/^\s*/)[0],tail=t.match(/\s*$/)[0];
+ ALTS.push({kind:'Word',text:lead+w+tail,why:'',off:true});useAlt(ALTS.length-1);}
+/* a word inside the passage, changed alone */
+function inkUseChip(c,i){const C=ACST.chips&&ACST.chips[c],w=C&&C.words[i];if(!w||!ALTSEL)return;
+ const t=ALTSEL.t;if(t.slice(C.at,C.at+C.text.length)!==C.text)return toast('Select the passage again, please');
+ ALTS.push({kind:'Word',text:t.slice(0,C.at)+w+t.slice(C.at+C.text.length),why:'',off:true});useAlt(ALTS.length-1);}
 /* ===== 7.34: rewrite with your own prompt, and a library of prompts =====
    As in Grammarly: say how the passage should sound, or pick a prepared
    prompt; each version comes back with its changes marked, and nothing
@@ -9873,7 +9979,7 @@ function openPromptRewrite(){
  const sel=inkTargetText();
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences or paragraph to rewrite first.');return;}
- inkAltsOpen(sel,'');ALTSEL.prompt=true;renderAlts('');
+ inkAltsOpen(sel,'');ACST.mode='prompt';ALTSEL.prompt=true;renderAlts('');
  setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
 function inkPromptPanel(){
  const mine=inkPromptsMine();
@@ -9982,7 +10088,7 @@ async function inkPromptRun(instr){
  const plan=inkPromptPlan(instr);
  inkOfflineVersions(plan,ALTSEL.t).forEach(a=>ALTS.push(a));
  (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
- const toResults=()=>setTimeout(()=>{const f=document.querySelector('#cards .altOpt');if(f)try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}},60);
+ const toResults=()=>setTimeout(()=>{const f=document.querySelector('#altCard .altOpt');if(f)try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}},60);
  if(!S.connected&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
  const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
  try{const r=await inkWrite(instr,ALTSEL.t);
@@ -9994,7 +10100,7 @@ async function inkPromptRun(instr){
 function inkWhyList(a){
  const cs=(a.changes||[]).filter(c=>c&&c.from!==c.to);if(!cs.length)return '';
  const groups=[],at={};
- cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||'A change the rules make.';if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
+ cs.forEach(c=>{const why=c.whyText||(DEMORW.WHYS&&DEMORW.WHYS[c.why])||(c.why&&/\s/.test(c.why)?c.why:'A change the rules make.');if(!(why in at)){at[why]=groups.length;groups.push({why:why,items:[]});}groups[at[why]].items.push(c);});
  const item=c=>{const f=String(c.from).trim(),t=String(c.to).trim();
   if(f.length>44||t.length>44)return '<span class="wq">“'+esc(f.split(/\s+/).slice(0,5).join(' '))+'…”</span>';
   return t?'<del>'+esc(f)+'</del> → <ins>'+esc(t)+'</ins>':'<del>'+esc(f)+'</del> taken out';};
@@ -10057,20 +10163,48 @@ function inkFactCheck(src,out){
  for(const k in nb)if(!na[k])added.push(k);
  b.caps.forEach(w=>{if(low.indexOf(w.toLowerCase())<0&&added.indexOf(w)<0)added.push(w);});
  return {ok:!lost.length&&!added.length,lost:lost,added:added};}
+/* the style tabs of the Rewrite card */
+const AC_TABS=[['scholarly','Scholarly'],['professional','Professional'],['casual','Casual'],['plain','Plainer'],['concise','Concise'],['confident','Confident'],['shorten','Shorter'],['paraphrase','Other words']];
 function renderAlts(status){
  if(!ALTMODE)return;
- const c=document.getElementById('cards');
- let html='<div class="altHead">'+(ALTSEL&&ALTSEL.prompt?'✍ Rewrite with a prompt':'✨ Alternatives')+'<button class="lkbtn" onclick="closeAlts()" title="Back to the suggestion list">‹ Back</button></div>';
- if(ALTSEL&&ALTSEL.prompt)html+=inkPromptPanel();
- const cards=ALTS.length+COACH.length;
- if(!cards)html+=(ALTSEL&&ALTSEL.prompt&&!status)?'':'<div class="aempty">'+(status?esc(status):'Finding alternatives…')+'</div>';
- else{html+=ALTS.map((a,i)=>'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
-  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div><div class="awhy">'+esc(a.why||'')+'</div>'+
+ const c=document.getElementById('altCard');if(!c)return;
+ const prompt=ALTSEL&&ALTSEL.prompt,mode=prompt?'prompt':ACST.mode;
+ const title=mode==='prompt'?'✍ Rewrite with a prompt':mode==='rewrite'?'↻ Rewrite':'✨ Alternatives';
+ let html='<div class="acGrab" aria-hidden="true"></div><div class="altHead">'+title+'<button class="lkbtn" onclick="closeAlts()" title="Close (Esc)" aria-label="Close">✕</button></div>';
+ if(ALTSEL&&ALTSEL.t)html+='<div class="acSel">'+esc(ALTSEL.t.trim().length>160?ALTSEL.t.trim().slice(0,157)+'…':ALTSEL.t.trim())+'</div>';
+ if(mode==='rewrite'||mode==='prompt')html+='<div class="acTabs" role="tablist">'+AC_TABS.map(x=>'<button role="tab" aria-selected="'+(mode==='rewrite'&&ACST.style===x[0])+'" class="'+(mode==='rewrite'&&ACST.style===x[0]?'on':'')+'" onclick="inkRewriteTab(\''+x[0]+'\')">'+x[1]+'</button>').join('')
+  +'<button class="'+(mode==='prompt'?'on':'')+'" onclick="inkPromptTab()" title="Say in your own words how it should sound">✍ Prompt</button></div>';
+ if(mode==='prompt')html+=inkPromptPanel();
+ /* a word: its alternatives, a meaning at a time */
+ if(ACST.words&&ACST.words.length){
+  const common=ACST.words.filter(g=>g.source==='common'),wn=ACST.words.filter(g=>g.source!=='common');
+  const grp=(g,gi)=>'<div class="wg"><div class="wgl">'+(g.other?'<b>'+esc(g.other)+'</b>'+(g.gloss?': ':''):'')+(g.gloss?esc(g.gloss):(g.other?'':'<b>Common alternatives</b>'))+(g.broader?' <i>(more general words)</i>':'')+'</div>'
+   +g.words.map((w,i)=>'<button onclick="inkUseWord('+gi+','+i+')" title="Use this word">'+esc(w)+'</button>').join('')+'</div>';
+  if(common.length)html+='<div class="acLab">Words to use instead</div>'+common.map(g=>grp(g,ACST.words.indexOf(g))).join('');
+  if(wn.length)html+='<div class="acLab">'+(common.length?'Other meanings':'By meaning')+' (WordNet): choose the one you mean</div>'+wn.slice(0,5).map(g=>grp(g,ACST.words.indexOf(g))).join('');}
+ const cards=ALTS.filter(a=>a.kind!=='Word').length+COACH.length;
+ if(cards){
+  if(ACST.words&&ACST.words.length)html+='<div class="acLab">The whole selection</div>';
+  html+=ALTS.map((a,i)=>a.kind==='Word'?'':'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
+  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div>'+(a.why?'<div class="awhy">'+esc(a.why)+'</div>':'')+
   inkWhyList(a)+inkFactNote(a)+
   '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('')
-  +COACH.map(inkCoachCard).join('');
-  html+='<div style="font-size:10.5px;color:var(--mut);margin:4px 0 8px;line-height:1.5">'+esc(status||((ALTS.length?(ALTS.length===1?'One version':ALTS.length+' versions'):'')+(ALTS.length&&COACH.length?', and notes':'')+(COACH.length&&!ALTS.length?'Notes':'')+(COACH.length?' from the coach':'')+'. Your suggestions wait under ‹ Back.'))+'</div>';}
- c.innerHTML=html;}
+  +COACH.map(inkCoachCard).join('');}
+ /* a passage: a word in it changed alone */
+ if(ACST.chips&&ACST.chips.length)html+='<div class="acLab">Or change one word</div>'+ACST.chips.map((k,ci)=>'<div class="wg"><div class="wgl"><b>'+esc(k.text)+'</b></div>'+k.words.map((w,i)=>'<button onclick="inkUseChip('+ci+','+i+')" title="Use this word in the passage">'+esc(w)+'</button>').join('')+'</div>').join('');
+ const any=cards||(ACST.words&&ACST.words.length)||(ACST.chips&&ACST.chips.length);
+ if(ACST.busy)html+='<div class="acNote"><span class="acBusy" aria-hidden="true"></span>'+esc(ACST.busy)+'</div>';
+ if(!any&&!ACST.busy&&!(mode==='prompt'&&!status))html+='<div class="aempty">'+esc(status||inkCardEmpty(mode))+'</div>';
+ else if(status)html+='<div class="acNote">'+esc(status)+'</div>';
+ if(any)html+='<div class="acNote">'+(cards?'Nothing changes until you choose “Use this”. ':'')+'Offline versions come from Inkwell’s own rules and word lists; '+(inkSrv()||PRO?'the writing model adds its own.':'a writing model (⚙ Engine) would add more.')+'</div>';
+ const keep=c.scrollTop;c.innerHTML=html;c.style.display='block';c.scrollTop=keep;
+ inkCardPlace();}
+/* why there is nothing to show, said plainly */
+function inkCardEmpty(mode){
+ if(mode==='rewrite'){const st=ACST.style;
+  if(/^(summarize|expand|humanize)$/.test(st))return (RW_LABEL[st]||st)+' needs a writing model (⚙ Engine): it writes new sentences, which rules cannot do. The other styles work offline.';
+  return 'No change found that keeps the meaning in this style: the passage may already read this way. Try another style above, or ✍ Prompt.';}
+ return 'No alternative found that keeps the meaning. Select a single word to see words to use instead, or a sentence to see it said another way.';}
 function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
 function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
  return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '
@@ -10091,14 +10225,14 @@ function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  const r=inkSafeReplace(ALTSEL.s,ALTSEL.e2,ALTSEL.t,text,ALTSEL.before);
  if(!r)return;
  ed.setSelectionRange(r.s,r.e);afterChange();
- closeAlts();toast('Applied ✔');}
+ closeAlts();try{showUndoChip();}catch(e){toast('Applied ✔');}}
 /* ===== 7.30: Rewrite ▾ and ✨ Draft =====
    Both menus called rewrite() and compose(), which no longer existed, so every
    Rewrite item and the Draft button stopped with an error. Restored here on
    the same pattern as Alternatives: the offline rules engine answers at once
    where it can, the local server or the Pro model adds its version, and the
    writer chooses in the side panel. Nothing changes the page until "Use this". */
-const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',concise:'Concise',confident:'Confident',
+const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',plain:'Plainer',concise:'Concise',confident:'Confident',
  shorten:'Shorter',summarize:'Summary',expand:'Expanded',paraphrase:'Paraphrase',humanize:'Natural'};
 function inkTargetText(){
  /* the selection, or the whole page when nothing is selected; the range is
@@ -10153,37 +10287,48 @@ function inkSafeReplace(s,e,orig,repl,before){
  return {s:s,e:s+repl.length};}
 function inkAltsOpen(sel,status){
  ALTSEL={s:sel.s,e2:sel.e2,t:sel.t,before:ed.value.slice(Math.max(0,sel.s-60),sel.s)};ALTS=[];COACH=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts(status);
 }
+/* 7.39: Rewrite opens the card on a style, with tabs for the others. The
+   offline versions come at once (INKPARA: idioms, register pairs, openers,
+   one change of order, and the style's rules), up to three of them, from the
+   lightest touch to a reordered sentence; a writing model adds its own. */
+const AC_OFFLINE={scholarly:1,professional:1,casual:1,plain:1,concise:1,confident:1};
 function rewrite(mode){
- const label=RW_LABEL[mode]||mode;
  const sel=inkTargetText();
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!sel.t.trim()){toast('Type or select something to rewrite first.');return;}
- inkAltsOpen(sel,'Rewriting'+(sel.whole?' the whole page':' the selection')+': '+label+'…');
- let pending=0;
- function done(){if(--pending<=0&&!ALTS.length){
-  renderAlts(S.connected||PRO?'The engine returned no change for this text.'
-   :(DEMORW[mode]?'This text is already tight for that style.':label+' needs a writing model: start the server (⚙ Engine) or install the Pro model.'));}}
- try{const r=DEMORW.explain&&DEMORW[mode]?DEMORW.explain(mode,sel.t):null,out=r&&r.text;
-  if(out&&out.trim()&&out.trim()!==sel.t.trim())ALTS.push({kind:label+' · rules',text:out,why:'Instant, offline: the rules engine',changes:r.changes,off:true});}catch(e){}
- renderAlts(ALTS.length?'':'Rewriting: '+label+'…');
- const sysNote=' Register target: '+S.reg+'.'+voiceNotes();
- if(inkSrv()){pending++;
-  api('rewrite',{text:sel.t,mode:mode,style:sysNote}).then(r=>{
-   if(r&&r.text&&r.text.trim()&&r.text.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.text.trim(),why:'Written by '+(S.serverModel||'the local model')});
-    if(r.think)maybeShowThink(r.think);renderAlts('');}
-  }).catch(()=>{}).finally(done);
- }else if(PRO&&SYS_RW[mode]){pending++;
-  proChat(SYS_RW[mode]+sysNote,sel.t,Math.min(1200,wordCt(sel.t)*(mode==='expand'?4:2)+150)).then(r=>{
-   if(r&&r.trim()&&r.trim()!==sel.t.trim()){ALTS.push({kind:label,text:r.trim(),why:'Written by '+inkProLabel()});renderAlts('');}
-  }).catch(()=>{}).finally(done);
- }
- if(!pending){pending=1;done();}
-}
+ inkAltsOpen(sel,'');ACST.mode='rewrite';
+ inkRewriteTab(mode);
+ if(typeof INKLEX!=='undefined'&&!INKLEX.ready)inkLexLoad();}
+function inkRewriteTab(mode){
+ if(!ALTSEL||!ALTSEL.t)return;
+ ALTSEL.prompt=false;ACST.mode='rewrite';ACST.style=mode;ACST.words=null;ACST.chips=null;
+ const t=ALTSEL.t,label=RW_LABEL[mode]||mode;
+ ALTS=ALTS.filter(a=>!a.off&&a.mode===mode);COACH=[];
+ const P=(typeof INKPARA!=='undefined')?INKPARA:null;
+ try{
+  if(P&&AC_OFFLINE[mode])P.restyle(t,mode).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
+  else if(P&&mode==='paraphrase')P.alternatives(t).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
+  if(DEMORW.explain&&DEMORW[mode]&&!ALTS.some(a=>a.off)){const r=DEMORW.explain(mode,t);
+   if(r.text&&r.text.trim()&&r.text.trim()!==t.trim())ALTS.push({kind:label+' · offline',text:r.text,why:'Instant, offline: the rules engine.',changes:r.changes,off:true,mode:mode});}}catch(e){}
+ ACST.busy='';renderAlts('');
+ inkRewriteAI(mode,t);}
+function inkRewriteAI(mode,t){
+ const label=RW_LABEL[mode]||mode,sysNote=' Register target: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes();
+ const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==t||ACST.style!==mode)return;ACST.busy='';
+  if(txt&&txt.trim()&&txt.trim()!==t.trim()&&!ALTS.some(a=>a.text===txt.trim()))ALTS.unshift({kind:label+' · '+by,text:txt.trim(),why:'Written by '+by+'.',mode:mode});
+  renderAlts('');};
+ const sysMode=mode==='plain'?'simplify':mode;
+ if(inkSrv()){ACST.busy='The writing model is writing its version…';renderAlts('');
+  api('rewrite',{text:t,mode:sysMode==='simplify'?'concise':sysMode,style:sysNote}).then(r=>{if(r&&r.think)maybeShowThink(r.think);done(r&&r.text,S.serverModel||'the local model');}).catch(()=>done('',''));}
+ else if(PRO&&(SYS_RW[mode]||mode==='plain')){ACST.busy='The writing model is writing its version…';renderAlts('');
+  proChat((SYS_RW[mode]||'Rewrite the passage in plainer words and shorter sentences for any reader; keep every fact, name, number and citation. Output only the rewritten text.')+sysNote,t,Math.min(1200,wordCt(t)*(mode==='expand'?4:2)+150)).then(r=>done(r,inkProLabel())).catch(()=>done('',''));}}
+function inkPromptTab(){if(!ALTSEL)return;ALTSEL.prompt=true;ACST.mode='prompt';ACST.style='';ACST.words=null;ACST.chips=null;renderAlts('');
+ setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
 function compose(){
  const mb=document.getElementById('modalBody');if(!mb)return;
  mb.innerHTML='<h3>✨ Draft</h3>'
@@ -10223,9 +10368,8 @@ function rewritePreset(preset){
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];COACH=[];ALTMODE=true;ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts('Rewriting with preset: '+preset+'…');
  if(inkSrv()){
   api('rewrite_preset',{text:t,preset:preset,context:ed.value.slice(Math.max(0,s-500),Math.min(ed.value.length,e+500))}).then(r=>{
@@ -10288,9 +10432,8 @@ function rewriteCustom(instruction){
  if(sel.lost){toast('Select the text again, please: the selection was lost.');return;}
  if(sel.whole){toast('Select the sentences to rewrite first. (7.33: a rewrite never replaces the whole document.)');return;}
  if(!t.trim()){toast('Select a passage first, or type something to rewrite.');return;}
- ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];ALTMODE=true;
- hideBubble();if(S.panelFold)foldPanel();
- document.getElementById('right').classList.remove('hidden');setRTab('sugg');
+ ALTSEL={s,e2:e,t:t,text:t,before:ed.value.slice(Math.max(0,s-60),s)};ALTS=[];COACH=[];ALTMODE=true;ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
+ hideBubble();
  renderAlts('Rewriting with your instruction…');
  if(inkSrv()){
   api('rewrite_custom',{text:t,instruction:instruction}).then(r=>{
@@ -11676,7 +11819,7 @@ const TOUR=[
   t:'Your patterns',b:'Every fix you accept is counted. Your commonest slips become your syllabus, each with a short lesson. Mastery is the count going down to zero.'},
  {chap:'Rewriting and drafting',sub:'Rewrite',spot:'#menu',go:()=>{setRTab('sugg');tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');tourMenu('rewrite');},
   t:'↻ Rewrite',b:'Select a passage, then open Rewrite. We have selected a wordy sentence on the sample page. The first group rewrites the selection; the presets give paragraph styles; the last item rewrites it your way, from your own prompt.'},
- {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#right',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
+ {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#altCard',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
   t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device. A rewrite never touches the page until you press Use this. With a writing model, more versions appear beside it.',
   tip:'Read both versions aloud. The one you can say in a breath usually wins.'},
  {chap:'Rewriting and drafting',sub:'Draft',spot:'.hdr .draftBtn',go:()=>{try{closeAlts();}catch(e){}},

@@ -1,15 +1,15 @@
-INKWELL 7.38: THE WEB APP
+INKWELL 7.39: THE WEB APP
 =========================
 
 WHAT IS IN THIS PACKAGE
 -----------------------
-The folder "Inkwell-web-7.38" is the finished web app. There is nothing to
-build and no GitHub Actions is needed. No file in it is larger than 9 MB, so
-the whole folder can be put online by dragging it into a browser.
+Unzipping this package gives one folder, "Inkwell_Web_App_v7p39". That
+folder IS the finished web site: index.html is at its top, beside sw.js, the
+manifest, and the icons and vendor folders. There is nothing to build and no
+GitHub Actions is needed. No file in it is larger than 9 MB.
 
-(Before 7.38 this package was a kit that GitHub Actions had to build, and
-one of its files, 26.9 MB, was too large for GitHub's browser upload, which
-takes 25 MB at most. That is why it could not be put online or updated.)
+(This READ ME and the licence sit in the folder too, so they go online with
+the site. They hold nothing private.)
 
 Safari can add Inkwell to the Home Screen only from a web address, not from
 a file. So the folder is put online once, at an address of your own.
@@ -22,20 +22,24 @@ Open your current Inkwell, File, Export library, and keep the file.
 PUT IT ONLINE THE FIRST TIME (choose one)
 -----------------------------------------
 A. Netlify (free, and the simplest)
-   1. On a computer, open  https://app.netlify.com/drop  in a browser.
-      Sign up or log in (free). A site dropped without an account is kept
-      behind a temporary password until it is claimed.
-   2. Unzip this package. Drag the folder "Inkwell-web-7.38" onto the page.
-   3. Netlify shows the address, ending in .netlify.app. Keep it.
-   Netlify advises keeping a deploy under 50 MB; this one is about 60 MB.
-   If the deploy stalls, try once more, or use B.
+   1. On a computer, open  https://app.netlify.com/drop  in a browser and
+      log in (free). A site dropped without an account is kept behind a
+      temporary password until it is claimed.
+   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p39" onto the
+      page. Drag the FOLDER, not the .zip file: Netlify asks for the
+      unzipped folder.
+   3. Netlify shows the address, ending in .netlify.app. Keep it. Open it:
+      Inkwell should appear, with "v7.39" beside the date at the top.
+   Netlify's guidance is that a drop works best under 50 MB; this site is
+   about 66 MB, most of it the files for the optional models. If the drop
+   stalls, try once more on a steady connection, or use B.
 
 B. GitHub Pages (free for a PUBLIC repository)
    1. github.com, "+", New repository, for example inkwell-site. Choose
       Public. Create repository.
-   2. "uploading an existing file": drag in everything INSIDE the folder
-      "Inkwell-web-7.38" (index.html, sw.js, manifest.webmanifest, and the
-      icons and vendor folders). Commit changes.
+   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p39"
+      and drag in EVERYTHING INSIDE it (index.html, sw.js,
+      manifest.webmanifest, and the icons and vendor folders). Commit.
    3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
       / (root). Save. After a minute or two the address appears, of the form
       https://YOUR-NAME.github.io/inkwell-site/
@@ -56,39 +60,90 @@ ON THE IPHONE OR IPAD
 UPDATING LATER (each new version)
 ---------------------------------
 1. In the old Inkwell: File, Export library.
-2. Netlify: open your site in Netlify. Under "Production deploys", drag the
-   new folder onto the drop area.
+2. Netlify: open your site in Netlify, then Deploys. Drag the new unzipped
+   folder onto the drop area at the foot of the Deploys page. The address
+   stays the same.
    GitHub: in your site repository, "Add file", "Upload files", drag in
    everything inside the new folder, Commit. The old files are replaced.
-3. Open Inkwell once while online. From 7.38 the new version shows at the
-   first opening. The first update away from 7.37 or older may need a
-   second opening, because the old version's offline copy answers first.
-Look for "v7.38" beside the date at the top.
+3. Open Inkwell once while online. The new version shows at the first
+   opening (an update from 7.37 or older may need a second opening).
+Look for "v7.39" beside the date at the top.
+
+
+YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
+-------------------------------------------------
+The .netlify.app address always works. A domain of your own is optional,
+and is set up in two places: at Netlify and at the company the domain was
+bought from (for example Namecheap).
+
+1. At Netlify: open the Inkwell site (its own site, not another project's),
+   Domain management, and add the domain. Netlify then lists the records it
+   wants: Domain management, Production domains, "Pending DNS verification"
+   beside the domain.
+2. At the domain company (Namecheap: Domain List, Manage, Advanced DNS),
+   the records must point only to Netlify. Netlify's guide gives these:
+     ALIAS Record  Host @     Value apex-loadbalancer.netlify.com
+                   (or, where ALIAS is not offered: A Record, Host @,
+                   Value 75.2.60.5)
+     CNAME Record  Host www   Value YOUR-SITE.netlify.app
+   Delete every other A record for @ and www. In particular, an address
+   such as 192.168.x.x, 10.x.x.x or 172.16.x.x to 172.31.x.x is a home
+   network address: no one outside that home can reach it. With such a
+   record, browsers can show "This site can't be reached" or
+   DNS_PROBE_FINISHED_NXDOMAIN.
+3. Netlify sets up the HTTPS certificate by itself (Let's Encrypt) once the
+   records point to it; Domain management, HTTPS shows its state. Changes
+   can take up to 48 hours to reach every network. Until then, use the
+   .netlify.app address.
+Netlify's guides:
+  https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/
+  https://docs.netlify.com/manage/domains/secure-domains-with-https/https-ssl/
+
+One domain, one site: if a domain already shows another project (for
+example a study companion), connecting it to Inkwell moves it away from that
+project. Give each project its own Netlify site and its own address.
 
 
 YOUR DOCUMENTS
 --------------
 - The web app keeps its own library in the browser, separate from the
   apps. Updating the site at the same address keeps it.
-- A NEW address (for example, moving from GitHub to Netlify) starts with
-  an empty library: File, Import library, and choose the exported file.
+- A NEW address (for example, moving from GitHub to Netlify, or from the
+  .netlify.app address to your own domain) starts with an empty library:
+  File, Import library, and choose the exported file.
 - Export regularly: a browser may clear a web app's storage, for example
   when the device is short of space.
 
 
+NEW IN 7.39
+-----------
+- Alternatives and Rewrite open a card right beside the words you selected
+  (on a phone, at the foot of the screen), so you see at once what is
+  offered. Nothing changes until you press "Use this"; then Undo shows.
+- Alternatives for a word: words to use instead, by meaning, in the word's
+  own form ("bigger" gives "larger"). For a sentence: the sentence said
+  plainer, more formally and casually, and idioms said three ways ("He lost
+  his train of thought": "He lost track of what he was saying", "He lost the
+  thread of his argument", "He forgot what he was going to say").
+- Rewrite (the new ↻ button, or Rewrite ▾): Scholarly, Professional, Casual,
+  Plainer, Concise, Confident, Shorter and Other words, as tabs, each with up
+  to three versions and every change with its reason. All of it works with
+  no writing model; a model adds its own version.
+- The words come from WordNet 3.0 (Princeton University; licence in
+  vendor/WORDNET-LICENCE.txt) and a list of common alternatives written for
+  Inkwell. The word list is read the first time you use Alternatives or
+  Rewrite (a second or two), then kept for offline use.
+- The package's folder is now the site itself, ready to drag into Netlify.
+
 NEW IN 7.38
 -----------
-- Rewrite with a prompt now works with no writing model at all. Every
-  prompt in the library does something on this device: rules rewrite where
-  they can keep the meaning, and each change says what it was and why. For
-  what only you can write ("Show, don't tell", "Signpost the argument"), a
-  coach points to the exact words, says how, and checks your own try.
+- Rewrite with a prompt works with no writing model at all. Every prompt in
+  the library does something on this device: rules rewrite where they can
+  keep the meaning, and each change says what it was and why. For what only
+  you can write ("Show, don't tell"), a coach points to the exact words,
+  says how, and checks your own try.
 - The seals are pressed into the wax; Schedae's button is a quill on
-  parchment. The app icons are redrawn; on an iPhone or iPad the home
-  screen icon sits on the seal's own cream.
-- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
-  colour's name shows when you hover over it, as do the names of the symbol
-  buttons everywhere.
+  parchment. Schedae: "Send to Tabula"; six new note colours.
 - Right-click Paste works with text copied from other apps.
 - The web app cannot reach the Mac mini's model: a secure web page may not
   call a plain address on the home network. The iPhone and iPad app can.
@@ -97,7 +152,7 @@ NEW IN 7.38
 OFFLINE, AND THE MODELS
 -----------------------
 - After the first visit the web app works with no internet: the rules
-  engine, spelling, Scriba's page, Fontes and Cite.
+  engine, spelling, Alternatives and Rewrite, Scriba's page, Fontes and Cite.
 - On a laptop or desktop, Engine, "Writing model inside this window" can
   install a writing model in the page (about 850 MB, once; it needs
   WebGPU, as in Chrome or Edge). On a phone or tablet the web app offers
@@ -109,7 +164,12 @@ OFFLINE, AND THE MODELS
 
 PROBLEMS
 --------
-- The address shows "404": wait a few minutes. On GitHub, check that
+- "This site can't be reached" or DNS_PROBE_FINISHED_NXDOMAIN on your own
+  domain: the domain's records, not the files. See YOUR OWN ADDRESS above,
+  and open the .netlify.app address meanwhile.
+- "Page not found" on Netlify: the folder dropped was not the one with
+  index.html at its top. Drop "Inkwell_Web_App_v7p39" itself.
+- The address shows "404" on GitHub: wait a few minutes; check that
   index.html is at the top of the repository, not inside a folder.
 - The old version still shows: close Inkwell fully and open it again while
   online.
