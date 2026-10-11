@@ -173,6 +173,78 @@ def replace_tree(src, dst):
     shutil.copytree(src, dst)
 
 
+def prune_llama(app):
+    """7.40: the Actions build copied every program of the llama.cpp release
+    into Contents/Frameworks/bin/darwin, and each library three times under
+    its three names. PyInstaller then set llama-server's search path to
+    @loader_path/../.., so llama-server loads its libraries from the top of
+    Contents/Frameworks: nothing else in bin/darwin is ever used. Only
+    llama-server stays there, and the top-level libraries that only the
+    removed programs needed go too. Every link left pointing at a removed
+    file is removed. check_links() then proves every library still loads."""
+    fw = os.path.join(app, "Contents", "Frameworks")
+    res = os.path.join(app, "Contents", "Resources")
+    bindir = os.path.join(fw, "bin", "darwin")
+    removed = 0
+    for name in os.listdir(bindir):
+        if name != "llama-server":
+            os.remove(os.path.join(bindir, name))
+            removed += 1
+    for name in os.listdir(fw):
+        if re.match(r"^libllama-.*-impl\.dylib$", name) and name != "libllama-server-impl.dylib":
+            os.remove(os.path.join(fw, name))
+            removed += 1
+    for root in (res, fw):
+        for d, dirs, files in os.walk(root):
+            for name in files + dirs:
+                q = os.path.join(d, name)
+                if os.path.islink(q) and not os.path.exists(q):
+                    os.remove(q)
+                    removed += 1
+    return removed
+
+
+def check_links(app):
+    """Every library each Mach-O file in the app names by @rpath,
+    @loader_path or @executable_path must exist where dyld would look."""
+    from macholib.MachO import MachO
+    from macholib.mach_o import LC_LOAD_DYLIB, LC_LOAD_WEAK_DYLIB, LC_REEXPORT_DYLIB, LC_RPATH
+    contents = os.path.join(app, "Contents")
+    exe_dir = os.path.join(contents, "MacOS")
+    missing = []
+    for d, _, files in os.walk(contents):
+        for name in files:
+            p = os.path.join(d, name)
+            if os.path.islink(p):
+                continue
+            with open(p, "rb") as f:
+                head = f.read(4)
+            if head not in (b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe"):
+                continue
+            real_dir = os.path.dirname(os.path.realpath(p))
+            for h in MachO(p).headers:
+                deps, rpaths = [], []
+                for lc, cmd, data in h.commands:
+                    if lc.cmd in (LC_LOAD_DYLIB, LC_LOAD_WEAK_DYLIB, LC_REEXPORT_DYLIB):
+                        deps.append((data.rstrip(b"\0").decode(), lc.cmd == LC_LOAD_WEAK_DYLIB))
+                    elif lc.cmd == LC_RPATH:
+                        rpaths.append(data.rstrip(b"\0").decode())
+                def expand(x):
+                    return x.replace("@loader_path", real_dir).replace("@executable_path", exe_dir)
+                for dep, weak in deps:
+                    if dep.startswith("/usr/lib/") or dep.startswith("/System/"):
+                        continue
+                    if dep.startswith("@rpath/"):
+                        cands = [os.path.join(expand(r), dep[7:]) for r in rpaths]
+                    elif dep.startswith("@"):
+                        cands = [expand(dep)]
+                    else:
+                        cands = [dep]
+                    if not any(os.path.exists(c) for c in cands) and not weak:
+                        missing.append("%s needs %s" % (os.path.relpath(p, contents), dep))
+    return sorted(set(missing))
+
+
 def make_one(label, dmg, build, out, work):
     web = os.path.join(REPO, "Inkwell-Android", "app", "src", "main", "assets")
     page = os.path.join(web, "Inkwell.html")
@@ -205,6 +277,10 @@ def make_one(label, dmg, build, out, work):
         raise SystemExit("LAUNCHER_BUILD in inkwell_app.py is not %s" % version)
     program = os.path.join(app, "Contents", "MacOS", "Inkwell")
     info = patch_program(program, launcher)
+    info["pruned"] = prune_llama(app)
+    missing = check_links(app)
+    if missing:
+        raise SystemExit("libraries missing after pruning:\n  " + "\n  ".join(missing[:20]))
     # read it back: the launcher inside is the one just compiled
     data = open(program, "rb").read()
     start, _, _, _, toc = read_archive(data)
@@ -241,7 +317,7 @@ def make_one(label, dmg, build, out, work):
     z = os.path.abspath(os.path.join(out, name + ".zip"))
     if os.path.exists(z):
         os.remove(z)
-    run(["zip", "-qry", "-X", z, name], cwd=work)
+    run(["zip", "-qry9", "-X", z, name], cwd=work)
     info.update({"zip": z, "version": version, "build": build})
     return info
 

@@ -41,7 +41,15 @@ WHAT CAME IN 7.40
    ad hoc with rcodesign and zips it with its links.
    packaging/verify_mac_app.py recomputes the seal; it passes on Apple's own
    seal of 7.37 and on the new apps, and catches a changed page, program or
-   link. Not yet opened on a real Mac.
+   link. The Actions build had copied every llama.cpp program, and each
+   library three times; llama-server loads its libraries from the top of
+   Contents/Frameworks (search path @loader_path/../..), so the rest is
+   removed (prune_llama), and check_links proves every library each program
+   names is still there (it finds none missing on 7.37 as built, and catches
+   a library removed on purpose). The zips fell from 58 MB to 34 MB, still
+   over the chat's 30 MB limit, so they are kept for download in the private
+   repository Inkwell-Cloud (branch claude/amazing-archimedes-lunzys, folder
+   mac-7.40). Not yet opened on a real Mac.
 4. Windows without GitHub Actions: the installer (Inno Setup 6.7) cannot be
    unpacked here, so Windows gets the 7.40 page as a folder dropped into the
    installed program's folder. The 7.37 program chooses the page with the
