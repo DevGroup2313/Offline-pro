@@ -1,0 +1,64 @@
+INKWELL FOR MAC: THE READY-MADE APP
+===================================
+
+This zip holds Inkwell.app, ready to use. There is nothing to build and no
+Terminal. Python is not needed.
+
+BEFORE YOU INSTALL
+------------------
+Open your current Inkwell: File, Export library, and keep the file.
+Your documents stay in ~/Library/Application Support/Inkwell when the app
+is replaced, but the exported file is your safe copy.
+
+WHICH ZIP
+---------
+  Inkwell-...-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
+  Inkwell-...-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
+To check: Apple menu, About This Mac. "Chip: Apple M..." is Apple Silicon.
+"Processor: ... Intel" is Intel.
+
+INSTALL OR UPDATE
+-----------------
+1. Double-click the zip. A folder appears beside it, in Downloads.
+2. Open the folder. Drag Inkwell.app onto "Applications" in the Finder
+   sidebar.
+3. If Finder says an Inkwell already exists there, choose Replace.
+4. Open Inkwell from Applications, not from the Downloads folder.
+
+THE FIRST OPENING
+-----------------
+macOS checks every app that does not come from the App Store. Inkwell is not
+signed with a paid Apple certificate, so macOS asks once.
+
+macOS 15 (Sequoia) and later:
+  1. Open Inkwell. macOS says it could not verify Inkwell. Press Done.
+  2. Open System Settings, Privacy & Security. Scroll down to Security.
+  3. Beside "Inkwell was blocked", press Open Anyway. Enter your password.
+     Press Open.
+
+macOS 14 (Sonoma) and earlier:
+  In Applications, hold Control and click Inkwell (or right-click it).
+  Choose Open, then Open again.
+
+After this, Inkwell opens normally. Look for the version number beside the
+date at the top.
+
+macOS may ask again for the microphone (Scriba's Record) and for the local
+network (sharing the writing model with your other devices). The app has a
+new seal, so macOS treats it as new. Allow them if you use those features.
+
+IF MACOS SAYS "INKWELL IS DAMAGED"
+----------------------------------
+That message means the app's seal does not match its files. It should not
+appear with this zip. If it does, tell me, and do not change your security
+settings. As a last resort only, Terminal can clear the download mark:
+    xattr -cr /Applications/Inkwell.app
+
+HOW THIS APP WAS MADE
+---------------------
+GitHub Actions, which built the Mac app on a Mac, has not started since
+10 October. So this app is the last one Actions built (7.37) with the
+current page, rooms, launcher and server put in, and the whole app sealed
+again (packaging/make_mac_prebuilt.py). The program that runs the writing
+model (llama.cpp) is the one from 7.37. This app has not been tried on a
+real Mac before you; tell me what you see.
