@@ -248,7 +248,8 @@
   /* ---- a plainer word for a more exact one, in the scholarly register ---- */
   const ELEV = [
     [/\b(show|shows|showed)\b(?= (?:that|how|what|why|whether|the|a|an|this|these|those|its|their|his|her|our|no|little|some|signs|evidence|significant|clear|strong|\d))/gi, (m, w) => keepCase({ show: 'demonstrate', shows: 'demonstrates', showed: 'demonstrated' }[w.toLowerCase()])(m)],
-    [/\bshown(?= (?:that|to|by|above|below|in (?:Table|Figure|Fig)))/gi, keepCase('demonstrated')],
+    /* "shown to be", "shown that"; never "shown to children", which is displayed */
+    [/\bshown(?= (?:that|to (?:be|have|work|cause|reduce|increase|improve|affect|lower|raise|play|contribute|correlate|predict|occur|exist|vary|decline|enhance|inhibit|protect|prevent|promote)\b|by (?:the|this|these|our|their|its) (?:data|results|analysis|analyses|study|studies|evidence|experiment|experiments|survey|model|models|findings)\b|above|below|in (?:Table|Figure|Fig)))/gi, keepCase('demonstrated')],
     [/\b(prove|proves|proved|proven|proving)\b(?! to be)/gi, (m, w) => keepCase({ prove: 'establish', proves: 'establishes', proved: 'established', proven: 'established', proving: 'establishing' }[w.toLowerCase()])(m)],
     [/\bfind out\b/gi, keepCase('determine')], [/\bfinds out\b/gi, keepCase('determines')], [/\bfound out\b/gi, keepCase('determined')], [/\bfinding out\b/gi, keepCase('determining')],
     [/\blook at\b/gi, keepCase('examine')], [/\blooks at\b/gi, keepCase('examines')], [/\blooked at\b/gi, keepCase('examined')], [/\blooking at\b/gi, keepCase('examining')],
@@ -324,7 +325,8 @@
     [/\bapproximately\b/gi, keepCase('about')],
     [/\bsubsequently\b/gi, keepCase('later')],
     [/\bnumerous\b/gi, keepCase('many')],
-    [/\bsufficient\b/gi, keepCase('enough')],
+    /* "the sufficient conditions" cannot be "the enough conditions" */
+    notAfter(/\bsufficient\b/gi, ['the', 'a', 'an', 'this', 'that', 'these', 'those', 'its', 'their', 'his', 'her', 'our', 'my', 'your', 'necessary and'], keepCase('enough')),
     [/\bindividuals\b(?!['’])/gi, keepCase('people')],
     [/\bin excess of\b/gi, keepCase('more than')],
     [/\bwith the result that\b/gi, keepCase('so')],
