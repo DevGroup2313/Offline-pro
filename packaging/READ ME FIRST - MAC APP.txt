@@ -1,19 +1,13 @@
-INKWELL FOR MAC: THE READY-MADE APP
-===================================
+INKWELL 7.40 FOR MAC: THE READY-MADE APP
+========================================
 
-This zip holds Inkwell.app, ready to use. There is nothing to build and no
-Terminal. Python is not needed.
-
-BEFORE YOU INSTALL
-------------------
-Open your current Inkwell: File, Export library, and keep the file.
-Your documents stay in ~/Library/Application Support/Inkwell when the app
-is replaced, but the exported file is your safe copy.
+This zip holds Inkwell.app, ready to use. There is nothing to build, no
+Terminal, and no disk image, so no disk icon stays on your Desktop.
 
 WHICH ZIP
 ---------
-  Inkwell-...-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
-  Inkwell-...-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
+  Inkwell-7.40-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
+  Inkwell-7.40-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
 To check: Apple menu, About This Mac. "Chip: Apple M..." is Apple Silicon.
 "Processor: ... Intel" is Intel.
 
@@ -22,8 +16,11 @@ INSTALL OR UPDATE
 1. Double-click the zip. A folder appears beside it, in Downloads.
 2. Open the folder. Drag Inkwell.app onto "Applications" in the Finder
    sidebar.
-3. If Finder says an Inkwell already exists there, choose Replace.
+3. If Finder says an Inkwell already exists there, choose Replace. Your
+   documents are not inside the app, so they stay where they are
+   (~/Library/Application Support/Inkwell).
 4. Open Inkwell from Applications, not from the Downloads folder.
+5. Look for "v7.40" beside the date at the top.
 
 THE FIRST OPENING
 -----------------
@@ -40,12 +37,40 @@ macOS 14 (Sonoma) and earlier:
   In Applications, hold Control and click Inkwell (or right-click it).
   Choose Open, then Open again.
 
-After this, Inkwell opens normally. Look for the version number beside the
-date at the top.
+After this, Inkwell opens normally. macOS may ask again for the microphone
+(Scriba's Record) and for the local network (sharing the writing model).
+The app has a new seal, so macOS treats it as new. Allow them if you use
+those features.
 
-macOS may ask again for the microphone (Scriba's Record) and for the local
-network (sharing the writing model with your other devices). The app has a
-new seal, so macOS treats it as new. Allow them if you use those features.
+THE MAC MINI'S MODEL ON YOUR OTHER DEVICES
+------------------------------------------
+On the Mac mini: Studio, Engine, "Share with my other devices on this
+Wi-Fi". It shows an address and a 6-digit code. Inkwell must stay open
+there.
+On the MacBook Pro or a Windows laptop: Engine, "Another computer's model".
+On the Fire tablet: Engine, "Your computer's model".
+Enter the address and the code. The pill at the top then names the Mac
+mini's model. If it says "computer linked, no model loaded", load a model on
+the Mac mini first (Engine there).
+
+NEW IN 7.40
+-----------
+- Inkwell keeps your library safe by itself. There is nothing to export,
+  no reminder, and no file on your Desktop. It copies your whole library
+  (the desk, Tabula, Fontes, and Scriba's transcripts) when it opens, every
+  ten minutes while you work, and when you put it away. File, Earlier
+  copies brings back any earlier day, and can itself be undone. If Inkwell
+  ever opens with its storage emptied, it puts your library back by itself.
+- A file is used only to move your library to another device: File, Move
+  the library to another device. The file now carries every room, and
+  opening it adds what is new without replacing anything.
+- Sticky notes have the 3D look of Carpe Diem and the Forge again (the
+  bevel, the pop, and handles on every edge and corner), in Inkwell's own
+  shades: Foolscap, Gilt, Lapis, Claret, Laurel and Vespers.
+- A computer linked over Wi-Fi that has no writing model loaded now says
+  so ("computer linked, no model loaded"). Its simple fallback rules are no
+  longer shown as a model's writing.
+- The Mac app comes as this zip: unzip, drag to Applications.
 
 IF MACOS SAYS "INKWELL IS DAMAGED"
 ----------------------------------
@@ -54,11 +79,12 @@ appear with this zip. If it does, tell me, and do not change your security
 settings. As a last resort only, Terminal can clear the download mark:
     xattr -cr /Applications/Inkwell.app
 
-HOW THIS APP WAS MADE
----------------------
+HOW THIS APP WAS MADE, AND ITS LIMITS
+-------------------------------------
 GitHub Actions, which built the Mac app on a Mac, has not started since
-10 October. So this app is the last one Actions built (7.37) with the
-current page, rooms, launcher and server put in, and the whole app sealed
-again (packaging/make_mac_prebuilt.py). The program that runs the writing
-model (llama.cpp) is the one from 7.37. This app has not been tried on a
-real Mac before you; tell me what you see.
+10 October. So this app is the last one Actions built (7.37), with the 7.40
+page, rooms, launcher and server put in, and the whole app sealed again
+(packaging/make_mac_prebuilt.py). The seal was checked file by file here
+(packaging/verify_mac_app.py), but this app has not yet been opened on a
+real Mac. The program that runs the writing model (llama.cpp) is the one
+from 7.37. Tell me what you see.

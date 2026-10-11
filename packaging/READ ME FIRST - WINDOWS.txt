@@ -1,0 +1,68 @@
+INKWELL 7.40 FOR WINDOWS
+========================
+
+This zip brings Inkwell 7.40 to the Inkwell already installed on your
+Windows computer (from Inkwell-7.37-Windows-Setup.exe). There is no new
+installer this time: GitHub Actions, which builds the Windows installer, has
+not started since 10 October. The installed program always opens the newest
+Inkwell page it finds in its own folder, so 7.40 is one folder dropped in.
+
+INSTALL (ABOUT A MINUTE)
+------------------------
+1. Close Inkwell if it is open.
+2. Unzip: right-click the zip, Extract All, Extract. A window opens with the
+   folder "Inkwell 7.40 page" in it.
+3. Open Inkwell's own folder: click the address bar at the top of a File
+   Explorer window, type   %LOCALAPPDATA%\Programs\Inkwell   and press Enter.
+   You should see Inkwell.exe there.
+4. Drag the folder "Inkwell 7.40 page" into that window.
+5. Open Inkwell from the Start menu as usual. Look for "v7.40" beside the
+   date at the top.
+
+Your documents, the Start menu entry and the uninstaller stay as they are.
+To go back to 7.37, delete the folder "Inkwell 7.40 page" from Inkwell's
+folder.
+
+If Inkwell is not installed on this computer yet: install
+Inkwell-7.37-Windows-Setup.exe first (GitHub release "Inkwell 7.37 for
+Windows (build 29)", under Assets). If Windows SmartScreen says it protected
+your PC, choose More info, then Run anyway. Then follow the steps above.
+
+THE MAC MINI'S MODEL ON THIS COMPUTER
+-------------------------------------
+On the Mac mini: Studio, Engine, "Share with my other devices on this
+Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
+computer's model". Enter both. The pill at the top then names the Mac mini's
+model.
+
+NEW IN 7.40
+-----------
+- Inkwell keeps your library safe by itself. There is nothing to export,
+  no reminder, and no file on your Desktop. It copies your whole library
+  (the desk, Tabula, Fontes, and Scriba's transcripts) when it opens, every
+  ten minutes while you work, and when you put it away. File, Earlier
+  copies brings back any earlier day, and can itself be undone. If Inkwell
+  ever opens with its storage emptied, it puts your library back by itself.
+- A file is used only to move your library to another device: File, Move
+  the library to another device. The file now carries every room, and
+  opening it adds what is new without replacing anything.
+- Sticky notes have the 3D look of Carpe Diem and the Forge again (the
+  bevel, the pop, and handles on every edge and corner), in Inkwell's own
+  shades: Foolscap, Gilt, Lapis, Claret, Laurel and Vespers.
+- A computer linked over Wi-Fi that has no writing model loaded now says
+  so ("computer linked, no model loaded"). Its simple fallback rules are no
+  longer shown as a model's writing.
+
+LIMITS OF THIS ROUTE
+--------------------
+The 7.40 page runs inside the 7.37 program. What lives in the program, not
+the page, stays as in 7.37 until a new Windows build can be made:
+- Right-click Paste does not read text copied from other apps; Ctrl+V does.
+- Inkwell's earlier copies are kept in its own storage on this computer,
+  not also in a folder of their own.
+- When this computer shares its own model with other devices, Scriba's
+  summaries from those devices need a newer server; share from the Mac mini
+  instead.
+This route was checked here by running the 7.37 program's own code that
+chooses the page; it has not yet been tried on a Windows computer. Tell me
+what you see.

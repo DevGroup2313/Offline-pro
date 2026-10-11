@@ -1,0 +1,94 @@
+INKWELL v7.40: HANDOFF NOTES
+============================
+Date: 11 October 2026. Read INKWELL_HANDOFF_v7p39.txt and the earlier notes
+for everything before 7.40.
+
+Look for "v7.40" beside the date at the top. If it is not there, the device
+is not running 7.40.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key.
+
+WHAT CAME IN 7.40
+-----------------
+1. Inkwell keeps its own library (THE KEEPING, src/inkwell.html). Every
+   room's work (the desk's documents, notes, sticky notes and versions;
+   Tabula's documents; Fontes' sources; Scriba's transcripts without their
+   sound; the prompts, the writer's own words and the settings) is copied
+   whole into the browser database 'inkwell-keep', and in the Mac, Windows
+   and Fire apps also into the app's own folder through keep_copy,
+   keep_list, keep_read and keep_drop (inkwell_app.py; Keep.java and the
+   Android bridge script). A copy is taken when Inkwell opens, every ten
+   minutes while the work has changed, and when it is put away. Kept: the
+   last ten, one a day for two weeks, one a week for two months.
+   - Storage emptied where a library has been (no ink_keepMark): the newest
+     copy fills in what is missing, once, and never overwrites the shelf.
+   - File, Earlier copies: list, look, put back (the library of that moment
+     is copied first, so putting back can be undone). The page stops saving
+     while a copy is put back, so the old page cannot write over it.
+   - The export reminder and every instruction to export are gone. File,
+     Move the library to another device is the only use of a file, and the
+     file now carries Tabula, Fontes, the prompts and the dictionary too.
+2. Sticky notes: Carpe Diem's dress and edge modules, so the note is the 3D
+   note of Carpe Diem and the Forge again (measured by computed style: the
+   same by day and night in every colour, apart from the shades). Inkwell's
+   own shades, chosen by the writer from a preview: Foolscap, Gilt, Lapis,
+   Claret, Laurel, Vespers, each with a night paper.
+3. The Mac app without GitHub Actions: packaging/make_mac_prebuilt.py takes
+   release mac-build-27 (7.37), puts in the current page, rooms, vendor
+   files, server and launcher (the launcher compiled with Python 3.12 into
+   the program's PyInstaller archive), sets Info.plist, seals the app again
+   ad hoc with rcodesign and zips it with its links.
+   packaging/verify_mac_app.py recomputes the seal; it passes on Apple's own
+   seal of 7.37 and on the new apps, and catches a changed page, program or
+   link. Not yet opened on a real Mac.
+4. Windows without GitHub Actions: the installer (Inno Setup 6.7) cannot be
+   unpacked here, so Windows gets the 7.40 page as a folder dropped into the
+   installed program's folder. The 7.37 program chooses the page with the
+   highest BUILD marker, but read only the first 256 KB, and the marker sat
+   further in: so a newer page was never chosen. The build now writes the
+   marker at the top of the page (tools/build_inkwell.py). Checked with the
+   7.37 program's own code; not yet tried on Windows.
+5. A computer linked over Wi-Fi with no model loaded is never presented as a
+   model: the page reads the server's 'ai' field (pill: "computer linked, no
+   model loaded"; the rules engine writes here).
+
+VERIFIED IN 7.40 (V1)
+---------------------
+- The Mac mini route, end to end, with server.py and Qwen3 4B through the
+  bundled llama.cpp runtime: a Fire (native route) and a MacBook (ordinary
+  request) connect with the six-digit code, are refused with a wrong one,
+  get the model's corrections and rewrites, and fall back when sharing
+  stops. iPhone and iPad: only the app (.ipa) can reach the Mac mini; the
+  web app cannot (a secure page may not call the home network), and the
+  .ipa needs GitHub Actions.
+- The clarity and style checks work but are hidden until "Show clarity and
+  style notes" (29 notes on an 8-sentence test paragraph: 3 grammar, 15
+  clarity, 11 style).
+- Found, for G1 (next): repeated notes on one phrase ("In order to",
+  "the fact that"); 18 of 29 notes give advice without an alternative
+  (passive voice, nominalisations); 4 fall back to a general lesson;
+  "Their is many" becomes "There is many"; Rewrite does not apply the
+  grammar fixes first. A model observation: Qwen3 4B's concise rewrite
+  dropped the hedge "we think" (one example, not a measurement).
+- Tests: run.js 230 of 230, coach_test.js 38 of 38, para_test.js 44 of 44;
+  every desk control (86) and room control pressed without a problem; the
+  tour by day, by night and on a phone; the keeping (t_keep, t_keepand,
+  t_move); the sticky notes (t_snsig, t_snfn).
+
+THE WEBSITE (carpediemofflinestudycompanion.com)
+------------------------------------------------
+Still, on 11 October: two A records for @ and www, 75.2.60.5 (Netlify) and
+192.168.0.58 (a home network address). A page that "stays stuck" is the
+browser trying 192.168.0.58. Netlify itself answers the domain with "Page
+not found": the domain is not linked to the site holding Inkwell, or that
+site has no index.html at its top. The web package itself was re-tested
+served as Netlify serves it: it works online and offline. The steps are in
+the web app guide.
+
+GITHUB ACTIONS
+--------------
+Workflows have not started since 10 October ("startup_failure"). Until that
+is cleared: the Mac apps come from make_mac_prebuilt.py, Windows from the
+page folder, the Fire APK from gradle in the session, and no .ipa can be
+built.

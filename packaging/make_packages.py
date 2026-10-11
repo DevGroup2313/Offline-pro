@@ -52,11 +52,25 @@ def common(pkg, readme, workflow, workflow_name, src_dir="packaging"):
             copy(name, os.path.join(pkg, name))
 
 
-def fire(pkg):
+def fire_kit(pkg):
     common(pkg, "READ ME FIRST - FIRE TABLET.txt", ".github/workflows/main.yml", "build-apk.yml")
     for name in ("app", "signing", "build.gradle", "settings.gradle", "gradle.properties"):
         copy(os.path.join("Inkwell-Android", name), os.path.join(pkg, name))
     copy("artwork", os.path.join(pkg, "artwork"))
+
+
+def fire(pkg):
+    """7.40: the Fire package is the app itself. GitHub Actions has not
+    started since 10 October, so the APK is built in the session
+    (gradle assembleRelease, signed with the project's key) and INKWELL_APK
+    names it; the package holds it, the READ ME and the licence."""
+    apk = os.environ.get("INKWELL_APK")
+    if not apk or not os.path.isfile(apk):
+        sys.exit("INKWELL_APK must name the built APK (or use --kits for the GitHub build kit)")
+    os.makedirs(pkg, exist_ok=True)
+    shutil.copy2(apk, os.path.join(pkg, "Inkwell-%s-build1.apk" % version()))
+    copy(os.path.join("packaging", "READ ME FIRST - FIRE TABLET.txt"), os.path.join(pkg, "READ ME FIRST - FIRE TABLET.txt"))
+    copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
 
 
 def ios(pkg):
@@ -122,6 +136,25 @@ def mac_mini(pkg):
 
 
 def windows(pkg):
+    """7.40: the page, for the Inkwell already installed on Windows. The
+    installed program opens the newest Inkwell.html it finds in its own
+    folder (find_app_html, by the BUILD marker at the top of the page), so a
+    folder holding the 7.40 page and its vendor files, dropped into
+    %LOCALAPPDATA%\\Programs\\Inkwell, is 7.40. The 7.37 program serves vendor
+    files by name only, so the files in vendor/csl are also placed at the
+    top of vendor."""
+    page = os.path.join(pkg, "Inkwell %s page" % version())
+    copy(os.path.join(ASSETS, "Inkwell.html"), os.path.join(page, "Inkwell.html"))
+    shutil.copytree(os.path.join(ASSETS, "vendor"), os.path.join(page, "vendor"))
+    csl = os.path.join(page, "vendor", "csl")
+    for name in sorted(os.listdir(csl)):
+        if not os.path.exists(os.path.join(page, "vendor", name)):
+            shutil.copy2(os.path.join(csl, name), os.path.join(page, "vendor", name))
+    copy(os.path.join("packaging", "READ ME FIRST - WINDOWS.txt"), os.path.join(pkg, "READ ME FIRST - WINDOWS.txt"))
+    copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
+
+
+def windows_kit(pkg):
     """Windows 7.32: a standalone program built on GitHub (PyInstaller and
     Inno Setup, no Python needed on the computer). The package holds the READ
     ME (how to get and run the installer) and everything GitHub needs to build
@@ -146,13 +179,19 @@ def zip_folder(folder, zip_path):
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit("usage: make_packages.py <output-folder>")
-    out = os.path.abspath(sys.argv[1])
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if len(args) != 1:
+        sys.exit("usage: make_packages.py <output-folder> [--kits]")
+    out = os.path.abspath(args[0])
     os.makedirs(out, exist_ok=True)
     tag = "v" + version().replace(".", "p")
-    for label, build in (("Mac", mac), ("Mac_mini", mac_mini), ("Windows", windows),
-                         ("Fire_Tablet", fire), ("iPhone_iPad", ios), ("Web_App", web)):
+    # 7.40: the Macs get the ready-made apps from packaging/make_mac_prebuilt.py;
+    # the GitHub build kits are made only on request (--kits)
+    plan = (("Windows", windows), ("Fire_Tablet", fire), ("iPhone_iPad", ios), ("Web_App", web))
+    if "--kits" in sys.argv:
+        plan = (("Mac", mac), ("Mac_mini", mac_mini), ("Windows", windows_kit),
+                ("Fire_Tablet", fire_kit), ("iPhone_iPad", ios), ("Web_App", web))
+    for label, build in plan:
         name = "Inkwell_%s_%s" % (label, tag)
         folder = os.path.join(out, name)
         if os.path.exists(folder):

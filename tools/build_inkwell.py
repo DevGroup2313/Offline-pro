@@ -14,6 +14,7 @@
 #   python3 tools/build_inkwell.py --check  fail if the built files are stale
 
 import base64
+import re
 import os
 import sys
 
@@ -50,6 +51,16 @@ def build():
         if page.count(marker) != 1:
             sys.exit("src/inkwell.html must hold %s exactly once" % marker)
         page = page.replace(marker, read(os.path.join(SRC, "lib", name + ".css")).decode("utf-8"))
+    # 7.40: the version, once more at the very top. The desktop launchers pick
+    # the newest Inkwell.html they can find by its BUILD marker, but read only
+    # the first 256 KB of each, and the page's own marker now sits further in;
+    # so a newer page placed beside an installed app was never chosen.
+    m = re.search(r"const BUILD='([0-9]+(?:\.[0-9]+)*)", page)
+    if not m:
+        sys.exit("src/inkwell.html must declare const BUILD")
+    if page.find("<head>") < 0 or page.find("<head>") > 2000:
+        sys.exit("src/inkwell.html must open with its <head>")
+    page = page.replace("<head>", "<head>\n<!-- BUILD='%s': read by the desktop launchers to choose the newest page -->" % m.group(1), 1)
     outputs = {
         os.path.join("Inkwell-Android", "app", "src", "main", "assets", "Inkwell.html"): page.encode("utf-8"),
         "Inkwell.html": page.encode("utf-8"),

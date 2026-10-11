@@ -1,135 +1,56 @@
-INKWELL 7.39 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.40 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 
-NEW IN 7.39
+THIS PACKAGE HOLDS: Inkwell-7.40-build1.apk, the app itself, built and
+signed with Inkwell's own key, so it installs over the Inkwell already on
+the tablet and keeps your documents.
+NOT FOR: iPhone or iPad (an iPhone or iPad cannot open an .apk file).
+
+
+INSTALL ON THE FIRE TABLET BY USB
+---------------------------------
+1. Unzip this package on your computer.
+2. On the tablet: Settings, Security & Privacy, Apps from Unknown Sources:
+   allow the Files app. (You did this once already if Inkwell is on the
+   tablet; the wording may differ slightly between Fire OS versions.)
+3. Connect the tablet to the computer with its USB cable. If the tablet asks
+   what the connection is for, choose "File transfer". Windows shows the
+   tablet in File Explorer. A Mac needs a separate file transfer app for
+   Android devices.
+4. Copy the .apk into the tablet's "Download" folder.
+5. On the tablet: open Files, then Downloads, tap the .apk, then Install
+   (or Update).
+6. Open Inkwell. Look for "v7.40" beside the date at the top.
+
+
+YOUR DOCUMENTS
+--------------
+- Installing a new APK over the old one keeps your documents, because every
+  build is signed with the same key.
+- From 7.40, Inkwell also keeps copies of your whole library by itself, in
+  the app's own folder on the tablet: File, Earlier copies.
+- Uninstalling the app deletes everything on the tablet, copies included.
+  To move documents to another device: File, Move the library to another
+  device.
+
+
+NEW IN 7.40
 -----------
-- Before you install: in the old Inkwell, File, Export library. Keep the file.
-- Alternatives and Rewrite open a card right beside the words you selected
-  (on a phone, at the foot of the screen), so you see at once what is
-  offered. Nothing changes until you press "Use this"; then Undo shows.
-- Alternatives for a word: words to use instead, by meaning, in the word's
-  own form ("bigger" gives "larger"). For a sentence: the sentence said
-  plainer, more formally and casually, and idioms said three ways ("He lost
-  his train of thought": "He lost track of what he was saying", "He lost the
-  thread of his argument", "He forgot what he was going to say").
-- Rewrite (the new ↻ button, or Rewrite ▾): Scholarly, Professional, Casual,
-  Plainer, Concise, Confident, Shorter and Other words, as tabs, each with up
-  to three versions and every change with its reason. All of it works with
-  no writing model; a model adds its own version.
-- The words come from WordNet 3.0 (Princeton University; licence in
-  vendor/WORDNET-LICENCE.txt) and a list of common alternatives written for
-  Inkwell.
-
-NEW IN 7.38
------------
-- Before you install: in the old Inkwell, File, Export library. Keep the file.
-- Rewrite with a prompt now works with no writing model at all. Every
-  prompt in the library does something on this device: rules rewrite where
-  they can keep the meaning, and each change says what it was and why. For
-  what only you can write ("Show, don't tell", "Signpost the argument"), a
-  coach points to the exact words, says how, and checks your own try.
-- The seals are pressed into the wax; Schedae's button is a quill on
-  parchment. The app icons are redrawn.
-- Schedae: "Send to Tabula"; six new note colours, by day and by night; each
-  colour's name shows when you hover over it, as do the names of the symbol
-  buttons everywhere.
-- Right-click Paste works with text copied from other apps.
-- "Your computer's model" connects to the Mac mini as well as a laptop.
-
-THIS PACKAGE IS FOR: the Fire tablet (and any Android tablet or phone).
-THE FILE IT MAKES:   Inkwell-7.39-buildN.apk
-NOT FOR: iPhone or iPad. An iPhone or iPad cannot open an .apk file; it shows
-only a white page with the file name. Use the iPhone and iPad package instead.
-
-GitHub turns this folder into the app file (the APK) on its own computers, so
-nothing needs to be installed on yours. You do this once; after that, every
-change you upload builds a new APK by itself.
-
-
-PART A. PUT THE PROJECT ON GITHUB (ONCE)
-----------------------------------------
-1. Sign in at github.com. Top right: "+", then "New repository".
-   Name it, for example, inkwell-fire. Choose PRIVATE: this package holds the
-   app's signing key (the folder "signing"), which must not be public.
-   Leave every other option as it is. Press "Create repository".
-
-2. Unzip this package on your computer. Open the folder inside it.
-
-3. Make hidden files visible, so the folder ".github" can be seen:
-     Windows: File Explorer, View, Show, Hidden items.
-     Mac: in Finder press Cmd + Shift + full stop.
-
-4. On the new repository's page, click "uploading an existing file".
-   Select EVERYTHING inside the package folder (the folders .github, app and
-   signing, and every file beside them) and drag it all onto the page.
-   Drag the CONTENTS, not the package folder itself.
-   Wait until every file is listed, then press "Commit changes".
-
-5. Check the repository's main page. It must show, at the top level:
-     .github   app   signing   build.gradle   settings.gradle   gradle.properties
-   If "app" sits inside another folder, see "Problems" below: the build still
-   works, because it finds the project wherever it is.
-   If ".github" is missing, the uploader skipped it (it often does). Then:
-     Add file, Create new file. As the name, type exactly:
-        .github/workflows/build-apk.yml
-     Open "WORKFLOW build-apk.yml (copy).txt" from this package, copy ALL of
-     its text, paste it into the big box, and press "Commit changes".
-
-
-PART B. BUILD THE APK
----------------------
-6. Open the "Actions" tab of the repository. A run called
-   "Build Inkwell for Android" starts by itself after each commit. If none
-   is running, click "Build Inkwell for Android" on the left, then
-   "Run workflow", then the green "Run workflow" button.
-   If GitHub asks you to enable Actions, enable them.
-
-7. Wait for the green tick (about 2 minutes; the first run can take longer).
-
-8. On the repository's main page, open "Releases" (right-hand side). The
-   newest release, "Inkwell 7.39 (build N)", has the APK under "Assets".
-
-
-PART C. INSTALL ON THE FIRE TABLET BY USB
------------------------------------------
-9.  On your computer, download the .apk from the release.
-10. On the tablet: Settings, Security & Privacy, Apps from Unknown Sources:
-    allow the Files app. (The wording may differ slightly between Fire OS
-    versions.)
-11. Connect the tablet to the computer with its USB cable. If the tablet asks
-    what the connection is for, choose "File transfer".
-    Windows shows the tablet in File Explorer. A Mac needs a separate file
-    transfer app for Android devices.
-12. Copy the .apk into the tablet's "Download" folder.
-13. On the tablet: open Files, then Downloads, tap the .apk, then Install.
-14. Inkwell is now among your apps, with the round seal. Open it like any app;
-    it runs in its own window and does not need Silk.
-
-
-PART D. YOUR DOCUMENTS
-----------------------
-- The app keeps its own library, separate from Silk. To bring documents over:
-  in Silk, File, Export library; in the app, File, Import library.
-- Each new APK installs OVER the previous one and keeps your documents, because
-  every build is signed with the same key (the "signing" folder).
-- NEVER uninstall the app without File, Export library first: uninstalling
-  deletes its storage.
-- Keep a copy of the "signing" folder somewhere safe. Without it, a future
-  build cannot install over the app already on the tablet.
-
-
-PART E. UPDATING INKWELL LATER
-------------------------------
-- New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
-  (replace the old one). If the vendor files changed, upload those into
-  app/src/main/assets/vendor/.
-- New version number: in app/build.gradle, change versionName '7.39'.
-  (versionCode rises by itself with every build, so Android accepts each
-  build as an update.)
-- New icon: replace the five ic_launcher.png files in app/src/main/res/
-  (48, 72, 96, 144 and 192 pixels square). "artwork/inkwell-seal-1024.png" is
-  the seal with transparent corners, to make them from.
-- Every commit starts a new build; install its APK as in Part C.
+- Inkwell keeps your library safe by itself. There is nothing to export,
+  no reminder, and no file on your Desktop. It copies your whole library
+  (the desk, Tabula, Fontes, and Scriba's transcripts) when it opens, every
+  ten minutes while you work, and when you put it away. File, Earlier
+  copies brings back any earlier day, and can itself be undone. If Inkwell
+  ever opens with its storage emptied, it puts your library back by itself.
+- A file is used only to move your library to another device: File, Move
+  the library to another device. The file now carries every room, and
+  opening it adds what is new without replacing anything.
+- Sticky notes have the 3D look of Carpe Diem and the Forge again (the
+  bevel, the pop, and handles on every edge and corner), in Inkwell's own
+  shades: Foolscap, Gilt, Lapis, Claret, Laurel and Vespers.
+- A computer linked over Wi-Fi that has no writing model loaded now says
+  so ("computer linked, no model loaded"). Its simple fallback rules are no
+  longer shown as a model's writing.
 
 
 CORRECTIONS AND MODELS ON THIS DEVICE (7.35 AND LATER)
@@ -201,6 +122,71 @@ YOUR COMPUTER'S MODEL
   computer".
 
 
+
+APPENDIX: BUILDING THE APK YOURSELF ON GITHUB
+---------------------------------------------
+This is for when GitHub Actions works again (it has not started since
+10 October; the APK in this package was built without it). The project is
+in the private repository; these were the steps.
+
+PART A. PUT THE PROJECT ON GITHUB (ONCE)
+----------------------------------------
+1. Sign in at github.com. Top right: "+", then "New repository".
+   Name it, for example, inkwell-fire. Choose PRIVATE: this package holds the
+   app's signing key (the folder "signing"), which must not be public.
+   Leave every other option as it is. Press "Create repository".
+
+2. Unzip this package on your computer. Open the folder inside it.
+
+3. Make hidden files visible, so the folder ".github" can be seen:
+     Windows: File Explorer, View, Show, Hidden items.
+     Mac: in Finder press Cmd + Shift + full stop.
+
+4. On the new repository's page, click "uploading an existing file".
+   Select EVERYTHING inside the package folder (the folders .github, app and
+   signing, and every file beside them) and drag it all onto the page.
+   Drag the CONTENTS, not the package folder itself.
+   Wait until every file is listed, then press "Commit changes".
+
+5. Check the repository's main page. It must show, at the top level:
+     .github   app   signing   build.gradle   settings.gradle   gradle.properties
+   If "app" sits inside another folder, see "Problems" below: the build still
+   works, because it finds the project wherever it is.
+   If ".github" is missing, the uploader skipped it (it often does). Then:
+     Add file, Create new file. As the name, type exactly:
+        .github/workflows/build-apk.yml
+     Open "WORKFLOW build-apk.yml (copy).txt" from this package, copy ALL of
+     its text, paste it into the big box, and press "Commit changes".
+
+
+PART B. BUILD THE APK
+---------------------
+6. Open the "Actions" tab of the repository. A run called
+   "Build Inkwell for Android" starts by itself after each commit. If none
+   is running, click "Build Inkwell for Android" on the left, then
+   "Run workflow", then the green "Run workflow" button.
+   If GitHub asks you to enable Actions, enable them.
+
+7. Wait for the green tick (about 2 minutes; the first run can take longer).
+
+8. On the repository's main page, open "Releases" (right-hand side). The
+   newest release, "Inkwell 7.40 (build N)", has the APK under "Assets".
+
+
+PART E. UPDATING INKWELL LATER
+------------------------------
+- New Inkwell page: upload the new Inkwell.html into app/src/main/assets/
+  (replace the old one). If the vendor files changed, upload those into
+  app/src/main/assets/vendor/.
+- New version number: in app/build.gradle, change versionName '7.40'.
+  (versionCode rises by itself with every build, so Android accepts each
+  build as an update.)
+- New icon: replace the five ic_launcher.png files in app/src/main/res/
+  (48, 72, 96, 144 and 192 pixels square). "artwork/inkwell-seal-1024.png" is
+  the seal with transparent corners, to make them from.
+- Every commit starts a new build; install its APK as in Part C.
+
+
 PROBLEMS
 --------
 - No run appears in Actions: the workflow file is missing. Do step 5 again.
@@ -215,4 +201,5 @@ PROBLEMS
   to the run as "build-log".
 - The tablet refuses to install over the old app ("App not installed"): the
   new APK was signed with a different key. Use the same "signing" folder as
-  before, or export your library, uninstall, and install the new APK.
+  before, or uninstall and install the new APK (uninstalling deletes the documents on
+  the tablet, so move them first: File, Move the library to another device).
