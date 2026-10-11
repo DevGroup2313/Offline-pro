@@ -13554,7 +13554,7 @@ document.addEventListener('keydown',e=>{
  if(e.shiftKey){if(i<=0){e.preventDefault();els[els.length-1].focus();}}
  else{if(i<0||i===els.length-1){e.preventDefault();els[0].focus();}}});
 
-/* ================= IMPROVE ▸ — alternatives live in the suggestions panel ================= */
+/* ================= IMPROVE ▸ — alternatives (7.39: in a card beside the selection) ================= */
 /* ================= OFFLINE REWRITERS (DEMORW) — no model, no server =================
    improveAlternatives calls DEMORW[mode](text) for each register. It was
    referenced but never built, so every alternative threw and was swallowed and
@@ -13659,7 +13659,7 @@ async function improveAlternatives(){
 async function inkAiAlternatives(t){
  const instr='Give three different rewordings of the passage, each on its own line, numbered 1 to 3: 1. plainer, 2. more formal, 3. in other words. Keep the meaning and every fact, name, number and citation; add nothing new. Output only the three numbered lines.';
  ACST.busy='The writing model is writing its versions…';renderAlts('');
- try{const r=await inkWrite(instr,t);if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;
+ try{const r=await inkWrite(instr,t);if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;r.by=String(r.by||'the writing model').replace(/\.gguf$/i,'');
   const lines=[],re=/^\s*([123])[.)]\s*(.+)$/gm;let m;
   while((m=re.exec(r.text)))lines.push(m[2].trim().replace(/^(?:plainer|more formal|in other words)\s*[:\-–]\s*/i,''));
   const labels=['Plainer','More formal','In other words'];
@@ -13967,7 +13967,7 @@ function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
    Rewrite item and the Draft button stopped with an error. Restored here on
    the same pattern as Alternatives: the offline rules engine answers at once
    where it can, the local server or the Pro model adds its version, and the
-   writer chooses in the side panel. Nothing changes the page until "Use this". */
+   writer chooses (7.39: in the card beside the selection). Nothing changes the page until "Use this". */
 const RW_LABEL={scholarly:'Scholarly',professional:'Professional',casual:'Casual',plain:'Plainer',concise:'Concise',confident:'Confident',
  shorten:'Shorter',summarize:'Summary',expand:'Expanded',paraphrase:'Paraphrase',humanize:'Natural'};
 function inkTargetText(){
@@ -14055,7 +14055,7 @@ function inkRewriteTab(mode){
  inkRewriteAI(mode,t);}
 function inkRewriteAI(mode,t){
  const label=RW_LABEL[mode]||mode,sysNote=' Register target: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes();
- const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==t||ACST.style!==mode)return;ACST.busy='';
+ const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==t||ACST.style!==mode)return;ACST.busy='';by=String(by||'the writing model').replace(/\.gguf$/i,'');
   if(txt&&txt.trim()&&txt.trim()!==t.trim()&&!ALTS.some(a=>a.text===txt.trim()))ALTS.unshift({kind:label+' · '+by,text:txt.trim(),why:'Written by '+by+'.',mode:mode});
   renderAlts('');};
  const sysMode=mode==='plain'?'simplify':mode;
@@ -14068,7 +14068,7 @@ function inkPromptTab(){if(!ALTSEL)return;ALTSEL.prompt=true;ACST.mode='prompt';
 function compose(){
  const mb=document.getElementById('modalBody');if(!mb)return;
  mb.innerHTML='<h3>✨ Draft</h3>'
-  +'<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Say what to write. The draft appears in the side panel; <b>Use this</b> puts it at your cursor. Nothing is inserted until you choose.</p>'
+  +'<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Say what to write. The draft appears in a card beside your cursor; <b>Use this</b> puts it there. Nothing is inserted until you choose.</p>'
   +'<textarea id="composeInput" style="width:100%;min-height:90px;font-family:inherit;font-size:14px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="e.g. A short paragraph introducing my research question on urban heat islands, for a general reader"></textarea>'
   +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
   +'<button class="primary" onclick="composeRun(document.getElementById(\'composeInput\').value)">Draft ▸</button>'
@@ -15081,7 +15081,7 @@ function openModalDo(which){
   ['Invite a hostile reader','🤝 Reviewer generates the strongest objections to your argument and plants them as margin notes for you to answer.'],
   ['Shape the chapter','# headings build the sidebar outline; drag sections to reorder. Snapshots guard every move.'],
   ['Protect your attention','⏱ 25 dims everything except the page; 1× one suggestion at a time; foldable docks; motion levels.'],
-  ['Select, then choose','Select any sentence or paragraph: ✔ Fix corrects in place, ✨ Improve lays alternatives in the suggestions panel, each with its reason.'],
+  ['Select, then choose','Select a word, a sentence or a paragraph: ✔ Fix corrects in place; ✨ Alternatives opens a card beside it, with words to use instead or the passage said another way; ↻ Rewrite does the same in a style you choose. Each version gives its reasons.'],
   ['The bank watches','Weak words earn a quiet blue line as you type. Open the card and the Scholar word bank\'s stronger choices are one tap away; a word that earns its keep can be muted for good.'],
   ['Pin stray thoughts','✏️ Schedae sits at the lower right; catch a thought, Send ▸ it onto the page later.'],
   ['Never lose a page','Your writing saves to this device on every keystroke; the footer shows the save state ("✓ saved" means it is written to disk; "⚠ memory only" means export now). Versions snapshot every quarter hour of drafting and before every Fix-all. File ▸ Export library downloads the whole archive, snapshots included.'],
@@ -15556,7 +15556,7 @@ const TOUR=[
  {chap:'Rewriting and drafting',sub:'Rewrite',spot:'#menu',go:()=>{setRTab('sugg');tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');tourMenu('rewrite');},
   t:'↻ Rewrite',b:'Select a passage, then open Rewrite. We have selected a wordy sentence on the sample page. The first group rewrites the selection; the presets give paragraph styles; the last item rewrites it your way, from your own prompt.'},
  {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#altCard',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
-  t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device. A rewrite never touches the page until you press Use this. With a writing model, more versions appear beside it.',
+  t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device, in a card beside the words. The tabs try the other styles: Scholarly, Casual, Plainer and more. A rewrite never touches the page until you press Use this. With a writing model, its version appears too.',
   tip:'Read both versions aloud. The one you can say in a breath usually wins.'},
  {chap:'Rewriting and drafting',sub:'Draft',spot:'.hdr .draftBtn',go:()=>{try{closeAlts();}catch(e){}},
   t:'✨ Draft',b:'Draft writes to order from a short brief. It needs a writing model: on this device, on your laptop, or on your Mac mini. Without one, Inkwell says so rather than guess.'},
@@ -16436,7 +16436,7 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
       return rows;
     }
     if(onDesk){
-      var fx = inkFn('fixSelection'), al = inkFn('improveAlternatives'), pin = inkFn('newStickyNote');
+      var fx = inkFn('fixSelection'), al = inkFn('improveAlternatives'), rw = inkFn('rewrite'), pin = inkFn('newStickyNote');
       var rows = [
         {label:'Undo', hint:'⌘Z', act:function(){ var u=inkFn('undo'); if(u){ try{ u(); return; }catch(e){} }
           try{ target.focus(); document.execCommand('undo',false,null); }catch(e){} }},
@@ -16451,6 +16451,7 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
         rows.push({sep:true});
         if(fx) rows.push({label:'✔ Fix this selection', hint:'', act:function(){ try{ fx(); }catch(e){} }});
         if(al) rows.push({label:'✨ Alternatives for it', hint:'', act:function(){ try{ al(); }catch(e){} }});
+        if(rw) rows.push({label:'↻ Rewrite it in a style', hint:'', act:function(){ try{ rw((window.S&&S.reg==='casual')?'casual':'scholarly'); }catch(e){} }});
       }
       if(pin) rows.push({sep:true}, {label:'✏️ Pin a note', hint:'', act:function(){ try{ pin(); }catch(e){} }});
       return rows;
