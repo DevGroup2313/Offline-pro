@@ -12919,7 +12919,9 @@ async function installPro(){
    one in this window); the laptop's model is used when it is chosen first in
    Engine, or when this device has no model running */
 function inkDeviceModel(){return !!(PRO&&(PRO.native||PRO.apple||PRO.writer));}
-function inkSrv(){return !!S.connected&&!(inkDeviceModel()&&S.engineFirst!=='laptop');}
+/* 7.40: a computer that answers but has no writing model loaded writes nothing:
+   its simple fallback rules are never passed off as a model's work */
+function inkSrv(){return !!S.connected&&S.serverAI!==false&&!(inkDeviceModel()&&S.engineFirst!=='laptop');}
 function inkProLabel(){return PRO&&PRO.apple?'Apple\u2019s model':PRO&&PRO.native?'the tablet\u2019s model ('+PRONAME+')':PRO&&PRO.writer?'the writing model ('+PRONAME+')':'the on-device model';}
 /* ===== 7.35: the writing model on the tablet itself =====
    On the Fire tablet (and any Android tablet), llama.cpp runs inside the app,
@@ -13101,14 +13103,16 @@ async function ping(){
  try{j=await one(S.server);}catch(e){j=null;}
  /* on a computer, its own model stands in for another computer's */
  if(!j&&!IS_TABLETAPP&&!inkSrvLocal(S.server)){base=INK_LOCAL_SRV;try{j=await one(base);}catch(e){j=null;}}
- if(j){S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;S.srvActive=base;}
- else{S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;S.srvActive=null;}
+ if(j){S.connected=true;pingFails=0;S.serverModel=j.model||null;S.serverEngine=j.engine||null;S.srvActive=base;S.serverAI=(j.ai!==false);}
+ else{S.connected=false;pingFails++;S.serverModel=null;S.serverEngine=null;S.srvActive=null;S.serverAI=null;}
  setPill();}
 /* where the writing goes now: this computer, another computer, or this
    computer standing in for another that is not answering */
 function inkSrvWhere(){if(!S.connected)return 'none';if(inkSrvLocal(S.srvActive||S.server))return inkSrvLocal(S.server)?'here':'standin';return 'other';}
 function setPill(){const p=document.getElementById('enginePill');
  if(S.connected){const w=inkSrvWhere();p.className='pill on';
+  if(S.serverAI===false){p.className='pill mini';p.innerHTML='<i></i>'+(w==='other'?'Wi-Fi · computer linked, no model loaded':'Server · no model loaded');
+   p.title='The computer answers, but no writing model is loaded on it, so the rules engine writes here. On that computer: Studio ▸ ⚙ Engine.';return;}
   p.innerHTML='<i></i>'+(w==='other'?'Wi-Fi · ':'')+(S.serverModel?(w==='other'?'':'Server · ')+esc(S.serverModel.replace(/\.gguf$/,'')):'Local AI connected');
   p.title=w==='other'?'The writing model of '+String(S.server).replace(/^https?:\/\//,'')+', over the Wi-Fi':w==='standin'?'That computer is not answering, so this computer\u2019s model is used meanwhile':'';}
  else if(PRO){p.className='pill on';p.innerHTML='<i></i>'+(PRO.apple?esc(PRONAME):'Pro · '+esc(PRONAME)+(PRODEVICE?' · '+esc(PRODEVICE):''));}
@@ -14527,7 +14531,7 @@ async function inkPromptRun(instr){
  inkOfflineVersions(plan,ALTSEL.t).forEach(a=>ALTS.push(a));
  (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
  const toResults=()=>setTimeout(()=>{const f=document.querySelector('#altCard .altOpt');if(f)try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}},60);
- if(!S.connected&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
+ if(!inkSrv()&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
  const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
  try{const r=await inkWrite(instr,ALTSEL.t);
   if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
@@ -14929,8 +14933,8 @@ function updateTone(){
  maybeAITone(t);}
 let LASTTONE=0,TONEHASH='';
 function maybeAITone(t){
- if(!(PRO||S.connected))return;
- if(PRO&&PRO.apple&&!S.connected)return;
+ if(!(PRO||inkSrv()))return;
+ if(PRO&&PRO.apple&&!inkSrv())return;
  if(AIDEPTH>0)return;
  if(t.length<200)return;
  const h=t.length+':'+wordCt(t);if(h===TONEHASH)return;
@@ -15864,7 +15868,7 @@ function openModalDo(which){
  (IS_TABLETAPP
   ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">A computer\u2019s model (the Mac mini, or a laptop) is stronger than anything a tablet can hold. On that computer: Engine \u25B8 <i>Share with my other devices on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
    +inkPeerForm('Connect to my computer','Forget the computer')
-   +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):''):(S.serverNeedsCode?'The computer answered but the code is wrong: check the 6 digits it shows.':(inkSrvLocal(S.server)?'Not connected to a computer.':'Not answering at '+esc(S.server)+': is the computer awake, on the same Wi-Fi, with sharing on?')))+'</div>'
+   +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):'')+(S.serverAI===false?' \u00b7 no writing model is loaded there yet, so the rules engine writes here':''):(S.serverNeedsCode?'The computer answered but the code is wrong: check the 6 digits it shows.':(inkSrvLocal(S.server)?'Not connected to a computer.':'Not answering at '+esc(S.server)+': is the computer awake, on the same Wi-Fi, with sharing on?')))+'</div>'
   :'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your other devices on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
    +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>'
    +'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Another computer\u2019s model</h4>'
