@@ -8115,11 +8115,23 @@ self.onmessage=async e=>{const d=e.data;
  }catch(err){post({id:d.id,ok:false,error:String(err&&err.message?err.message:err)});}
 };`;
 const INKAI={files:null,slots:{}};
+/* 7.38: on the web app's site a large vendor file may be kept in parts (no
+   file there is larger than 9 MiB, so each can be put online by dragging it
+   into a browser): name.parts holds the number of parts, name.part1 and on
+   the bytes. The apps carry each file whole, and the first fetch finds it. */
+async function inkVendorBytes(url){
+ let r=null;try{r=await fetch(url);}catch(e){r=null;}
+ if(r&&r.ok)return r.arrayBuffer();
+ const name=url.split('/').pop();let n=0;
+ try{const p=await fetch(url+'.parts');if(p.ok)n=parseInt(await p.text(),10)||0;}catch(e){n=0;}
+ if(!n)throw new Error(name+': HTTP '+(r?r.status:'unreachable'));
+ const bufs=[];
+ for(let i=1;i<=n;i++){const q=await fetch(url+'.part'+i);if(!q.ok)throw new Error(name+', part '+i+' of '+n+': HTTP '+q.status);bufs.push(await q.arrayBuffer());}
+ return new Blob(bufs).arrayBuffer();}
 async function inkAiFiles(){
  if(INKAI.files)return INKAI.files;
  const u=f=>new URL('vendor/'+f,document.baseURI||location.href).href;
- const blob=async(f,type)=>{const r=await fetch(u(f));if(!r.ok)throw new Error(f+': HTTP '+r.status);
-  return URL.createObjectURL(new Blob([await r.arrayBuffer()],{type:type}));};
+ const blob=async(f,type)=>URL.createObjectURL(new Blob([await inkVendorBytes(u(f))],{type:type}));
  let files;
  try{files={tf:await blob('transformers.min.js','text/javascript'),
   mjs:await blob('ort-wasm-simd-threaded.jsep.mjs','text/javascript'),
@@ -8133,8 +8145,8 @@ let INKAI4=null;
 async function inkAiFiles4(){
  if(INKAI4)return INKAI4;
  const u=f=>new URL('vendor/tf4/'+f,document.baseURI||location.href).href;
- const blob=async(f,type)=>{const r=await fetch(u(f));if(!r.ok)throw new Error('vendor/tf4/'+f+' is missing (HTTP '+r.status+')');
-  return URL.createObjectURL(new Blob([await r.arrayBuffer()],{type:type}));};
+ const blob=async(f,type)=>{let b;try{b=await inkVendorBytes(u(f));}catch(e){throw new Error('vendor/tf4/'+f+' is missing ('+e.message+')');}
+  return URL.createObjectURL(new Blob([b],{type:type}));};
  return INKAI4={tf:await blob('transformers.min.js','text/javascript'),
   mjs:await blob('ort-wasm-simd-threaded.asyncify.mjs','text/javascript'),
   wasm:await blob('ort-wasm-simd-threaded.asyncify.wasm','application/wasm')};}
@@ -8286,8 +8298,8 @@ async function inkDiagnose(){
  if(navigator.storage&&navigator.storage.estimate){try{const e=await navigator.storage.estimate();say('Storage: '+fmtMB(e.usage||0)+' used of '+fmtMB(e.quota||0)+' allowed');}catch(e){say('Storage estimate failed: '+e.message);}}
  if(typeof caches!=='undefined'){await step('open the model cache',async()=>{const c=await caches.open('transformers-cache');const k=await c.keys();return k.length+' files cached';});}
  await step('read vendor/transformers.min.js',async()=>{const r=await fetch(new URL('vendor/transformers.min.js',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return fmtMB((await r.arrayBuffer()).byteLength);});
- await step('read vendor/ort-wasm-simd-threaded.jsep.wasm',async()=>{const r=await fetch(new URL('vendor/ort-wasm-simd-threaded.jsep.wasm',location.href).href,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
-  const b=await r.arrayBuffer();await WebAssembly.compile(b);return fmtMB(b.byteLength)+', compiles';});
+ await step('read vendor/ort-wasm-simd-threaded.jsep.wasm',async()=>{const b=await inkVendorBytes(new URL('vendor/ort-wasm-simd-threaded.jsep.wasm',location.href).href);
+  await WebAssembly.compile(b);return fmtMB(b.byteLength)+', compiles';});
  await step('start the model runtime in the background',async()=>{const busy=!!INKAI.slots.diag;if(busy)inkAiEnd('diag');
   try{await tmo(inkAiStart('diag'),60000,'runtime');return 'it answers';}finally{inkAiEnd('diag','done');}});
  const hf='https://huggingface.co/Xenova/flan-t5-small/resolve/main/';

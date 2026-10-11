@@ -55,6 +55,15 @@ WHAT CAME IN 7.38
    an older one when it opens from Applications (never a newer one, never
    forced). On Windows the Desktop shortcut is optional and unticked.
 
+8. The web app package is the finished web site (11 October). Before, it
+   was a kit that GitHub Actions had to build, with a 26.9 MB file that
+   GitHub's browser upload (25 MiB at most) refuses, so it could neither be
+   put online nor updated. Now no file is over 9 MiB (the two large engine
+   files are kept in parts, joined by the page and by sw.js; tested byte
+   for byte), the folder goes online by dragging it into Netlify Drop or a
+   public GitHub Pages repository, and a new version shows at the first
+   opening online.
+
 MEASURED IN 7.38
 ----------------
 - Grammar (rules and spelling), held out: W&I report half 67.6% / 4.3% /

@@ -29,11 +29,15 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 """
 
 SERVICE_WORKER = """/* Inkwell web app service worker, build %(build)s.
-   Inkwell's own files are kept on the device and served from there first, so
-   the app opens offline. Requests to other sites (models, for instance) pass
-   through untouched. */
+   Inkwell's own files are kept on the device, so the app opens offline.
+   7.38: the page itself is asked of the site first (for up to 3.5 seconds),
+   so a new version shows the first time Inkwell is opened online; with no
+   network the kept copy opens at once. A file too large for an easy upload
+   is kept in parts (SPLIT), and joined here when it is asked for whole.
+   Requests to other sites (models, for instance) pass through untouched. */
 const CACHE = 'inkwell-%(build)s';
 const FILES = %(files)s;
+const SPLIT = %(split)s;
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
@@ -42,16 +46,63 @@ self.addEventListener('activate', e => {
     .then(keys => Promise.all(keys.filter(k => k.startsWith('inkwell-') && k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
+async function page(req) {
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 3500);
+    const r = await fetch(req.url, { signal: ctl.signal, cache: 'no-store', credentials: 'same-origin' });
+    clearTimeout(t);
+    if (r && r.ok) { const c = await caches.open(CACHE); await c.put('index.html', r.clone()); return r; }
+  } catch (err) {}
+  return (await caches.match('index.html')) || fetch(req);
+}
+async function joined(name, n, type) {
+  const parts = [];
+  for (let i = 1; i <= n; i++) {
+    const u = name + '.part' + i;
+    const r = (await caches.match(u)) || await fetch(u);
+    if (!r || !r.ok) return new Response('missing ' + u, { status: 404 });
+    parts.push(await r.arrayBuffer());
+  }
+  return new Response(new Blob(parts, { type: type }), { status: 200, headers: { 'Content-Type': type } });
+}
 self.addEventListener('fetch', e => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  if (req.mode === 'navigate') {
-    e.respondWith(caches.match('index.html').then(r => r || fetch(req)));
-    return;
-  }
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (req.mode === 'navigate') { e.respondWith(page(req)); return; }
+  const rel = url.pathname.slice(new URL(self.registration.scope).pathname.length);
+  if (SPLIT[rel]) { e.respondWith(joined(rel, SPLIT[rel], rel.endsWith('.wasm') ? 'application/wasm' : 'application/octet-stream')); return; }
   e.respondWith(caches.match(req).then(r => r || fetch(req)));
 });
 """
+
+# 7.38: no file of the site is larger than this, so every file can be put
+# online by dragging it into a browser (GitHub takes 25 MiB at most per file
+# that way; Netlify advises staying under 10 MB). A larger file is kept as
+# name.part1, name.part2, ... with name.parts holding the number of parts; the
+# page and the service worker join them again.
+PART = 9 * 1024 * 1024
+
+
+def split_large(out):
+    split = {}
+    for base, _dirs, names in os.walk(out):
+        for n in names:
+            path = os.path.join(base, n)
+            size = os.path.getsize(path)
+            if size <= PART:
+                continue
+            with open(path, "rb") as f:
+                data = f.read()
+            count = (size + PART - 1) // PART
+            for i in range(count):
+                with open("%s.part%d" % (path, i + 1), "wb") as g:
+                    g.write(data[i * PART:(i + 1) * PART])
+            with open(path + ".parts", "w") as g:
+                g.write(str(count))
+            os.remove(path)
+            split[os.path.relpath(path, out).replace(os.sep, "/")] = count
+    return split
 
 
 def inject_head(html, tags):
@@ -82,6 +133,7 @@ def main():
     if os.path.isdir(tf4):
         shutil.copytree(tf4, os.path.join(out, "vendor", "tf4"))
     shutil.copytree(os.path.join(HERE, "icons"), os.path.join(out, "icons"))
+    split = split_large(out)
 
     manifest = {
         "name": "Inkwell",
@@ -109,11 +161,12 @@ def main():
     digest = hashlib.sha256(page.encode("utf-8")).hexdigest()[:10]
     build = "%s-%s" % (version, digest)
     with open(os.path.join(out, "sw.js"), "w", encoding="utf-8") as f:
-        f.write(SERVICE_WORKER % {"build": build, "files": json.dumps(files)})
+        f.write(SERVICE_WORKER % {"build": build, "files": json.dumps(files), "split": json.dumps(split)})
 
     # GitHub Pages and similar hosts must serve the files as they are.
     open(os.path.join(out, ".nojekyll"), "w").close()
-    print("web app built in %s (build %s, %d files cached for offline use)" % (out, build, len(files)))
+    print("web app built in %s (build %s, %d files cached for offline use; kept in parts: %s)"
+          % (out, build, len(files), ", ".join("%s (%d)" % kv for kv in sorted(split.items())) or "none"))
 
 
 if __name__ == "__main__":

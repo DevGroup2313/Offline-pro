@@ -10,6 +10,13 @@ HOW IT IS BUILT
    GitHub builds it with build_site.py whenever Inkwell.html changes, and
    publishes it on the Releases page as "Inkwell ... web app", a zip file.
    To build it yourself: python3 build_site.py <assets folder> <output folder>
+   From 7.38 the web app package (packaging/make_packages.py) holds the
+   finished site itself, so it needs no build. build_site.py keeps any file
+   larger than 9 MiB in parts (name.part1 and on, with name.parts holding
+   the number), so every file can be uploaded by dragging it into a browser
+   (GitHub takes 25 MiB at most that way); the page and sw.js join them.
+   sw.js asks the site for the page first (for 3.5 seconds), so a new
+   version shows at the first opening online.
 
 WHAT IT STILL NEEDS: A WEB ADDRESS
    Safari can only add a page to the Home Screen from a web address (https),

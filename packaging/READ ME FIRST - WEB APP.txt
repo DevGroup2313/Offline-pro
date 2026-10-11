@@ -1,172 +1,117 @@
-INKWELL 7.38: THE HOME SCREEN WEB APP
-=====================================
+INKWELL 7.38: THE WEB APP
+=========================
+
+WHAT IS IN THIS PACKAGE
+-----------------------
+The folder "Inkwell-web-7.38" is the finished web app. There is nothing to
+build and no GitHub Actions is needed. No file in it is larger than 9 MB, so
+the whole folder can be put online by dragging it into a browser.
+
+(Before 7.38 this package was a kit that GitHub Actions had to build, and
+one of its files, 26.9 MB, was too large for GitHub's browser upload, which
+takes 25 MB at most. That is why it could not be put online or updated.)
+
+Safari can add Inkwell to the Home Screen only from a web address, not from
+a file. So the folder is put online once, at an address of your own.
+
+BEFORE YOU UPDATE
+-----------------
+Open your current Inkwell, File, Export library, and keep the file.
+
+
+PUT IT ONLINE THE FIRST TIME (choose one)
+-----------------------------------------
+A. Netlify (free, and the simplest)
+   1. On a computer, open  https://app.netlify.com/drop  in a browser.
+      Sign up or log in (free). A site dropped without an account is kept
+      behind a temporary password until it is claimed.
+   2. Unzip this package. Drag the folder "Inkwell-web-7.38" onto the page.
+   3. Netlify shows the address, ending in .netlify.app. Keep it.
+   Netlify advises keeping a deploy under 50 MB; this one is about 60 MB.
+   If the deploy stalls, try once more, or use B.
+
+B. GitHub Pages (free for a PUBLIC repository)
+   1. github.com, "+", New repository, for example inkwell-site. Choose
+      Public. Create repository.
+   2. "uploading an existing file": drag in everything INSIDE the folder
+      "Inkwell-web-7.38" (index.html, sw.js, manifest.webmanifest, and the
+      icons and vendor folders). Commit changes.
+   3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
+      / (root). Save. After a minute or two the address appears, of the form
+      https://YOUR-NAME.github.io/inkwell-site/
+   A public repository can be read by anyone; your documents are never in
+   it (they stay on your devices). GitHub publishes Pages with its own
+   Actions; if Actions is blocked on your account, the site may not
+   publish. Then use A.
+
+
+ON THE IPHONE OR IPAD
+---------------------
+1. Open the address in Safari.
+2. Share, "Add to Home Screen", Add.
+3. Open Inkwell from the Home Screen once while online, so it keeps its
+   files for offline use.
+
+
+UPDATING LATER (each new version)
+---------------------------------
+1. In the old Inkwell: File, Export library.
+2. Netlify: open your site in Netlify. Under "Production deploys", drag the
+   new folder onto the drop area.
+   GitHub: in your site repository, "Add file", "Upload files", drag in
+   everything inside the new folder, Commit. The old files are replaced.
+3. Open Inkwell once while online. From 7.38 the new version shows at the
+   first opening. The first update away from 7.37 or older may need a
+   second opening, because the old version's offline copy answers first.
+Look for "v7.38" beside the date at the top.
+
+
+YOUR DOCUMENTS
+--------------
+- The web app keeps its own library in the browser, separate from the
+  apps. Updating the site at the same address keeps it.
+- A NEW address (for example, moving from GitHub to Netlify) starts with
+  an empty library: File, Import library, and choose the exported file.
+- Export regularly: a browser may clear a web app's storage, for example
+  when the device is short of space.
+
 
 NEW IN 7.38
 -----------
-- Before you install: in the old Inkwell, File, Export library. Keep the file.
 - Rewrite with a prompt now works with no writing model at all. Every
   prompt in the library does something on this device: rules rewrite where
   they can keep the meaning, and each change says what it was and why. For
   what only you can write ("Show, don't tell", "Signpost the argument"), a
   coach points to the exact words, says how, and checks your own try.
 - The seals are pressed into the wax; Schedae's button is a quill on
-  parchment. The app icons are redrawn.
+  parchment. The app icons are redrawn; on an iPhone or iPad the home
+  screen icon sits on the seal's own cream.
 - Schedae: "Send to Tabula"; six new note colours, by day and by night; each
   colour's name shows when you hover over it, as do the names of the symbol
   buttons everywhere.
 - Right-click Paste works with text copied from other apps.
-- The home screen icon on an iPhone or iPad sits on the seal's own cream.
-- The web app cannot reach the Mac mini's model: a secure web page may
-  not call a plain address on the home network. The iPhone and iPad app
-  can.
-
-THIS PACKAGE IS FOR: iPhone and iPad without a computer or Apple ID, and for
-any browser. It is the fallback to the iPhone and iPad app.
-THE FILE IT MAKES:   Inkwell-7.38-web-buildN.zip (a ready web site)
-It never expires and needs no USB cable, but it needs a WEB ADDRESS: Safari can
-only add a page to the Home Screen from a web address, not from a file.
-
-Once on the Home Screen it opens in its own window with the seal (on a navy
-square, as iOS shows every icon as a square) and works offline after the first
-visit.
+- The web app cannot reach the Mac mini's model: a secure web page may not
+  call a plain address on the home network. The iPhone and iPad app can.
 
 
-PART A. PUT THE PACKAGE ON GITHUB AND BUILD THE SITE
-----------------------------------------------------
-1. Sign in at github.com. Top right: "+", then "New repository".
-   Name it, for example, inkwell-web. Private is fine for this part.
-   Press "Create repository".
-
-2. Unzip this package. Open the folder inside it. Make hidden files visible
-   (Windows: File Explorer, View, Show, Hidden items. Mac: in Finder,
-   Cmd + Shift + full stop).
-
-3. On the new repository's page, click "uploading an existing file". Drag in
-   EVERYTHING inside the package folder (.github, icons, web, and every file
-   beside them). Wait until every file is listed, then "Commit changes".
-
-4. If the repository does not show ".github": Add file, Create new file,
-   name it exactly  .github/workflows/build-web.yml  and paste ALL of the text
-   of "WORKFLOW build-web.yml (copy).txt". Commit.
-
-5. Actions tab: "Build the Inkwell web app" runs by itself (or press
-   "Run workflow"). When it is green, open Releases: the newest
-   "Inkwell 7.38 web app" release has the site as a .zip under Assets.
-
-
-PART B. GIVE THE SITE A WEB ADDRESS (GITHUB PAGES)
---------------------------------------------------
-GitHub Pages is free for PUBLIC repositories. As far as I know, Pages for a
-private repository needs a paid GitHub plan; check GitHub's current plans.
-Anyone who knows a published address can open it, and a public repository's
-files can be read by anyone. Decide whether that is acceptable for Inkwell.
-
-6.  Create another new repository, for example inkwell-site, PUBLIC.
-7.  Unzip the site .zip from step 5. Upload EVERYTHING inside it (index.html,
-    sw.js, manifest.webmanifest, .nojekyll, and the icons and vendor folders)
-    with "uploading an existing file". Commit.
-8.  In that repository: Settings, Pages. Under "Build and deployment",
-    Source: "Deploy from a branch"; Branch: main, folder / (root). Save.
-9.  After a minute or two the Pages screen shows the address, of the form
-    https://YOUR-NAME.github.io/inkwell-site/
-
-
-PART C. ON THE IPHONE OR IPAD
------------------------------
-10. Open the address in Safari.
-11. Tap Share, then "Add to Home Screen", then Add.
-12. Open Inkwell from the Home Screen icon. Open it once while online, so it
-    can keep its files for offline use.
-
-
-PART D. YOUR DOCUMENTS
-----------------------
-- The web app keeps its own library, separate from the app and from Safari
-  tabs. Use File, Export library and File, Import library to move documents.
-- Export regularly: a browser may clear a web app's storage, for example when
-  the device is short of space.
-
-
-PART D2. OFFLINE, AND THE WRITING MODEL (7.34)
-----------------------------------------------
-- After the first visit the web app opens and works with no internet and no
-  server: the rules engine, Scriba's page, Fontes and Cite (with every
-  citation style) are kept on the device.
-- New in 7.34, on a laptop or desktop: a writing model inside the page.
-  Engine, "Writing model inside this window", "Install the writing model".
-  It is LFM2.5 1.2B Instruct (Liquid AI, LFM Open License v1.0), downloaded
-  once (about 850 MB), then offline. It needs WebGPU: Chrome or Edge on
-  Windows or a Mac; recent Safari on a Mac may work but was not tested.
-  Measured behind Inkwell's safety filter (6 October 2026): 37% of learner
-  sentences improved, 3% made worse, 2% of correct sentences changed.
-  Its rewrites are weaker: in the measurement it dropped citations in 8 of
-  24 rewrites, so every rewrite that drops a citation or number, or adds a
-  name, is marked in red, with "Use anyway" instead of "Use this".
-  Not tested on real graphics hardware here; its speed on your computer is
-  not yet known.
-- On a phone or tablet the web app offers no writing model (the system
-  closes a page that takes this much memory). There, use Apple's model in
-  the iPhone and iPad app (iOS 26), or your Mac's model over the Wi-Fi.
-- The folder "tf4" in this package carries the engine for this model
-  (Transformers.js 4.3.1, Apache 2.0, and ONNX Runtime Web, MIT). Upload it
-  with everything else in Part A.
-
-
-NEW IN 7.36: SPELLING, AND A CAREFUL GRAMMAR MODEL (OPTIONAL)
--------------------------------------------------------------
-- A dictionary spelling checker now runs on this device, offline, with
-  suggestions and "Add to dictionary" (switch: Studio, Rules).
-- Engine, "Turn on the grammar model" (about 124 MB, once): it reads each
-  paragraph as you pause and adds suggestions; nothing changes unless you
-  accept. Only its reliable kinds are shown (agreement, articles,
-  prepositions, spelling, verb forms). Measured: 80% to 86% of its
-  suggestions match a human corrector's; on a 5,486-word thesis it
-  suggested nothing.
-- Coach menu: an authorship report, and "Grade against a rubric".
-
-
-NEW IN 7.36: SCRIBA, LIKE CAPTION.ED, OFFLINE
---------------------------------------------
-Scriba (the microphone room) now works on a recording the way Caption.Ed
-does. Open a recording (or "Import audio or video") and press Transcribe:
-- Playback and editing: the transcript follows the sound; a time plays from
-  there; every paragraph can be corrected in place; search; exports as
-  text, Word, SRT or WebVTT subtitles, or straight into Inkwell's document.
-- Notes and highlights: Important, Question, Action, Revisit; a note on
-  any moment; a scratchpad; slides from a PDF or photos of the board.
-- Your words: names and terms spelled your way in every transcript, and a
-  switch that removes "um", "uh" and "er".
-- Speakers: name them by hand, or press "Find the speakers". This runs on
-  the device with two small open models (about 33 MB, fetched once with
-  the internet, then offline). Measured on recorded meetings: about 85% of
-  speech lands in a paragraph naming the right person, about 95% when the
-  speakers are found before transcribing (Scriba then starts a new
-  paragraph where the speaker changes). The number of speakers is often
-  wrong on short recordings; check the names, and give two speakers the
-  same name to join them. Details: tools/speakers/README.md.
-- Summarise: a summary with chapters, action items, meeting minutes,
-  revision notes with questions, or your own prompt. These come from the
-  writing model Inkwell is running on your devices; none is sent anywhere
-  else. Any name or number the transcript does not contain is marked so
-  you can check it. With a small model the summaries are short and
-  plain, and they repeat the speech model's mishearings.
-
-
-PART E. UPDATING INKWELL LATER
-------------------------------
-- In the first repository: upload the new Inkwell.html into web/ (and new
-  vendor files into web/vendor/); change VERSION.txt if the version changed.
-- A new site .zip appears in Releases. Upload its contents to the Pages
-  repository (replacing the old files). Phones pick up the new version the
-  next time Inkwell is opened online, sometimes only on the second opening.
+OFFLINE, AND THE MODELS
+-----------------------
+- After the first visit the web app works with no internet: the rules
+  engine, spelling, Scriba's page, Fontes and Cite.
+- On a laptop or desktop, Engine, "Writing model inside this window" can
+  install a writing model in the page (about 850 MB, once; it needs
+  WebGPU, as in Chrome or Edge). On a phone or tablet the web app offers
+  no writing model: the system closes a page that takes that much memory.
+- Engine, "Turn on the grammar model" (about 124 MB, once) adds careful
+  grammar suggestions. Scriba can find the speakers in a recording (about
+  33 MB, once). Both then work offline.
 
 
 PROBLEMS
 --------
-- No run appears in Actions: the workflow file is missing. Do step 4.
-- "No build_site.py" or "No Inkwell.html with a vendor folder beside it": a
-  file or folder was not uploaded. Compare with the package.
-- A red step called "Publish a release": Settings, Actions, General, Workflow
-  permissions: "Read and write permissions", Save, and run it again.
-- The Pages address shows 404: wait a few minutes; check that index.html is at
-  the top level of the Pages repository, not inside a folder.
+- The address shows "404": wait a few minutes. On GitHub, check that
+  index.html is at the top of the repository, not inside a folder.
+- The old version still shows: close Inkwell fully and open it again while
+  online.
+- A model will not start: Engine, "Diagnose this device", and send me the
+  report.

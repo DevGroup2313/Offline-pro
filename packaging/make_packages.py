@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import subprocess
 import sys
 import zipfile
 
@@ -67,10 +68,16 @@ def ios(pkg):
 
 
 def web(pkg):
-    common(pkg, "READ ME FIRST - WEB APP.txt", ".github/workflows/web.yml", "build-web.yml")
-    for name in ("build_site.py", "VERSION.txt", "icons", "tf4"):
-        copy(os.path.join("Inkwell-Web", name), os.path.join(pkg, name))
-    shutil.copytree(ASSETS, os.path.join(pkg, "web"))
+    """7.38: the web app package is the finished web site, ready to put
+    online by dragging it into a browser: nothing to build, no GitHub
+    Actions, and no file larger than 9 MiB (build_site.py keeps a larger one
+    in parts). Before 7.38 it was a kit that GitHub Actions had to build,
+    with a 26.9 MB file no browser upload to GitHub accepts. The kit stays in
+    this repository (Inkwell-Web, and .github/workflows/web.yml)."""
+    copy(os.path.join("packaging", "READ ME FIRST - WEB APP.txt"), os.path.join(pkg, "READ ME FIRST - WEB APP.txt"))
+    copy("LICENCE.txt", os.path.join(pkg, "LICENCE.txt"))
+    site = os.path.join(pkg, "Inkwell-web-" + version())
+    subprocess.run([sys.executable, os.path.join(ROOT, "Inkwell-Web", "build_site.py"), ASSETS, site, version()], check=True)
 
 
 def desktop_page(pkg):

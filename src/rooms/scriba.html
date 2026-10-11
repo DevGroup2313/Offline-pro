@@ -819,10 +819,24 @@ function scribaPageOk(){
    library, so it never has to fetch them from the app's private address
    (the Fire and iPhone/iPad app windows may not serve a worker's requests) */
 var SCRIBA_BLOBS=null;
+/* 7.38: on the web app's site a large file may be kept in parts (name.parts
+   holds the number; name.part1 and on hold the bytes), so that every file of
+   the site can be put online by dragging it into a browser */
+function scribaVendorBytes(url){
+  return fetch(url).then(function(r){ if(r.ok) return r.arrayBuffer(); throw new Error("whole"); })
+    .catch(function(){
+      return fetch(url+".parts").then(function(p){ if(!p.ok) throw new Error(url); return p.text(); }).then(function(t){
+        var n=parseInt(t,10)||0, got=[], i=1;
+        if(!n) throw new Error(url);
+        function next(){ if(i>n) return new Blob(got).arrayBuffer();
+          return fetch(url+".part"+(i++)).then(function(q){ if(!q.ok) throw new Error(url); return q.arrayBuffer(); }).then(function(b){ got.push(b); return next(); }); }
+        return next(); });
+    });
+}
 function scribaBlobUrls(cb){
   if(SCRIBA_BLOBS!==null){ cb(); return; }
   var base=document.baseURI||location.href;
-  function one(f,type){ return fetch(new URL("vendor/"+f,base).href).then(function(r){ if(!r.ok) throw new Error(f); return r.arrayBuffer(); })
+  function one(f,type){ return scribaVendorBytes(new URL("vendor/"+f,base).href)
     .then(function(b){ return URL.createObjectURL(new Blob([b],{type:type})); }); }
   Promise.all([one("transformers.min.js","text/javascript"),one("ort-wasm-simd-threaded.jsep.mjs","text/javascript"),one("ort-wasm-simd-threaded.jsep.wasm","application/wasm")])
     .then(function(u){ SCRIBA_BLOBS={module:u[0], wasm:{mjs:u[1], wasm:u[2]}}; cb(); },function(){ SCRIBA_BLOBS=false; cb(); });
