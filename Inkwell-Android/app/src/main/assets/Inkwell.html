@@ -824,7 +824,7 @@ body.panelFolded #panelFoldLabel,body.sideFolded #sideFoldLabel{display:block}
    family, the scroll and foot refinements, the perf line, the matte pass (457),
    the night wall, the lift (501), the final seating (592), the night inks. The
    seams Inkwell needs are marked. */
-.sticky-note { position: fixed; width: 202px; min-height: 152px; background: #f6efdc; color: #4a3f1e; border-radius: 3px; box-shadow: 0 0 0 1px rgba(60,44,14,.10), 0 1px 2px rgba(60,44,14,.14), 0 4px 10px rgba(60,44,14,.10); pointer-events: auto; display: flex; flex-direction: column; transform: none; z-index: 5000; }
+.sticky-note { position: fixed; width: 202px; min-height: 152px; background: #f9f3e2; color: #4a3f1e; border-radius: 3px; box-shadow: 0 0 0 1px rgba(60,44,14,.10), 0 1px 2px rgba(60,44,14,.14), 0 4px 10px rgba(60,44,14,.10); pointer-events: auto; display: flex; flex-direction: column; transform: none; z-index: 5000; }
 .sticky-note .sn-head { height: 22px; cursor: default; display: flex; align-items: center; gap: 4px; padding: 0 5px; background: rgba(16,42,58,0.07); border-radius: 3px 3px 0 0; color: #6b5d2e; box-shadow: none; }
 .sticky-note .sn-iconbtn { border: none; background: transparent; cursor: pointer; color: #6b5d2e; font-size: 12px; line-height: 1; padding: 2px 5px; border-radius: 4px; box-shadow: none; position: relative; z-index: 6; }
 .sticky-note .sn-iconbtn:hover { color: #2c2410; background: rgba(0,0,0,0.10); }
@@ -877,7 +877,7 @@ html[data-theme=dark] .sticky-note .sn-tools { border-top: 1px solid rgba(0,0,0,
 html[data-theme=dark] .sticky-note .sn-resize { background: linear-gradient(135deg, transparent 50%, rgba(255,246,228,0.26) 50%) !important; }
 /* the minimised note keeps only its head (their data-sn-min spec) */
 .sticky-note[data-sn-min="1"]{ min-height: 0 !important; height: auto !important; resize: none !important; }
-.sticky-note[data-sn-min="1"] .sn-body, .sticky-note[data-sn-min="1"] .sn-tools, .sticky-note[data-sn-min="1"] .sn-actions { display: none !important; }
+.sticky-note[data-sn-min="1"] .sn-body, .sticky-note[data-sn-min="1"] .sn-foot, .sticky-note[data-sn-min="1"] .sn-meta { display: none !important; }
 /* their day construction for the menu's and panel's rows, scoped */
 html:not([data-theme=dark]) .sticky-card-menu-back .btn, html:not([data-theme=dark]) .sticky-panel-back .btn { box-shadow: inset 0 -1.5px 0 rgba(16,42,58,.16), 0 2px 0 rgba(16,42,58,.3), 0 4px 5px rgba(16,42,58,.2), 0 9px 14px rgba(16,42,58,.13) !important; transition: transform .1s cubic-bezier(.34,1.35,.64,1), box-shadow .12s ease, background-color .14s ease !important; }
 html:not([data-theme=dark]) .sticky-card-menu-back .btn:hover, html:not([data-theme=dark]) .sticky-panel-back .btn:hover { transform: translateY(-2px) !important; box-shadow: inset 0 -1.5px 0 rgba(16,42,58,.16), 0 3px 0 rgba(16,42,58,.3), 0 6px 8px rgba(16,42,58,.22), 0 13px 20px rgba(16,42,58,.15) !important; }
@@ -1021,6 +1021,36 @@ html[data-theme=dark] .sticky-card-menu-back .btn.btn-soft, html[data-theme=dark
 /* the panel's one piece of midnight: the New note button */
 .sticky-panel-back .scheNew{background:linear-gradient(#2b6884,#1a4157) !important;color:#fdfaf2 !important;border:1px solid #16394c !important}
 html[data-theme=dark] .sticky-panel-back .scheNew{background:linear-gradient(#5d93ac,#49768d) !important;color:#0c151c !important;border-color:#6d9cb3 !important}
+/* 7.40: the rest of Carpe Diem's note, as in Carpe Diem and the Forge: its type,
+   the edge and corner handles, the quick transition, the pop, and the lift
+   standing down under minimal motion and the reduced motion preference */
+.sticky-note { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.sticky-note * { font-family: inherit; }
+.sticky-note .sn-body, .sticky-note .sn-tool { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+.sticky-note .sn-iconbtn, .sticky-note .sn-tool { transition: all 0s ease 0s; }
+.cd-sn-edge { position: absolute; z-index: 5; background: transparent; }
+.cd-sn-edge-n { top: -4px; left: 10px; right: 10px; height: 8px; }
+.cd-sn-edge-s { bottom: -4px; left: 10px; right: 24px; height: 8px; }
+.cd-sn-edge-e { right: -4px; top: 10px; bottom: 24px; width: 8px; }
+.cd-sn-edge-w { left: -4px; top: 10px; bottom: 10px; width: 8px; }
+.cd-sn-edge-ne { top: -5px; right: -5px; width: 14px; height: 14px; }
+.cd-sn-edge-nw { top: -5px; left: -5px; width: 14px; height: 14px; }
+.cd-sn-edge-sw { bottom: -5px; left: -5px; width: 14px; height: 14px; }
+.cd-sn-edge { touch-action: none !important; }
+@media (pointer: coarse) {
+  .cd-sn-edge-n { height: 18px; top: -9px; }
+  .cd-sn-edge-s { height: 18px; bottom: -9px; }
+  .cd-sn-edge-e { width: 18px; right: -9px; }
+  .cd-sn-edge-w { width: 18px; left: -9px; }
+  .cd-sn-edge-ne, .cd-sn-edge-nw, .cd-sn-edge-sw { width: 26px; height: 26px; }
+  .cd-sn-edge-n { top: -14px; height: 16px; }
+  .cd-sn-edge-ne { top: -14px; }
+  .cd-sn-edge-nw { top: -14px; }
+}
+body .sticky-note { will-change: transform; transition: transform .08s ease-out, box-shadow .08s ease !important; }
+@keyframes cdFwPop { 0% { transform: scale(.93) translateY(20px); opacity: .45; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+html body[data-motion="minimal"] .sticky-note:hover { transform: none !important; }
+@media (prefers-reduced-motion: reduce) { html body .sticky-note:hover { transform: none !important; } }
 </style>
 
 <style id="ink730Layout">
@@ -7978,19 +8008,22 @@ function stickyToTabula(id) {
   setTimeout(tick, 600);
   return true;
 }
-/* 7.38: the six named papers, retinted to sit with Inkwell's own colours:
-   Foolscap is the desk's vellum, a shade deeper than the page, and is the
-   paper a new note takes; the others are washes of the house pigments on
-   that vellum (ochre, the seal's lapis blue, claret, laurel, vespers
-   violet), a little warmer than in 7.37. The ids stay as they were, so
-   every note already on the desk keeps its colour. Night papers: below. */
+/* 7.39: the six papers of Carpe Diem and the Forge, exactly (their cd-603
+   palette): the cream leads and a new note takes it; then a pastel yellow,
+   sky, rose, sage and violet. The names are theirs too, and each shows over
+   its swatch. The ids never change, so every note keeps its colour. The
+   muted 7.37 and 7.38 papers are withdrawn at the writer's word: the notes
+   had lost the look they share with Carpe Diem. Night papers: below. */
 const STICKY_COLORS = [
-  { id: "ivory",  name: "Foolscap", bg: "linear-gradient(180deg, #f6efdc, #ece2c7)" },
-  { id: "gold",   name: "Ochre",    bg: "linear-gradient(180deg, #efdba6, #e5cb8a)" },
-  { id: "sky",    name: "Lapis",    bg: "linear-gradient(180deg, #dce4e9, #cad6df)" },
-  { id: "rose",   name: "Claret",   bg: "linear-gradient(180deg, #eed9d1, #e3c6bc)" },
-  { id: "sage",   name: "Laurel",   bg: "linear-gradient(180deg, #e2e3cb, #d3d6b8)" },
-  { id: "violet", name: "Vespers",  bg: "linear-gradient(180deg, #e6dce6, #d7cbd8)" },
+  /* 7.40: Inkwell's own shades, drawn from the app's colours: the page's cream,
+     the brass, lapis (the manuscript blue), the claret of the seal's wax, laurel,
+     and the slate of midnight. The ids stay, so every saved note keeps its colour. */
+  { id: "ivory",  name: "Foolscap", bg: "linear-gradient(180deg, #f9f3e2, #efe6cf)" },
+  { id: "gold",   name: "Gilt",     bg: "linear-gradient(180deg, #f2e2b6, #e8d39c)" },
+  { id: "sky",    name: "Lapis",    bg: "linear-gradient(180deg, #d6e7ee, #c2dae4)" },
+  { id: "rose",   name: "Claret",   bg: "linear-gradient(180deg, #f1d8d6, #e7c4c1)" },
+  { id: "sage",   name: "Laurel",   bg: "linear-gradient(180deg, #d9e8db, #c6dcc9)" },
+  { id: "violet", name: "Vespers",  bg: "linear-gradient(180deg, #dfe1ee, #cdd0e4)" },
 ];
 function stickyColorBg(id) { const c = STICKY_COLORS.find(x => x.id === id) || STICKY_COLORS[0]; return c.bg; }
 function saveStickyAsNew(id) {
@@ -8063,6 +8096,33 @@ function makeStickyCard(n) {
   tools.appendChild(fmt("U", "underline", { textDecoration: "underline" }));
   tools.appendChild(fmt("ab", "strikeThrough", { textDecoration: "line-through" }));
   tools.appendChild(fmt("\u2022", "insertUnorderedList", null));
+  /* 7.39: Carpe Diem's image tool, as theirs: a picture is scaled to 600 px at
+     most and kept inside the note */
+  const imgIn = el("input", { style: { display: "none" } });
+  imgIn.setAttribute("type", "file"); imgIn.setAttribute("accept", "image/*");
+  imgIn.addEventListener("change", () => {
+    const f = imgIn.files && imgIn.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const mx = 600; let w = im.width, h = im.height;
+        if (w > mx || h > mx) { const r = Math.min(mx / w, mx / h); w = Math.round(w * r); h = Math.round(h * r); }
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        cv.getContext("2d").drawImage(im, 0, 0, w, h);
+        let url; try { url = cv.toDataURL("image/jpeg", 0.82); } catch (e) { url = rd.result; }
+        body.focus(); try { document.execCommand("insertImage", false, url); } catch (e) {}
+        n.text = body.innerHTML; saveState();
+      };
+      im.src = rd.result;
+    };
+    rd.readAsDataURL(f); imgIn.value = "";
+  });
+  const imgBtn = el("button", { class: "sn-tool", title: "Insert image" });
+  imgBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L6 21"/></svg>';
+  imgBtn.addEventListener("mousedown", (e) => { e.preventDefault(); });
+  imgBtn.onclick = (e) => { e.preventDefault(); imgIn.click(); };
+  tools.appendChild(imgBtn);
   const snSave = el("button", { class: "sn-tool" });
   snSave.textContent = "Save";
   snSave.title = "Save this note now";
@@ -8077,21 +8137,24 @@ function makeStickyCard(n) {
   };
   tools.appendChild(snSave);
   card.appendChild(tools);
+  card.appendChild(imgIn);
+  /* Carpe Diem pass 962: the note keeps its full weighted shadow while it moves */
+  var __snLowShadow = function (on) {};
   if (n.w) card.style.width = n.w + "px";
   if (n.h) card.style.height = n.h + "px";
   const rsz = el("div", { class: "sn-resize", title: "Resize" });
   let rs = null;
-  rsz.addEventListener("pointerdown", (e) => { e.preventDefault(); rs = { sx: e.clientX, sy: e.clientY, ow: card.offsetWidth, oh: card.offsetHeight }; try { rsz.setPointerCapture(e.pointerId); } catch (er) {} });
+  rsz.addEventListener("pointerdown", (e) => { e.preventDefault(); rs = { sx: e.clientX, sy: e.clientY, ow: card.offsetWidth, oh: card.offsetHeight }; try { rsz.setPointerCapture(e.pointerId); } catch (er) {} __snLowShadow(true); });
   rsz.addEventListener("pointermove", (e) => { if (!rs) return; n.w = Math.max(150, rs.ow + (e.clientX - rs.sx)); n.h = Math.max(120, rs.oh + (e.clientY - rs.sy)); card.style.width = n.w + "px"; card.style.height = n.h + "px"; });
-  rsz.addEventListener("pointerup", () => { if (rs) { rs = null; saveState(); } });
-  rsz.addEventListener("pointercancel", () => { rs = null; });
+  rsz.addEventListener("pointerup", () => { __snLowShadow(false); if (rs) { rs = null; saveState(); } });
+  rsz.addEventListener("pointercancel", () => { __snLowShadow(false); if (rs) { rs = null; } });
   card.appendChild(rsz);
   let drag = null;
-  grip.addEventListener("pointerdown", (e) => { drag = { sx: e.clientX, sy: e.clientY, ox: n.x || 90, oy: n.y || 100 }; try { grip.setPointerCapture(e.pointerId); } catch (er) {} grip.style.cursor = "grabbing"; card.classList.add("sn-dragging"); });
+  grip.addEventListener("pointerdown", (e) => { drag = { sx: e.clientX, sy: e.clientY, ox: n.x || 90, oy: n.y || 100 }; window.__cdDragging = true; try { grip.setPointerCapture(e.pointerId); } catch (er) {} grip.style.cursor = "grabbing"; __snLowShadow(true); });
   let __snRaf = 0;
-  grip.addEventListener("pointermove", (e) => { if (!drag) return; if (!(e.buttons & 1) && e.pointerId !== 999) { drag = null; grip.style.cursor = "grab"; card.classList.remove("sn-dragging"); return; } n.x = Math.max(0, Math.min(drag.ox + (e.clientX - drag.sx), innerWidth - 214)); n.y = Math.max(0, Math.min(drag.oy + (e.clientY - drag.sy), innerHeight - 164)); if (__snRaf) return; __snRaf = requestAnimationFrame(() => { __snRaf = 0; card.style.left = n.x + "px"; card.style.top = n.y + "px"; }); });
-  grip.addEventListener("pointerup", () => { if (drag) { drag = null; grip.style.cursor = "grab"; card.classList.remove("sn-dragging"); saveState(); } });
-  grip.addEventListener("pointercancel", () => { drag = null; grip.style.cursor = "grab"; card.classList.remove("sn-dragging"); });
+  grip.addEventListener("pointermove", (e) => { if (!drag) return; if (!(e.buttons & 1) && e.pointerId !== 999) { drag = null; window.__cdDragging = false; grip.style.cursor = "grab"; __snLowShadow(false); return; } /*cd-506-stale: a missed pointerup left drag set, and the next stray move slammed the card; a move without a held button ends the drag instead.*/ n.x = Math.max(0, Math.min(drag.ox + (e.clientX - drag.sx), innerWidth - 214)); n.y = Math.max(0, Math.min(drag.oy + (e.clientY - drag.sy), innerHeight - 164)); if (__snRaf) return; __snRaf = requestAnimationFrame(() => { __snRaf = 0; card.style.left = n.x + "px"; card.style.top = n.y + "px"; }); });
+  grip.addEventListener("pointerup", () => { __snLowShadow(false); if (drag) { drag = null; window.__cdDragging = false; grip.style.cursor = "grab"; saveState(); } });
+  grip.addEventListener("pointercancel", () => { __snLowShadow(false); if (drag) { drag = null; window.__cdDragging = false; grip.style.cursor = "grab"; } });
   (function () {
     var nw = 214, nh = 164;
     var cx = Math.max(0, Math.min(n.x || 90, innerWidth - nw));
@@ -8103,8 +8166,8 @@ function makeStickyCard(n) {
     if (cx !== n.x || cy !== n.y) { n.x = cx; n.y = cy; }
     card.style.left = cx + "px"; card.style.top = cy + "px";
   })();
-  if (!window.__snResize) {
-    window.__snResize = true;
+  if (!window.__cd500SnResize) {
+    window.__cd500SnResize = true;
     var __snRz = 0;
     window.addEventListener("resize", function () {
       clearTimeout(__snRz);
@@ -8134,6 +8197,424 @@ inkMark('stickyFns');
   clear(layer);
   (state.stickyNotes || []).filter(n => n.pinned).forEach(n => layer.appendChild(makeStickyCard(n)));
 }
+/* 7.40: THE NOTE'S DRESS, Carpe Diem's own (cd-fixes-461 and after), so that a
+   note here looks and moves as it does in Carpe Diem and the Forge: the flat face
+   in its own colour, the bevel in that colour darkened, three soft casts, the pop
+   as it arrives, and its own place in the pile. It wraps makeStickyCard and
+   changes nothing about how a card is built. */
+(function () {
+  var Z = 9250;                     /* above .cd-fw at 9200, below the panels at 9500 */
+
+  /* the flat face for each colour: the first stop of the palette's gradient, read from the
+     app's own STICKY_COLORS rather than copied, so a colour she adds there arrives here too */
+  function flatFace(el) {
+    try {
+      var inline = el.style.background || '';
+      var m = /(#[0-9a-f]{3,8})|rgba?\([^)]*\)/i.exec(inline);
+      if (m) return m[0];
+    } catch (e) {}
+    /*cd-602: the fallback follows the first colour. It was still the old yellow, which would have painted a note the one shade she asked to be rid of on the one path where no colour can be read.*/
+    return '#f9f3e2';  /* Inkwell: the first colour, Foolscap */
+  }
+
+  /* PASS 465 - *** WHY THE WALL KEPT READING AS "A WEIRD DARK SHADOW". ***
+
+     She has now rejected the note's bottom edge four times: gold at 457, my ink at 462, the
+     card's ink at 464. Each time she called it a shadow, and each time she ALSO asked for more
+     height and volume. Those two things sound contradictory and are not, and the resolution is
+     the thing I had never done:
+
+     *** A SOLID OBJECT'S SIDE WALL IS A DARKER SHADE OF ITS OWN FACE, NOT A GREY. ***
+
+     A yellow block has a darker-yellow side. A blue note has a darker-blue side. Painting the
+     side in the app's shadow ink makes it a SHADOW UNDER the note rather than the note's own
+     thickness - which is exactly the phrase she has used every time. It also explains the
+     whole history at a stroke: the gold wall of pass 457 looked right while every note was
+     yellow, and looked wrong the moment the six colours started working, because gold is a
+     darker shade of yellow and of nothing else.
+
+     So the wall is now computed from each note's own face: the same hue, darkened. The cast
+     beneath it stays neutral, because a cast IS a shadow and belongs to the page, not to the
+     note. Volume from the wall, contact from the cast, and no grey band under the paper. */
+  function darken(css, amount) {
+    try {
+      var m = /^#([0-9a-f]{6})$/i.exec(css);
+      var r, g, b;
+      if (m) {
+        r = parseInt(m[1].slice(0, 2), 16);
+        g = parseInt(m[1].slice(2, 4), 16);
+        b = parseInt(m[1].slice(4, 6), 16);
+      } else {
+        var n = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(css);
+        if (!n) return null;
+        r = +n[1]; g = +n[2]; b = +n[3];
+      }
+      var f = function (v) { return Math.max(0, Math.round(v * amount)); };
+      return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+    } catch (e) { return null; }
+  }
+
+  function wallFor(face) {
+    /* the card's grammar - one hard wall, a cut edge, two casts - but the wall in the note's
+       own colour, and deeper than a card because a note is a thicker object */
+    var w1 = darken(face, 0.80);
+    var w2 = darken(face, 0.66);
+    if (!w1 || !w2) return null;
+    /* PASS 466. She reports "a weird shadow layer at the bottom, it looks horrible", and it
+       is the SECOND hard band: pass 465 wrote `0 3px 0 w1` AND `0 7px 0 w2` under it, so the
+       note carried two unblurred walls in two different shades. Two stacked walls read as a
+       printed stripe, not as thickness, and pass 464's measurement of the app's own cards
+       found exactly ONE unblurred layer. One wall now, thicker than a card because a note is
+       a thicker object, in the note's own colour darkened, and the two casts beneath it doing
+       the work of lifting it off the page. */
+    /* PASS 468. At her instruction the reference is the Home page, and the day-shape card's
+       grammar is read from the app rather than invented: an inset cut into the bottom edge,
+       exactly ONE unblurred wall, a near cast and a far cast. A note is a heavier object than
+       a card, so the wall is thicker and the casts scale with it - and nothing else changes.
+       The two-axis extrusion of pass 466b is withdrawn. It was my answer to "the volume is
+       only on the bottom", and she has since said plainly to match Home, which gets its
+       volume from a wall and two casts rather than from a corner. The wall stays the note's
+       OWN colour darkened, which is pass 465's finding and still the right one. */
+    /* *** PASS 471: THE SPREAD RING WAS WRONG AND SHE SAID SO. ***
+       `0 0 0 5px` puts a flat collar of equal weight on all four sides, which reads as a
+       BORDER drawn around the note, not as a solid with a lit top and a heavy foot. She said
+       it made things worse, and she was right.
+
+       The recipe is now copied from the Home page's own surfaces, read live off the day card,
+       Open today's plan and Manage books, which all agree:
+           inset 0 -1.5px 0 (cut into the bottom edge)
+           0 2px 0          (ONE hard wall)
+           0 4px 5px        (near cast)
+           0 9px 14px       (far cast)
+       scaled up for a note, which is a thicker object than a card, and in the note's own
+       colour rather than the page's navy. The lit top edge stays as an inset highlight, which
+       is what gives a real note its curl. */
+    /* PASS 472: the shadow gives the note its foot; the BEVEL gives it four sides. Applied
+       alongside this in wallFor's caller via card.style.borderColor - see below. */
+    /* *** PASS 478: THE ROOT CAUSE, AND THE NOTE BUILT THE WAY THE STONES ARE. ***
+       She asked for the cause rather than another patch, and it is this: a box-shadow CANNOT
+       extrude a rectangle on four sides. Offset it and one side is painted. Spread it and an
+       even collar is drawn AROUND the object, which is exactly the "yellow casing" she
+       rejected. Neither is depth. That is a property limit, not a value problem, which is why
+       changing numbers never fixed it.
+
+       The Magister stones - the look she keeps pointing at - do not use a shadow for their
+       depth at all. They use a GRADIENT FACE, light at the top and dark at the foot, a BORDER
+       whose four edges are four different colours, and INSET highlights. The shadow is the
+       smallest part. So the note is built the same way here: the face is shaded, the four
+       edges are shaded individually, and only then does it drop.
+
+       wallFor returns the SHADOW half; the face and border are set on the card alongside it. */
+        /* PASS 501: the solid wall read as a grey band and is gone, her instruction.
+       A real note lies stuck at the top and lifts at the foot, so the casts are
+       bottom weighted and soft, and the hover lift in the stylesheet completes it. */
+    return 'inset 0 2px 0 rgba(255,255,255,0.72), ' +
+           'inset 2px 0 0 rgba(255,255,255,0.42), ' +
+           'inset -2px 0 0 ' + w2 + ', ' +
+           'inset 0 -3px 0 ' + w2 + ', ' +
+           '0 2px 3px -1px rgba(40,34,26,0.18), ' +
+           '0 12px 18px -9px rgba(40,34,26,0.40), ' +
+           '0 24px 30px -18px rgba(40,34,26,0.22)';
+  }
+
+  function dress(card) {
+    try {
+      if (!card || card.__cd461) return;
+      card.__cd461 = true;
+      /* flat, matte, and still her colour */
+      var face = flatFace(card);
+      card.style.setProperty('background', face, 'important');
+      card.style.setProperty('background-image', 'none', 'important');
+      var wall = wallFor(face);
+      if (wall) card.style.setProperty('box-shadow', wall, 'important');
+      /* its own place in the pile */
+      card.style.setProperty('z-index', String(++Z));
+      /* *** PASS 472: THE FOUR-COLOUR BEVEL, THE THING THAT WAS ACTUALLY MISSING. ***
+         She has said five times the notes are only 3D at the bottom. A box-shadow with a Y
+         offset CAN only paint the bottom. The Home page's app stones get their sides from a
+         BORDER whose four edges are four different colours - lit on top, shaded at the sides,
+         darkest at the foot. The note had no border at all. */
+      try {
+      } catch (e) {}
+
+      /* *** PASS 472: THE NOTES WANDERING OFF THE PAGE. ***
+         A note keeps fixed coordinates. When the window is resized, or the page changes to a
+         shorter section, those coordinates can fall outside the viewport and the note is gone.
+         Every note is clamped back inside on resize, on orientation change, and whenever the
+         app changes section. Nothing is moved that is already on screen. */
+      try {
+        if (!window.__cdStickyClamp) {
+          window.__cdStickyClamp = function () {
+            var pad = 8;
+            document.querySelectorAll('.sticky-note').forEach(function (n) {
+              var r = n.getBoundingClientRect();
+              if (!r.width) return;
+              var maxL = Math.max(pad, window.innerWidth  - r.width  - pad);
+              var maxT = Math.max(pad, window.innerHeight - r.height - pad);
+              var L = Math.min(Math.max(pad, r.left), maxL);
+              var T = Math.min(Math.max(pad, r.top),  maxT);
+              if (Math.abs(L - r.left) > 0.5) n.style.setProperty('left', L + 'px', 'important');
+              if (Math.abs(T - r.top)  > 0.5) n.style.setProperty('top',  T + 'px', 'important');
+            });
+          };
+          window.addEventListener('resize', window.__cdStickyClamp);
+          window.addEventListener('orientationchange', window.__cdStickyClamp);
+          if (typeof showSection === 'function' && !showSection.__cdClampWrapped) {
+            var _ss = showSection;
+            window.showSection = function () {
+              var out = _ss.apply(this, arguments);
+              setTimeout(window.__cdStickyClamp, 60);
+              return out;
+            };
+            window.showSection.__cdClampWrapped = true;
+          }
+        }
+        setTimeout(window.__cdStickyClamp, 40);
+      } catch (e) {}
+
+      /* ================= PASS 475: THE NOTE'S OWN LIFE =================
+         The finder panel written at 474 is REMOVED. Her screenshot shows why: the note's own
+         three-dot menu already carries Notes list, Send to Tabula and Delete note, so my panel
+         duplicated features that existed and put a white box over them. Building something the
+         app already had was my mistake; the birth and the rip are kept because those are new. */
+      try {
+        if (!document.getElementById('cd-sn-life')) {
+          var st = document.createElement('style');
+          st.id = 'cd-sn-life';
+          st.textContent =
+            '@keyframes cdSnBorn{0%{transform:scale(.86) translateY(22px) rotate(-1.5deg);opacity:0}' +
+            '60%{transform:scale(1.03) translateY(-5px) rotate(.4deg);opacity:1}' +
+            '100%{transform:scale(1) translateY(0) rotate(0);opacity:1}}' +
+            '@keyframes cdSnRip{0%{transform:rotate(0) translateY(0);opacity:1}' +
+            '25%{transform:rotate(-4deg) translateY(-8px) scale(1.02)}' +
+            '100%{transform:rotate(14deg) translateY(160px) scale(.92);opacity:0}}' +
+            '.sticky-note.cd-born{animation:cdSnBorn .34s cubic-bezier(.34,1.35,.64,1) both}' +
+            '.sticky-note.cd-ripping{animation:cdSnRip .42s cubic-bezier(.4,0,.7,.4) both;pointer-events:none}' +
+            'body[data-motion="minimal"] .sticky-note.cd-born,' +
+            'body[data-motion="minimal"] .sticky-note.cd-ripping{animation:none !important}' +
+            '@media (prefers-reduced-motion:reduce){.sticky-note.cd-born,.sticky-note.cd-ripping{animation:none !important}}';
+          document.head.appendChild(st);
+        }
+        /* PASS 478: the face and the four edges, the stones' own construction. The note's own
+           colour is read from its inline background, so a colour she adds arrives here too. */
+        try {
+          var face = (card.style.background || card.style.backgroundColor || '').trim();
+          var stops = face.match(/#[0-9a-f]{3,8}|rgba?\([^)]+\)/gi);
+          if (stops && stops.length) {
+            var top = stops[0], bot = stops[stops.length - 1];
+            /*cd-497-note-matte: her own colour, painted FLAT. The 478 gradient foot and
+              the four colour edges read as gloss, tail and shell, all three rejected in
+              her words on 2026-08-20. The lift now comes from the house shadows in the
+              stylesheet, so the note keeps her colour and gains matte depth.*/
+            card.style.setProperty('background', bot, 'important');
+            card.style.setProperty('border','0','important');
+          }
+        } catch (e) {}
+        card.classList.add('cd-born');
+        setTimeout(function(){ card.classList.remove('cd-born'); }, 420);
+
+        /* the rip runs on the note's OWN delete, wherever it lives in its menu */
+        window.__cdSnRip = function (note, after) {
+          if (!note) return;
+          var quiet = document.body.getAttribute('data-motion') === 'minimal' ||
+                      (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+          if (quiet) { if (after) after(); return; }
+          note.classList.add('cd-ripping');
+          setTimeout(function(){ if (after) after(); }, 430);
+        };
+        if (!card.__cdRipWired) {
+          card.__cdRipWired = true;
+          card.addEventListener('click', function (ev) {
+            var b = ev.target.closest ? ev.target.closest('button,[role=button]') : null;
+            if (!b) return;
+            var label = ((b.textContent || '') + ' ' + (b.getAttribute('title') || '')).toLowerCase();
+            if (/delete note|throw|remove note/.test(label)) {
+              ev.preventDefault(); ev.stopPropagation();
+              window.__cdSnRip(card, function () { card.remove(); });
+            }
+          }, true);
+        }
+      } catch (e) {}
+      /* PASS 468 - THE POP. She has asked three times for the notes to look like they are
+         popping out of the page, and a pop is a movement, not a shadow. The note arrives from
+         slightly behind the page and settles. Honoured only when the app's own motion setting
+         allows it, so the quiet dresses stay quiet. */
+      try {
+        var b = document.body;
+        var quiet = b.getAttribute('data-motion') === 'minimal' || b.hasAttribute('data-cd-lift-off') ||
+                    (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        if (!quiet) card.style.setProperty('animation', 'cdFwPop .28s cubic-bezier(.34,1.35,.64,1) both');
+      } catch (e) {}
+      /* picking a note up brings it to the front */
+      card.addEventListener('pointerdown', function () {
+        try { card.style.setProperty('z-index', String(++Z)); } catch (e) {}
+      }, true);
+    } catch (e) {}
+  }
+
+  /* makeStickyCard is a function declaration, so it is on the global object and can be
+     wrapped the way tr() and openDisplayMenu() are. The original builds the card; this
+     dresses what it returns and changes nothing about how it is built. */
+  function hookCards() {
+    try {
+      if (window.__cd461Hooked || typeof window.makeStickyCard !== 'function') return false;
+      var orig = window.makeStickyCard;
+      window.makeStickyCard = function () {
+        var card = orig.apply(this, arguments);
+        dress(card);
+        return card;
+      };
+      window.__cd461Hooked = true;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* a note already on the page when this loads, or one built by a path that does not go
+     through makeStickyCard, is caught by the sweep below rather than missed */
+  function sweepCards() {
+    try {
+      var ns = document.querySelectorAll('.sticky-note');
+      for (var i = 0; i < ns.length; i++) if (!ns[i].__cd461) dress(ns[i]);
+    } catch (e) {}
+  }
+
+
+  function tick() { hookCards(); sweepCards(); }
+  tick();  /* the hook is in place before the desk draws its notes */
+  function boot() { setInterval(tick, 700); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+/* 7.40: edge and corner handles on every note, Carpe Diem's module. */
+
+/* ============================================================================
+   THE STICKY NOTES, FREED. Two complaints, one module.
+   1) SPAWN: new notes always appeared at the same top-left cascade (90,100), so a note
+      summoned from the bottom-right fab had to be chased across the whole page. The
+      app's newStickyNote is global, so it is wrapped: after the app creates and renders
+      the note, the newest card is moved next to the sticky fab (cascading, clamped to
+      the viewport) by replaying the move through the card's OWN grip handler, so the
+      app itself updates n.x/n.y and saves. Nothing is forked; the app remains the owner
+      of its state.
+   2) RESIZE: only a bottom-right grip existed. Every .sticky-note now grows edge and
+      corner handles on all sides, like the floating windows. The live resize adjusts
+      the card's box directly; on release, the final width/height delta is replayed
+      through the app's original bottom-right handle, and any left/top displacement is
+      replayed through the grip, so n.w/n.h/n.x/n.y are saved by the app's own code. */
+(function () {
+  function replayPointer(el, dx, dy) {
+    /* the app's handlers read only clientX/clientY deltas, so a synthetic
+       down(0,0) -> move(dx,dy) -> up sequence persists exactly our final geometry */
+    try {
+      var mk = function (type, x, y) {
+        return new PointerEvent(type, { bubbles: true, cancelable: true,
+          clientX: x, clientY: y, pointerId: 999, pointerType: 'mouse' });
+      };
+      el.dispatchEvent(mk('pointerdown', 1000, 1000));
+      el.dispatchEvent(mk('pointermove', 1000 + dx, 1000 + dy));
+      el.dispatchEvent(mk('pointerup', 1000 + dx, 1000 + dy));
+    } catch (e) {}
+  }
+
+  function outfit(card) {
+    if (card.getAttribute('data-cd-rsz')) return;
+    card.setAttribute('data-cd-rsz', '1');
+    var EDGES = [
+      { k: 'n',  cur: 'ns-resize' }, { k: 's',  cur: 'ns-resize' },
+      { k: 'e',  cur: 'ew-resize' }, { k: 'w',  cur: 'ew-resize' },
+      { k: 'ne', cur: 'nesw-resize' }, { k: 'sw', cur: 'nesw-resize' },
+      { k: 'nw', cur: 'nwse-resize' }
+      /* se stays the app's own handle */
+    ];
+    EDGES.forEach(function (E) {
+      var h = document.createElement('div');
+      h.className = 'cd-sn-edge cd-sn-edge-' + E.k;
+      h.style.cursor = E.cur;
+      var st = null;
+      h.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        var r = card.getBoundingClientRect();
+        st = { sx: ev.clientX, sy: ev.clientY, x: r.left, y: r.top, w: r.width, h: r.height };
+        try { h.setPointerCapture(ev.pointerId); } catch (e) {}
+      });
+      h.addEventListener('pointermove', function (ev) {
+        if (!st) return;
+        var dx = ev.clientX - st.sx, dy = ev.clientY - st.sy;
+        var nx = st.x, ny = st.y, nw = st.w, nh = st.h;
+        if (E.k.indexOf('e') >= 0) nw = st.w + dx;
+        if (E.k.indexOf('w') >= 0) { nw = st.w - dx; nx = st.x + dx; }
+        if (E.k.indexOf('s') >= 0) nh = st.h + dy;
+        if (E.k.indexOf('n') >= 0) { nh = st.h - dy; ny = st.y + dy; }
+        if (nw < 150) { if (E.k.indexOf('w') >= 0) nx -= (150 - nw); nw = 150; }
+        if (nh < 120) { if (E.k.indexOf('n') >= 0) ny -= (120 - nh); nh = 120; }
+        card.style.width = nw + 'px'; card.style.height = nh + 'px';
+        card.style.left = Math.max(0, nx) + 'px'; card.style.top = Math.max(0, ny) + 'px';
+        st.fw = nw; st.fh = nh; st.fx = Math.max(0, nx); st.fy = Math.max(0, ny);
+      });
+      var done = function () {
+        if (!st) return;
+        var fw = (st.fw !== undefined) ? st.fw : st.w;
+        var fh = (st.fh !== undefined) ? st.fh : st.h;
+        var fx = (st.fx !== undefined) ? st.fx : st.x;
+        var fy = (st.fy !== undefined) ? st.fy : st.y;
+        var rz = card.querySelector('.sn-resize');
+        var gr = card.querySelector('.sn-grip');
+        /* the app's handler reads the card's CURRENT offsetWidth as its base, and the
+           live resize already applied the delta once, so replaying on the resized card
+           doubled it: snap the box back to its starting size first, then replay. */
+        card.style.width = st.w + 'px'; card.style.height = st.h + 'px';
+        if (rz) replayPointer(rz, fw - st.w, fh - st.h);
+        else { card.style.width = fw + 'px'; card.style.height = fh + 'px'; }
+        if (gr && (fx !== st.x || fy !== st.y)) replayPointer(gr, fx - st.x, fy - st.y);
+        st = null;
+      };
+      h.addEventListener('pointerup', done);
+      h.addEventListener('pointercancel', done);
+      card.appendChild(h);
+    });
+  }
+
+  function sweep() {
+    var cards = document.querySelectorAll('.sticky-note');
+    for (var i = 0; i < cards.length; i++) outfit(cards[i]);
+  }
+
+  /* SPAWN NEAR THE HAND. Wrap the global creator; place the newest card by the fab. */
+  function hookSpawn() {
+    if (typeof window.newStickyNote !== 'function' || window.newStickyNote.__cdWrapped) return;
+    var orig = window.newStickyNote;
+    var wrapped = function () {
+      var out = orig.apply(this, arguments);
+      /*cd-506-corner: THE TRUE CORNER WRITER, found by a left setter trap. This
+        wrapper was the ricochet: sixty milliseconds after the factory placed a
+        fresh note at 90,100 it replayed a synthetic drag that carried the card to
+        the fab corner, over the Schedae and Clepsydra buttons. The relocation is
+        removed; a fresh note now stays on the cascade spot the model gives it.
+        The edge outfit remains, because the resize handles are wanted.*/
+      try {
+        setTimeout(function () {
+          var cards = document.querySelectorAll('.sticky-note');
+          for (var i = 0; i < cards.length; i++) outfit(cards[i]);
+        }, 60);
+      } catch (e) {}
+      return out;
+    };
+    wrapped.__cdWrapped = true;
+    window.newStickyNote = wrapped;
+  }
+
+  /* Inkwell: the handles are fitted as each card is built, so a note redrawn by the
+     desk has them at once rather than at the next sweep */
+  function hookBuild() {
+    if (window.__inkEdgeHooked || typeof window.makeStickyCard !== 'function') return;
+    var orig = window.makeStickyCard;
+    window.makeStickyCard = function () { var c = orig.apply(this, arguments); try { outfit(c); } catch (e) {} return c; };
+    window.__inkEdgeHooked = true;
+  }
+  function tick() { hookBuild(); sweep(); hookSpawn(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ tick(); setInterval(tick, 700); });
+  else { tick(); setInterval(tick, 700); }
+})();
+
 function openStickyToggle(){const b=document.querySelector('.sticky-panel-back');if(b){b.remove();return;}openStickyPanel();}
 /* the pen travels with the writer: drag it anywhere along the desk's edge; a
    tap still opens the drawer. Position persists between sittings. */
@@ -15915,36 +16396,26 @@ finally{try{var _sb=document.getElementById('stBuild');if(_sb&&!/boot ok/.test(_
       || document.body.getAttribute('data-theme') === 'night'; }
     catch (e) { return false; }
   }
-  /* the six house papers, keyed by the daylight face */
+  /* the six house papers, keyed by the daylight face. The system is Carpe Diem's;
+     the papers are Inkwell's own (7.40), to go with its own day shades */
   var DAY = {
-    /* 7.38 faces: night papers in the midnight of the seal */
-    '246,239,220': { p:'#302c25', e:'#1f1c17', n:'Foolscap' },
-    '239,219,166': { p:'#44361b', e:'#2c2311', n:'Ochre'    },
-    '220,228,233': { p:'#1c2b3c', e:'#121c28', n:'Lapis'    },
-    '238,217,209': { p:'#3a1e23', e:'#251316', n:'Claret'   },
-    '226,227,203': { p:'#252f20', e:'#171e14', n:'Laurel'   },
-    '230,220,230': { p:'#2c2236', e:'#1c1523', n:'Vespers'  },
-    /* the 7.37 faces, for a note painted by that build */
-    '239,223,177': { p:'#44361b', e:'#2c2311', n:'Ochre'    },
-    '223,229,230': { p:'#1c2b3c', e:'#121c28', n:'Lapis'    },
-    '239,222,218': { p:'#3a1e23', e:'#251316', n:'Claret'   },
-    '227,230,212': { p:'#252f20', e:'#171e14', n:'Laurel'   },
-    '232,224,230': { p:'#2c2236', e:'#1c1523', n:'Vespers'  },
-    '248,242,228': { p:'#302c25', e:'#1f1c17', n:'Foolscap' },
-    /* the faces before 7.37 */
-    '251,243,207': { p:'#44361b', e:'#2c2311', n:'Ochre'    },
-    '220,239,255': { p:'#1c2b3c', e:'#121c28', n:'Lapis'    },
-    '255,224,234': { p:'#3a1e23', e:'#251316', n:'Claret'   },
-    '230,244,222': { p:'#252f20', e:'#171e14', n:'Laurel'   },
-    '236,226,251': { p:'#2c2236', e:'#1c1523', n:'Vespers'  },
-    '253,250,240': { p:'#302c25', e:'#1f1c17', n:'Foolscap' }
+    /* 7.40: Inkwell's own night papers, each shade deepened into the midnight of the seal */
+    '249,243,226': { p:'#2e2b25', e:'#1d1b17', n:'Foolscap' },
+    '242,226,182': { p:'#3b321d', e:'#262012', n:'Gilt'     },
+    '214,231,238': { p:'#1b2c3b', e:'#111c26', n:'Lapis'    },
+    '241,216,214': { p:'#3a1d22', e:'#251215', n:'Claret'   },
+    '217,232,219': { p:'#1f2f23', e:'#141e16', n:'Laurel'   },
+    '223,225,238': { p:'#262539', e:'#17162a', n:'Vespers'  }
   };
   function paperName(css) {
     try { var rgb = rgbOf(css); if (!rgb) return ''; var k = DAY[rgb.join(',')];
       return k && k.n ? k.n : ''; } catch (e) { return ''; }
   }
-  /* 7.37: matte by night too, a hairline and a short shadow */
-  var SEAT = '0 0 0 1px rgba(255,246,228,0.07), 0 1px 1px rgba(0,0,0,0.55), 0 3px 6px rgba(0,0,0,0.35), 6px 12px 12px -9px rgba(0,0,0,0.75), -6px 12px 12px -9px rgba(0,0,0,0.75)';
+  /* their lit edges and seat by night (passes 593 and 592) */
+  var LIT_TOP  = 'rgba(255,246,228,0.10)';
+  var LIT_SIDE = 'rgba(255,246,228,0.05)';
+  var SEAT = '0 2px 0 rgba(0,0,0,0.55), 0 9px 14px rgba(0,0,0,0.46), ' +
+             '0 20px 32px rgba(0,0,0,0.34), 0 36px 58px rgba(0,0,0,0.24)';
   function rgbOf(css) {
     if (!css) return null;
     var m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i.exec(css);
@@ -16006,7 +16477,9 @@ finally{try{var _sb=document.getElementById('stBuild');if(_sb&&!/boot ok/.test(_
       card.__cdDayWall = card.style.getPropertyValue('box-shadow');
       card.style.setProperty('background', night.p, 'important');
       card.style.setProperty('background-image', 'none', 'important');
-      card.style.setProperty('box-shadow', SEAT, 'important');
+      card.style.setProperty('box-shadow',
+        'inset 0 2px 0 ' + LIT_TOP + ', inset 2px 0 0 ' + LIT_SIDE + ', ' +
+        'inset -2px 0 0 ' + night.e + ', inset 0 -3px 0 ' + night.e + ', ' + SEAT, 'important');
       card.__cdNightPaper = 1;
     } catch (e) {}
   }
