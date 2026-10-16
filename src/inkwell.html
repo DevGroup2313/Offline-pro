@@ -344,6 +344,7 @@ body[data-motion=minimal] #status .foldBtn{transform:none !important}
 .wbalt{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:1px 0 9px}
 .wbalt span{font-size:11px;color:var(--mut)}
 .wbalt button{font-size:12px;padding:4px 12px;font-family:Georgia,serif}
+.askrow input{flex:1 1 120px;min-width:0;font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line,#c9c2b2);border-radius:7px;background:var(--paper,#fff);color:inherit}
 .lkbtn{font-size:11px;padding:4px 10px}
 .soloNav{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px;font-size:12px;color:var(--mut)}
 .soloNav button{padding:5px 12px}
@@ -1626,6 +1627,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_LEXICON_CORE@@
 @@LIB_SYNONYMS_CORE@@
 @@LIB_PARAPHRASE_CORE@@
+@@LIB_REFINE_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -1908,6 +1910,11 @@ function salvageDocs(raw){
  }catch(e){return null;}
 }
 function bridgeHas(k){try{return typeof window.__inkBridgeStore==='object'&&window.__inkBridgeStore!==null&&Object.prototype.hasOwnProperty.call(window.__inkBridgeStore,k);}catch(e){return false;}}
+/* 7.42: clarity and style notes are shown unless the writer hides them. The
+   page once hid them until asked; that choice is turned on once, here. */
+function inkStyleDefault(){
+ try{if(localStorage.getItem('ink_style742')!=='1'){localStorage.setItem('ink_style742','1');localStorage.setItem('ink_showStyle','true');return true;}}catch(e){}
+ return LS('showStyle')!==false;}
 const LS=k=>{var raw=null;try{raw=localStorage.getItem('ink_'+k);}catch(e){}
  if((raw===null||raw===undefined)&&bridgeHas(k))raw=window.__inkBridgeStore[k];
  if(raw===null||raw===undefined)return null;
@@ -2268,7 +2275,7 @@ function openMove(){
  inkModalShow();}
 let S={docs:LS('docs')||[],active:LS('active')||null,rules:LS('rules')||[],profile:LS('profile')||'',
 server:LS('server')||'http://127.0.0.1:8317',lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
-stats:LS('stats')||{},showStyle:LS('showStyle')||false,modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
+stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
@@ -5673,6 +5680,7 @@ const DPHIL=[
  {re:/\bcomprised of\b/gi,to:'composed of',cat:'g',label:'"comprised of" is disputed; use "composed of"'},
  {re:/\bbetween you and I\b/gi,to:'between you and me',cat:'g',label:'Pronoun case after a preposition'},
  {re:/\bit's own\b/gi,to:'its own',cat:'g',label:"its vs it's (possessive)"},
+ {re:/\btheir (?:is|was)\b(?=\s+(?:many|several|multiple|various|numerous|lots|two|three|four|five|six|seven|eight|nine|ten|\d+)\b)/gi,to:'x',fx:m=>/was/i.test(m)?'there were':'there are',cat:'g',label:'"There are", not "their is"'},
  {re:/\btheir is\b/gi,to:'there is',cat:'g',label:'their vs there'},
  {re:/\btheir are\b/gi,to:'there are',cat:'g',label:'their vs there'},
  {re:/\btheir was\b/gi,to:'there was',cat:'g',label:'their vs there'},
@@ -7328,7 +7336,7 @@ const GRAM35=[
 
 /* ----- GRAM36 — the mechanics: comma-which, doubled marks, stranded space */
 const GRAM36=[
- {re:/\b([A-Za-z][A-Za-z\-']{1,}), that\b(?!\s+(?:is|was|means|meant|said|seems|seemed|matters|mattered|remains|holds|counts|depends|explains|suggests|shows|makes|leaves|brings|is,|was,)\b)/g,to:'$1, which',cat:'g',label:'“Which” carries the comma; “that” begins a restriction and takes none'},
+ {re:/\b([A-Za-z][A-Za-z\-']{1,}), that\b(?!\s+(?:is|was|means|meant|said|seems|seemed|matters|mattered|remains|holds|counts|depends|explains|suggests|shows|makes|leaves|brings|is,|was,)\b)/g,to:'$1 that',cat:'g',label:'“Which” carries the comma; “that” begins a restriction and takes none'},
  {re:/,{2,}/g,to:',',cat:'g',label:'One comma'},
  {re:/ +([,.;:!?])/g,to:'$1',cat:'g',label:'The space belongs after the mark, not before it'},
  {re:/([A-Za-z0-9”’\)])\.\.(?=\s|$)/g,to:'$1.',cat:'g',label:'Two full stops: one, or a true ellipsis …'},
@@ -7360,7 +7368,6 @@ const GRAM37=[
  {re:/\bloose\s+(track|money|weight|focus|sight|sleep|interest|hope|confidence|faith)\b/gi,to:'lose $1',cat:'c',label:'"Lose" is the verb; "loose" means not tight'},
  {re:/\bprinciple\s+(investigator|researcher|author|finding|argument|reason|concern|cause|target|aim|objective|goal)\b/gi,to:'principal $1',cat:'c',label:'"Principal" is the adjective; "principle" is the noun'},
  {re:/\baffect\b(?=\s+on\b)/gi,to:'effect',cat:'c',label:'"Effect on" is the noun phrase; "affect" is the verb'},
- {re:/\bstationary\b(?!\s+(?:phase|front|wave|orbit|point|engine|bike))\b/gi,to:null,cat:'c',label:'Check: "stationary" means not moving; "stationery" means writing materials'},
  /* redundancy (additional) */
  {re:/\babsolutely\s+(essential|necessary|certain|guaranteed|required)\b/gi,to:'$1',cat:'c',label:'The adjective is already absolute'},
  {re:/\bcompletely\s+(destroyed|eliminated|eradicated|finished|consumed|empty|full)\b/gi,to:'$1',cat:'c',label:'The verb is already complete'},
@@ -7455,29 +7462,18 @@ const GRAM38=[
  /* an before vowel letters that are actually vowel sounds already handled by CONFUSE; add missing */
  {re:/\ba (apple|orange|hour|honest|honor|honour|heir|X-ray)\b/gi,to:'an $1',cat:'g',label:'These begin with a vowel sound: "an", not "a"'},
  /* more word confusions */
- {re:/\badvise\b(?=\s+(on|about|against|for|that))/gi,to:null,cat:'c',label:'"Advice" (noun) vs "advise" (verb): check which you need',cs:true},
  {re:/\bplease advice\b/gi,to:'please advise',cat:'g',label:'"Advise" is the verb here'},
  {re:/\bdevice a\b/gi,to:'devise a',cat:'g',label:'"Devise" (create) vs "device" (instrument)'},
- {re:/\bcompliment(?:ary|ary)? on\b/gi,to:null,cat:'c',label:'"Complement" (completes) vs "compliment" (praises)',cs:true},
  {re:/\bcouncil someone\b/gi,to:'counsel someone',cat:'g',label:'"Counsel" (advise) vs "council" (body)'},
  {re:/\bcapitol building\b/gi,to:'Capitol building',cat:'g',label:'"Capitol" (the building) vs "capital" (the city)'},
- {re:/\beminent (researcher|scholar|professor|scientist|historian|philosopher|economist|author|writer|theorist|critic|academic)\b/gi,to:null,cat:'c',label:'"Eminent" (respected) vs "imminent" (about to happen)',cs:true},
  {re:/\bimminent (researcher|scholar|professor|scientist|historian|philosopher|economist|author|writer|theorist|critic|academic|domain|field|figure|professor)\b/gi,to:null,cat:'c',label:'"Imminent" (about to happen) vs "eminent" (respected)',cs:true},
- {re:/\bphase in\b(?!\s+(out|down|over|in))\s/gi,to:null,cat:'c',label:"\"Faze\" (disturb) vs \"phase\" (stage): \"didn't faze me\"",cs:true},
- {re:/\bdoesn't faze\b/gi,to:null,cat:'c',label:'Correct: "faze" (disturb). "Phase" is a stage',cs:true},
- {re:/\bwaive (a|an|the) (right|fee|requirement|condition|rule|obligation)\b/gi,to:null,cat:'c',label:'"Waive" (forgo) vs "wave" (gesture)',cs:true},
- {re:/\bcite (the|a|an|this|that)\b/gi,to:null,cat:'c',label:'"Cite" (reference) is correct here; "site" is a location',cs:true},
  {re:/\bsight a (paper|source|reference|author|study)\b/gi,to:'cite a $1',cat:'g',label:'"Cite" (reference) vs "sight" (seeing)'},
- {re:/\brole of (the|a|an)\b/gi,to:null,cat:'c',label:'"Role" (part) is correct; "roll" is the verb',cs:true},
- {re:/\broll of (the|a|an)\b/gi,to:null,cat:'c',label:'"Role" (part) vs "roll" (turn/rotate)',cs:true},
- {re:/\bpour over (the|a|an|this|that|these|those)\s+(data|documents?|records?|evidence|manuscript|text|paper|article|book|chapter|results?|findings?|analysis)\b/gi,to:'pour over $1 $2',cat:'c',label:'"Pour over" (liquid) vs "pore over" (study carefully). Check: did you mean study?',cs:true},
+ {re:/\bpour over (the|a|an|this|that|these|those)\s+(data|documents?|records?|evidence|manuscript|text|paper|article|book|chapter|results?|findings?|analysis)\b/gi,to:'pore over $1 $2',cat:'c',label:'"Pore over" (study closely); "pour over" is for liquids',cs:true},
  {re:/\bdiscreet (difference|gap|separation|interval|category|group|class|element|variable|factor)\b/gi,to:'discrete $1',cat:'g',label:'"Discrete" (separate) vs "discreet" (careful)'},
  {re:/\bdiscrete (action|manner|behavior|behaviour|approach|silence|inquiry|enquiry)\b/gi,to:'discreet $1',cat:'g',label:'"Discreet" (careful) vs "discrete" (separate)'},
  {re:/\bcanvas a (response|reply|argument|conclusion|solution|theory|framework|approach|strategy)\b/gi,to:'canvass a $1',cat:'g',label:'"Canvass" (survey/examine) vs "canvas" (fabric)'},
- {re:/\bflair for (the|a|an)\b/gi,to:null,cat:'c',label:'"Flair" (talent) is correct; "flare" is a fire/light',cs:true},
  {re:/\baltar (the|a|an|this|that)\s+(course|direction|approach|strategy|plan|policy|position|argument|finding|result|conclusion)\b/gi,to:'alter the $2',cat:'g',label:'"Alter" (change) vs "altar" (sacred table)'},
  {re:/\bassist at\b/gi,to:'assist with',cat:'g',label:'"Assist with" is the standard collocation'},
- {re:/\bbeen (a|an) long time\b/gi,to:null,cat:'c',label:'"It has been a long time" or "a long time" alone is smoother',cs:true},
  /* register upgrades: informal to academic */
  {re:/\bget\s+(a better|worse|bigger|smaller|higher|lower)\b/gi,to:null,cat:'s',label:'"Become" or "grow" carries more weight in academic prose',cs:true},
  {re:/\bget\s+(to|into|from|by|in|on|at|through)\b/gi,to:null,cat:'s',label:'"Obtain", "acquire", "gain", or "reach" reads more formally',cs:true},
@@ -7492,7 +7488,6 @@ const GRAM38=[
  {re:/\bpoints? out\b/gi,to:null,cat:'s',label:'"Notes", "observes", or "argues" reads more formally',alts:{points:['notes','observes','argues','highlights'],'pointed':['noted','observed','argued','highlighted']}},
  {re:/\bfinds? out\b/gi,to:null,cat:'s',label:'"Discovers", "determines", or "ascertains" reads more formally',alts:{finds:['discovers','determines','ascertains'],'found':['discovered','determined','ascertained']}},
  {re:/\bmakes? (a|the) (point|argument|case|claim)\b/gi,to:null,cat:'s',label:'"Advances" or "puts forward" is stronger',alts:['advances','puts forward','presents']},
- {re:/\bso that\b/gi,to:null,cat:'c',label:'"Such that" or "thereby" may be tighter in formal contexts',cs:true},
  /* punctuation spacing: space before punctuation */
  {re:/\s+([,.;:!?])/g,to:'$1',cat:'g',label:'No space before punctuation'},
  {re:/([,;:])(?=[A-Za-z])/g,to:'$1 ',cat:'g',label:'Space after comma or semicolon'},
@@ -7509,9 +7504,7 @@ const GRAM38=[
  {re:/\bthird (party|person|party|party)\b(?=\s+[a-z])/g,to:'third-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
  {re:/\bcross (section|cultural|disciplinary|sectional|national|border|reference)\b(?=\s+[a-z])/g,to:'cross-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
  /* more spelling */
- {re:/\bcalendar\b/gi,to:null,cat:'c',label:'Correct spelling is "calendar"; common misspelling is "calender"',cs:true},
  {re:/\bcalender\b/gi,to:'calendar',cat:'g',label:'The spelling is "calendar" (unless you mean the paper machine)'},
- {re:/\bconsensus\b/gi,to:null,cat:'c',label:'Correct spelling is "consensus"; common misspelling is "concensus"',cs:true},
  {re:/\bconcensus\b/gi,to:'consensus',cat:'g',label:'The spelling is "consensus" (no second c)'},
  {re:/\bconcious\b/gi,to:'conscious',cat:'g',label:'The spelling is \"conscious\" (s + c + i)'},
  {re:/\bmanagable\b/gi,to:'manageable',cat:'g',label:'The spelling is "manageable"'},
@@ -7530,7 +7523,6 @@ const GRAM38=[
  {re:/\boccassional\b/gi,to:'occasional',cat:'g',label:'Two c, one s'},
  {re:/\bpersistant\b/gi,to:'persistent',cat:'g',label:'The ending is "-ent"'},
  {re:/\brelevent\b/gi,to:'relevant',cat:'g',label:'The spelling is "relevant" (a, not e)'},
- {re:/\btrial and error\b/gi,to:null,cat:'c',label:'"Trial and error" is correct; common mishearing is "trail and error"',cs:true},
  {re:/\btrail and error\b/gi,to:'trial and error',cat:'g',label:'The phrase is "trial and error"'},
  /* more wordy phrases */
  {re:/\bin the not too distant future\b/gi,to:'soon',cat:'c',label:'"Soon" is shorter and clearer'},
@@ -7558,12 +7550,10 @@ const GRAM38=[
  {re:/\bare are\b/gi,to:'are',cat:'g',label:'The word is doubled'},
  {re:/\bwill will\b/gi,to:'will',cat:'g',label:'The word is doubled'},
  {re:/\bhave have\b/gi,to:'have',cat:'g',label:'The word is doubled'},
- {re:/\bhad had\b/gi,to:null,cat:'c',label:'"Had had" can be grammatically correct (past perfect); check context',cs:true},
  {re:/\bthat that that\b/gi,to:'that that',cat:'g',label:'Triple "that"; one is likely a false start'},
  /* missing comma after introductory phrases (common pattern) */
  {re:/^(However|Moreover|Furthermore|Therefore|Thus|Hence|Nevertheless|Nonetheless|Indeed|Similarly|Consequently|Accordingly|Subsequently|Finally|Firstly|Secondly|Lastly|Indeed|Namely)(,?)\s/gm,to:null,cat:'g',label:'A comma follows these sentence openers',cs:true},
  /* Oxford comma suggestion is advisory only */
- {re:/\b( and | or )(?=[A-Za-z]+,?\s+(?:and|or)\s)/gi,to:null,cat:'c',label:'A serial comma before the final "and/or" can prevent ambiguity',cs:true}
 ];
 /* 7.37 GRAM39: the learner's pack. Errors common in learners' essays (the
    classes found most often in a public learner corpus, used for measurement
@@ -7710,7 +7700,7 @@ function thatWhichCheck(t,ms,out){
   if(prev===','||prev===';'||prev===':'||prev==='('||prev==='—')continue;
   var nxt=t[m.index+m[0].length];
   if(nxt===','||nxt==='.')continue;
-  var s0=m.start+m[1].length+1;
+  var s0=m.index+m[1].length+1;
   if(ovTaken(out,s0,s0+5))continue;
   out.push({start:s0,end:s0+5,orig:'which',fix:S.dialect==='us'?'that':null,cat:'g',
    why:S.dialect==='us'?'A restrictive clause takes “that” in US style':'“Which” restricting is accepted British usage; “that” restricts in the stricter style — the desk only notes'});
@@ -8234,7 +8224,7 @@ function renderCards(){
  const sig=(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
  if(sig===CARDSIG)return;
  CARDSIG=sig;
- if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">✨ No correctness issues found.</div>'+inkStyleSwitch();return;}
+ if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">'+(S.showStyle?'✨ Nothing to note.':'✨ No correctness issues found.')+'</div>'+inkStyleSwitch();return;}
  if(S.solo){SOLOI=Math.max(0,Math.min(SOLOI,EDITS.length-1));
   c.innerHTML='<div class="soloNav"><button title="The previous suggestion" onclick="soloMove(-1)">‹</button><span>'+(SOLOI+1)+' of '+EDITS.length+'</span><button title="The next suggestion" onclick="soloMove(1)">›</button></div>'+cardHTML(EDITS[SOLOI],SOLOI,true);
   return;}
@@ -8251,7 +8241,7 @@ function renderCards(){
    '<span class="cor">'+esc(e.orig)+'</span>'+
    ((typeof e.fix==='string'&&e.fix!=='')?'<span class="cfx">→ '+esc(e.fix)+'</span>':
     (e.fix===''?'<span class="cfx" style="color:var(--gold)">remove ▸</span>':
-    (e.alts&&e.alts.length?'<span class="cfx" style="color:var(--gold)">'+e.alts.length+(e.spell?(e.alts.length===1?' suggestion':' suggestions'):' stronger')+' ▸</span>':'')))+
+    (e.alts&&e.alts.length?'<span class="cfx" style="color:var(--gold)">'+e.alts.length+(e.spell?(e.alts.length===1?' suggestion':' suggestions'):e.tryAlts?' to try':' stronger')+' ▸</span>':(e.ask?'<span class="cfx" style="color:var(--gold)">'+esc(e.ask.q)+' ▸</span>':''))))+
    '<span class="cwhy">'+esc(inkCap1(e.why||''))+'</span><span class="cexp">▾</span>'+
    '<button class="cremove" title="Dismiss this suggestion" onclick="event.stopPropagation();dismissOne('+i+')">✕</button></div>').join('')+
   (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
@@ -8282,10 +8272,25 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
  if(wasFirst)showTip('learn');toast('Accepted ✔');clearSel();}
 function dismissOne(i){SND.dismiss();EDITS.splice(i,1);if(S.solo&&SOLOI>0)SOLOI--;EXPID=-1;renderCards();renderHL();clearSel();}
-function wbAccept(i,a){const e=EDITS[i];if(!e||!a)return;
+function wbAccept(i,a){const e=EDITS[i];if(!e)return;
+ /* 7.42: the chip names its place in the list, so no wording is lost in the
+    page's markup; a wording the refiner built has its case and its span */
+ if(typeof a==='number')a=(e.alts||[])[a];
+ if(typeof a!=='string')return;
+ if(e.tryAlts){if(e.built){e.start=e.bStart;e.end=e.bEnd;e.orig=ed.value.slice(e.bStart,e.bEnd);}e.fix=a;acceptOne(i);return;}
+ if(!a)return;
  const before=ed.value.slice(Math.max(0,e.start-4),e.start);
  const atStart=(e.start===0)||/(?:^|[.!?]["’')\]]?\s)$/.test(before);
  e.fix=atStart?matchCase(e.orig,a):a;acceptOne(i);}
+/* 7.42: the note's question answered: the answer builds the new wording,
+   shown as a choice before it lands */
+function inkAskBuild(i){const e=EDITS[i];if(!e||!e.ask||typeof INKREF==='undefined')return;
+ const inp=document.getElementById('ask'+i),v=inp?inp.value:'';
+ if(!v.trim()){toast('Type the answer first');if(inp)inp.focus();return;}
+ const b=INKREF.build(e,v);
+ if(!b||!b.fix){toast('That answer does not fit here; try a shorter one');return;}
+ e.askVal=v;e.alts=[b.fix];e.altView=[b.fix];e.tryAlts=true;e.built=true;e.bStart=b.start;e.bEnd=b.end;
+ CARDSIG='';renderCards();}
 function wbMute(i){const e=EDITS[i];if(!e||!e.wb)return;const w=e.wb;
  if(S.muteWords.indexOf(w)===-1){S.muteWords.push(w);SV('muteWords',S.muteWords);}
  WB=null;EDITS=EDITS.filter(x=>x.wb!==w);SOLOI=0;EXPID=-1;renderCards();updateStats();renderHL();
@@ -8329,9 +8334,10 @@ function cardHTML(e,i,solo){
  return '<div class="card'+(solo?' solo':'')+'" style="animation-delay:'+Math.min(i*40,300)+'ms">'+
  '<span class="tag t-'+e.cat+'">'+NAMES[e.cat]+'</span>'+
  '<div class="orig">'+esc(e.orig)+'</div>'+
- ((typeof e.fix==='string'&&e.fix!=='')?'<div class="fix">'+esc(e.fix)+'</div>':(e.fix===''?'<div class="fix" style="opacity:.75">(remove the word)</div>':''))+
+ (e.cut?'<div class="fix" style="opacity:.75">'+(e.fix?'(cut it, so the sentence begins “'+esc(e.fix)+'”)':'(cut it)')+'</div>':(typeof e.fix==='string'&&e.fix!=='')?'<div class="fix">'+esc(e.fix)+'</div>':(e.fix===''?'<div class="fix" style="opacity:.75">(remove the word)</div>':''))+
  '<div class="why">'+esc(inkCap1(e.why||'Suggested edit'))+'</div>'+
- ((e.alts&&e.alts.length)?'<div class="wbalt"><span>'+(e.spell?'Did you mean:':'The bank offers:')+'</span>'+e.alts.map(a=>'<button onclick="wbAccept('+i+',\''+String(a).replace(/'/g,"\\'")+'\')" title="Use this word">'+esc(a)+'</button>').join('')+'</div>':'')+
+ (e.ask?'<div class="wbalt askrow"><span>'+esc(e.ask.q)+'</span><input id="ask'+i+'" value="'+esc(e.askVal||'')+'" placeholder="'+esc(e.ask.ph||'')+'" aria-label="'+esc(e.ask.q)+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();inkAskBuild('+i+');}"><button class="lkbtn" onclick="inkAskBuild('+i+')" title="Build the new wording from your answer">Build it</button></div>':'')+
+ ((e.alts&&e.alts.length)?'<div class="wbalt"><span>'+(e.tryAlts?(e.built?'Your sentence:':'Try:'):e.spell?'Did you mean:':'The bank offers:')+'</span>'+e.alts.map((a,j)=>'<button onclick="wbAccept('+i+','+j+')" title="'+(e.tryAlts?'Use this wording':'Use this word')+'">'+esc(e.altView&&e.altView[j]!=null?e.altView[j]:a)+'</button>').join('')+'</div>':'')+
  '<div class="learn" id="lrn'+i+'"><b>Mini-lesson</b>'+esc(L[0])+'<div style="margin-top:5px;font-style:italic">'+esc(L[1])+'</div></div>'+
  '<div class="row"><button onclick="locate('+i+')">Locate</button>'+
  ((typeof e.fix==='string')?'<button class="primary" onclick="acceptOne('+i+')">'+(e.fix===''?'Remove':'Accept')+'</button>':'')+
@@ -8466,9 +8472,17 @@ async function inkModelPump(){
  finally{MBUSY=false;}
  CARDSIG='';try{scan();}catch(e){}
  if(MQUEUE.length)setTimeout(inkModelPump,500);}
+/* 7.42: the note refiner (src/lib/refine_core.js) reads the notes last: a
+   note on words already right goes; a note with nothing to choose gets an
+   alternative, a few to try, or a question whose answer builds the wording;
+   two notes on one place become one. It is given the dictionary and the
+   word bank. */
+const INKREF_H={plain:w=>!!SPELLD&&INKSPELL.level(SPELLD,String(w).toLowerCase())>=0,
+ syn:w=>{const r=synFor(String(w));return r?r.syns.map(x=>inflectSyn(x,r.form)):[];}};
 function inkRules(t){
- const all=inkRuleGate(t,ruleEdits(t));
+ let all=inkRuleGate(t,ruleEdits(t));
  Array.prototype.push.apply(all,inkSpellEdits(t,all));
+ if(typeof INKREF!=='undefined'){try{all=INKREF.refine(t,all,INKREF_H);}catch(e){console.warn('[inkwell] refine',e);}}
  if(S.showStyle){INK_STYLE_HIDDEN=0;return all;}
  const keep=all.filter(e=>e.cat!=='c'&&e.cat!=='s');
  INK_STYLE_HIDDEN=all.length-keep.length;
@@ -8527,7 +8541,7 @@ const LESSONS={
  'foreword (book preface) vs forward':['A book\'s opening words are its "foreword"; the direction is "forward".','"the forward of the book" → "the foreword"'],
  'New sentence begins in lowercase':['A sentence after a full stop begins with a capital letter, even when the last word looked like an abbreviation.','"…the method works. the next" → "…the method works. The next"'],
  'Missing space after a full stop':['A full stop breathes on both sides; without the space, two sentences collide.','"ended.Another" → "ended. Another"'],
- 'Possible comma splice;':['Two complete sentences joined by a comma strain the reader. Give them a full stop, a semicolon, or a joining word.','"It rained, we stayed in." → "It rained; we stayed in."'],
+ 'Possible comma splice':['Two complete sentences joined by a comma strain the reader. Give them a full stop, a semicolon, or a joining word.','"It rained, we stayed in." → "It rained; we stayed in."'],
  'Nominalisation: prefer the verb':['A verb wrapped in a noun ("make an assessment") hides the action and taxes the reader. Release the verb.','"make an assessment of" → "assess"'],
  'Vague "this"':['At the head of a sentence, "This" must answer "this what?" without the reader looking back. Name the antecedent.','"This shows…" → "This finding shows…"'],
  'Split infinitive':['"To boldly go" splits "to go". Modern usage permits it; the strictest examinations still prefer the verb whole.','"to carefully examine" → "carefully to examine"'],
@@ -8686,6 +8700,8 @@ function lessonFor(why){
  if(m){k=exact(m[1]);if(k)return LESSONS[k];}
  const inner=Object.keys(LESSONS).filter(k=>k.length>=10&&why.indexOf(k)>=0).sort((a,b)=>b.length-a.length)[0];
  if(inner)return LESSONS[inner];
+ /* 7.42: a lesson for the kind of note, from the refiner */
+ if(typeof INKREF!=='undefined'){const L=INKREF.lesson(why);if(L)return L;}
  return [why||'A suggested edit.','Compare the two versions aloud, and keep the one that says what you mean.'];}
 
 /* ================= DIFF ================= */
@@ -11039,19 +11055,25 @@ function rewrite(mode){
 function inkRewriteTab(mode){
  if(!ALTSEL||!ALTSEL.t)return;
  ALTSEL.prompt=false;ACST.mode='rewrite';ACST.style=mode;ACST.words=null;ACST.chips=null;
- const t=ALTSEL.t,label=RW_LABEL[mode]||mode;
+ const t0=ALTSEL.t,label=RW_LABEL[mode]||mode;
+ /* 7.42: the certain grammar and spelling fixes come first, so no version
+    restyles a mistake; each version lists them with its own changes */
+ let t=t0,fixes=[];try{const c=inkCorrectOnly(t0);if(c.text!==t0){t=c.text;fixes=c.changes;}}catch(e){}
  ALTS=ALTS.filter(a=>!a.off&&a.mode===mode);COACH=[];
  const P=(typeof INKPARA!=='undefined')?INKPARA:null;
+ const push=o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:fixes.concat(o.changes||[]),off:true,mode:mode});
  try{
-  if(P&&AC_OFFLINE[mode])P.restyle(t,mode).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
-  else if(P&&mode==='paraphrase')P.alternatives(t).forEach(o=>ALTS.push({kind:o.label+' · offline',text:o.text,why:o.why,changes:o.changes,off:true,mode:mode}));
+  if(P&&AC_OFFLINE[mode])P.restyle(t,mode).forEach(push);
+  else if(P&&mode==='paraphrase')P.alternatives(t).forEach(push);
   if(DEMORW.explain&&DEMORW[mode]&&!ALTS.some(a=>a.off)){const r=DEMORW.explain(mode,t);
-   if(r.text&&r.text.trim()&&r.text.trim()!==t.trim())ALTS.push({kind:label+' · offline',text:r.text,why:'Instant, offline: the rules engine.',changes:r.changes,off:true,mode:mode});}}catch(e){}
+   if(r.text&&r.text.trim()&&r.text.trim()!==t.trim())push({label:label,text:r.text,why:'Instant, offline: the rules engine.',changes:r.changes});}
+  if(fixes.length&&!ALTS.some(a=>a.off))push({label:'Corrected',text:t,why:'The grammar and spelling fixes alone; the style already fits.',changes:[]});}catch(e){}
  ACST.busy='';renderAlts('');
- inkRewriteAI(mode,t);}
-function inkRewriteAI(mode,t){
+ inkRewriteAI(mode,t,t0);}
+function inkRewriteAI(mode,t,sel){
  const label=RW_LABEL[mode]||mode,sysNote=' Register target: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes();
- const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==t||ACST.style!==mode)return;ACST.busy='';by=String(by||'the writing model').replace(/\.gguf$/i,'');
+ const guard=sel||t;
+ const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==guard||ACST.style!==mode)return;ACST.busy='';by=String(by||'the writing model').replace(/\.gguf$/i,'');
   if(txt&&txt.trim()&&txt.trim()!==t.trim()&&!ALTS.some(a=>a.text===txt.trim()))ALTS.unshift({kind:label+' · '+by,text:txt.trim(),why:'Written by '+by+'.',mode:mode});
   renderAlts('');};
  const sysMode=mode==='plain'?'simplify':mode;
