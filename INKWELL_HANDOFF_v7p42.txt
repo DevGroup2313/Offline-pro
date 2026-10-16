@@ -62,6 +62,37 @@ WHAT CAME IN 7.42
    yet tried on a Mac or an iPhone. The library of that page lives in that
    address's own storage (File, Move the library carries it across).
 
+WHERE THE BUILDS ARE (16 October, later)
+----------------------------------------
+The session lost its access to yabban-maker (every push answered
+"repository not found"), so the writer opened four repositories under
+DevGroup2313 and the 7.42 builds went there, each as the repository's
+first commit on main: the GitHub build kit (the same files
+make_packages.py --kits makes), a builds/ folder with the ready-made 7.42
+build, and a README.md.
+- DevGroup2313/Inwell-Mac-Intel: the Mac kit; builds/Inkwell-7.42-Mac-Intel.zip
+- DevGroup2313/Inkwell-Mac-Mini: the Mac mini kit; builds/Inkwell-7.42-Mac-AppleSilicon.zip
+- DevGroup2313/Inkwell-Windows: the Windows kit; builds/Inkwell_Windows_v7p42.zip
+- DevGroup2313/Inkwell-Android-fire: the Fire kit WITHOUT signing/;
+  builds/Inkwell-7.42-build1.apk (signed with the real key).
+Inkwell-Android-fire, Inwell-Mac-Intel and Inkwell-Mac-Mini were PUBLIC
+when they were made (Inkwell-Windows private). The signing key never
+goes into a public repository: the Fire kit there was made with
+make_packages.py --no-key (no signing/, and a .gitignore that keeps a
+later copy out). For GitHub to sign its builds with the real key, the
+writer puts two secrets on that repository (Settings, Secrets and
+variables, Actions): INKWELL_KEYSTORE_B64 (the keystore as one line of
+base64) and INKWELL_SIGNING_PROPERTIES (the three lines of
+signing.properties); the workflow's "Write the signing key" step writes
+the files from them. With neither files nor secrets, build.gradle signs
+with the Android test key and the APK is named -TESTKEY: it installs on
+a tablet with no Inkwell, never over the real one. Checked here: the
+base64 round trip gives the same keystore byte for byte, and a build
+from the public kit with no key produces a test-key APK.
+The source itself (this repository, branch claude/amazing-archimedes-
+lunzys) still has its 7.42 commits unpushed until yabban-maker access
+returns.
+
 NOT DONE YET
 ------------
 - The Scriba and Fontes button symbols: three choices were shown; the
