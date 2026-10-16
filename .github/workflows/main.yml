@@ -72,6 +72,35 @@ jobs:
           fi
           git -C "$dest" log -1 --format='llama.cpp %h %cd' || true
 
+      # 7.42: in a PUBLIC repository the signing key must not be a file. Keep
+      # the keystore, base64-encoded, in the repository secret
+      # INKWELL_KEYSTORE_B64 and the three lines of signing.properties
+      # (storePassword, keyPassword, keyAlias) in INKWELL_SIGNING_PROPERTIES;
+      # this step writes the two files the build reads (Settings, Secrets and
+      # variables, Actions, New repository secret; on a Mac the first value is
+      # made with: base64 -i signing/inkwell.jks | tr -d '\n' | pbcopy).
+      # With neither the files nor the secrets, the APK is signed with the
+      # Android test key and named -TESTKEY: it installs on a tablet with no
+      # Inkwell, but not over an Inkwell signed with the real key.
+      - name: Write the signing key from the repository's secrets
+        working-directory: ${{ env.PROJECT_DIR }}
+        env:
+          INKWELL_KEYSTORE_B64: ${{ secrets.INKWELL_KEYSTORE_B64 }}
+          INKWELL_SIGNING_PROPERTIES: ${{ secrets.INKWELL_SIGNING_PROPERTIES }}
+        run: |
+          set -euo pipefail
+          if [ -f signing/inkwell.jks ] && [ -f signing/signing.properties ]; then
+            echo "Signing with the key in signing/."
+          elif [ -n "$INKWELL_KEYSTORE_B64" ] && [ -n "$INKWELL_SIGNING_PROPERTIES" ]; then
+            mkdir -p signing
+            printf '%s' "$INKWELL_KEYSTORE_B64" | tr -d ' \n\r' | base64 -d > signing/inkwell.jks
+            printf '%s\n' "$INKWELL_SIGNING_PROPERTIES" > signing/signing.properties
+            echo "Signing with the key from the repository's secrets."
+          else
+            echo "::warning::No signing key: no signing/ folder and no INKWELL_KEYSTORE_B64 secret. The APK is signed with the Android test key; it installs on a tablet with no Inkwell, but not over an Inkwell signed with the real key."
+            echo "APK_NAME=${APK_NAME%.apk}-TESTKEY.apk" >> "$GITHUB_ENV"
+          fi
+
       - name: Build the APK
         working-directory: ${{ env.PROJECT_DIR }}
         run: |

@@ -2,13 +2,22 @@ plugins {
     id 'com.android.application'
 }
 
-// The signing key lives in this repository (signing/), so every build is signed
-// the same way and each new APK installs OVER the previous one, keeping your
-// documents. Keep the repository private, and keep a copy of signing/.
+// The signing key: every build is signed the same way, so each new APK
+// installs OVER the previous one and keeps your documents. It is read from
+// signing/inkwell.jks with signing/signing.properties, which live in a
+// PRIVATE repository, or, in a public one, are written by the workflow from
+// the repository's secrets just before the build (see build-apk.yml). With
+// neither, the build is signed with the Android test key: that APK installs
+// on a tablet with no Inkwell, but never over an Inkwell signed with the
+// real key, so the documents on the tablet are never at risk.
 def signingProps = new Properties()
 def signingFile = rootProject.file('signing/signing.properties')
-if (signingFile.exists()) {
+def keystoreFile = rootProject.file('signing/inkwell.jks')
+def hasInkwellKey = signingFile.exists() && keystoreFile.exists()
+if (hasInkwellKey) {
     signingFile.withInputStream { signingProps.load(it) }
+} else {
+    logger.warn('Inkwell: no signing/inkwell.jks with signing/signing.properties; signing with the Android test key (this APK will not install over an Inkwell signed with the real key).')
 }
 // Each GitHub build gets a higher version code, so Android accepts it as an update.
 def runNumber = Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '0')
@@ -61,13 +70,13 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.inkwell
+            signingConfig hasInkwellKey ? signingConfigs.inkwell : signingConfigs.debug
             ndk {
                 abiFilters 'arm64-v8a'
             }
         }
         debug {
-            signingConfig signingConfigs.inkwell
+            signingConfig hasInkwellKey ? signingConfigs.inkwell : signingConfigs.debug
             ndk {
                 abiFilters 'arm64-v8a', 'x86_64'
             }

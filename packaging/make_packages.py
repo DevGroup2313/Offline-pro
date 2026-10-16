@@ -53,10 +53,22 @@ def common(pkg, readme, workflow, workflow_name, src_dir="packaging"):
 
 
 def fire_kit(pkg):
+    """The GitHub build kit. With --no-key the signing key stays out (for a
+    PUBLIC repository: the workflow then takes the key from the repository's
+    secrets, see build-apk.yml) and a .gitignore keeps a later local copy of
+    signing/ out of the repository too."""
     common(pkg, "READ ME FIRST - FIRE TABLET.txt", ".github/workflows/main.yml", "build-apk.yml")
-    for name in ("app", "signing", "build.gradle", "settings.gradle", "gradle.properties"):
+    names = ["app", "build.gradle", "settings.gradle", "gradle.properties"]
+    if "--no-key" not in sys.argv:
+        names.insert(1, "signing")
+    for name in names:
         copy(os.path.join("Inkwell-Android", name), os.path.join(pkg, name))
     copy("artwork", os.path.join(pkg, "artwork"))
+    with open(os.path.join(pkg, ".gitignore"), "w") as f:
+        f.write("# build outputs and the fetched llama.cpp source\n.gradle/\nbuild/\napp/build/\napp/.cxx/\n"
+                "app/src/main/cpp/llama.cpp/\nlocal.properties\n")
+        if "--no-key" in sys.argv:
+            f.write("# the signing key never goes into a public repository\nsigning/\n")
 
 
 def fire(pkg):
@@ -181,7 +193,7 @@ def zip_folder(folder, zip_path):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
-        sys.exit("usage: make_packages.py <output-folder> [--kits]")
+        sys.exit("usage: make_packages.py <output-folder> [--kits] [--no-key]")
     out = os.path.abspath(args[0])
     os.makedirs(out, exist_ok=True)
     tag = "v" + version().replace(".", "p")
