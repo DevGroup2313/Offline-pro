@@ -1628,6 +1628,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_SYNONYMS_CORE@@
 @@LIB_PARAPHRASE_CORE@@
 @@LIB_REFINE_CORE@@
+@@LIB_LEARNER_DATA@@
+@@LIB_LEARNER_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -1910,6 +1912,15 @@ function salvageDocs(raw){
  }catch(e){return null;}
 }
 function bridgeHas(k){try{return typeof window.__inkBridgeStore==='object'&&window.__inkBridgeStore!==null&&Object.prototype.hasOwnProperty.call(window.__inkBridgeStore,k);}catch(e){return false;}}
+/* 7.42: a phone or tablet with no app opens Inkwell from the Mac mini itself
+   (http://<its address>:8318/, served by server.py). That page's writing
+   model is the computer it came from, so its address is the server. */
+function inkLanOrigin(){
+ try{return /^http:\/\/(?:10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+|[a-z0-9-]+\.local):\d+$/i.test(location.origin);}catch(e){return false;}}
+function inkDefaultServer(){
+ const v=LS('server');
+ if(inkLanOrigin()&&(!v||/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/i.test(String(v))))return location.origin;
+ return v||'http://127.0.0.1:8317';}
 /* 7.42: clarity and style notes are shown unless the writer hides them. The
    page once hid them until asked; that choice is turned on once, here. */
 function inkStyleDefault(){
@@ -2274,7 +2285,7 @@ function openMove(){
   '<div class="choiceRow" style="margin-top:8px"><button onclick="openModal(\'keep\')">🕮 Earlier copies</button><button onclick="closeModal()">Close</button></div>';
  inkModalShow();}
 let S={docs:LS('docs')||[],active:LS('active')||null,rules:LS('rules')||[],profile:LS('profile')||'',
-server:LS('server')||'http://127.0.0.1:8317',lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
+server:inkDefaultServer(),lanKey:LS('lanKey')||'',connected:false,mode:LS('mode')||'light',reg:LS('reg')||'professional',docType:LS('doctype')||null,
 stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',miniAuto:LS('miniAuto')||false,proAuto:LS('proAuto')||false,
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
@@ -5485,6 +5496,7 @@ async function inkLanRefresh(){
   el.innerHTML=j.enabled
    ?'<b>On.</b> On the other device: Engine \u25B8 Your computer\u2019s model (a tablet or phone) or Another computer\u2019s model (a laptop), then enter<br>address <b style="font-size:15px">'+esc((j.addresses||[])[0]||'this computer\u2019s Wi-Fi address')+'</b> and code <b style="font-size:17px;letter-spacing:.12em">'+esc(j.code)+'</b>'
     +((j.addresses||[]).length>1?'<br><span style="color:var(--mut)">Other addresses: '+esc(j.addresses.slice(1).join(', '))+'</span>':'')
+    +'<br><span style="color:var(--mut)">An iPhone or iPad with no Inkwell app: open Safari at <b>http://'+esc((j.addresses||[])[0]||'this address')+'/</b>. Inkwell opens from this computer, with its model; enter the code once in Engine. Add it to the Home Screen for a door of its own.</span>'
     +'<div class="row" style="margin-top:6px"><button onclick="inkLanSet(false)">Stop sharing</button> <button onclick="inkLanSet(true,true)">New code</button></div>'
    :'<b>Off.</b> Nothing on this computer is reachable from the network.<div class="row" style="margin-top:6px"><button class="primary" onclick="inkLanSet(true)">Share with my other devices on this Wi-Fi</button></div>';
  }catch(e){el.innerHTML='<span style="color:var(--mut)">This companion server is older and cannot share yet; reinstall Inkwell 7.35 on this computer.</span>';}
@@ -8166,6 +8178,7 @@ function ruleEdits(t){
   if(fix)fix=matchCase(m.raw,fix);
   out.push({start:m.start,end:m.start+m.raw.length,orig:m.raw,fix,why:'Your rule: '+ur.label,cat:'r'});}}catch(e){}}
  articleCheck(t,ms,out);
+ learnerCheck(t,ms,out);
  longSentenceCheck(t,ms,out);
  commaSpliceCheck(t,ms,out);
  rhythmCheck(t,ms,out);
@@ -8192,6 +8205,17 @@ function ruleEdits(t){
  if(S.reg==='scholarly')expletiveCheck(t,ms,out);
  __ruleAns=out;
  return out;}
+/* 7.42: the learner-error checks (src/lib/learner_core.js): agreement, verb
+   forms, a missing "is", a noun's number, articles and prepositions in fixed
+   phrases, words run together, the commas learners leave out. Measured on
+   learner essays and on correct text (tools/grammar/README.md). */
+function learnerCheck(t,ms,out){
+ if(typeof INKLRN==='undefined')return;
+ let es=[];try{es=INKLRN.check(t);}catch(e){return;}
+ for(const e of es){
+  if(inMask(e.start,ms))continue;
+  if(out.some(o=>e.start<o.end&&e.end>o.start))continue;
+  out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam});}}
 /* ===== restored card + bubble + accept + undo cluster (regressed away in 6.58) ===== */
 let CARDSIG="";
 const bub=document.getElementById('bubble');

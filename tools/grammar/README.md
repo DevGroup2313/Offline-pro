@@ -106,6 +106,62 @@ models, not that endpoint.
 On CoNLL-2014, GECToR at 0.7 with rules and spelling: precision 76.7%,
 recall 28.9%, F0.5 0.576 (the 7.32 app: 81.7%, 21.8%, 0.527).
 
+## 7.42: the learner-error checks (stage G2)
+
+The writer's report: "the grammar editor ignores a lot of errors". Measured
+again on the tuning half with the whole page pipeline (rules, the gate, the
+spelling checker and, from 7.42, the note refiner), the 7.41 app found
+4.1% of the learner errors (precision 66.8%). The gold edits by type, on
+that half (3,382 edits): missing punctuation 12.5% (369 of them commas),
+word choice 11%, prepositions 6.7%, verb tense 5.6%, missing articles 5.4%,
+verbs 4.9%, capitals and spacing 4.2%, extra articles 4%, spelling 3.8%,
+nouns 3.8%, a noun's number 3.4%.
+
+`src/lib/learner_core.js` adds nine families of checks, each written to
+fire only where the fix is certain, with word lists made from the lexicon
+(`tools/grammar/learner_lists.mjs`, writing `src/lib/learner_data.js`):
+subject-verb agreement (pronoun, plural-noun and singular-noun subjects;
+"everyone"; the subjunctive and the collective nouns left alone), verb
+forms (after a modal, "did", "to"; enjoy + -ing; want + to; the -ing form
+after a preposition, only where a noun could not read the same), a missing
+am/is/are, a past marker or a past sentence with a present verb, a noun's
+number after many/every/this/one of the, articles and prepositions in fixed
+phrases, words run together or split, and the commas learners leave out
+(after an opener, after a fronted clause, before "but" and "so" joining two
+clauses, after "two years ago"). Each family was scored alone on the tuning
+half and on correct text, and its false alarms read and removed; then the
+whole was checked on the report half, which no choice was made from.
+
+The whole page pipeline, correctness fixes only ("g"), ERRANT span-based:
+
+| Set | 7.41: TP / FP, P / R / F0.5 | 7.42: TP / FP, P / R / F0.5 |
+|---|---|---|
+| W&I tuning half (1,698 sentences) | 135 / 67, 66.8% / 4.1% / 0.164 | 226 / 117, 65.9% / 6.8% / 0.241 |
+| W&I report half (1,698 sentences) | 148 / 69, 68.2% / 4.6% / 0.181 | 212 / 119, 64.1% / 6.6% / 0.233 |
+| Correct Wikipedia changed, tuning (1,500) | 64 (4.3%) | 73 (4.9%) |
+| Correct Wikipedia changed, report (1,500) | 55 (3.7%) | 77 (5.1%) |
+
+By type on the report half, 7.42 (precision / recall): capitals and spacing
+85% / 28%, spelling 63% / 46%, punctuation 69% / 11%, a noun's number 80% /
+7%, verb tense 80% / 4%, agreement 44% / 10%, prepositions 45% / 3%. The
+learner checks alone, on the report half: 101 fixes matching a human's, 84
+not (55%), 26 of 1,500 correct sentences touched (1.7%); on the tuning half
+124 / 65 (66%) and 13 (0.9%).
+
+What this is and is not: the app now finds about one learner error in
+fifteen offline, where it found one in twenty-four; two of three of its
+fixes are the human corrector's. A neural corrector finds far more (GECToR,
+above: one in four, with three of four fixes right), and Grammarly more
+still; the rules cannot reach that. Most of what is still missed is word
+choice, articles, prepositions and tense inside sentences with no marker,
+which need a model of the sentence's meaning. The grammar model stays
+available in Engine for those who want it; the writer asked for the
+offline rules to hold their own first, and this is where they stand.
+
+The tests: `node tools/grammar/learner_test.js` (91 sentences by hand).
+The measurement: `runpage.mjs` in the stage folder (the real page), then
+`score.py` and `errant_compare -cat 2`.
+
 ## Features beyond correctness (Grammarly, as described in 2026 reviews)
 
 Present in Inkwell before Stage C: clarity and wordiness notes, passive
