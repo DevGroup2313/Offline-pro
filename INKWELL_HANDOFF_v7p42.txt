@@ -1,0 +1,87 @@
+INKWELL v7.42: HANDOFF NOTES
+============================
+Date: 16 October 2026. Read INKWELL_HANDOFF_v7p40.txt and the earlier notes
+for everything before 7.41 (7.41 had no notes of its own: the Mac app under
+30 MB through the fetch-once model runtime, the seal in every tab and
+shared link, and the honest "no model loaded" pill).
+
+Look for "v7.42" beside the date at the top. If it is not there, the device
+is not running 7.42.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG) is never in the repository and never trained on.
+
+WHAT CAME IN 7.42
+-----------------
+1. G1, the note refiner (src/lib/refine_core.js, INKREF; tests
+   tools/rewrite/refine_test.js, 83). The rules engine's notes pass through
+   it last, in inkRules after the spelling checker. A note on words already
+   right goes (a stative "was born", a repeated name, the reminders that a
+   word is correct, which were also removed from the rule packs). A note
+   with nothing to choose gets a fix, a few wordings to try ("Try:" chips,
+   e.tryAlts and e.altView) or a question whose answer builds the new
+   wording (e.ask; inkAskBuild in the page; INKREF.build): "Who did it?"
+   turns an agentless passive active with the verb and the number agreed;
+   "This what?" names the noun; "Whose work?" puts the citation in. Two
+   notes on one place become the more useful one (score: fix > choices >
+   advice; grammar over clarity over style); two overlapping fixes never
+   both stay fixes (Fix all would corrupt the text). Every kind of note has
+   a lesson of its own (INKREF.lesson, read by lessonFor before the general
+   fallback). Clarity and style notes are shown by default (inkStyleDefault,
+   one-time key ink_style742). Rewrite applies the certain grammar and
+   spelling fixes before any style. Measured on the G1 baseline texts:
+   advice-only notes 68% to 27% (Wikipedia), 20% to 2% (learners); general
+   lessons 14 to 1 and 80 to 19; overlapping notes 36 to 0.
+2. G2, the learner-error checks (src/lib/learner_core.js, INKLRN; word
+   lists src/lib/learner_data.js from tools/grammar/learner_lists.mjs; tests
+   tools/grammar/learner_test.js, 91). Called from ruleEdits as
+   learnerCheck, before the refiner. Nine families (sva, form, aux, tense,
+   num, art, prep, orth, comma), each tagged e.fam. The numbers and what the
+   rules still cannot reach are in tools/grammar/README.md ("7.42"). On the
+   held-out learner half: 148 true fixes to 212, false 69 to 119 (precision
+   68% to 64%), correct sentences touched 3.7% to 5.1%. The measurement
+   runner is tools/grammar/runpage.mjs (the real page in Chromium).
+3. The web app's tab icon follows the theme (inkTabIcon in applyMode; the
+   site's icon links carry data-ink-day and data-ink-night;
+   icons/favicon-32-night.png and icon-192-night.png from the seal's night
+   face; no "shortcut icon" link any more). The theme colour follows too.
+4. The writing model's download (web app, LFM2.5 1.2B over WebGPU) keeps
+   its progress on the pill (window.__inkInstalling; setPill stands back),
+   shows "x MB of about 850 MB", and a failed download names huggingface.co
+   and says that trying again continues. In this sandbox the browser could
+   not reach huggingface.co (the proxy's certificate), so a full load was
+   not seen here; the chain up to the download was.
+5. The Mac mini serves Inkwell itself to an iPhone or iPad (server.py,
+   LanHandler._page: "/", "/Inkwell.html" and "/vendor/..." only, from
+   INKWELL_PAGE, set by the launcher from find_app_html, else a page beside
+   server.py; nothing else, no climbing paths, the endpoints still need the
+   code). The page opened from such an address takes it as its server
+   (inkLanOrigin, inkDefaultServer) and asks for the code once; the sharing
+   panel says how. Checked in the browser here with a .local stand-in; not
+   yet tried on a Mac or an iPhone. The library of that page lives in that
+   address's own storage (File, Move the library carries it across).
+
+NOT DONE YET
+------------
+- The Scriba and Fontes button symbols: three choices were shown to the
+  writer (scratchpad sf1/symbols_*.png); none chosen or committed.
+- AuDHD support at the core (task 41): not started; needs the writer's
+  choices.
+- The Carpe Diem session (session_01VFiq31rcYxqT8dQ3twEE4R) asked, at the
+  owner's request, to be told of each Scriba/Fontes version (repository,
+  branch, files) so Carpe Diem can copy it, and suggested a port of
+  Inkwell's own for the desktop window (Carpe Diem uses 42049; moving the
+  port must carry the saved work across). Neither done.
+- The DNS fix for carpediemofflinestudycompanion.com is the writer's action
+  at Namecheap (see the 7.40 notes).
+- GitHub Actions still has not started since 10 October: the Mac apps come
+  from make_mac_prebuilt.py, Windows from the page folder, the Fire APK from
+  gradle in the session, and no .ipa can be built.
+
+TESTS
+-----
+run.js 230, coach_test.js 38, para_test.js 44, refine_test.js 83,
+learner_test.js 91; the browser regression (108 desk controls, the rooms,
+the tour by day, night and phone; the one "missing button" line at the
+tour's last step is the same as in 7.41).

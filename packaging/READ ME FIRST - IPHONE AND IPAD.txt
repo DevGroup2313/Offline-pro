@@ -1,11 +1,11 @@
-INKWELL 7.41 FOR IPHONE AND IPAD
+INKWELL 7.42 FOR IPHONE AND IPAD
 ================================
 
 TWO WAYS TO HAVE INKWELL ON AN IPHONE OR IPAD
 - TODAY: the web app, added to the Home Screen. Nothing to install; it opens
   like an app and works offline after the first visit.
 - LATER: the iPhone and iPad app (.ipa). GitHub builds it on one of its
-  Macs, and GitHub Actions has not started since 10 October, so no 7.41 .ipa
+  Macs, and GitHub Actions has not started since 10 October, so no 7.42 .ipa
   can be made yet. Its steps follow below, for when it works again. The app
   can use the Mac mini's model; the web app cannot (Safari does not let a
   secure web page call a computer on the home network).
@@ -19,7 +19,7 @@ TODAY: THE WEB APP ON THE HOME SCREEN
 2. On the iPhone or iPad, open that address in Safari.
 3. Share, "Add to Home Screen", Add.
 4. Open Inkwell from the Home Screen once while online, so it keeps its
-   files for offline use. Look for "v7.41" beside the date.
+   files for offline use. Look for "v7.42" beside the date.
 - Updating later: when the site is updated on Netlify, open Inkwell from the
   Home Screen while online; the new version shows at the first or second
   opening.
@@ -29,6 +29,27 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   copy on another device is wise for long work: File, Move the library to
   another device.
 
+
+NEW IN 7.42
+-----------
+- Inkwell catches more mistakes offline, with no model: the errors people
+  make most when writing English (he go, they was, didn't knew, enjoy to
+  play, by use, many student, every students, in future, married with, in
+  Monday, infront, and the commas left out after "If you want a car" or
+  "In my opinion"). Measured on learner essays: half again as many errors
+  found, at the same precision; one correct sentence in twenty touched.
+- Every note now offers something to do: a fix, a few wordings to try, or
+  a question whose answer builds the new sentence ("Who did it?" turns a
+  passive sentence active). Notes on words already right are gone, and two
+  notes on one place are one. Every note has a lesson of its own kind.
+- Clarity and style notes are shown from the start (hide them with one
+  button if you want only correctness).
+- The web app's tab icon follows the theme: the night seal in dark mode.
+- An iPhone or iPad with no app can open Inkwell from the Mac mini itself:
+  on the Mac mini, Studio ▸ Engine ▸ Share; on the phone, Safari at
+  http://<the address shown>/ and the six-digit code once in Engine.
+- The writing model's download (web app) keeps its progress on the pill,
+  and a failed download says why in plain words.
 
 NEW IN 7.41
 -----------

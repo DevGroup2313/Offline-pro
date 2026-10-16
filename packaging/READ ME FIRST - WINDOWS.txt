@@ -1,28 +1,28 @@
-INKWELL 7.41 FOR WINDOWS
+INKWELL 7.42 FOR WINDOWS
 ========================
 
-This zip brings Inkwell 7.41 to the Inkwell already installed on your
+This zip brings Inkwell 7.42 to the Inkwell already installed on your
 Windows computer (from Inkwell-7.37-Windows-Setup.exe). There is no new
 installer this time: GitHub Actions, which builds the Windows installer, has
 not started since 10 October. The installed program always opens the newest
-Inkwell page it finds in its own folder, so 7.41 is one folder dropped in.
+Inkwell page it finds in its own folder, so 7.42 is one folder dropped in.
 
 INSTALL (ABOUT A MINUTE)
 ------------------------
 1. Close Inkwell if it is open.
 2. Unzip: right-click the zip, Extract All, Extract. A window opens with the
-   folder "Inkwell 7.41 page" in it.
+   folder "Inkwell 7.42 page" in it.
 3. Open Inkwell's own folder: click the address bar at the top of a File
    Explorer window, type   %LOCALAPPDATA%\Programs\Inkwell   and press Enter.
    You should see Inkwell.exe there.
-4. Drag the folder "Inkwell 7.41 page" into that window.
+4. Drag the folder "Inkwell 7.42 page" into that window.
    If an older folder such as "Inkwell 7.40 page" is there, you can delete
    it: Inkwell always opens the newest page.
-5. Open Inkwell from the Start menu as usual. Look for "v7.41" beside the
+5. Open Inkwell from the Start menu as usual. Look for "v7.42" beside the
    date at the top.
 
 Your documents, the Start menu entry and the uninstaller stay as they are.
-To go back to 7.37, delete the folder "Inkwell 7.41 page" from Inkwell's
+To go back to 7.37, delete the folder "Inkwell 7.42 page" from Inkwell's
 folder.
 
 If Inkwell is not installed on this computer yet: install
@@ -36,6 +36,27 @@ On the Mac mini: Studio, Engine, "Share with my other devices on this
 Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
+
+NEW IN 7.42
+-----------
+- Inkwell catches more mistakes offline, with no model: the errors people
+  make most when writing English (he go, they was, didn't knew, enjoy to
+  play, by use, many student, every students, in future, married with, in
+  Monday, infront, and the commas left out after "If you want a car" or
+  "In my opinion"). Measured on learner essays: half again as many errors
+  found, at the same precision; one correct sentence in twenty touched.
+- Every note now offers something to do: a fix, a few wordings to try, or
+  a question whose answer builds the new sentence ("Who did it?" turns a
+  passive sentence active). Notes on words already right are gone, and two
+  notes on one place are one. Every note has a lesson of its own kind.
+- Clarity and style notes are shown from the start (hide them with one
+  button if you want only correctness).
+- The web app's tab icon follows the theme: the night seal in dark mode.
+- An iPhone or iPad with no app can open Inkwell from the Mac mini itself:
+  on the Mac mini, Studio ▸ Engine ▸ Share; on the phone, Safari at
+  http://<the address shown>/ and the six-digit code once in Engine.
+- The writing model's download (web app) keeps its progress on the pill,
+  and a failed download says why in plain words.
 
 NEW IN 7.41
 -----------
