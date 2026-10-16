@@ -1928,6 +1928,47 @@ LAN_ROUTES = {"correct", "rewrite", "rewrite_preset", "rewrite_custom", "presets
               "stt_warm", "net_status"}
 LAN = {"server": None}
 
+# 7.42: the page itself, for a phone or tablet with no app. The web app (a
+# secure page) may not call a home-network address, so an iPhone or iPad
+# opens Inkwell FROM this computer instead: http://<this address>:8318/ is
+# the page, same origin as the writing model, no app to install. Only the
+# page and its vendor files are served (no models, no library, no data); the
+# writing endpoints still need the pairing code. The page is the one the
+# app shows (INKWELL_PAGE, set by the launcher), else one beside server.py.
+PAGE_FILES = {"vendor"}
+PAGE_TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript",
+              ".wasm": "application/wasm", ".json": "application/json", ".txt": "text/plain; charset=utf-8",
+              ".css": "text/css", ".png": "image/png", ".ico": "image/x-icon", ".svg": "image/svg+xml",
+              ".woff2": "font/woff2", ".webmanifest": "application/manifest+json"}
+
+
+def lan_page():
+    """The page file to serve, or None."""
+    cands = [os.environ.get("INKWELL_PAGE") or ""]
+    here = os.path.dirname(os.path.abspath(__file__))
+    for d in (here, os.path.join(here, "Inkwell"), os.path.join(os.path.dirname(here), "Resources"), os.getcwd()):
+        cands.append(os.path.join(d, "Inkwell.html"))
+    for c in cands:
+        if c and os.path.isfile(c):
+            return os.path.abspath(c)
+    return None
+
+
+def lan_file(path):
+    """The file a GET of this path may read, within the page's own folder."""
+    page = lan_page()
+    if not page:
+        return None
+    if path in ("/", "/index.html", "/Inkwell.html"):
+        return page
+    parts = [p for p in path.split("/") if p]
+    if not parts or parts[0] not in PAGE_FILES or any(p in ("..", "", ".") or p.startswith(".") for p in parts):
+        return None
+    f = os.path.abspath(os.path.join(os.path.dirname(page), *parts))
+    if not f.startswith(os.path.dirname(page) + os.sep) or not os.path.isfile(f):
+        return None
+    return f
+
 
 def lan_conf():
     try:
@@ -2038,11 +2079,41 @@ class LanHandler(Handler):
 
     def do_GET(self):
         path = self.path.split("?")[0]
+        if not path.startswith("/api/"):
+            return self._page(path)
         if not self._paired():
             return self._send(401, {"error": "pairing code needed", "paired": False})
         if path in ("/api/health", "/api/net_status", "/api/stt_status", "/api/presets"):
             return Handler.do_GET(self)
         return self._send(404, {"error": "not offered to other devices"})
+
+    def _page(self, path):
+        """The page and its vendor files, read-only, nothing else."""
+        from urllib.parse import unquote
+        f = lan_file(unquote(path))
+        if not f:
+            return self._send(404, {"error": "not offered to other devices"})
+        try:
+            size = os.path.getsize(f)
+            self.send_response(200)
+            self.send_header("Content-Type", PAGE_TYPES.get(os.path.splitext(f)[1].lower(), "application/octet-stream"))
+            self.send_header("Content-Length", str(size))
+            self.send_header("Cache-Control", "no-store" if f == lan_page() else "max-age=86400")
+            self._cors()
+            self.end_headers()
+            with open(f, "rb") as fh:
+                while True:
+                    chunk = fh.read(1 << 16)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception as e:
+            try:
+                self._send(500, {"error": str(e)})
+            except Exception:
+                pass
 
     def do_POST(self):
         m = re.match(r"^/api/([a-z_]+)$", self.path.split("?")[0])

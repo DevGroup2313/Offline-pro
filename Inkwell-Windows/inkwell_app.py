@@ -1483,6 +1483,13 @@ def _ensure_server_running():
             import subprocess
             env = dict(os.environ)
             env[_ENGINE_ENV] = "engine"
+            # 7.42: the page the window shows, for the home network (server.py serves it)
+            try:
+                page = find_app_html()
+                if page:
+                    env["INKWELL_PAGE"] = page
+            except Exception:
+                pass
             _SERVER_PROC = subprocess.Popen(
                 _engine_spawn_cmd(sp),
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
