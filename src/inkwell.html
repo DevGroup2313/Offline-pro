@@ -4339,8 +4339,23 @@ function applyMode(){const dark=S.mode==='dark'||(S.mode==='auto'&&TMQ.matches);
  {const bs=document.getElementById('brandSeal');sealButtonPaint(bs,36,dark,!bs.__painted);bs.__painted=true;}
  try{scheFacePaint(dark);}catch(e){}
  if(document.getElementById('door')&&document.getElementById('door').style.display==='flex')doorSealPaint(dark,false);
- (function(){const lk=document.querySelector('link[rel=icon]');if(lk)lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark));})();
+ inkTabIcon(dark);
 }
+/* 7.42: the tab's icon and colour follow the theme (the device's mode on
+   "auto"). The web app's page names a day and a night icon on each link
+   (build_site.py); a page with no such names draws the seal itself. Safari
+   reads an icon again only from a new link element, so the link is
+   replaced, not changed. */
+function inkTabIcon(dark){
+ try{
+  const links=Array.from(document.querySelectorAll('link[rel~="icon"]')).filter(l=>!/apple-touch/i.test(l.getAttribute('rel')||''));
+  for(const lk of links){
+   const named=lk.getAttribute(dark?'data-ink-night':'data-ink-day');
+   const href=named||('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark)));
+   if(lk.getAttribute('href')===href)continue;
+   const n=lk.cloneNode(false);n.setAttribute('href',href);lk.parentNode.replaceChild(n,lk);}
+  const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content',dark?'#070b10':'#1F4F68');
+ }catch(e){}}
 function setMode(m){S.mode=m;SV('mode',m);applyMode();}
 function setDS(m){setMode(m);if(document.getElementById('modal').style.display==='flex')openModal('display');}
 function soundTest(){if(!S.sound){toggleSound();}
@@ -9089,6 +9104,7 @@ function inkDiagSave(){const t=(document.getElementById('diagOut')||{}).value||'
 async function installMini(){
  if(MINI){toast('Grammar model active: '+MININAME);return;}
  const pill=document.getElementById('enginePill'),btn=document.getElementById('miniBtn')||{textContent:''};
+ window.__inkInstalling=true;
  pill.className='pill load';pill.innerHTML='<i></i>Preparing the grammar model…';btn.textContent='…';
  instSay('[' + new Date().toLocaleTimeString() + '] Grammar model install begins.');
  if(typeof Worker!=='function'){setPill();btn.textContent='⬇ Install the grammar model';
@@ -9109,12 +9125,12 @@ async function installMini(){
     ?await installLoad('gector',c.id,[{dtype:'q8'}],tick,false,'mini',{verbs:verbs,tuning:GEC_TUNING})
     :await installLoad('text2text-generation',c.id,[{dtype:'q8'},{dtype:'q4'}],tick,false,'mini');
    MINIPREFIX=c.prefix||'';MININAME=c.name;
-   S.miniAuto=true;SV('miniAuto',true);setPill();btn.textContent='✓ Grammar model';
+   S.miniAuto=true;SV('miniAuto',true);window.__inkInstalling=false;setPill();btn.textContent='✓ Grammar model';
    instSay('Grammar model installed: '+MININAME+'. Cached; it never needs the internet again.');
    showTip('mini');toast('Grammar model installed: cached, offline from now on');return;
   }catch(e){/* installLoad already logged each attempt */}
  }
- setPill();btn.textContent='⬇ Install the grammar model';
+ window.__inkInstalling=false;setPill();btn.textContent='⬇ Install the grammar model';
  instSay('The grammar model did not install. The log above says why, word for word; Diagnose this device shows what the device lacks.');
  toast('The grammar model did not install. The Engine log says why.');}
 function ejectMini(){inkAiEnd('mini','unloaded');MINI=null;MININAME='';S.miniAuto=false;SV('miniAuto',false);
@@ -9331,13 +9347,14 @@ async function installWriter(auto){
  let files;try{files=await inkAiFiles4();}
  catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
  const pill=document.getElementById('enginePill'),dtype=g.f16?'q4f16':'q4';
+ window.__inkInstalling=true;
  if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
  instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', WebGPU): '+(auto?'starting':'downloading once, about '+WRITER.mb+' MB, then kept for offline use')+'.');
  inkAiMark('writer',true);const got={};
  try{
   await inkAiStart('pro',files);
   await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:{dtype:dtype,device:'webgpu'}},d=>{const p=d.progress||{};
-   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot);}},null,0);
+   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+WRITER.mb+' MB';}},null,0);
   PRO=async function(msgs,gen,onTok){
    const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
    return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
@@ -9345,9 +9362,12 @@ async function installWriter(auto){
   S.writerAuto=true;SV('writerAuto',true);setPill();
   instSay(WRITER.name+' is running in this window, offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
   if(!auto)toast('Writing model ready: '+WRITER.name);
- }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';setPill();
-  instSay('The writing model did not start: '+((e&&e.message)||e));toast('The writing model did not start; the Engine log says why');}
- finally{inkAiMark('',false);}}
+ }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';window.__inkInstalling=false;setPill();
+  const why=String((e&&e.message)||e);
+  /* 7.42: "Failed to fetch" names the cause in plain words */
+  const plain=/Failed to fetch|NetworkError|Load failed|ERR_|network|TOO_MANY|timed? ?out/i.test(why)?'its files could not be downloaded from huggingface.co (the connection dropped, or this network blocks that site). What was downloaded is kept, so trying again continues from there. ('+why+')':why;
+  instSay('The writing model did not start: '+plain);toast('The writing model did not start; the Engine log says why');}
+ finally{inkAiMark('',false);window.__inkInstalling=false;setPill();}}
 function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);S.writerAuto=false;SV('writerAuto',false);
  const pb=document.getElementById('proBtn');if(pb)pb.textContent='⬇ Install Pro model';setPill();toast('Pro model unloaded (cached files remain)');}
 async function proChat(system,user,maxTok,onTok){return aiRun(()=>proChatDo(system,user,maxTok,onTok));}
@@ -9416,6 +9436,9 @@ async function ping(){
    computer standing in for another that is not answering */
 function inkSrvWhere(){if(!S.connected)return 'none';if(inkSrvLocal(S.srvActive||S.server))return inkSrvLocal(S.server)?'here':'standin';return 'other';}
 function setPill(){const p=document.getElementById('enginePill');
+ /* 7.42: while a model is downloading, the pill shows the download; the
+    periodic ping must not write "Rules engine" over it */
+ if(window.__inkInstalling&&/\bload\b/.test(p.className))return;
  if(S.connected){const w=inkSrvWhere();p.className='pill on';
   if(S.serverAI===false){p.className='pill mini';p.innerHTML='<i></i>'+(w==='other'?'Wi-Fi · computer linked, no model loaded':'Server · no model loaded');
    p.title='The computer answers, but no writing model is loaded on it, so the rules engine writes here. On that computer: Studio ▸ ⚙ Engine.';return;}

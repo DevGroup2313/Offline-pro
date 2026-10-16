@@ -32,9 +32,12 @@ SHARE_DESC = "The writing desk that teaches as it corrects. Offline, private, on
 
 def share_tags(site):
     """The seal in every tab and in every shared link."""
-    tags = ['<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">',
-            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">',
-            '<link rel="shortcut icon" href="favicon.ico">',
+    # 7.42: each icon link names its day and night form; the page swaps them
+    # with its theme (inkTabIcon), so the tab shows the night seal in dark mode.
+    # No "shortcut icon" link: with one, Chrome and Safari may keep favicon.ico
+    # (the cream seal) over the swapped link.
+    tags = ['<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">',
             '<meta name="description" content="%s">' % SHARE_DESC,
             '<meta property="og:type" content="website">',
             '<meta property="og:site_name" content="Inkwell">',
