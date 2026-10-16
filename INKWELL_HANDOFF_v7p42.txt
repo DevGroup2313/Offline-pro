@@ -64,15 +64,16 @@ WHAT CAME IN 7.42
 
 NOT DONE YET
 ------------
-- The Scriba and Fontes button symbols: three choices were shown to the
-  writer (scratchpad sf1/symbols_*.png); none chosen or committed.
+- The Scriba and Fontes button symbols: three choices were shown; the
+  writer chose to keep the symbols as they are. Nothing to do.
 - AuDHD support at the core (task 41): not started; needs the writer's
   choices.
 - The Carpe Diem session (session_01VFiq31rcYxqT8dQ3twEE4R) asked, at the
   owner's request, to be told of each Scriba/Fontes version (repository,
   branch, files) so Carpe Diem can copy it, and suggested a port of
   Inkwell's own for the desktop window (Carpe Diem uses 42049; moving the
-  port must carry the saved work across). Neither done.
+  port must carry the saved work across). No Scriba/Fontes change was made
+  in 7.42; the port question is open.
 - The DNS fix for carpediemofflinestudycompanion.com is the writer's action
   at Namecheap (see the 7.40 notes).
 - GitHub Actions still has not started since 10 October: the Mac apps come
