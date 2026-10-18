@@ -370,7 +370,7 @@
     ['w', 'most', 'the majority of', () => true, 'd'],
     ['w', 'help', 'assistance', c => /^(the|your|their|his|her|our|my|for|with|of|some|any|no)$/.test(c.p), 'd'],
     ['w', 'very', 'highly', c => /^(important|significant|likely|unlikely|effective|successful|relevant|competitive|sensitive|variable|controversial|unusual|influential|specific|accurate|efficient|reliable|profitable|valuable|technical|toxic|contagious|dependent|visible|critical|desirable|problematic|complex|probable|improbable|flexible|selective|productive|beneficial|unstable|active|charged|concentrated|diverse|correlated|skilled|qualified|regarded|recommended|educated|trained|respected|motivated|developed|structured|specialised|specialized)$/.test(c.n), 'u'],
-    ['w', 'really', 'highly', c => /^(important|significant|likely|unlikely|effective|successful|relevant|competitive|sensitive|controversial|unusual|influential|accurate|efficient|reliable|valuable|critical|desirable|complex|flexible|productive|beneficial)$/.test(c.n), 'u'],
+    ['w', 'really', 'highly', c => /^(significant|likely|unlikely|effective|successful|relevant|competitive|sensitive|controversial|unusual|influential|accurate|efficient|reliable|valuable|critical|desirable|complex|flexible|productive|beneficial)$/.test(c.n), 'u'],
     /* "improved a lot", "a lot better"; never "a lot more companies" or "thanks a lot" */
     ['w', 'a lot', 'considerably', c => (c.n === '' && /[a-z]{3,}ed$/.test(c.p)) || /^(better|worse|faster|slower|higher|lower|larger|smaller|easier|harder|longer|shorter|greater|cheaper|safer|stronger|weaker)$/.test(c.n), 'u'],
     ['w', 'really', 'very', c => /^(good|bad|useful|helpful|difficult|hard|easy|clear|different|similar|common|rare|high|low|large|small|strong|weak|close|interesting|old|new|long|short|fast|slow|busy|tired|happy|sad|nice|quiet|loud|cold|hot|warm|expensive|cheap|popular|serious|simple|careful|lucky|proud|sure|keen|kind)$/.test(c.n) && c.p !== 'not', 'u'],
@@ -584,7 +584,14 @@
     r.changes.forEach(c => log.push({ from: c.from, to: c.to, why: (R.WHYS && R.WHYS[c.why]) || c.why }));
     return r.text;
   }
-  function sentences(text) { return String(text).match(/[^.!?\n]+(?:[.!?]+["”’)]*|$)\s*|\n+/g) || [String(text)]; }
+  /* 7.43: a line with no end mark (a heading, "Introduction") is a part of
+     its own; before, it matched nothing and was dropped from the reordered
+     version. Whatever the parts, together they are the whole text, or the
+     text is taken as one part. */
+  function sentences(text) {
+    const t = String(text), m = t.match(/[^.!?\n]+(?:[.!?]+["”’)]*\s*|(?=\n)|$)|\n+/g);
+    return m && m.join('') === t ? m : [t];
+  }
   function perSentence(text, fn) {
     return sentences(text).map(s => { const lead = s.match(/^\s*/)[0], tail = s.match(/\s*$/)[0], core = s.slice(lead.length, s.length - tail.length); return core ? lead + fn(core) + tail : s; }).join('');
   }

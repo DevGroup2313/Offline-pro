@@ -182,7 +182,7 @@
     [/\bby means of\b/gi, keepCase('by')],
     /* a sentence that opens with a filler: only at the start of a sentence, so
        no introductory phrase is left hanging on the wrong subject */
-    tag(atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say,?|it goes without saying that)\\s*'), 'filler')
+    tag(atStart('(?:it is important to note that|it should be noted that|it is worth noting that|it is interesting to note that|it is a fact that|needless to say(?:,|\\s+that)?|it goes without saying that)\\s*'), 'filler')
   ].concat(forms([
     [['make a decision', 'makes a decision', 'made a decision', 'making a decision'], ['decide', 'decides', 'decided', 'deciding']],
     [['come to (?:a|the) conclusion', 'comes to (?:a|the) conclusion', 'came to (?:a|the) conclusion', 'coming to (?:a|the) conclusion'], ['conclude', 'concludes', 'concluded', 'concluding']],
@@ -201,8 +201,11 @@
   function dropIntensifiers(t) {
     t = swap(t, /\b(very|really|extremely)(?:,?\s+\1\b)+/gi, '$1', 'intensifier');
     /* "the very end", "not really", "really?" keep their word */
-    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her'], '')], 'intensifier');
-    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', "n't", 'n’t'], '')], 'intensifier');
+    /* 7.43: never after "not": "not totally conclusive" is not "not
+       conclusive", and "not very good" is not "not good"; and "very much",
+       "very few", "very well" keep their word */
+    t = apply(t, [notAfter(/\b(?:very|extremely|totally|basically|literally|actually) (?!(?:much|many|few|little|well|same|own)\b)(?=[A-Za-z])/gi, ['the', 'this', 'that', 'these', 'those', 'its', 'their', 'our', 'my', 'your', 'his', 'her', 'not', 'never', 'nor', "\\w+n['’]t"], '')], 'intensifier');
+    t = apply(t, [notAfter(/\breally (?=[A-Za-z])/gi, ['not', 'never', "\\w+n['’]t"], '')], 'intensifier');
     return t;
   }
   /* ---- hedges: only words that soften and carry no fact ---- */
@@ -232,15 +235,42 @@
     [/\blet['’]s\b/gi, keepCase('let us')]
   ];
   /* ---- informal words, for formal registers; only safe readings ---- */
-  const muchMany = (m, lead, next) => keepCase((/[^s]s$|ies$|^(?:people|children|men|women|students)$/i.test(next) ? 'many ' : 'much ') + next)(m);
+  /* 7.43: "a lot of" by the noun it counts, read past its adjectives: "a lot
+     of different genres" is "many different genres", "a lot of time" is "a
+     great deal of time"; before 7.43 only the next word was read, so "a lot
+     of different music" became "much different music" and "a lot of the
+     work" became "much the work". Where the noun is not certain, it stays. */
+  const PLURAL_N = /^(?:[a-z]+[^s'’]s|[a-z]+ies|people|children|men|women|media|criteria|phenomena|feet|teeth|mice|police|cattle)$/i;
+  const MASS_N = /^(?:data|time|money|information|work|traffic|energy|effort|experience|passion|tension|exercise|fun|research|evidence|pollution|noise|attention|damage|support|knowledge|interest|progress|pressure|stress|space|water|food|power|freedom|help|advice|luck|trouble|patience|courage|confidence|criticism|controversy|uncertainty|variation|growth|investment|literature|scholarship|potential|influence|importance|emphasis|care|heat|rain|snow|land|waste|fuel|electricity|equipment|furniture|homework|software|content|material|coverage|speculation|debate|discussion|thought|practice|training|evidence|light|violence|crime|poverty|wealth|change)$/i;
+  const ADJ_N = /^(?:good|bad|new|old|other|different|high|low|big|small|great|beautiful|interesting|important|young|little|long|short|strong|weak|various|useful|serious|real|hard|free|cheap|expensive|nice|fresh|healthy|local|public|private|social|human|natural|modern|extra|further|personal|daily|[a-z]+(?:ful|ous|ive|al|ent|ant|ic|able|ible|ing|ed|ary|less|ish))$/i;
+  function lotOf(m) {
+    const a = arguments, off = a[a.length - 2], str = a[a.length - 1];
+    const ws = str.slice(off + m.length).match(/^[A-Za-z][\w'’-]*(?:\s+[A-Za-z][\w'’-]*){0,3}/);
+    if (!ws) return m;
+    for (const w of ws[0].split(/\s+/).slice(0, 3)) {
+      if (/-/.test(w) && !PLURAL_N.test(w.split('-').pop())) continue;
+      if (PLURAL_N.test(w) && !ADJ_N.test(w)) return keepCase('many ')(m);
+      if (MASS_N.test(w)) return keepCase('a great deal of ')(m);
+      if (ADJ_N.test(w)) continue;
+      return m;
+    }
+    return m;
+  }
+  /* "big" and "huge" by the noun: size for things you could measure, "a
+     significant role" (in PRECISE) for rank; "a big fan" or "a big surprise"
+     stays as it is, and "huge" otherwise reads "enormous" */
+  const SIZE_N = '(?:and|or|enough|cit(?:y|ies)|towns?|villages?|houses?|homes?|buildings?|rooms?|groups?|famil(?:y|ies)|compan(?:y|ies)|firms?|corporations?|enterprises?|businesses|organi[sz]ations?|countr(?:y|ies)|nations?|squares?|motorways?|roads?|streets?|shopping|theat(?:er|re)s?|castles?|restaurants?|trees?|bags?|malls?|farms?|librar(?:y|ies)|supermarkets?|gardens?|windows?|cars?|box(?:es)?|vehicles?|factor(?:y|ies)|teams?|amounts?|quantit(?:y|ies)|numbers?|sums?|crowds?|part(?:y|ies)|events?|areas?|regions?|spaces?|fields?|parks?|schools?|universit(?:y|ies)|hospitals?|shops?|stores?|markets?|samples?|datasets?|populations?|audiences?|class(?:es)?|machines?|stones?|rocks?|lakes?|rivers?|forests?|animals?|dogs?|portions?|meals?|dinners?|budgets?|salar(?:y|ies)|loads?|suitcases?|shelves|furniture|facilities|plazas?|zoos?|lawns?|parking|fountains?|caves?|gyms?|percentages?|proportions?|scale|range|variety|majority|minority|share|margin|investments?|sizes?|volumes?)';
   const INFORMAL = [
     [/\bgonna\b/gi, keepCase('going to')], [/\bwanna\b/gi, keepCase('want to')], [/\bgotta\b/gi, keepCase('have to')], [/\bkinda\b/gi, keepCase('somewhat')],
-    [/\b(a lot of|lots of) (\w+)/gi, (m, lead, next) => muchMany(m, lead, next)],
+    [/\b(?:a lot of|lots of) (?=[A-Za-z])/gi, lotOf],
     [/\bkids\b/gi, keepCase('children')],
-    [/\bhuge\b/gi, keepCase('large')],
-    [/\bbig\b(?!\s+(?:data|bang|picture|deal|brother|tech|five|ten|apple|city|cat|game|screen|toe|top|shot|wig|business|pharma|names?)\b)/gi, keepCase('large')],
+    [new RegExp('\\bhuge(?=\\s+' + SIZE_N + '\\b)', 'gi'), keepCase('large')],
+    [/\bhuge\b(?!\s+(?:role|part|impact|influence|effect|difference|factor|contribution|change|problem|issue|challenge|concern|question|step|improvement|mistake|threat|advantage)\b)/gi, keepCase('enormous')],
+    [new RegExp('\\bbig(?=\\s+' + SIZE_N + '\\b)(?!\\s+(?:city|screen|business|names?)\\b)', 'gi'), keepCase('large')],
     [/\b(is|are|was|were|seems|seemed|be|been) (?:ok|okay)\b/gi, '$1 acceptable'],
     [/\bmaybe\b/gi, keepCase('perhaps')],
+    /* 7.43: "really" before a word is speech, not formal writing */
+    tag(notAfter(/\breally (?=[a-z])/gi, ['not', 'never', "\\w+n['’]t"], ''), 'intensifier'),
     [/(^|[.!?]\s+)Plus,\s*/g, '$1Moreover, '],
     [/\banyway\b/gi, keepCase('in any case')],
     [/\bpretty (?=(?:good|bad|much|clear|sure|easy|hard|simple|obvious|strong|weak|well|important|common|rare|close|quick|quickly|similar|small|large|high|low|interesting|difficult|useful|accurate|confident|certain|likely|unlikely|straightforward)\b)/gi, '']
@@ -278,6 +308,152 @@
     [/\b(rule|rules|ruled|ruling) out\b/gi, (m, w) => keepCase({ rule: 'exclude', rules: 'excludes', ruled: 'excluded', ruling: 'excluding' }[w.toLowerCase()])(m)],
     [/\b(keep|keeps|kept|keeping) on\b(?= \w+ing\b)/gi, (m, w) => keepCase({ keep: 'continue', keeps: 'continues', kept: 'continued', keeping: 'continuing' }[w.toLowerCase()])(m)]
   ];
+  /* ---- 7.43: sentences recast, not only words swapped ----
+     A test of 7.42 found that the styles changed single words ("carried
+     out" to "conducted") and left the weak sentences as they were: "It is
+     very clear that this is a really important issue, and it is something
+     that needs to be looked at in a lot more detail." These rules take out
+     what only announces a point, put the subject first, and turn a verb
+     hidden in a noun back into a verb; each only where the grammar of what
+     is left is certain. */
+  const DEG = '(?:(?:very|quite|really|abundantly|extremely|perfectly|fairly|so|also)\\s+)?';
+  /* a verb that can follow "who" or "that" at once: then "that" begins a
+     clause about the noun ("a theory that explains"), never "a theory that
+     students like" */
+  const VERBY = '(?:is|are|was|were|has|have|had|can|could|will|would|may|might|must|should|do|does|did|cannot|[a-z]{3,}ed|believes?|thinks?|argues?|suggests?|shows?|claims?|uses?|needs?|struggles?|lives?|works?|wants?|feels?|seems?|remains?|exists?|appears?|tends?|prefers?|supports?|opposes?|affects?|influences?|helps?|makes?|takes?|says?|knows?|sees?|finds?|tries|try|explains?|describes?|requires?|depends?|reflects?|holds?|insists?|maintains?|contends?|agrees?|disagrees?|rejects?|accepts?|lacks?|faces?|experiences?|reports?|attends?)\\b';
+  const BE_TO = { am: 0, is: 1, are: 0, was: 2, were: 2, be: 0, been: 2 };
+  /* "is dependent on" becomes "depends on": the verb in the form that "is"
+     stood for; never after "being", where the reading would change */
+  function beVerb(adjPhrase, base, s3, past, after) {
+    return [new RegExp('\\b(am|is|are|was|were|be|been) ' + adjPhrase + '\\b', 'gi'), function () {
+      const a = arguments, m = a[0], v = a[1].toLowerCase(), off = a[a.length - 2], str = a[a.length - 1];
+      if (/\bbeing\s+$/i.test(str.slice(Math.max(0, off - 8), off))) return m;
+      const f = BE_TO[v], verb = f === 1 ? s3 : f === 2 ? past : base;
+      /* "has been dependent on" becomes "has depended on"; "will be" stays a base */
+      return keepCase(verb + (after ? ' ' + after : ''))(m);
+    }];
+  }
+  const RECAST = [
+    /* "It is very clear that this is ..." becomes "This is ..." */
+    tag(atStart('it (?:is|seems|appears|becomes) ' + DEG + '(?:clear|obvious|evident|apparent|plain) that\\s+'), 'opener'),
+    tag(atStart('it (?:is|should be) (?:also |particularly |especially |very )?(?:important|essential|crucial|vital|interesting|useful|significant) to (?:note|remember|recognise|recognize|stress|emphasise|emphasize|point out|mention|observe|highlight|bear in mind) that\\s+'), 'filler'),
+    tag(atStart('it (?:is|should be) (?:also )?worth (?:noting|mentioning|remembering|pointing out|stressing|emphasising|emphasizing|highlighting) that\\s+'), 'filler'),
+    tag(atStart('it (?:should|must) (?:also )?be (?:noted|stressed|emphasised|emphasized|remembered|mentioned|pointed out|borne in mind) that\\s+'), 'filler'),
+    /* "There are many students who struggle" becomes "Many students struggle" */
+    tag([new RegExp(S0 + 'there (?:is|are|was|were) ((?:(?:many|several|some|few|numerous|various|certain|other|no|two|three|four|five|six|ten|countless|a few|a lot of|a number of)\\b(?:\\s+(?!(?:who|whom|whose|that|which)\\b)[a-z][a-z-]*){0,3})|others|no one|nobody|someone|somebody) (?:who|that|which) (?=' + VERBY + ')', 'gi'),
+      /* "There are some who are, but others who are not": the second half
+         needs the first as it was */
+      function (m, pre, np) { const a = arguments, str = a[a.length - 1], off = a[a.length - 2];
+        return /\b(?:but|and|while|whereas|yet) (?:others|some|many|those|the rest)\b/i.test(str.slice(off + m.length)) ? m : pre + np + ' '; }], 'expletive'),
+    /* "it is something that needs" becomes "it needs" */
+    tag([/\b(it|this|that|which) (?:is|was) (?:also )?something (?:that|which) (?=(?:needs|requires|deserves|merits|has|had|needed|required|deserved|merited|demands|demanded|calls|called|should|must|can|could|will|would|may|might)\b)/gi, '$1 '], 'something'),
+    /* "needs to be looked at in a lot more detail" becomes "needs closer examination" */
+    tag([/\b(needs?|needed|deserves?|deserved|merits?|merited) to be (looked at|examined|studied|explored|investigated|considered|analy[sz]ed|researched|scrutini[sz]ed) in (?:(?:a lot|much|far|considerably|a great deal) )?(?:more|greater|further|closer) detail\b/gi,
+      (m, v, p) => v + ' closer ' + ({ 'looked at': 'examination', examined: 'examination', studied: 'study', explored: 'exploration', investigated: 'investigation', considered: 'consideration', analysed: 'analysis', analyzed: 'analysis', researched: 'research', scrutinised: 'scrutiny', scrutinized: 'scrutiny' }[p.toLowerCase()])], 'closer'),
+    /* "into the ways in which platforms influence" becomes "into how platforms influence" */
+    tag([/\b(into|on|of|about|at|examines?|examined|examining|explores?|explored|exploring|investigates?|investigated|investigating|considers?|considered|considering|understands?|understood|understanding|understand|shows?|showed|shown|showing|describes?|described|describing|analy[sz]es?|analy[sz]ed|analy[sz]ing|discuss(?:es|ed|ing)?|studies|study|studied|studying|explains?|explained|explaining|reveals?|revealed|revealing|illustrates?|illustrated|illustrating|highlights?|highlighted|highlighting|addresses|address|addressed|addressing|asks?|asked|asking) the (?:ways?|manner) in which\b/gi, '$1 how'], 'how'),
+    /* "research that has been carried out into" becomes "research into" */
+    tag([/\b(research|work|studies|study|analysis|analyses|experiments?|investigations?|surveys?|trials?|fieldwork|interviews) (?:that|which) (?:has|have|had) been (?:carried out|conducted|done|undertaken|performed|completed) (?=(?:into|on|in|of|by|with|among|amongst|across|at|over|since|during)\b)/gi, '$1 '], 'reduced'),
+    /* "the data that were collected in 2019" becomes "the data collected in 2019" */
+    tag([/\b([A-Za-z][\w-]*) (?:that|which) (?:is|are|was|were) (collected|gathered|obtained|used|employed|reported|described|published|presented|proposed|developed|discussed|mentioned|cited|quoted|outlined|identified|produced|written|recorded|measured|selected|observed|based|conducted|carried out|undertaken|performed|held|given|provided) (?=(?:by|in|on|from|for|at|during|between|with|under|over|through|across|throughout|as|since|to)\b)/g,
+      (m, w, part) => /^(?:for|of|in|on|to|with|by|from|at|about|under|over|through|into|upon|without|within|between|among|amongst|after|before|during|against|toward|towards|via|per|like|beyond|despite|across|behind|below|above|beneath|beside|besides|near|this|that|it|what|all|those|these|everything|anything|nothing|something|much|little|which|who|so|such|now|given|provided|except|in|but|and|or|than|is|are|was|were|be|been|said|argued|claimed|showed|shown|found|noted|believed|thought|suggested|stated|reported|known|true|clear|evident|is|means|mean|meant|ensure|ensures|ensured|assume|assumes|assumed|show|shows|find|finds|note|notes|say|says|argue|argues|claim|claims|suggest|suggests|believe|believes|think|thinks|know|knows)$/i.test(w) || /ly$/i.test(w) ? m : w + ' ' + part + ' '], 'reduced'),
+    /* "a growing amount of research" becomes "a growing body of research" */
+    tag([/\b(a|an|the) ((?:growing|large|considerable|substantial|significant|vast|small|limited|modest|expanding|rich|extensive|sizeable|sizable|increasing) )?amount of (research|literature|scholarship|evidence)\b/gi,
+      (m, d, adj, n) => keepCase((adj ? (d.toLowerCase() === 'the' ? 'the' : /^[aeiou]/i.test(adj) ? 'an' : 'a') : (d.toLowerCase() === 'the' ? 'the' : 'a')) + ' ' + (adj || '') + 'body of ' + n)(m)], 'idiom'),
+    /* "the amount of students" becomes "the number of students" */
+    tag([/\bamount of ((?:[a-z]+ )?(?:people|students|studies|participants|respondents|children|individuals|cases|papers|articles|books|researchers|scholars|words|times|questions|issues|problems|errors|mistakes|countries|users|patients|workers|items|things|ideas|sources|examples|readers|women|men|teachers|schools))\b/gi, (m, n) => keepCase('number of ' + n)(m)], 'countable')
+  ].concat(forms([
+    /* a verb hidden in a noun */
+    [['have an (?:effect|impact) on', 'has an (?:effect|impact) on', 'had an (?:effect|impact) on', 'having an (?:effect|impact) on'], ['affect', 'affects', 'affected', 'affecting']],
+    [['have an influence on', 'has an influence on', 'had an influence on', 'having an influence on'], ['influence', 'influences', 'influenced', 'influencing']],
+    [['have a tendency to', 'has a tendency to', 'had a tendency to', 'having a tendency to'], ['tend to', 'tends to', 'tended to', 'tending to']],
+    [['have a discussion (?:about|of|on)', 'has a discussion (?:about|of|on)', 'had a discussion (?:about|of|on)', 'having a discussion (?:about|of|on)'], ['discuss', 'discusses', 'discussed', 'discussing']],
+    [['make use of', 'makes use of', 'made use of', 'making use of'], ['use', 'uses', 'used', 'using']],
+    [['make (?:a )?reference to', 'makes (?:a )?reference to', 'made (?:a )?reference to', 'making (?:a )?reference to'], ['refer to', 'refers to', 'referred to', 'referring to']],
+    [['make a comparison (?:between|of)', 'makes a comparison (?:between|of)', 'made a comparison (?:between|of)', 'making a comparison (?:between|of)'], ['compare', 'compares', 'compared', 'comparing']],
+    [['make an attempt to', 'makes an attempt to', 'made an attempt to', 'making an attempt to'], ['attempt to', 'attempts to', 'attempted to', 'attempting to']],
+    [['make a contribution to', 'makes a contribution to', 'made a contribution to', 'making a contribution to'], ['contribute to', 'contributes to', 'contributed to', 'contributing to']],
+    [['make a distinction between', 'makes a distinction between', 'made a distinction between', 'making a distinction between'], ['distinguish between', 'distinguishes between', 'distinguished between', 'distinguishing between']],
+    [['make an argument that', 'makes an argument that', 'made an argument that', 'making an argument that'], ['argue that', 'argues that', 'argued that', 'arguing that']],
+    [['give an explanation (?:of|for)', 'gives an explanation (?:of|for)', 'gave an explanation (?:of|for)', 'giving an explanation (?:of|for)'], ['explain', 'explains', 'explained', 'explaining']],
+    [['give a description of', 'gives a description of', 'gave a description of', 'giving a description of'], ['describe', 'describes', 'described', 'describing']],
+    [['give an indication of', 'gives an indication of', 'gave an indication of', 'giving an indication of'], ['indicate', 'indicates', 'indicated', 'indicating']],
+    [['provide a description of', 'provides a description of', 'provided a description of', 'providing a description of'], ['describe', 'describes', 'described', 'describing']],
+    [['provide an explanation (?:of|for)', 'provides an explanation (?:of|for)', 'provided an explanation (?:of|for)', 'providing an explanation (?:of|for)'], ['explain', 'explains', 'explained', 'explaining']],
+    [['provide an analysis of', 'provides an analysis of', 'provided an analysis of', 'providing an analysis of'], ['analyse', 'analyses', 'analysed', 'analysing']],
+    [['perform an analysis of', 'performs an analysis of', 'performed an analysis of', 'performing an analysis of'], ['analyse', 'analyses', 'analysed', 'analysing']],
+    [['carry out an analysis of', 'carries out an analysis of', 'carried out an analysis of', 'carrying out an analysis of'], ['analyse', 'analyses', 'analysed', 'analysing']],
+    [['carry out an investigation (?:into|of)', 'carries out an investigation (?:into|of)', 'carried out an investigation (?:into|of)', 'carrying out an investigation (?:into|of)'], ['investigate', 'investigates', 'investigated', 'investigating']],
+    [['carry out an examination of', 'carries out an examination of', 'carried out an examination of', 'carrying out an examination of'], ['examine', 'examines', 'examined', 'examining']],
+    [['draw a conclusion', 'draws a conclusion', 'drew a conclusion', 'drawing a conclusion'], ['conclude', 'concludes', 'concluded', 'concluding']],
+    [['come to an end', 'comes to an end', 'came to an end', 'coming to an end'], ['end', 'ends', 'ended', 'ending']]
+  ]).map(r => [r[0], r[1], 'nominal'])).concat([
+    beVerb('dependent (?:on|upon)', 'depend on', 'depends on', 'depended on'),
+    beVerb('reliant (?:on|upon)', 'rely on', 'relies on', 'relied on'),
+    beVerb('indicative of', 'indicate', 'indicates', 'indicated'),
+    beVerb('reflective of', 'reflect', 'reflects', 'reflected'),
+    beVerb('suggestive of', 'suggest', 'suggests', 'suggested'),
+    beVerb('supportive of', 'support', 'supports', 'supported'),
+    beVerb('in need of', 'need', 'needs', 'needed'),
+    beVerb('of the (?:opinion|view|belief) that', 'believe that', 'believes that', 'believed that')
+  ].map(r => [r[0], r[1], 'nominal']));
+  /* ---- 7.43: a precise word for a vague one, where the noun decides the
+     word: "a big role" is "a significant role", never "a large role" ---- */
+  const RANK = '(?:role|part|impact|influence|effect|difference|factor|contribution|change|problem|issue|challenge|concern|question|step|improvement|mistake|threat|advantage|gap|increase|decrease|rise|fall|drop|shift|obstacle|barrier|implication|implications|consequence|consequences|benefit|benefits|risk|risks)';
+  const PRECISE = [
+    [new RegExp('\\bbig (' + RANK + ')\\b', 'gi'), (m, n) => keepCase('significant ' + n)(m)],
+    /* "a major issue", never "a considerable issue" */
+    [new RegExp('\\bhuge (' + RANK + ')\\b', 'gi'), (m, n) => keepCase((/^(?:issue|problem|question|concern|challenge|threat|mistake|obstacle|barrier|risks?)$/i.test(n) ? 'major ' : 'considerable ') + n)(m)],
+    [/\ba lot (more|less|better|worse|greater|smaller|higher|lower|larger|easier|harder|longer|shorter|faster|slower|stronger|weaker|closer|wider)\b/gi, (m, c) => keepCase('much ' + c)(m)],
+    [/\ba lot fewer\b/gi, keepCase('far fewer')],
+    [/\btotally\b(?!\s+(?:\w+\s+)?(?:not|never|no)\b|\s+\w+n['’]t\b)/gi, keepCase('entirely')]
+  ];
+  /* alternatives a writer can choose instead, for some changes: tried on the
+     writer's own words, never stacked on another change */
+  const ALTS = [
+    [new RegExp('\\bit (?:is|seems|appears|becomes) ' + DEG + '(?:clear|obvious|evident|apparent|plain) that\\s+', 'i'), ['Clearly, ', 'Evidently, ']],
+    [new RegExp('\\bbig (' + RANK + ')\\b', 'i'), ['major $1', 'considerable $1']],
+    [new RegExp('\\bhuge (' + RANK + ')\\b', 'i'), ['major $1', 'substantial $1']],
+    [/\b(?:very|really|extremely|so|highly) important\b/i, ['crucial', 'essential', 'central']],
+    [/\b(?:very|really|extremely) (?:big|large)\b/i, ['substantial', 'vast']],
+    [/\b(?:very|really|extremely) small\b/i, ['slight', 'minor']],
+    [/\b(?:very|really|extremely) (?:difficult|hard)\b/i, ['demanding', 'challenging']],
+    [/\b(?:very|really|extremely) (?:good)\b/i, ['excellent', 'strong']],
+    [/\b(?:very|really|extremely) (?:bad|serious)\b/i, ['severe', 'grave']],
+    [/\b(?:very|really|extremely) (?:interesting)\b/i, ['striking', 'notable']],
+    [/\b(?:very|really|extremely) (?:common)\b/i, ['widespread', 'prevalent']],
+    [/\b(?:very|really|extremely) (?:strong)\b/i, ['robust', 'compelling']],
+    [/\b(?:very|really|extremely) (?:weak)\b/i, ['tenuous', 'slight']],
+    [/\b(?:very|really|extremely) (?:clear|obvious)\b(?! that)/i, ['evident', 'unmistakable']],
+    [/\b(?:very|really|extremely) (?:quick|fast)\b/i, ['rapid', 'swift']],
+    [/\b(?:very|really|extremely) (?:useful)\b/i, ['valuable', 'invaluable']],
+    [/\b(?:very|really|extremely) (?:different)\b/i, ['distinct', 'markedly different']],
+    [/\b(?:very|really|extremely) many\b/i, ['numerous']],
+    [/\b(needs?|needed|deserves?|deserved|merits?|merited) to be (looked at|examined) in (?:(?:a lot|much|far|considerably|a great deal) )?(?:more|greater|further|closer) detail\b/i,
+      ['$1 to be examined in more detail', m => ({ need: 'warrant', needs: 'warrants', needed: 'warranted', deserve: 'warrant', deserves: 'warrants', deserved: 'warranted', merit: 'warrant', merits: 'warrants', merited: 'warranted' }[m.split(' ')[0].toLowerCase()] || 'warrants') + ' closer examination']],
+    [/\b(a|an|the) ((?:[a-z]+ )?)amount of (research|literature|scholarship)\b/i, ['$1 $2number of studies']],
+    [/\bmake use of\b/i, ['employ', 'draw on']], [/\bmakes use of\b/i, ['employs', 'draws on']], [/\bmade use of\b/i, ['employed', 'drew on']],
+    [/\b(?:have|has|had|having) an (?:effect|impact) on\b/i, [m => ({ have: 'influence', has: 'influences', had: 'influenced', having: 'influencing' }[m.split(' ')[0].toLowerCase()])]]
+  ];
+  /* other ways to say what a change says, worked out from the writer's own
+     words (from); each one differs from the chosen version (to) */
+  function alternatives(from, to) {
+    const out = [], f = String(from || ''), t = String(to || '').trim();
+    for (const [re, reps] of ALTS) {
+      const m = re.exec(f); if (!m) continue;
+      for (const rep of reps) {
+        let r = typeof rep === 'function' ? rep(m[0]) : rep.replace(/\$(\d)/g, (x, n) => m[+n] || '');
+        if (/^[A-Z]/.test(m[0]) && r) r = r[0].toUpperCase() + r.slice(1);
+        let alt = f.slice(0, m.index) + r + f.slice(m.index + m[0].length);
+        alt = fixArticles(f, tidy(alt)).replace(/\s+/g, ' ').trim();
+        if (/^[A-Z]/.test(f.trim()) && alt) alt = alt[0].toUpperCase() + alt.slice(1);
+        /* "Clearly, this": the word after a new opener keeps its own case */
+        alt = alt.replace(/^(Clearly|Evidently), ([A-Z])(?=[a-z])/, (x, a, c) => a + ', ' + c.toLowerCase());
+        if (alt && alt !== t && alt !== f.trim() && out.indexOf(alt) < 0) out.push(alt);
+      }
+    }
+    return out.slice(0, 3);
+  }
   /* ---- the casual register ---- */
   const CASUAL = [
     [/\bdo not\b/gi, keepCase("don't")], [/\bdoes not\b/gi, keepCase("doesn't")], [/\bdid not\b/gi, keepCase("didn't")],
@@ -461,6 +637,8 @@
   }
   /* ---- neutral: words that tell the reader what to think ---- */
   const STANCE = [
+    /* 7.43: "It is clear that" tells the reader what to conclude */
+    atStart('it (?:is|seems|appears) ' + DEG + '(?:clear|obvious|evident|undeniable|indisputable) that\\s+'),
     atStart('(?:obviously|clearly|undoubtedly|unquestionably|surely|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|needless to say|interestingly|remarkably|admittedly|frankly|honestly),\\s*'),
     [/,\s*(?:obviously|of course|naturally|unfortunately|sadly|fortunately|luckily|thankfully|frankly|honestly),\s*/gi, ' '],
     [/\b(?:obviously|undoubtedly|unquestionably) (?=[a-z])/gi, '']
@@ -510,14 +688,18 @@
       return o === p ? p : finish(p, o);
     }).join('');
   }
-  const concise = t => run(t, x => dropIntensifiers(apply(x, WORDY, 'wordy')));
-  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(x, WORDY, 'wordy'))));
+  /* 7.43: Concise, Shorter, Scholarly and Simplify recast sentences
+     (RECAST); Professional and Scholarly choose the precise word (PRECISE) */
+  const concise = t => run(t, x => dropIntensifiers(apply(apply(x, RECAST, 'recast'), WORDY, 'wordy')));
+  const shorten = t => run(t, x => dropHedges(dropIntensifiers(apply(apply(x, RECAST, 'recast'), WORDY, 'wordy'))));
   const confident = t => run(t, x => dropHedges(x));
-  const professional = t => run(t, x => apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'));
-  const scholarly = t => run(t, x => apply(apply(apply(apply(x, CONTR, 'contraction'), INFORMAL, 'informal'), WORDY, 'wordy'), ELEV, 'exact'));
+  const professional = t => run(t, x => apply(apply(apply(x, CONTR, 'contraction'), PRECISE, 'exact'), INFORMAL, 'informal'));
+  /* the wordy phrases before the informal words, so "a lot of time" ends as
+     "a great deal of time" and is not shortened again to "much time" */
+  const scholarly = t => run(t, x => dropIntensifiers(apply(apply(apply(apply(apply(apply(x, CONTR, 'contraction'), RECAST, 'recast'), PRECISE, 'exact'), WORDY, 'wordy'), INFORMAL, 'informal'), ELEV, 'exact')));
   const casual = t => run(t, x => apply(x, CASUAL, 'casual'));
   /* 7.38 */
-  const simplify = t => run(t, x => splitIdeas(dropIntensifiers(apply(apply(x, WORDY, 'wordy'), PLAIN, 'plain'))));
+  const simplify = t => run(t, x => splitIdeas(dropIntensifiers(apply(apply(apply(x, RECAST, 'recast'), WORDY, 'wordy'), PLAIN, 'plain'))));
   const split = t => run(t, x => splitIdeas(x));
   const active = t => run(t, x => activeVoice(x));
   const neutral = t => run(t, x => dropIntensifiers(apply(x, STANCE, 'stance')));
@@ -536,7 +718,18 @@
     split: 'Two ideas, two sentences: each is easier to hold in mind.',
     active: 'Active voice: the one who acts comes first, so the reader sees who did what.',
     stance: 'This word tells the reader what to think. Neutral writing lets the evidence speak.',
-    overclaim: 'A claim of certainty. A careful word matches what the evidence can show.'
+    overclaim: 'A claim of certainty. A careful word matches what the evidence can show.',
+    /* 7.43 */
+    opener: '“It is clear that” only announces the point. State the point; if it is clear, the reader will see that it is.',
+    expletive: '“There are … who” makes the reader wait for the subject. Starting with the subject saves words and puts the actors first.',
+    something: '“It is something that” is a long way round. Say what it does.',
+    closer: 'A noun (“examination”) carries what a long verb phrase did, in fewer words.',
+    how: '“The ways in which” is a long way of saying “how”.',
+    reduced: 'A shorter clause with the same meaning: “the data that were collected” and “the data collected” say the same, and research is always carried out.',
+    idiom: '“A body of research” is the usual phrase for studies taken together; “amount” suits a mass you measure.',
+    countable: '“Amount” is for what cannot be counted (time, money, research); “number” is for what can (people, studies).',
+    nominal: 'A verb hidden in a noun (“make use of”, “have an effect on”). The verb itself (“use”, “affect”) is shorter and more direct.',
+    recast: 'The sentence recast so its subject and verb carry the meaning.'
   };
   /* the rewrite and, for each change, what it was and why */
   function explain(mode, t) {
@@ -551,6 +744,6 @@
     });
     return { text: text, changes: changes };
   }
-  const api = { concise, shorten, confident, professional, scholarly, casual, simplify, split, active, neutral, hedge, explain, WHYS, fixArticles, tidy };
+  const api = { concise, shorten, confident, professional, scholarly, casual, simplify, split, active, neutral, hedge, explain, alternatives, WHYS, fixArticles, tidy };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKRW = api;
 })(typeof self !== 'undefined' ? self : this);
