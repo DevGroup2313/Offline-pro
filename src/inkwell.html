@@ -69,7 +69,7 @@ button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus
 .primary{background:var(--acc);color:#fff;border-color:var(--acc);text-shadow:0 1px 1px rgba(0,0,0,.18)}
 .primary:hover{background:#1a4157;box-shadow:0 2px 5px #1f4f6833;transform:translateY(-2px)}
 [data-theme=dark] .primary{background:var(--acc);color:#080b10;border-color:var(--acc);text-shadow:none}
-[data-theme=dark] .primary:hover{background:#6ba4be}
+[data-theme=dark] .primary:hover{background:linear-gradient(#326d91,#1e4d6a)}
 /* the two hero verbs are pressed keys, the way the door's are: Correct dark,
    Draft in open blue; both rise at a hover and squash into the desk on press */
 .heroKey{transition:transform .12s var(--pop),box-shadow .12s,background-color .15s,color .15s,border-color .15s;box-shadow:0 1px 0 rgba(20,16,10,.18),0 2px 4px #14100a1c,0 6px 14px #14100a14,inset 0 1px 0 #ffffff66,inset 0 -3px 5px #14100a12,0 1px 2px #14100a10}
@@ -77,12 +77,12 @@ button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus
 .heroKey:active{transform:translateY(1px) scale(.97);box-shadow:0 1px 2px #14100a1c,inset 0 1px 0 #ffffff44,inset 0 2px 6px #14100a1f;transition-duration:.04s}
 .draftBtn{background:linear-gradient(#f4f9fc,#dfeaf2) !important;color:#1f4f68 !important;border-color:#9db8c8 !important;font-weight:600}
 .draftBtn:hover{background:linear-gradient(#f4f9fc,#dfeaf2) !important}
-[data-theme=dark] .draftBtn{background:linear-gradient(#33475c,#24384a) !important;color:#7fb4cf !important;border-color:#49708a !important}
+[data-theme=dark] .draftBtn{background:linear-gradient(#33475c,#24384a) !important;color:#a9cfe3 !important;border-color:#49708a !important}
 .correctBtn3,button.primary.hero{background:linear-gradient(#2b6884,#1a4157) !important;color:#fdfaf2 !important;border-color:#1a4157 !important;text-shadow:0 1px 1px #0d2a39;box-shadow:0 1px 0 #0d2a39,0 2px 4px #14100a2c,0 6px 12px #1f4f6836,0 12px 26px #1f4f6822,inset 0 1px 0 #ffffff40,inset 0 -3px 6px #0d243438 !important}
 .correctBtn3:hover,button.primary.hero:hover{background:linear-gradient(#2b6884,#1a4157) !important;box-shadow:0 1px 0 #0d2a39,0 4px 8px #14100a36,0 10px 20px #1f4f6840,0 20px 44px #1f4f682c,inset 0 1px 0 #ffffff50,inset 0 -3px 6px #0d243438 !important;transform:translateY(-2px)}
 .correctBtn3:active,button.primary.hero:active{transform:translateY(1px) scale(.97);box-shadow:0 1px 2px #0d2a3950,inset 0 2px 6px #0d243455 !important;transition-duration:.04s}
-[data-theme=dark] button.primary.hero{color:#f4ede0 !important;background:linear-gradient(#3a7ba0,#22536e) !important;border-color:#3d6b8c !important;box-shadow:0 1px 0 #071e29,0 2px 5px #00000088,0 8px 16px #00000055,inset 0 1px 0 #ffffff2e !important}
-[data-theme=dark] button.primary.hero:hover{background:linear-gradient(#3a7ba0,#22536e) !important}
+[data-theme=dark] button.primary.hero{color:#f4ede0 !important;background:linear-gradient(#2f6a8d,#1e4c66) !important;border-color:#3d6b8c !important;box-shadow:0 1px 0 #071e29,0 2px 5px #00000088,0 8px 16px #00000055,inset 0 1px 0 #ffffff2e !important}
+[data-theme=dark] button.primary.hero:hover{background:linear-gradient(#336f93,#204f6b) !important}
 @keyframes rise{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes pup{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes flash{0%,100%{background:transparent}50%{background:#f5a52466}}
@@ -404,7 +404,7 @@ body[data-motion=minimal] #modal .box.guide3D{animation:none}
 .tour3d:hover{background:#1a4157;box-shadow:0 2px 5px #1f4f6833}
 .tour3d:active{background:#1a4157;box-shadow:0 1px 1px #14100a0c;transition-duration:.04s}
 [data-theme=dark] .tour3d{background:var(--acc);color:#0c151c;border-color:var(--acc);text-shadow:none;box-shadow:0 1px 2px #0006}
-[data-theme=dark] .tour3d:hover{background:#6ba4be;box-shadow:0 2px 5px #000a}
+[data-theme=dark] .tour3d:hover{background:linear-gradient(#326d91,#1e4d6a);box-shadow:0 2px 5px #000a}
 .guideHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .guideHeadL{display:flex;align-items:center;gap:12px;min-width:0}
 .guideHeadL h3{margin:0;font-family:Georgia,'Iowan Old Style',serif;font-size:20px}
@@ -775,6 +775,12 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 .coachOpt .cFb:empty{display:none}
 [data-theme=dark] .altOpt .awhyl del,[data-theme=dark] .coachOpt .cEx del,[data-theme=dark] .altOpt .at del{color:#f2a49b !important}
 [data-theme=dark] .altOpt .awhyl ins,[data-theme=dark] .coachOpt .cEx ins,[data-theme=dark] .altOpt .at ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
+/* 7.43: by night the accent is champagne, a light colour: whatever is
+   filled with it carries dark ink, never white (white on it measured 1.9
+   to 1; dark ink measures 10 to 1) */
+[data-theme=dark] #altCard .acTabs button.on{color:#0b1218 !important;text-shadow:none;font-weight:600}
+[data-theme=dark] .steps .n{background:var(--acc);color:#0b1218}
+[data-theme=dark] #scheFab .fbadge{color:#0b1218}
 /* (the bubble's names now come from the shared tooltip, inkTips) */
 #bubble .btones button{border-radius:999px}
 /* suggestion legend: the category dots with counts, quiet */
@@ -1183,7 +1189,7 @@ body[data-motion=minimal] #clepBtn.on .clepIc{animation:none}
  --brass:#a9803a;--brassHi:#d9bd7c;--brassLo:#7a5a1f;--hair:rgba(169,128,58,.42);--hairSoft:rgba(169,128,58,.22);
  --btnFace:linear-gradient(#2a5f7d,#17405a);--btnEdge:#0e2939;--btnText:#fbf3df;--btnRing:rgba(226,201,140,.38)}
 [data-theme=dark]{--hair:rgba(201,169,100,.34);--hairSoft:rgba(201,169,100,.16);
- --btnFace:linear-gradient(#336f93,#1b4762);--btnEdge:#0a1f2d;--btnText:#f3e5bf;--btnRing:rgba(226,207,159,.28)}
+ --btnFace:linear-gradient(#2e6688,#1b4762);--btnEdge:#0a1f2d;--btnText:#f3e5bf;--btnRing:rgba(226,207,159,.28)}
 
 /* display type */
 .brand b{font-family:var(--disp);font-weight:700;font-size:25px;letter-spacing:.03em}
