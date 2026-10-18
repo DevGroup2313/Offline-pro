@@ -346,6 +346,12 @@ body[data-motion=minimal] #status .foldBtn{transform:none !important}
 .wbalt button{font-size:12px;padding:4px 12px;font-family:Georgia,serif}
 .askrow input{flex:1 1 120px;min-width:0;font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line,#c9c2b2);border-radius:7px;background:var(--paper,#fff);color:inherit}
 .lkbtn{font-size:11px;padding:4px 10px}
+/* 7.43: the writing mark's two switches and its scale table */
+.mkSegs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mkSeg button{font-size:11px;padding:3px 9px}
+.mkTab{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0 10px}
+.mkTab th,.mkTab td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
+.mkTab th{font-weight:700;color:var(--mut)}
 .soloNav{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px;font-size:12px;color:var(--mut)}
 .soloNav button{padding:5px 12px}
 #tipCard{position:fixed;left:18px;bottom:18px;z-index:65;width:min(330px,88vw);background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;padding:11px 15px 13px;box-shadow:var(--sh-lg);display:none;animation:rise .35s var(--pop)}
@@ -1558,7 +1564,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   </div>
   <div id="status">
    <span id="stWords">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
-   <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="Overall clarity score: correctness, readability, register and rhythm">· score</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
+   <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="The writing mark: accuracy, clarity, vocabulary, sentences and register, on the scale you chose">· mark</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
    <span id="stSel"></span><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
   </div>
  </section>
@@ -1570,12 +1576,17 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
    <button id="tabInstr" onclick="setRTab('instr')">Instruments</button>
   </div>
   <div id="instrPanel">
-  <div class="inst"><div class="lbl">Overall</div>
-   <div class="gauge"><div style="display:flex;align-items:baseline;gap:8px;flex:1">
+  <div class="inst"><div class="lbl">Writing mark</div>
+   <div class="gauge"><div style="display:flex;align-items:baseline;gap:8px;flex:1;flex-wrap:wrap">
     <div id="ovScore" style="font:700 28px Georgia,serif">·</div>
-    <div id="ovLbl" style="font-size:11px;color:var(--mut)"></div></div></div>
+    <div id="ovUS" style="font:700 15px Georgia,serif;color:var(--acc)"></div></div></div>
+   <div id="ovLbl" style="font-size:11px;color:var(--mut)"></div>
    <div class="meter" style="margin-top:4px"><i id="ovBar" style="width:0%"></i></div>
-   <div id="ovParts" style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.6"></div></div>
+   <div class="mkSegs"><div class="seg mkSeg" id="mkLevelSeg"><button data-v="ug" onclick="setMarkLevel('ug')" title="UK classes First to Third; US undergraduate letters">Undergraduate</button><button data-v="pg" onclick="setMarkLevel('pg')" title="UK Distinction, Merit, Pass; US graduate letters">Postgraduate</button></div>
+   <div class="seg mkSeg" id="mkModeSeg"><button data-v="w" onclick="setMarkMode('w')" title="The writing alone, measured offline">Writing</button><button data-v="wa" onclick="setMarkMode('wa')" title="The writing and the argument; the argument is marked by your writing model">Writing and argument</button></div></div>
+   <div id="ovParts" style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.6"></div>
+   <div id="ovArg" style="font-size:11px;margin-top:6px;line-height:1.5"></div>
+   <button class="lkbtn" style="margin-top:6px;font-size:11px" onclick="openMarkHelp()">How this mark is made</button></div>
   <div class="inst"><div class="lbl">Formality</div>
    <div class="gauge">
     <svg width="104" height="60" viewBox="0 0 120 70">
@@ -1630,6 +1641,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_REFINE_CORE@@
 @@LIB_LEARNER_DATA@@
 @@LIB_LEARNER_CORE@@
+@@LIB_MARK_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -2290,7 +2302,7 @@ stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -9918,7 +9930,11 @@ async function gradeRun(){
    row.warn=warn.length?'\u26a0 Check: '+warn.join('; ')+'.':'';
    if(!row.mark)row.warn=(row.warn?row.warn+' ':'')+'The model gave no mark.';
   }catch(e){row.html='The model did not answer: '+esc(String(e&&e.message||e));}
-  draw();}}
+  draw();}
+ /* 7.43: the model's marks (not Inkwell's own Mechanics count) feed the
+    "Writing and argument" mark, kept with this page and its length */
+ const am=GRADE.rows.filter(r=>r.mark&&!/mechanic|grammar|spelling|punctuation|accuracy/i.test(r.name)).map(r=>r.mark);
+ if(am.length&&GRADE.by){S.argMarks={doc:S.active,marks:am,words:wordCt(t),by:GRADE.by};SV('argMarks',S.argMarks);MARKC.sig='';updateStats();}}
 
 /* ================= CITATION HELP (the queue's last item) ================= */
 /* Inkwell invents nothing it cannot see. The only index here is your own library:
@@ -11328,7 +11344,7 @@ let LASTF=0;
 function schMetrics(t){
  const words=wordCt(t);
  const signposts=(t.match(/\b(however|moreover|furthermore|therefore|consequently|nevertheless|thus|hence|in contrast|by contrast|firstly|secondly|finally|in conclusion)\b/gi)||[]).length;
- const contr=(t.match(/\b\w+'(t|ll|re|ve|d|m|s)\b/gi)||[]).length;
+ const contr=(t.match(/\b[A-Za-z]+(?:n['\u2019]t|['\u2019](?:ll|re|ve|m|d))\b|\b(?:it|that|there|what|who|he|she|let|here)['\u2019]s\b/gi)||[]).length;
  const rhet=(t.match(/\?/g)||[]).length;
  const exc=(t.match(/!/g)||[]).length;
  const cites=(t.match(/\((?:19|20)\d\d/g)||[]).length+(t.match(/\[[\d,\s\-–]+\]/g)||[]).length;
@@ -11367,32 +11383,68 @@ function syl(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(!w)return 0;
  if(SYLC[w]!==undefined)return SYLC[w];
  const m=w.replace(/e$/,'').match(/[aeiouy]+/g);
  const v=Math.max(1,(m||[]).length);SYLC[w]=v;return v;}
-/* the day's score wears both scale languages: percentile, US letter, UK class */
-/* Each country's own scale, applied literally to the clarity percentile. The two
-   systems are calibrated differently, so the SAME number is a different grade in
-   each: on the US scale 57 is an F (90 A, 80 B, 70 C, 60 D, under 60 F); on the
-   UK scale 57 is a 2:2 (70 First, 60 2:1, 50 2:2, 40 Third, under 40 Fail). They
-   are never equated, and the display shows only the scale the flag selects. */
-/* The scales are different measurement cultures and CANNOT share one number;
-   the raw UK mark first converts to its US school-scale basis, then the US
-   letter is read from that basis. A UK 57 (a solid 2:2) is never a US F. */
-function usGrade(p){return p>=93?'A':p>=90?'A\u2212':p>=87?'B+':p>=83?'B':p>=80?'B\u2212':p>=77?'C+':p>=73?'C':p>=70?'C\u2212':p>=67?'D+':p>=63?'D':p>=60?'D\u2212':'F';}
-function ukGrade(p){return p>=70?'First':p>=60?'2:1':p>=50?'2:2':p>=40?'Third':'Fail';}
-function ukToUs(p){
- if(p>=70)return 93+(p-70)*0.23;
- if(p>=65)return 90+(p-65)*0.6;
- if(p>=60)return 87+(p-60)*0.6;
- if(p>=55)return 83+(p-55)*0.8;
- if(p>=50)return 80+(p-50)*0.6;
- if(p>=45)return 77+(p-45)*0.6;
- if(p>=40)return 73+(p-40)*0.8;
- if(p>=30)return 60+(p-30)*1.3;
- return Math.max(0,p*1.6);
-}
-function gradeBand(p){return{us:usGrade(ukToUs(p)),uk:ukGrade(p)};}
-function ukGrade(p){return p>=70?'First':p>=60?'2:1':p>=50?'2:2':p>=40?'Third':'Fail';}
-
-function gradeLine(p){var g=gradeBand(p);var us=Math.round(ukToUs(p));var d=(typeof S!=='undefined'&&S.dialect)?S.dialect:'off';if(d==='us')return us+'% \u00b7 '+g.us+' US';if(d==='uk')return p+'% \u00b7 '+g.uk+' UK';return p+'% \u00b7 '+g.uk+' UK \u00b7 \u2248'+us+'% \u00b7 '+g.us+' US';}
+/* 7.43: the writing mark (src/lib/mark_core.js, INKMARK), read onto the
+   scale the writer chose: UK or US (the spelling flags; neither lit, both),
+   undergraduate or postgraduate. The US letters follow AACRAO EDGE's grade
+   scale for UK degrees. Until 7.42 the "score" mixed readability and the
+   number of notes of every kind: a thesis chapter read as a Fail, and a
+   beginner's essay scored like a native student's. */
+let MARKC={sig:'',at:0,m:null};
+function inkMarkNow(t){
+ const sig=t.length+'|'+EDITS.length+'|'+S.reg+'|'+(S.docType||'');
+ const now=Date.now();
+ if(MARKC.m&&MARKC.sig===sig)return MARKC.m;
+ if(MARKC.m&&now-MARKC.at<2500&&t.length>20000)return MARKC.m;
+ MARKC={sig:sig,at:now,m:INKMARK.mark(t,EDITS,{scholarly:S.reg==='scholarly'||/thesis|dissert|article|chapter|essay|paper|review|abstract|proposal/i.test(String(S.docType||''))})};
+ return MARKC.m;}
+/* "Writing and argument": the writing model's marks for the argument
+   criteria of the rubric (Grade against a rubric), kept with the page they
+   were given for */
+function inkArgFor(d,words){const a=S.argMarks;if(!a||!d||a.doc!==d.id||!a.marks||!a.marks.length)return null;
+ return {marks:a.marks,stale:Math.abs(words-a.words)>Math.max(60,a.words*0.1),words:a.words,by:a.by||''};}
+function inkMarkScales(m){return INKMARK.scales(m);}
+function inkMarkText(m,short){const sc=inkMarkScales(m),pg=S.markLevel==='pg',d=S.dialect;
+ const uk=m+' · '+(pg?sc.ukPG:sc.ukUG),us=(pg?sc.usPG:sc.usUG),usT=us.letter+' ('+us.points.toFixed(1)+')';
+ if(d==='uk')return uk;if(d==='us')return usT;
+ return short?uk+' · '+us.letter:uk+' UK · '+usT+' US';}
+function inkMarkScaleName(){const pg=S.markLevel==='pg',d=S.dialect;
+ const uk=pg?'UK postgraduate':'UK undergraduate',us=pg?'US graduate':'US undergraduate';
+ return d==='uk'?uk:d==='us'?us:uk+', '+us;}
+function setMarkLevel(v){S.markLevel=v;SV('markLevel',v);inkMarkSegs();updateStats();}
+function setMarkMode(v){S.markMode=v;SV('markMode',v);inkMarkSegs();updateStats();}
+function inkMarkSegs(){
+ document.querySelectorAll('#mkLevelSeg button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.markLevel));
+ document.querySelectorAll('#mkModeSeg button').forEach(b=>b.classList.toggle('active',b.dataset.v===S.markMode));}
+function inkMarkRender(t,words){
+ const ov=document.getElementById('ovScore');if(!ov)return;
+ inkMarkSegs();
+ const lbl=document.getElementById('ovLbl'),bar=document.getElementById('ovBar'),parts=document.getElementById('ovParts'),argEl=document.getElementById('ovArg');
+ const stE=document.getElementById('stScore'),usEl=document.getElementById('ovUS');
+ if(!words){usEl.textContent='';ov.textContent='·';lbl.textContent='';bar.style.width='0%';parts.textContent='';argEl.innerHTML='';if(stE)stE.textContent='· mark';return;}
+ const mk=inkMarkNow(t),P=mk.parts;
+ const d=S.docs.find(x=>x.id===S.active),arg=S.markMode==='wa'?inkArgFor(d,words):null;
+ const shown=arg?INKMARK.combined(mk.mark,arg.marks):mk.mark;
+ {const sc=inkMarkScales(shown),pg=S.markLevel==='pg',us=pg?sc.usPG:sc.usUG,usT=us.letter+' ('+us.points.toFixed(1)+')';
+  if(S.dialect==='us'){ov.textContent=usT;usEl.textContent='';}
+  else{ov.textContent=shown+' \u00b7 '+(pg?sc.ukPG:sc.ukUG);usEl.textContent=S.dialect==='uk'?'':'US '+usT;}}
+ lbl.textContent=(arg?'Writing and argument':'Writing')+' · '+inkMarkScaleName()+(mk.enough?'':' · a rough mark under 150 words');
+ bar.style.width=shown+'%';
+ const sg=x=>(x>0?'+':x<0?'−':'')+Math.abs(x).toFixed(1).replace(/\.0$/,'');
+ parts.textContent=(S.docType?('Form: '+DOCNAME[S.docType]+' · '):'')+'Base 58 · vocabulary '+sg(P.vocabulary)+' · accuracy '+sg(P.accuracy)+' · clarity '+sg(P.clarity)+' · sentences '+sg(P.sentences)+' · register '+sg(P.register)+' = writing '+mk.mark;
+ if(S.markMode==='wa'){
+  if(!arg)argEl.innerHTML='The argument is not marked yet. <button class="lkbtn" style="font-size:11px" onclick="openGrader()">Mark the argument</button> <span style="color:var(--mut)">(your writing model marks it against a rubric; the writing part stays Inkwell’s own)</span>';
+  else argEl.innerHTML='<span style="color:var(--mut)">Argument: '+arg.marks.map(x=>x+'/5').join(', ')+(arg.by?' by '+esc(arg.by):'')+'; half the mark.'+(arg.stale?' Marked at '+arg.words+' words; the page has changed since.':'')+'</span> <button class="lkbtn" style="font-size:11px" onclick="openGrader()">'+(arg.stale?'Mark again':'See the feedback')+'</button>';}
+ else argEl.innerHTML='';
+ if(stE){stE.textContent=inkMarkText(shown,true);}}
+function openMarkHelp(){
+ const row=(a,b,c,dd)=>'<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+dd+'</td></tr>';
+ document.getElementById('modalBody').innerHTML='<h3>How the writing mark is made</h3>'+
+  '<p style="font-size:13px;line-height:1.6">The mark judges the <b>writing alone</b>: accuracy (Inkwell’s correctness notes per 100 words), clarity (its clarity notes per 100 words), the range and precision of the vocabulary, very long sentences, and register (contractions, exclamations, and “you” in scholarly writing). It is worked out on this device, with no model. Argument, evidence and structure are not judged here; choose <b>Writing and argument</b> for those, which needs your writing model.</p>'+
+  '<p style="font-size:13px;line-height:1.6">It was set by hand on essays of known level and on published scholarship, then checked on texts it had not seen. On those, the middle marks were: beginners’ essays 39, intermediate 45, advanced learners 52, native student essays 54, published scholarly articles 67. A text of a higher group outscored one of a lower group in 71% to 99% of pairs. Long words count only up to the length usual in good scholarly prose. Dismissing a note that is wrong raises the mark.</p>'+
+  '<table class="mkTab"><tr><th>UK mark</th><th>Undergraduate</th><th>Postgraduate</th><th>US letter</th></tr>'+
+  row('70–100','First','Distinction','A (4.0)')+row('60–69','2:1 (Upper Second)','Merit','B+ (3.3)')+row('50–59','2:2 (Lower Second)','Pass','B (3.0)')+row('40–49','Third','Fail','C (2.0); F for a postgraduate mark')+row('0–39','Fail','Fail','F (0.0)')+'</table>'+
+  '<p style="font-size:12px;line-height:1.6;color:var(--mut)">The US letters follow the grade scale AACRAO EDGE (the American Association of Collegiate Registrars and Admissions Officers) gives for UK undergraduate degrees, as published with that attribution by Arcadia University’s study abroad office. AACRAO’s postgraduate table is open to its subscribers only, so the same reading is applied to the postgraduate bands; a postgraduate mark under 50 is a fail, F. There is no official conversion, and a university may read a UK mark its own way. Postgraduate bands also differ a little between universities.</p>';
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}
 let FKAT=0,FKVAL=null,FKWORDS=-1;
 const schCache={at:0,lex:0,words:-1};
 function updateStats(){
@@ -11413,15 +11465,8 @@ function updateStats(){
  {const nw=Date.now();
   if(nw-schCache.at>2500||schCache.words===-1||Math.abs(words-schCache.words)>250){
    schCache.at=nw;schCache.words=words;lex=schMetrics(t);schCache.lex=lex;renderRhythm(t);}}
- /* the day's number, measurable and honest: four ingredients, all local */
- const dens=words?Math.max(0,1-EDITS.length/(words/100)):1;
- const rhy=document.querySelectorAll('#rhy i').length;
- const score=Math.round(LASTF*.3+(fk===null?60:fk)*.25+dens*100*.25+Math.min(100,rhy*8)*.2);
- if(document.getElementById('ovScore')){document.getElementById('ovScore').textContent=words?gradeLine(score):'·';
-  document.getElementById('ovScore').title='Clarity as a percentile, read onto the two classroom scales; a writing measure, not an assessment of the work itself';
-  document.getElementById('ovLbl').textContent=score>=80?'Excellent shape':score>=60?'Strong draft':score>=40?'Needs another pass':'Beginning';
-  document.getElementById('ovBar').style.width=score+'%';
-  document.getElementById('ovParts').textContent=(S.docType?('Form: '+DOCNAME[S.docType]+' · '):'')+'Formality '+LASTF+' · readability '+(fk===null?'·':fk)+' · '+Math.round(dens*100)+'% clean · rhythm '+(rhy?'seen':'not yet');}
+ /* 7.43: the writing mark (INKMARK) */
+ inkMarkRender(t,words);
  const d=S.docs.find(x=>x.id===S.active);
  let gain='';if(d&&d.baseWords!==undefined&&words>d.baseWords)gain='+'+(words-d.baseWords);
  document.getElementById('stWords').textContent=inkN(words,'word');
@@ -11430,8 +11475,6 @@ function updateStats(){
  document.getElementById('stWps').textContent=words?(words/sents).toFixed(1)+' w/sentence':'';
  document.getElementById('stLex').textContent=words?('lex '+Math.round(lex*100)+'%'):'';
  document.getElementById('stFlesch').textContent=(fk===null?'·':fk)+' readability';
- {const _se=document.getElementById('stScore');if(_se){_se.textContent=words?(function(){var d=(typeof S!=='undefined'&&S.dialect)?S.dialect:'off';var g=gradeBand(score);var us=Math.round(ukToUs(score));return d==='us'?(us+'% ('+g.us+')'):d==='uk'?(score+'% ('+g.uk+')'):(score+'% ('+g.uk+') \u00b7 \u2248'+us+'% ('+g.us+')');})():'\u00b7 score';
-  _se.title='Clarity percentile; US letter and UK class are reading aids, not a judgment of the work';}}
  const s=ed.selectionStart,e=ed.selectionEnd;
  document.getElementById('stSel').textContent=s!==e?(wordCt(ed.value.slice(s,e))+' selected'):'';
  updateTone();}
@@ -12670,7 +12713,7 @@ const TOUR=[
  {chap:'Clarity and style',sub:'Spelling dialect',spot:'#diaSeg',go:()=>tourCloseLayers(),
   t:'US or UK',b:'Choose American or British spelling. The dictionary knows both, and Inkwell marks the other variant.'},
  {chap:'Clarity and style',sub:'Instruments',spot:'#instrPanel',go:()=>setRTab('instr'),
-  t:'🎛 Instruments',b:'The Instruments tab reads the page back to you: an overall score, formality, tone, and the rhythm of your sentence lengths.',
+  t:'🎛 Instruments',b:'The Instruments tab reads the page back to you: a writing mark on the UK or US scale, formality, tone, and the rhythm of your sentence lengths.',
   tip:'Good prose varies its sentence lengths. A row of long bars in Rhythm is a cue to break one up.'},
  {chap:'Clarity and style',spot:'#patList',go:()=>setRTab('instr'),
   t:'Your patterns',b:'Every fix you accept is counted. Your commonest slips become your syllabus, each with a short lesson. Mastery is the count going down to zero.'},
