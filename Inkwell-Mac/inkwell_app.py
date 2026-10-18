@@ -37,7 +37,7 @@ MIN_HEIGHT = 560
 ACCENT_BLUE = "#1F4F68"   # the Inkwell sigil blue
 
 # Build marker of this launcher, reported to the page by host_info().
-LAUNCHER_BUILD = "7.45"
+LAUNCHER_BUILD = "7.46"
 
 
 # ---------------------------------------------------------------------------

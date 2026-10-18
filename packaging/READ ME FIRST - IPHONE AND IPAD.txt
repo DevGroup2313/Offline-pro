@@ -30,6 +30,15 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   another device.
 
 
+NEW IN 7.46
+-----------
+- If Inkwell closes while a model is loading, that model no longer loads
+  again by itself the next time Inkwell opens. This guard had not worked
+  since 7.34.
+- In a browser without WebGPU, the web app runs a smaller writing model
+  (LFM2.5 350M) instead of bringing the page down.
+
+
 NEW IN 7.45
 -----------
 - The checks a doctoral editor makes, on the whole document, short or

@@ -85,6 +85,7 @@ WHAT IS IN 7.45
 
 AFTER THE 7.45 RELEASE
 ----------------------
+See INKWELL_HANDOFF_v7p46.txt for 7.46 (the website's writing model).
 - The Mac Intel build stopped at "Make the disk image": hdiutil said
   "Resource busy" (Inwell-Mac-Intel, run 4). The same workflow passed on
   the other runners. The step now detaches anything left mounted, waits

@@ -1,0 +1,70 @@
+INKWELL v7.46: HANDOFF NOTES
+============================
+Date: 18 October 2026. Read INKWELL_HANDOFF_v7p45.txt and the earlier notes
+for everything before 7.46.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on.
+
+WHY 7.46
+--------
+The writer reported that on the website (inkwelloffline.ink, Safari on a
+Mac with no WebGPU) the writing model never installed and brought the
+whole page down. The site served the 7.45 files correctly (every file
+checked, byte for byte the 7.45 package). The causes, found and measured:
+
+1. Memory. With no WebGPU, 7.45 ran the 1.2B model on the processor from
+   its q8 files (1.77 GB). Measured in Chromium with no WebGPU, the page's
+   largest process reached 5,415 MB while it loaded and 4,838 MB while it
+   answered (300 MB before). A browser short of memory closes the page.
+   One core: 45 s to load, 119 s for a correction, 168 s for a rewrite.
+2. The crash guard never worked. At start the page cleared the mark
+   "a model is loading" (ink_ai_loading) and only then read it, so a page
+   that closed during a load was never noticed, and a model set to start
+   by itself was loaded again at the next opening. Wrong since 7.34.
+   Shown with a test: the 7.45 page started the model again; 7.46 does not.
+
+WHAT CHANGED
+------------
+- With no WebGPU, the writing model is LFM2.5 350M (LiquidAI/LFM2.5-350M-
+  ONNX, LFM Open License v1.0), its q4f32 files (481 MB: INT4 weights, FP32
+  embedding, no GatherBlockQuantized, so it runs on WebAssembly). Measured
+  the same way: largest process at most 2,078 MB, 8.7 s to load, 17.7 s a
+  correction, 18.7 s a rewrite; through the page's own install, 2,014 MB
+  at most. Its q8 files were measured too (2,272 MB, 21 to 23 s) and wrote
+  no better. Its rewrites are weaker: one dropped a clause, one added
+  "consolidation". It is offered as "the smaller model" and the writer is
+  asked before it downloads (the question names its size, its speed, and
+  the Inkwell app for Mac or Windows). With WebGPU nothing changed (the
+  1.2B q4 files).
+- The crash guard reads the mark before clearing it. After a load that
+  never finished: no model starts by itself, the Engine log says why, a
+  toast says so, and the next install's question mentions it
+  (ink_ai_crashed, kept out of backups like ink_ai_loading). The same
+  guard covers the Fire tablet's own model.
+- The 1.2B q8 files a 7.45 attempt left in the browser's storage are
+  deleted (with the q4f16 files, as before).
+- A part of a split engine file whose download drops is asked for again,
+  twice (inkFetchBytes).
+- The Engine panel's advice on the website no longer names a companion
+  server.
+- Mac Intel build: hdiutil "Resource busy" is tried again (see 7.45).
+
+NOT DONE YET
+------------
+- Tested in Chromium only; Safari not run here (no WebKit in the session).
+  Safari's memory limit for a page is not known to me exactly; 2 GB is
+  less than half of what 7.45 needed.
+- The website does not send the headers for cross-origin isolation, so
+  the processor runs the model on one core.
+- The designs shown for approval (note card, note tags, Revise) are still
+  kept outside the repository.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 94, mark_test.js 26,
+find_test.js 23, myway_test.js 21, dphil_test.js 94; the browser regression;
+the crash guard (7.45 fails it, 7.46 passes); the install without WebGPU.

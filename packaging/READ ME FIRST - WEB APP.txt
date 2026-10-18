@@ -118,6 +118,27 @@ YOUR DOCUMENTS
   space. For long work, keep a copy on another device the same way.
 
 
+NEW IN 7.46
+-----------
+- In a browser without WebGPU (Safari on some Macs), installing the
+  writing model no longer brings the page down. 7.45 ran the full model
+  there on the processor. Measured, the page then held about 5.4 GB of
+  memory, and a browser short of memory closes the page. Now a smaller
+  model runs there: LFM2.5 350M, one download of about 480 MB. Measured,
+  the page holds at most about 2 GB, and a sentence takes about 20 seconds
+  on Inkwell's test machine. Inkwell asks before it downloads it. Its
+  rewrites are weaker than the full model's. Chrome or Edge (with WebGPU),
+  or the Inkwell app for Mac, run the full model.
+- If Inkwell closes while a model is loading, that model no longer loads
+  again by itself the next time Inkwell opens. This guard had not worked
+  since 7.34.
+- The 1.77 GB of model files that 7.45 downloaded for the processor are
+  removed from the browser's storage.
+- A dropped download of the writing model's engine is tried again.
+- The Engine panel no longer speaks of a companion server on the web
+  app's site, which has none.
+
+
 NEW IN 7.45
 -----------
 - The checks a doctoral editor makes, on the whole document, short or

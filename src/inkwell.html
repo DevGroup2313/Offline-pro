@@ -1980,7 +1980,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.45 · XVIII · OCTOBRIS · MMXXVI';
+const BUILD='7.46 · XVIII · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -2202,7 +2202,7 @@ function markExported(){SV('lastExport',Date.now());}
      that moment is copied first, so putting back can itself be undone. */
 var KEEP={db:null,hash:'',busy:false,where:''};
 var KEEP_MARK='ink_keepMark';
-var KEEP_SKIP=/^(ink_probe|ink_lasterr|ink_ai_loading|ink_lastNudge|ink_lastExport)$/;
+var KEEP_SKIP=/^(ink_probe|ink_lasterr|ink_ai_loading|ink_ai_crashed|ink_lastNudge|ink_lastExport)$/;
 /* the keys whose change is a change of the work (settings ride along, but do not cause a copy) */
 var KEEP_WORK=/^(ink_(docs|active|notes|snaps|rules|muteWords|patterns|goals|prompts|spellDict|voice|profile|rubric|aiRules)|tabula_|fontes_|scriba_|cd_sign)/;
 var KEEP_DAY=86400000;
@@ -5725,6 +5725,8 @@ async function inkLanSet(on,newCode){
 function engineAdvice(){
  if(inkNative())return 'On the '+deviceName()+', the writing model runs on the tablet itself, offline, with no other device: install it once below. Corrections also come from the rules engine. Your computer\u2019s model over the Wi-Fi is an optional second engine.';
  if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your computer\u2019s model over the same Wi-Fi (below).';
+ /* 7.46: the web app's site has no companion server */
+ if(!window.pywebview&&!inkSrvLocal(location.href))return 'In this browser, corrections come from the rules engine, offline. The grammar model and the writing model below download once and then run in this window'+(ON_MAC||ON_WIN?'; the Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the writing model faster':'')+'.';
  return 'On this computer, the companion server runs the writing model; corrections come from the rules engine, offline.';}
 
 /* ================= HELPERS ================= */
@@ -9623,15 +9625,23 @@ async function inkVendorKept(name){
  if(await hex(b)!==pin[1]){const e=new Error(name+': the downloaded copy is not the expected file, so it was not used');e.inkIntegrity=true;window.__inkVendorBad=true;throw e;}
  if(c){try{await c.put(pin[0],new Response(b.slice(0),{headers:{'Content-Type':pin[2]}}));}catch(e){}}
  return b;}
+/* 7.46: a part whose download drops is asked for again, twice, before it
+   counts as missing (one dropped connection stopped the writing model) */
+async function inkFetchBytes(u){let last=null;
+ for(let i=0;i<3;i++){if(i)await new Promise(r=>setTimeout(r,1000*i));
+  try{const r=await fetch(u);
+   if(!r.ok){if(r.status<500)return {status:r.status};last=new Error('HTTP '+r.status);continue;}
+   return {status:r.status,bytes:await r.arrayBuffer()};}catch(e){last=e;}}
+ throw last;}
 async function inkVendorBytes(url){
  let r=null;try{r=await fetch(url);}catch(e){r=null;}
  if(r&&r.ok)return r.arrayBuffer();
  const name=url.split('/').pop();let n=0;
- try{const p=await fetch(url+'.parts');if(p.ok)n=parseInt(await p.text(),10)||0;}catch(e){n=0;}
+ try{const p=await inkFetchBytes(url+'.parts');if(p.bytes)n=parseInt(new TextDecoder().decode(p.bytes),10)||0;}catch(e){n=0;}
  if(!n&&INK_VENDOR_PIN[name])return inkVendorKept(name);
  if(!n)throw new Error(name+': HTTP '+(r?r.status:'unreachable'));
  const bufs=[];
- for(let i=1;i<=n;i++){const q=await fetch(url+'.part'+i);if(!q.ok)throw new Error(name+', part '+i+' of '+n+': HTTP '+q.status);bufs.push(await q.arrayBuffer());}
+ for(let i=1;i<=n;i++){const q=await inkFetchBytes(url+'.part'+i);if(!q.bytes)throw new Error(name+', part '+i+' of '+n+': HTTP '+q.status);bufs.push(q.bytes);}
  return new Blob(bufs).arrayBuffer();}
 async function inkAiFiles(){
  if(INKAI.files)return INKAI.files;
@@ -10046,6 +10056,16 @@ function inkTabletPanel(){
  h+='<div style="margin-top:8px">Which model first: <button class="lkbtn'+(S.engineFirst!=='laptop'?' on':'')+'" onclick="setEngineFirst(\'device\')">'+(S.engineFirst!=='laptop'?'✓ ':'')+'this tablet’s</button> <button class="lkbtn'+(S.engineFirst==='laptop'?' on':'')+'" onclick="setEngineFirst(\'laptop\')">'+(S.engineFirst==='laptop'?'✓ ':'')+'my laptop’s, when it answers</button></div>';
  el.innerHTML=h;}
 const WRITER={id:'LiquidAI/LFM2.5-1.2B-Instruct-ONNX',name:'LFM2.5 1.2B Instruct',mb:850,licence:'LFM Open License v1.0'};
+/* 7.46: on the processor (no WebGPU) the 350M model of the same family, in
+   its "q4f32" files (INT4 weights, no WebGPU-only operator). In 7.45 the
+   processor took the 1.2B model's q8 files: a 1.77 GB download that held
+   about 5.4 GB in the page's process while it loaded, and a browser that
+   runs short of memory closes the page. Measured in Chromium with no WebGPU,
+   one core: the 1.2B q8 took 45 s to load and 119 to 168 s a sentence; the
+   350M q4f32 9 s to load, at most 2.1 GB, and 18 to 19 s a sentence. Its
+   rewrites are weaker (one dropped a clause), so it is offered as the
+   smaller model, not the full one. */
+const WRITER_CPU={id:'LiquidAI/LFM2.5-350M-ONNX',name:'LFM2.5 350M',mb:480,file:'model_q4f32',licence:'LFM Open License v1.0'};
 function inkCpuThreads(){return window.crossOriginIsolated?Math.max(1,Math.min(8,(navigator.hardwareConcurrency||4)-1)):1;}
 async function inkGpuCheck(){
  if(!('gpu' in navigator))return {ok:false,why:'this browser has no WebGPU'};
@@ -10060,11 +10080,12 @@ async function inkGpuCheck(){
    Firefox worked. Liquid AI's model card recommends Q4 for WebGPU and does not
    list Q4F16, and half precision overflows in ONNX Runtime's WebGPU path. The
    q4f16 files an earlier attempt left in the browser's storage (about 760 MB)
-   are removed. */
+   are removed. 7.46: so are the 1.2B model's q8 files (1.77 GB), which 7.45
+   downloaded for the processor. */
 async function inkWriterDropF16(){
  try{if(typeof caches==='undefined')return 0;let n=0;
   for(const name of await caches.keys()){const c=await caches.open(name);
-   for(const r of await c.keys()){if(/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_q4f16\.onnx/.test(r.url)){await c.delete(r);n++;}}}
+   for(const r of await c.keys()){if(/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_(q4f16|q8)\.onnx/.test(r.url)){await c.delete(r);n++;}}}
   return n;}catch(e){return 0;}}
 async function installWriter(auto){
  if(!PRO_ALLOWED){instSay('The writing model is not offered on phones and tablets: it needs more memory than the system gives an app. Use your laptop\u2019s model (below), or Apple\u2019s model on an iPhone or iPad with iOS 26.');
@@ -10073,26 +10094,31 @@ async function installWriter(auto){
  if(PRO&&PRO.writer)return toast('The writing model is running: '+PRONAME);
  const g=await inkGpuCheck();
  /* 7.45: with no WebGPU (Safari on some Macs, and wherever it is switched
-    off) the same model runs on the processor, with WebAssembly: slower, but
-    it works. Until 7.44 it was not installed at all. */
- const cpu=!g.ok;
- if(cpu)instSay('No WebGPU here ('+g.why+'), so the writing model runs on the processor instead: it works, more slowly'+(window.crossOriginIsolated?', on '+inkCpuThreads()+' cores':'')+'. The companion server\u2019s model (below) is faster.');
+    off) the model runs on the processor, with WebAssembly: slower, but it
+    works. Until 7.44 it was not installed at all. 7.46: there it is the
+    smaller model, and the writer is asked before it downloads */
+ const cpu=!g.ok,W=cpu?WRITER_CPU:WRITER,noGpu=/has no WebGPU/.test(g.why||'')?'This browser has no WebGPU':'WebGPU is not working here ('+g.why+')';
+ let crashed=null;try{crashed=localStorage.getItem('ink_ai_crashed');}catch(e){}
+ if(cpu&&!auto&&!confirm(noGpu+', so the writing model would run on the processor.\n\nHere Inkwell uses its smaller model, '+W.name+' (about '+W.mb+' MB, downloaded once). It is slow, about 20 seconds for a sentence on Inkwell\u2019s test machine, and less able than the full model.'
+  +(crashed?'\n\nLast time, Inkwell closed while a model was loading. Most often the browser had run out of memory.':'')
+  +(ON_MAC||ON_WIN?'\n\nThe Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the full model much faster.':'')+'\n\nInstall it?'))return;
+ if(cpu)instSay(noGpu+', so the smaller writing model, '+W.name+', runs on the processor instead: it works, more slowly'+(window.crossOriginIsolated?', on '+inkCpuThreads()+' cores':'')+'.');
  let files;try{files=await inkAiFiles4();}
  catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
- /* on the processor the q8 files: the q4 files use an operator ONNX
-    Runtime has only for WebGPU (GatherBlockQuantized) */
- const pill=document.getElementById('enginePill'),dtype=cpu?'q8':'q4',mb=cpu?1770:WRITER.mb;
+ /* on the processor not the q4 files: they use an operator ONNX Runtime
+    has only for WebGPU (GatherBlockQuantized) */
+ const pill=document.getElementById('enginePill'),dtype=cpu?W.file.replace(/^model_/,''):'q4',mb=W.mb;
  window.__inkInstalling=true;
  if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
- instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', '+(cpu?'processor':'WebGPU'+(g.gpu?', '+g.gpu:''))+'): '+(auto?'starting':'downloading once, about '+mb+' MB, then kept for offline use')+'.');
- inkWriterDropF16().then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' (q4f16) left by an earlier attempt.');});
+ instSay('['+new Date().toLocaleTimeString()+'] '+W.name+' ('+dtype+', '+(cpu?'processor':'WebGPU'+(g.gpu?', '+g.gpu:''))+'): '+(auto?'starting':'downloading once, about '+mb+' MB, then kept for offline use')+'.');
+ inkWriterDropF16().then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' left by an earlier attempt.');});
  inkAiMark('writer',true);const got={};
  try{
   await inkAiStart('pro',files);
-  /* the q8 files are named "model_q8" (Transformers.js would look for
+  /* the files are named by model_file_name (Transformers.js would look for
      "model_quantized", which holds the WebGPU-only operator too) */
-  const lo=cpu?{dtype:'fp32',model_file_name:'model_q8',use_external_data_format:1,device:'wasm'}:{dtype:dtype,device:'webgpu'};
-  await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:lo},d=>{const p=d.progress||{};
+  const lo=cpu?{dtype:'fp32',model_file_name:W.file,use_external_data_format:1,device:'wasm'}:{dtype:dtype,device:'webgpu'};
+  await inkAiAsk('pro',{op:'loadLM',model:W.id,opts:lo},d=>{const p=d.progress||{};
    if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+mb+' MB';}},null,0);
   /* 7.43: loaded is not working: the model must answer once before it is
      called ready (a model whose numbers overflow loads and then answers
@@ -10105,10 +10131,11 @@ async function installWriter(auto){
   PRO=async function(msgs,gen,onTok){
    const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
    return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
-  PRO.writer=true;PRONAME=WRITER.name;PRODEVICE=cpu?'the processor':'WebGPU';
+  PRO.writer=true;PRONAME=W.name;PRODEVICE=cpu?'the processor':'WebGPU';
   S.writerAuto=true;SV('writerAuto',true);setPill();
-  instSay(WRITER.name+' is running in this window'+(cpu?' on the processor':'')+', offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
-  if(!auto)toast('Writing model ready: '+WRITER.name);
+  try{localStorage.removeItem('ink_ai_crashed');}catch(e){}
+  instSay(W.name+' is running in this window'+(cpu?' on the processor':'')+', offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
+  if(!auto)toast('Writing model ready: '+W.name);
  }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';window.__inkInstalling=false;setPill();
   const why=String((e&&e.message)||e);
   /* 7.42: "Failed to fetch" names the cause in plain words */
@@ -13123,8 +13150,8 @@ function openModalDo(which){
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(inkNative()?'Writing model on this tablet':'Writing model inside this window')+'</h4>'+
  (PRO_ALLOWED
   ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'
-   +(HAS_GPU?'':'<p style="font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 11px">This browser has no WebGPU, so here the model can run only on the processor: a larger download (about 1.8 GB) and slow. On Inkwell\u2019s test machine, with three cores, one sentence took about a minute and a half; a recent computer is faster, but expect tens of seconds a sentence. '+(/Mac/.test(deviceName())?'On a Mac, the Inkwell app for Mac runs the writing model much faster and needs no WebGPU.':'The companion server\u2019s model is much faster.')+'</p>')
-   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 '+(HAS_GPU?'Install the writing model':'Install it on the processor (slow)')+'</button>')+'</div>'
+   +(HAS_GPU?'':'<p style="font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 11px">This browser has no WebGPU, so here a smaller model runs on the processor instead: <b>'+esc(WRITER_CPU.name)+'</b> (Liquid AI, the same licence), one download of about '+WRITER_CPU.mb+' MB. It is slow, about 20 seconds for a sentence on Inkwell\u2019s test machine, and less able than the full model. '+(ON_MAC||ON_WIN?'The Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the full model much faster and needs no WebGPU.':'')+'</p>')
+   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 '+(HAS_GPU?'Install the writing model':'Install the smaller model (slow)')+'</button>')+'</div>'
   :inkNative()?'<div id="tmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the tablet\u2026</div>'
   :'<p style="font-size:12.5px;color:var(--mut);line-height:1.6">No writing model runs inside the app on a phone or tablet: the useful ones need more memory than the system gives an app, and the system closes the app (which is what happened before 7.32). Here Apple\u2019s own model (iPhone and iPad with iOS 26) or your laptop\u2019s model over the Wi-Fi does this work.</p>')+
  (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
@@ -13842,14 +13869,18 @@ function renderPatterns(){
   inkTabIcon(dark); });
  step('pros',function(){
   S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
+  /* 7.34: the writing model starts by itself where it was installed, unless
+     the window closed while it was loading last time. 7.46: the mark is read
+     before it is cleared; until now it was cleared first, so a window that
+     closed during a load was never noticed and the model was loaded again */
+  var wcrash=null;try{wcrash=localStorage.getItem('ink_ai_loading');}catch(e){}
   try{inkAiMark('',false);}catch(e){}
+  if(wcrash){try{localStorage.setItem('ink_ai_crashed',wcrash);}catch(e){}}
   inkPurgeOldModels();
   inkAppleInit();
-  /* 7.34: the writing model starts by itself where it was installed, unless
-     the window closed while it was loading last time */
-  var wcrash=null;try{wcrash=localStorage.getItem('ink_ai_loading');}catch(e){}
-  if(wcrash){inkAiMark('',false);S.writerAuto=false;SV('writerAuto',false);
-   instSay('Inkwell closed while a model was loading last time, so it does not load at start. Start it again from the Engine panel if you wish.');}
+  if(wcrash){S.writerAuto=false;SV('writerAuto',false);
+   instSay('Inkwell closed while a model was loading last time (most often the browser ran out of memory), so no model loads at start. Start it again from the Engine panel if you wish.');
+   setTimeout(function(){toast('No model loaded at start: Inkwell closed while one was loading last time');},2500);}
   else if(S.writerAuto&&PRO_ALLOWED)setTimeout(function(){if(!PRO)installWriter(true);},1500);
   /* 7.35: the tablet's own model starts by itself where it was started before */
   else if(S.tabletAuto&&S.tabletFile&&inkNative())setTimeout(function(){if(!PRO)inkTabletStart(S.tabletFile,true);},2500);
