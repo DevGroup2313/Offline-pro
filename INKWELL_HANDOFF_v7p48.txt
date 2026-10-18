@@ -1,0 +1,120 @@
+INKWELL v7.48: HANDOFF NOTES
+============================
+Date: 18 October 2026. Read INKWELL_HANDOFF_v7p47.txt and the earlier notes
+for everything before 7.48.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on.
+
+WHY 7.48
+--------
+The writer: footnotes should look as Word shows them, a small number to the
+right of the word and the notes with their text at the foot of the page;
+the same in Tabula; the same in every Word file, and through copy and
+paste. The writer saw the screenshots and approved them before this was
+committed. 7.47 was not released on its own; its work (the Engine panel's
+install, the corrector under an examiner's eye) is released with 7.48.
+
+WHAT CHANGED
+------------
+1. The desk (src/inkwell.html, the flow editor). The text keeps its notes as
+   before ([^n] in the text, "[^n]: ..." under # Notes), so every check,
+   export and device reads them as it did; only the sheets show them
+   otherwise (_fNotes, _fSegHTML, _fSheetNotes):
+   - the marker a raised number (its brackets are in the page, hidden, so
+     every place in the text is where it was); the definitions and their
+     # Notes heading hidden; a definition with no marker stays in sight;
+   - each page's notes at its foot (.pgnotes): a short rule, then each note
+     with its number raised, smaller type, single spaced, *titles* in
+     italics; a page holds less text by its notes' height (_fMeasure counts
+     them; a note longer than a page lets the sheet grow);
+   - the pen never stands inside a marker or in hidden text (_fSnap,
+     _fCaretOK); Backspace after a number deletes the note with it, and the
+     notes are numbered again (_fUserEdit; undo brings it back); a selection
+     deleted across the hidden notes keeps the notes of markers it keeps;
+   - Insert footnote (and Ctrl+Alt+F, Cmd+Option+F) raises the number at the
+     pen and takes the pen to the foot of the page; a click on a note writes
+     in it; Enter or Esc, or a click in the text, ends it; a click on the
+     note's number goes back to the text; a double-click on a number in the
+     text opens its note. The 7.45 note card is gone.
+   - a suggestion card that points into a note opens the note, its words
+     selected; the Outline leaves out the hidden Notes.
+   Faults found on the way, both since 7.33: the page's words sit in an
+   inline span (.pgw) that takes the general typeface, while the probe that
+   measures pages had the serif; and a line break that ends a span opens one
+   more line. Pages were measured in one face and drawn in another and ran
+   past their foot. The probe now holds the same span, and a page's closing
+   line breaks are set after it (_fTailAt). The cut is looked for within
+   what fits (it took one line more when a page ended in a blank line). The
+   Reading comfort typeface now reaches the words (it stopped at the page).
+   Speed, measured on the 100,000-word thesis with 998 notes (390 pages):
+   opening 1.4 s (7.47: 2.0 s, without notes at the feet); a fresh layout
+   1.9 s (7.47: 2.3 s); a key about 50 ms (7.47: 31 ms). The page is laid
+   out once a little past its break and the break read from its lines
+   (_fRectBest), confirmed by two measurements; the probes stand in a box
+   closed to the page (contain). The pages match a fresh layout after
+   every kind of edit; no page runs past its foot.
+2. Tabula (src/rooms/tabula.html). The notes stay in #footnotes (saved,
+   sent, exported; shown at the end in print), hidden on the screen, and
+   each page shows its notes at its foot (#cd-fnpages, fnPrep, fnDraw): the
+   pagination leaves their room (a line that cites a note goes on with it);
+   a note is written where it stands; Insert footnote takes the pen to the
+   foot (no more prompt box); the number in the text is set as Word sets
+   it, in the text's colour, without opening its line.
+3. Word files.
+   - The desk's .docx: real footnotes (footnotes.xml, Word's Footnote Text
+     and Footnote Reference styles, the two separators named in
+     settings.xml); the # Notes section leaves the body. Until now the
+     numbers were raised digits and the notes a list at the end.
+   - Tabula's Save as .docx (cdBuildDocx) wrote each number as a plain
+     digit and left the notes out; it now writes footnotes and endnotes as
+     Word's own, with their italics; the document's type is Times New Roman
+     12 pt at 1.7 lines, as the screen shows it (it had no defaults). The
+     other writer (buildDocx, the ribbon's Save .docx) keeps note formatting
+     and names the separators in settings.xml (they stood in sectPr, where
+     the schema has no place for them).
+   - Opening a .docx on the desk reads its footnotes and endnotes (they were
+     dropped). Zip entries are found through the central directory: files
+     that write sizes after the data (LibreOffice) were read as empty, and
+     the inflate looped for ever on an empty entry. Zip dates are real.
+   Checked by rendering in LibreOffice 24.2 (installed here for it): the
+   notes stand at each page's foot under the separator. Not opened in Word.
+4. Copy and paste (src/lib/fnclip_core.js, INKFNCLIP, in the desk and in
+   Tabula). A selection with notes is copied with them: HTML in Word's own
+   footnote form (mso-footnote-id, mso-element:footnote), plain text as the
+   desk keeps notes. A paste reads notes from that form, from LibreOffice
+   (sdfootnote), from Google Docs (ftnt) and from any page whose reference
+   and note link to each other; they take fresh numbers in place. The desk
+   and Tabula hand notes to each other (a hidden data-ink-notes box after
+   the text), and Tabula's autosave keeps them.
+   Tested in Chromium with synthetic clipboard events. Not tested: pasting
+   into Word (Word is not here; LibreOffice does not read Word's footnote
+   HTML, so it could not stand in), Safari, Firefox.
+5. The two designs shown with 7.45 and kept outside the repository until
+   now, approved by the writer: the notes of the doctoral checks carry
+   their own tag, with no strike-through on the words of a note that
+   changes nothing; and Revise (Rewrite, Revise) corrects or rewrites a
+   paragraph, a section or the whole document, change by change
+   (src/lib/revise_core.js, tools/revise/revise_test.js). The third design
+   of that set, the note card, is replaced by the notes at the page foot.
+
+NOT DONE YET
+------------
+- Corrections inside a note are listed and open the note, but are not
+  underlined at the page foot.
+- A note longer than the room left is not continued on the next page, as
+  Word does; the sheet grows instead (desk) or the line moves on (Tabula).
+- Tabula: find does not show hits inside the notes at the page foot;
+  endnotes stay at the end (as in Word) and still ask for their text in a
+  box.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 129, mark_test.js 26,
+find_test.js 23, myway_test.js 21, dphil_test.js 94, revise_test.js 20; the
+browser regression; the footnote tests (the pen at markers, typing and
+deleting, writing a note, the thesis layout, Tabula's pages, the Word files
+written and read back, copy, cut and paste on both sides, the handoff).

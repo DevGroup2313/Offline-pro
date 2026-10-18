@@ -87,6 +87,11 @@ WHAT CHANGED
    changed correct sentences (Qwen3.5 9B 24%, Ministral 3 14B 52%). Not in
    7.47.
 
+AFTER 7.47
+----------
+7.47 was not released on its own; it is released with 7.48. See
+INKWELL_HANDOFF_v7p48.txt.
+
 TESTS
 -----
 run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,

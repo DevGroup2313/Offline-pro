@@ -34,6 +34,24 @@ YOUR DOCUMENTS
   device.
 
 
+NEW IN 7.48
+-----------
+- Footnotes as Word shows them, on the desk and in Tabula: a small raised
+  number after the word, and each page's notes at the foot of that page,
+  under a short rule, in smaller type. Insert footnote (Ctrl+Alt+F; on a
+  Mac, Cmd+Option+F) takes the pen to the foot of the page to write the
+  note; deleting the number deletes its note; the notes renumber
+  themselves.
+- Every Word file holds real Word footnotes (the desk's and Tabula's), and
+  a Word file's footnotes come in when it is opened. Copy and paste keep
+  footnotes, from Word and Google Docs too, and the desk and Tabula pass
+  them to each other.
+- The notes of the doctoral checks carry their own tag; Revise corrects or
+  rewrites a paragraph, a section or the whole document, change by change.
+- Pages are measured in the typeface they are drawn in (since 7.33 they
+  were not, and a page could run past its foot). See
+  INKWELL_HANDOFF_v7p48.txt.
+
 NEW IN 7.47
 -----------
 - The corrector, measured under a doctoral examiner's eye: on 40 published

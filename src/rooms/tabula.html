@@ -152,7 +152,9 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   .editor h2{font-size:20px;font-weight:600;margin:18px 0 8px;}
   .editor blockquote{border-left:3px solid var(--blue);margin:12px 0;padding:2px 0 2px 16px;color:var(--ink-2);font-style:italic;}
   .editor p{margin:0 0 12px;}
-  .editor sup.fn-ref{color:var(--blue);font-weight:600;}
+  /* 7.48: a note's number as Word sets it: in the text's own colour and
+     weight, small and raised, without opening its line wider */
+  .editor sup.fn-ref{color:inherit;font-weight:inherit;font-size:.68em;line-height:1;vertical-align:baseline;position:relative;top:-.52em;}
   .editor .cite{color:var(--blue);}
   .editor .comment{background:#fff3c4;border-bottom:2px solid #e3b505;cursor:help;}
   .editor table{border-collapse:collapse;margin:12px 0;}
@@ -172,6 +174,17 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   .editor.chicago p{text-indent:0.5in;margin:0;}
   #footnotes,#biblio{display:none;border-top:1px solid var(--line);margin-top:24px;padding-top:12px;font-family:var(--serif);position:relative;z-index:1;}
   #footnotes .h,#biblio .h{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px;}
+  #cd-fnpages{position:absolute;left:0;top:0;width:0;height:0;z-index:3;pointer-events:none;}
+  .cd-fnpage{position:absolute;pointer-events:auto;font-family:'Times New Roman',Times,serif;font-size:13.3px;line-height:1.35;color:var(--ink);text-align:left;padding-top:12px;box-sizing:border-box;}
+  .cd-fnprobe{visibility:hidden;pointer-events:none;}
+  .cd-fnrule{width:33%;max-width:2in;border-top:1px solid currentColor;opacity:.6;margin:0 0 4px;}
+  .cd-fnp{padding:0 0 1px;}
+  .cd-fnpn{font-size:.72em;line-height:1;position:relative;top:-.5em;vertical-align:baseline;margin-right:.28em;cursor:pointer;}
+  .cd-fnpt{outline:none;border-radius:2px;}
+  .cd-fnpt:focus{box-shadow:0 0 0 2px rgba(27,107,147,.28);background:rgba(27,107,147,.06);}
+  .cd-fnpt:empty::after{content:'Type the note';color:var(--ink-3);}
+  #footnotes.cd-fn-atfoot{position:absolute !important;visibility:hidden !important;height:0 !important;overflow:hidden !important;margin:0 !important;padding:0 !important;border:0 !important;pointer-events:none !important;}
+  @media print{#cd-fnpages{display:none !important;}#footnotes.cd-fn-atfoot{position:static !important;visibility:visible !important;height:auto !important;overflow:visible !important;margin-top:24px !important;padding-top:12px !important;border-top:1px solid #999 !important;}}
   #footnotes .fn,#biblio .be{font-size:13px;line-height:1.6;color:var(--ink-2);margin-bottom:6px;}
   #biblio .be{padding-left:24px;text-indent:-24px;}
 
@@ -533,7 +546,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   // References: footnotes / TOC / Chicago
   var footCount=0,noteSeq=1,fnBox=$('footnotes');
   function addFootnote(html){var uid='fn'+(noteSeq++);cdNoteInsert('foot',uid);if(fnBox.style.display!=='block'){fnBox.style.display='block';fnBox.innerHTML='<div class="h">Notes</div>';}var d=document.createElement('div');d.className='fn';d.setAttribute('data-nid',uid);d.innerHTML='<sup></sup> '+html;fnBox.appendChild(d);renumberNotes();layout();}
-  $('insFoot').addEventListener('click',function(){var t=prompt('Footnote text');if(t===null)return;addFootnote(escapeHtml(t));});
+  $('insFoot').addEventListener('click',function(){cdInsertFootnote();});
   $('insTOC').addEventListener('click',function(){var toc=$('toc'),heads=editor.querySelectorAll('h1,h2');if(!heads.length){alert('Add a Title or Heading first using the Styles menu.');return;}var html='<div class="toc-h">Contents</div>',i=0;heads.forEach(function(h){i++;var id='h_'+i;h.id=id;html+='<a class="'+(h.tagName==='H2'?'l2':'')+'" href="#'+id+'">'+escapeHtml(h.textContent||'Untitled')+'</a>';});toc.innerHTML=html;toc.style.display='block';layout();});
   $('chicagoChk').addEventListener('change',function(){editor.classList.toggle('chicago',this.checked);layout();});
 
@@ -787,7 +800,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
     Array.prototype.forEach.call(refs,function(r){var id=r.getAttribute('data-nid');var e=box.querySelector('.fn[data-nid="'+id+'"]');if(e){var s=e.querySelector('sup');if(s)s.textContent=valid[id];box.appendChild(e);}});
     box.style.display=box.querySelector('.fn[data-nid]')?'block':'none';
   }
-  function renumberNotes(){renumberSet('foot',fnBox,'');renumberSet('end',enBox,'e');}window.__cdAfterImport=function(){try{restoreNoteSeq();}catch(e){}try{renumberNotes();}catch(e){}try{layout();}catch(e){}};(function(){var FL='cd-note-flash';function flash(el){if(!el)return;el.classList.add(FL);setTimeout(function(){el.classList.remove(FL);},1400);}function box(kind){return kind==='end'?enBox:fnBox;}document.addEventListener('click',function(ev){var t=ev.target;if(!t||!t.closest)return;var ref=t.closest('sup.fn-ref');if(ref&&editor.contains(ref)){var kind=ref.getAttribute('data-note')||'foot';var nid=ref.getAttribute('data-nid');var bx=box(kind);if(!bx)return;var entry=bx.querySelector('.fn[data-nid="'+nid+'"]');if(!entry)return;ev.preventDefault();entry.scrollIntoView({block:'center'});flash(entry);return;}var fn=t.closest('.fn[data-nid]');if(fn&&(fn.closest('#footnotes')||fn.closest('#endnotes'))){var id2=fn.getAttribute('data-nid');var back=editor.querySelector('sup.fn-ref[data-nid="'+id2+'"]');if(!back)return;ev.preventDefault();back.scrollIntoView({block:'center'});flash(back);}},true);})();
+  function renumberNotes(){renumberSet('foot',fnBox,'');renumberSet('end',enBox,'e');}window.__cdAfterImport=function(){try{restoreNoteSeq();}catch(e){}try{renumberNotes();}catch(e){}try{layout();}catch(e){}};(function(){var FL='cd-note-flash';function flash(el){if(!el)return;el.classList.add(FL);setTimeout(function(){el.classList.remove(FL);},1400);}function box(kind){return kind==='end'?enBox:fnBox;}document.addEventListener('click',function(ev){var t=ev.target;if(!t||!t.closest)return;var ref=t.closest('sup.fn-ref');if(ref&&editor.contains(ref)){var kind=ref.getAttribute('data-note')||'foot';var nid=ref.getAttribute('data-nid');var bx=box(kind);if(!bx)return;var entry=bx.querySelector('.fn[data-nid="'+nid+'"]');if(!entry)return;ev.preventDefault();if(kind==='foot'&&window.cdFnFocus&&window.cdFnFocus(nid,true))return;entry.scrollIntoView({block:'center'});flash(entry);return;}var fn=t.closest('.fn[data-nid]');if(fn&&(fn.closest('#footnotes')||fn.closest('#endnotes'))){var id2=fn.getAttribute('data-nid');var back=editor.querySelector('sup.fn-ref[data-nid="'+id2+'"]');if(!back)return;ev.preventDefault();back.scrollIntoView({block:'center'});flash(back);}},true);})();
   window.cdCleanKeepSource=function(html){
     var tmp=document.createElement('div');tmp.innerHTML=String(html||'');
     Array.prototype.slice.call(tmp.querySelectorAll('script,style,meta,link,title,head,noscript,iframe,object')).forEach(function(n){if(n.parentNode)n.parentNode.removeChild(n);});
@@ -806,7 +819,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
     return tmp.innerHTML;
   }
   window.cdCleanMerge=cleanHTML;
-  editor.addEventListener('paste',function(e){if(tracking)return;if(!e.clipboardData)return;e.preventDefault();var html=e.clipboardData.getData('text/html');var text=e.clipboardData.getData('text/plain');if(window.__cdPasteForceText){window.__cdPasteForceText=false;if(text)document.execCommand('insertText',false,text);layout();return;}if(html&&window.cdPasteDecide&&window.cdPasteDecide(html,text))return;if(html){document.execCommand('insertHTML',false,cleanHTML(html));}else if(text){document.execCommand('insertText',false,text);}layout();});
+  editor.addEventListener('paste',function(e){if(tracking)return;if(!e.clipboardData)return;e.preventDefault();var html=e.clipboardData.getData('text/html');var text=e.clipboardData.getData('text/plain');if(window.__cdPasteForceText){window.__cdPasteForceText=false;if(text)document.execCommand('insertText',false,text);layout();return;}if(html&&window.INKFNCLIP){var __P=null;try{__P=INKFNCLIP.parse(html);}catch(_){}if(__P&&__P.notes.length&&cdPasteNotes(__P,cleanHTML))return;}if(html&&window.cdPasteDecide&&window.cdPasteDecide(html,text))return;if(html){document.execCommand('insertHTML',false,cleanHTML(html));}else if(text){document.execCommand('insertText',false,text);}layout();});
   function trackedDeleteRange(r){var frag=r.extractContents();var del=document.createElement('del');del.className='trk-del';del.appendChild(frag);del.querySelectorAll('ins.trk-ins').forEach(function(x){x.parentNode.removeChild(x);});if(del.textContent.length)r.insertNode(del);r.collapse(false);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}
   function insertTracked(text){var sel=window.getSelection();if(!sel.rangeCount)return;var r=sel.getRangeAt(0);if(!r.collapsed){trackedDeleteRange(r);r=sel.getRangeAt(0);}var sc=r.startContainer;if(sc.nodeType===3&&sc.parentNode&&sc.parentNode.classList&&sc.parentNode.classList.contains('trk-ins')){sc.parentNode.appendChild(document.createTextNode(text));var rr=document.createRange();rr.selectNodeContents(sc.parentNode);rr.collapse(false);sel.removeAllRanges();sel.addRange(rr);}else{var ins=document.createElement('ins');ins.className='trk-ins';ins.textContent=text;r.insertNode(ins);var rr2=document.createRange();rr2.setStartAfter(ins);rr2.collapse(true);sel.removeAllRanges();sel.addRange(rr2);}}
   function trackedDelete(dir){var sel=window.getSelection();if(!sel.rangeCount)return;var r=sel.getRangeAt(0);if(!r.collapsed){trackedDeleteRange(r);return;}var range=r.cloneRange();try{if(dir==='back')range.setStart(range.startContainer,Math.max(0,range.startOffset-1));else range.setEnd(range.endContainer,range.endOffset+1);}catch(e){return;}if(range.collapsed)return;var sc=range.startContainer;if(sc.nodeType===3&&sc.parentNode&&sc.parentNode.classList&&sc.parentNode.classList.contains('trk-ins')){range.deleteContents();}else{var frag=range.extractContents();var del=document.createElement('del');del.className='trk-del';del.appendChild(frag);range.insertNode(del);range.setStartAfter(del);}range.collapse(true);sel.removeAllRanges();sel.addRange(range);}
@@ -1157,8 +1170,126 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
       var cs=getComputedStyle(b);if(cs.display!=='block'||cs.position==='absolute'||cs.position==='fixed'||cs.cssFloat!=='none'||(cs.columnCount&&cs.columnCount!=='auto'))return false;}catch(e){return false;}
     return true;
   }
+  /* 7.48: Word's footnotes at the foot of each page. The pages show the
+     notes of #footnotes (which stays the document's own store, hidden on the
+     screen, shown at the end in print) in a layer of their own over the
+     paper: a short rule, then each note with its number raised, in smaller
+     type, single spaced. A note is written where it stands. */
+  function fnLayer(){var paper=editor.closest('.paper');var L=document.getElementById('cd-fnpages');if(!L){L=document.createElement('div');L.id='cd-fnpages';}if(paper&&L.parentNode!==paper)paper.appendChild(L);return L;}
+  function fnNoteHTML(e){var c=e.cloneNode(true);var sp=c.querySelector('sup');if(sp&&sp===c.firstElementChild)sp.remove();return c.innerHTML.replace(/^(\s|&nbsp;)+/,'');}
+  function fnItem(r){return '<div class="cd-fnp" data-nid="'+r.id+'"><sup class="cd-fnpn" contenteditable="false" title="Back to the text">'+r.n+'</sup><span class="cd-fnpt" contenteditable="true" spellcheck="true">'+r.html+'</span></div>';}
+  function fnPrep(g,base){
+    var out={sep:0,byBlock:{},has:false};
+    var refs=editor.querySelectorAll('sup.fn-ref[data-note="foot"]');
+    var L0=document.getElementById('cd-fnpages');
+    if(!refs.length||!fnBox){if(fnBox)fnBox.classList.remove('cd-fn-atfoot');if(L0)L0.innerHTML='';return out;}
+    var L=fnLayer(),list=[],kids=editor.children;
+    for(var i=0;i<refs.length;i++){var r=refs[i],id=r.getAttribute('data-nid'),e=fnBox.querySelector('.fn[data-nid="'+id+'"]');if(!e)continue;
+      var blk=r;while(blk&&blk.parentNode!==editor)blk=blk.parentNode;if(!blk)continue;
+      var rc=r.getBoundingClientRect();
+      list.push({id:id,n:r.textContent,html:fnNoteHTML(e),y:(rc.top+rc.bottom)/2-base,bi:Array.prototype.indexOf.call(kids,blk)});}
+    if(!list.length){fnBox.classList.remove('cd-fn-atfoot');L.innerHTML='';return out;}
+    var pr=document.createElement('div');pr.className='cd-fnpage cd-fnprobe';pr.style.width=editor.clientWidth+'px';
+    pr.innerHTML='<div class="cd-fnrule"></div>'+list.map(fnItem).join('');L.appendChild(pr);
+    var items=pr.querySelectorAll('.cd-fnp'),sum=0;
+    for(var k=0;k<items.length;k++){var h=items[k].getBoundingClientRect().height;list[k].h=h;sum+=h;}
+    out.sep=pr.getBoundingClientRect().height-sum;pr.remove();
+    list.forEach(function(x){(out.byBlock[x.bi]=out.byBlock[x.bi]||[]).push(x);});
+    out.has=true;fnBox.classList.add('cd-fn-atfoot');
+    return out;}
+  /* the notes of a paragraph by the line that cites them */
+  function fnLines(bn,L){var LR=[];bn.forEach(function(r){var j=0;while(j<L.length-1&&r.y>L[j].b)j++;var o=LR[j]||(LR[j]={h:0,list:[]});o.h+=r.h;o.list.push(r);});return LR;}
+  function fnCaret(el,off){try{el.focus({preventScroll:true});}catch(e){el.focus();}
+    var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null),n,left=(off==null?1e9:off),s=window.getSelection(),r=document.createRange();
+    while((n=w.nextNode())){if(left<=n.data.length){r.setStart(n,left);r.collapse(true);s.removeAllRanges();s.addRange(r);return;}left-=n.data.length;}
+    r.selectNodeContents(el);r.collapse(false);s.removeAllRanges();s.addRange(r);}
+  function fnDraw(top,pgS,pgN,INNER,FN){
+    var L=document.getElementById('cd-fnpages');if(!L)return;
+    if(!FN.has){L.innerHTML='';return;}
+    /* the pen stays where it was in a note being written */
+    var act=document.activeElement,keep=null;
+    if(act&&act.classList&&act.classList.contains('cd-fnpt')&&L.contains(act)){var off=0;try{var sel=window.getSelection(),rg=document.createRange();rg.selectNodeContents(act);rg.setEnd(sel.anchorNode,sel.anchorOffset);off=rg.toString().length;}catch(e){}keep={id:act.parentNode.getAttribute('data-nid'),off:off};}
+    var html='',left=editor.offsetLeft,w=editor.offsetWidth;
+    for(var p=0;p<pgN.length;p++){var list=pgN[p];if(!list.length)continue;
+      var nh=FN.sep;for(var q=0;q<list.length;q++)nh+=list[q].h;
+      html+='<div class="cd-fnpage" data-page="'+(p+1)+'" style="top:'+(top+pgS[p]+INNER-nh).toFixed(1)+'px;left:'+left+'px;width:'+w+'px"><div class="cd-fnrule"></div>'+list.map(fnItem).join('')+'</div>';}
+    L.innerHTML=html;
+    if(keep){var t=L.querySelector('.cd-fnp[data-nid="'+keep.id+'"] .cd-fnpt');if(t)fnCaret(t,keep.off);}}
+  function fnFocus(uid,atEnd){var t=document.querySelector('#cd-fnpages .cd-fnp[data-nid="'+uid+'"] .cd-fnpt');if(!t)return false;
+    try{t.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){t.scrollIntoView(false);}fnCaret(t,atEnd?null:0);return true;}
+  window.cdFnFocus=fnFocus;
+  /* back to a note's place in the text, the pen after its number */
+  function fnBack(uid){var ref=editor.querySelector('sup.fn-ref[data-nid="'+uid+'"]');if(!ref)return;
+    try{ref.scrollIntoView({block:'center'});}catch(e){}editor.focus();var r=document.createRange();r.setStartAfter(ref);r.collapse(true);var s=window.getSelection();s.removeAllRanges();s.addRange(r);}
+  /* Insert footnote: the number at the pen, the pen at the foot of the page */
+  function cdInsertFootnote(){var uid='fn'+noteSeq;addFootnote('');setTimeout(function(){if(!fnFocus(uid,true)){var e=fnBox.querySelector('.fn[data-nid="'+uid+'"]');if(e)e.scrollIntoView({block:'center'});}},30);}
+  window.cdInsertFootnote=cdInsertFootnote;
+  /* 7.48: the notes travel with the text. What leaves Tabula (to the desk,
+     to its own autosave) carries them in a hidden box after the text; what
+     comes in with such a box has its notes taken into the Notes, whichever
+     way it came (the desk, an autosave, a saved document) */
+  function cdNotesHTML(){var out='';
+    [[fnBox,'foot'],[enBox,'end']].forEach(function(b){if(!b[0])return;[].slice.call(b[0].querySelectorAll('.fn[data-nid]')).forEach(function(e){var c=e.cloneNode(true);c.setAttribute('data-kind',b[1]);out+=c.outerHTML;});});
+    return out?'<div data-ink-notes="1" style="display:none">'+out+'</div>':'';}
+  window.cdNotesHTML=cdNotesHTML;
+  function cdTakeNotes(){var bx=editor.querySelector('[data-ink-notes]');if(!bx)return false;
+    [].slice.call(bx.querySelectorAll('.fn[data-nid]')).forEach(function(e){var end=e.getAttribute('data-kind')==='end',box=end?enBox:fnBox;if(!box)return;e.removeAttribute('data-kind');
+      if(box.querySelector('.fn[data-nid="'+e.getAttribute('data-nid')+'"]'))return;
+      if(!box.querySelector('.h')){box.innerHTML='<div class="h">'+(end?'Endnotes':'Notes')+'</div>';}
+      box.appendChild(e);box.style.display='block';});
+    bx.remove();try{restoreNoteSeq();}catch(e){}try{renumberNotes();}catch(e){}return true;}
+  window.cdTakeNotes=cdTakeNotes;
+  /* pasted HTML that brings footnotes (Word, LibreOffice, Google Docs, the
+     desk, Tabula): each becomes a note of Tabula's own, numbered in place */
+  function cdPasteNotes(P,clean){
+    var body=String(P.html).replace(/<sup data-fnk="(\d+)"[^>]*>[\s\S]*?<\/sup>/g,function(m,i){return '\uE000'+i+'\uE001';});
+    try{document.execCommand('insertHTML',false,clean?clean(body):body);}catch(e){}
+    var w=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,null),n,hits=[];
+    while((n=w.nextNode()))if(n.nodeValue.indexOf('\uE000')>=0)hits.push(n);
+    hits.forEach(function(tn){var parts=tn.nodeValue.split(/(\uE000\d+\uE001)/),frag=document.createDocumentFragment();
+      parts.forEach(function(pt){var m=/^\uE000(\d+)\uE001$/.exec(pt);if(!m){if(pt)frag.appendChild(document.createTextNode(pt));return;}
+        var note=P.notes[+m[1]-1];if(!note)return;var uid='fn'+(noteSeq++);
+        var sp=document.createElement('sup');sp.className='fn-ref';sp.setAttribute('data-note','foot');sp.setAttribute('data-nid',uid);sp.textContent='0';frag.appendChild(sp);
+        if(fnBox.style.display!=='block'||!fnBox.querySelector('.h')){fnBox.style.display='block';if(!fnBox.querySelector('.h'))fnBox.innerHTML='<div class="h">Notes</div>';}
+        var d=document.createElement('div');d.className='fn';d.setAttribute('data-nid',uid);d.innerHTML='<sup></sup> '+(clean?clean(note.html):note.html);fnBox.appendChild(d);});
+      tn.parentNode.replaceChild(frag,tn);});
+    renumberNotes();layout();return hits.length>0;}
+  window.cdPasteNotes=cdPasteNotes;
+  /* copying a stretch that holds notes: the notes go with it, as Word
+     writes its own footnotes (and in plain text as the desk keeps them) */
+  function cdClipNotes(ev,cut){
+    var sel=window.getSelection();if(!sel||!sel.rangeCount||sel.isCollapsed||!window.INKFNCLIP)return;
+    var rg=sel.getRangeAt(0);if(!editor.contains(rg.commonAncestorContainer))return;
+    var frag=rg.cloneContents(),refs=frag.querySelectorAll('sup.fn-ref[data-note="foot"][data-nid]');if(!refs.length)return;
+    var notes=[],plainNotes=[];
+    [].forEach.call(refs,function(r,i){var e=fnBox&&fnBox.querySelector('.fn[data-nid="'+r.getAttribute('data-nid')+'"]'),c=e?e.cloneNode(true):document.createElement('div');var sp=c.querySelector('sup');if(sp&&sp===c.firstElementChild)sp.remove();
+      notes.push({html:c.innerHTML.replace(/^(\s|&nbsp;)+/,'')});plainNotes.push(INKFNCLIP.noteText(c));
+      var k=document.createElement('sup');k.setAttribute('data-fnk',String(i+1));k.textContent=String(i+1);r.parentNode.replaceChild(k,r);});
+    var box=document.createElement('div');box.appendChild(frag);
+    var html=INKFNCLIP.wordHTML(box.innerHTML,notes);
+    box.querySelectorAll('sup[data-fnk]').forEach(function(k){k.replaceWith('[^'+k.getAttribute('data-fnk')+']');});
+    box.style.cssText='position:fixed;left:-99999px;top:0;white-space:normal';document.body.appendChild(box);var plain=box.innerText;box.remove();
+    plain=plain.replace(/\s+$/,'')+'\n\n'+plainNotes.map(function(x,i){return '[^'+(i+1)+']: '+x;}).join('\n');
+    try{ev.clipboardData.setData('text/html',html);ev.clipboardData.setData('text/plain',plain);ev.preventDefault();}catch(e){return;}
+    if(cut){try{document.execCommand('delete');}catch(e){}renumberNotes();layout();}}
+  editor.addEventListener('copy',function(ev){cdClipNotes(ev,false);});
+  editor.addEventListener('cut',function(ev){if(!tracking)cdClipNotes(ev,true);});
+  (function(){
+    var T=null;
+    document.addEventListener('input',function(ev){var t=ev.target;if(!t||!t.classList||!t.classList.contains('cd-fnpt'))return;
+      var id=t.parentNode.getAttribute('data-nid'),e=fnBox&&fnBox.querySelector('.fn[data-nid="'+id+'"]');
+      if(e){var sup=e.querySelector('sup');e.innerHTML=(sup?sup.outerHTML:'<sup></sup>')+' '+t.innerHTML;}
+      clearTimeout(T);T=setTimeout(function(){try{if(window.cdScheduleLayout)window.cdScheduleLayout(60);else layout();}catch(_){}},240);},true);
+    document.addEventListener('keydown',function(ev){var t=ev.target;if(!t||!t.classList||!t.classList.contains('cd-fnpt'))return;
+      if(ev.key==='Escape'||(ev.key==='Enter'&&!ev.shiftKey)){ev.preventDefault();fnBack(t.parentNode.getAttribute('data-nid'));}},true);
+    document.addEventListener('mousedown',function(ev){var n=ev.target&&ev.target.closest&&ev.target.closest('.cd-fnpn');if(!n)return;ev.preventDefault();fnBack(n.parentNode.getAttribute('data-nid'));},true);
+    document.addEventListener('paste',function(ev){var t=ev.target&&ev.target.closest&&ev.target.closest('.cd-fnpt');if(!t)return;
+      ev.preventDefault();var x='';try{x=ev.clipboardData.getData('text/plain')||'';}catch(_){}try{document.execCommand('insertText',false,x.replace(/\s*\n\s*/g,' '));}catch(_){}},true);
+    editor.addEventListener('keydown',function(ev){if((ev.ctrlKey||ev.metaKey)&&ev.altKey&&ev.code==='KeyF'){ev.preventDefault();cdInsertFootnote();}});
+  })();
   function layout(){
   var g=$('pageguides'); if(!g||!editor) return; g.innerHTML='';
+  try{cdTakeNotes();}catch(e){}
   var kids=editor.children,i,b;
   /* documents saved before 7.44 carry the old margins in their blocks */
   for(i=0;i<kids.length;i++){ b=kids[i]; if(b.hasAttribute&&b.hasAttribute('data-pgpush')){ b.style.marginTop=b.getAttribute('data-pgpush'); b.removeAttribute('data-pgpush'); b.__pgPush=null; } else if(b.__pgPush!=null){ b.style.marginTop=b.__pgPush; b.__pgPush=null; } }
@@ -1172,6 +1303,15 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
      fractional: offsetTop rounds, and half a pixel puts a line on the wrong
      page */
   var paras=[], pushes=[], brk=[], forced=false;
+  /* 7.48: footnotes at the foot of the page that cites them, as Word sets
+     them. A page holds less text by the height of its notes (a short rule,
+     then each note); a line that cites a note goes to the next page with
+     its note when both no longer fit. The notes stay in #footnotes, which is
+     what is saved, sent and exported; the pages only show them. */
+  var FN=fnPrep(g,base), pageNH=0, pgN=[[]], pgS=[0];
+  function fnNeed(list){if(!list||!list.length)return 0;var h=pageNH?0:FN.sep;for(var q=0;q<list.length;q++)h+=list[q].h;return h;}
+  function fnAdd(list){if(!list)return;for(var q=0;q<list.length;q++){if(!pageNH)pageNH=FN.sep;pageNH+=list[q].h;pgN[pgN.length-1].push(list[q]);}}
+  function fnPage(ps){pgN.push([]);pgS.push(ps);pageNH=0;}
   var pos=[];for(i=0;i<kids.length;i++){var rc=kids[i].getBoundingClientRect();pos.push([rc.top-base,rc.height]);}
   TT.push(performance.now()-T0);
   for(i=0;i<kids.length;i++){
@@ -1184,11 +1324,12 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
     if(forced){forced=false;
       var nx=limit+PAGE_GAP+PAGE_TOP,pb=i>0?pos[i-1][0]+pos[i-1][1]+shift:0;
       brk.push({u:pushes.length,next:nx});pushes.push({i:i,mt:Math.max(0,nx-pb)});
-      shift+=nx-bTop;seps.push(nx-PAGE_TOP-(PAGE_GAP/2));pageStart=nx;
+      shift+=nx-bTop;seps.push(nx-PAGE_TOP-(PAGE_GAP/2));pageStart=nx;fnPage(nx);
       bTop=nx;bBot=bTop+hgt;limit=pageStart+INNER;
-      if(bBot<=limit)continue;
+      if(bBot<=limit-pageNH-fnNeed(FN.byBlock[i])){fnAdd(FN.byBlock[i]);continue;}
     }
-    if(bBot<=limit) continue;
+    var bn=FN.byBlock[i]||null;
+    if(bBot<=limit-pageNH-fnNeed(bn)){fnAdd(bn);continue;}
     var done=false;
     /* a paragraph breaks across the page */
     if(pgCanSplit(b)){
@@ -1196,27 +1337,32 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
       if(L.length>=4){
         var cs0=getComputedStyle(b),pad=(parseFloat(cs0.paddingTop)||0)+(parseFloat(cs0.borderTopWidth)||0);
         var ctop=pos[i][0]+pad,bands=[],k0=0,ok=true,lsh=0,ps0=pageStart,ns0=seps.length,nb0=brk.length;
+        var fs0={nh:pageNH,pl:pgN.length,pc:pgN[pgN.length-1].length,sl:pgS.length},LR=bn?fnLines(bn,L):null,jj;
         /* the space above a line's letters, measured on lines that have not
            moved: line j's box starts at j line-heights below the top */
         var lhp=parseFloat(cs0.lineHeight),hlv=L[0].gt!=null?L[0].gt-ctop:0;
         if(lhp>0){var arr=[];for(var z=0;z<Math.min(L.length,6);z++)if(L[z].gt!=null)arr.push(L[z].gt-ctop-z*lhp);arr.sort(function(a,c){return a-c;});if(arr.length)hlv=arr[arr.length>>1];}
         while(ok){
-          var k=k0;while(k<L.length&&L[k].b+shift+lsh<=limit)k++;
-          if(k>=L.length)break;
+          var k=k0,ex=0;
+          while(k<L.length){var lr=LR&&LR[k],need=lr?((pageNH||ex)?0:FN.sep)+lr.h:0;
+            if(L[k].b+shift+lsh<=limit-pageNH-ex-need){ex+=need;k++;}else break;}
+          if(k>=L.length){for(jj=k0;jj<L.length;jj++)if(LR&&LR[jj])fnAdd(LR[jj].list);break;}
           /* a last line alone at the top of a page takes one more with it */
           if(L.length-k<2&&k-k0>=3)k=L.length-2;
           if(k-k0<2||L.length-k<2){ok=false;break;}
+          for(jj=k0;jj<k;jj++)if(LR&&LR[jj])fnAdd(LR[jj].list);
           var next=limit+PAGE_GAP+PAGE_TOP,lineTop=L[k].t+shift+lsh,delta=next-lineTop;
           /* the band opens at the next line's letters, inside its box and clear of the line above */
           var y1=(L[k].gt!=null?L[k].gt:L[k].t+1)-ctop+lsh,y2=next-shift-ctop;
           bands.push([y1,y2,hlv]);lsh+=delta;
           brk.push({p:paras.length,q:bands.length-1,next:next});
-          seps.push(next-PAGE_TOP-(PAGE_GAP/2));pageStart=next;limit=pageStart+INNER;k0=k;
+          seps.push(next-PAGE_TOP-(PAGE_GAP/2));pageStart=next;limit=pageStart+INNER;fnPage(next);k0=k;
         }
         if(bands.length&&ok){paras.push({i:i,pad:pad,bands:bands});shift+=lsh;done=true;}
         else {
           /* no break that keeps two lines on each side: the block moves whole */
           seps.length=ns0;brk.length=nb0;pageStart=ps0;limit=pageStart+INNER;
+          pageNH=fs0.nh;pgN.length=fs0.pl;pgN[pgN.length-1].length=fs0.pc;pgS.length=fs0.sl;
         }
       }
     }
@@ -1229,10 +1375,10 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
       pushes.push({i:i,mt:Math.max(0,next2-prevBot)});
       shift+=next2-bTop;
       seps.push(next2-PAGE_TOP-(PAGE_GAP/2));
-      pageStart=next2;
+      pageStart=next2;fnPage(next2);fnAdd(bn);
     } else {
       var over=Math.max(1,Math.ceil((bBot-pageStart)/INNER));
-      pageStart=pageStart+over*INNER;
+      pageStart=pageStart+over*INNER;fnAdd(bn);
     }
   }
   function pgRules(){
@@ -1280,6 +1426,7 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
     var lab=document.createElement('div');lab.className='pg-num';lab.style.top=y+'px';lab.textContent='Page '+(i+2);g.appendChild(lab);
   }
   var n=seps.length+1;window.__tabSeps=seps;
+  try{fnDraw(top,pgS,pgN,INNER,FN);}catch(e){}
   try{var paper=document.querySelector('[data-panel="write"] .paper');if(paper)paper.style.minHeight=(top+editor.scrollHeight+120)+'px';}catch(e){}
   var text=editor.innerText||'';
   var words=(text.trim().match(/\S+/g)||[]).length;
@@ -1316,6 +1463,9 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
 </script>
 <script>
 @@LIB_FIND_CORE@@
+</script>
+<script>
+@@LIB_FNCLIP_CORE@@
 </script>
 <style>
   /* 7.44: the Navigation pane (search), raised like the rest of the app:
@@ -1413,7 +1563,7 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
   /* inside Inkwell the side buttons stand at the right edge */
   body.tf-sheet.tf-framed .tf-pane{right:64px;}
   /* a footnote's number was the dark ribbon colour on the night page */
-  html.cd-dark .editor sup.fn-ref{color:#8cc2ff;}
+  html.cd-dark .editor sup.fn-ref{color:inherit;}
 </style>
 <script>(function(){
 /* 7.44: search the document as Word does. Ctrl+F (Cmd+F on a Mac) opens the
@@ -1817,6 +1967,7 @@ window.tabFind={open:open,close:close,toggle:function(which){if(st.open&&st.tab=
 <style>
   /* 7.44: Reading comfort in Tabula. The page as you see it; the document's
      own fonts and sizes go into Word files, PDFs and print unchanged */
+  html.ink-comfort .cd-fnpage{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * .83) !important;letter-spacing:var(--cf-letter) !important;}
   html.ink-comfort #editor,html.ink-comfort #footnotes,html.ink-comfort #endnotes{font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important;}
   html.ink-comfort #editor :is(p,div,li,span,font,a,b,i,em,strong,u,s,td,th,blockquote,ins,del,label),html.ink-comfort #footnotes .fn,html.ink-comfort #endnotes .fn{font-family:inherit !important;font-size:inherit !important;line-height:inherit !important;letter-spacing:inherit !important;}
   html.ink-comfort #editor h1{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * 1.6) !important;line-height:1.3 !important;}
@@ -2212,7 +2363,7 @@ body.cd-cm-open .canvas{padding-right:312px;}
 .cd-dark .cd-typed-hand.cd-typed-hand-shown img{filter:invert(1) hue-rotate(180deg);}
 </style><script>
 (function(){
-  var ed=document.getElementById('editor'); if(!ed) return;try{var _ub=document.getElementById('tabUndoBtn'),_rb=document.getElementById('tabRedoBtn');if(_ub)_ub.onclick=function(){try{ed.focus();document.execCommand('undo');}catch(e){}};if(_rb)_rb.onclick=function(){try{ed.focus();document.execCommand('redo');}catch(e){}};}catch(e){}var __asT=null;function cdAutosave(){try{var h=ed.innerHTML;if(h===window.__cdAsPrev)return;if(!ed.textContent.trim()&&!ed.querySelector('img,table')&&!(window.__cdAsPrev&&window.__cdAsPrev.length)){/* a fresh instance that has never held content must not clobber the surviving autosave with emptiness */return;}if(h.length>4000000){if(!window.__cdAsBig){window.__cdAsBig=true;try{console.warn('Tabula autosave paused: document too large for local storage. Use File > Save.');}catch(e2){}}return;}window.__cdAsBig=false;var ti=document.querySelector('.titlebar input');try{localStorage.setItem('tabula_autosave'+__CDI,JSON.stringify({html:h,title:(ti&&ti.value)||'Untitled',ts:Date.now()}));window.__cdAsPrev=h;}catch(qe){if(!window.__cdAsQuota){window.__cdAsQuota=true;try{console.warn('Tabula autosave could not write: storage is full. Existing autosave kept.');}catch(e3){}}}}catch(e){}}try{ed.addEventListener('input',function(){clearTimeout(__asT);__asT=setTimeout(cdAutosave,1200);});setInterval(cdAutosave,20000);}catch(e){}try{window.__tabulaFlush=cdAutosave;window.__tabulaCapture=function(){try{var ti=document.querySelector('.titlebar input');return {html:ed.innerHTML,title:(ti&&ti.value)||'Untitled'};}catch(e){return null;}};window.addEventListener('pagehide',cdAutosave);window.addEventListener('beforeunload',cdAutosave);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')cdAutosave();});}catch(e){}window.cdShowRecent=function(){try{var a=null;try{a=JSON.parse(localStorage.getItem('tabula_autosave'+__CDI)||'null');}catch(e){}var docs={};try{docs=JSON.parse(localStorage.getItem('tabula_docs')||'{}')||{};}catch(e){}var out=Object.keys(docs).map(function(k){var d=docs[k]||{};return {t:d.title||k,ts:d.ts||d.savedAt||0,html:d.html||''};});out.sort(function(x,y){return (y.ts||0)-(x.ts||0);});out=out.slice(0,8);var rows='';if(a&&a.html){rows+='<button class="fm-item" data-rec="auto" style="width:100%">Autosaved: '+(a.title||'Untitled')+' <span class="chev">'+new Date(a.ts).toLocaleString()+'</span></button>';}out.forEach(function(d,i){rows+='<button class="fm-item" data-rec="'+i+'" style="width:100%">'+(d.t||'Untitled')+' <span class="chev">'+(d.ts?new Date(d.ts).toLocaleString():'')+'</span></button>';});cdModal('Recent documents',rows||'<p style="font-size:13px;color:#5a616b">Nothing saved yet. Tabula autosaves as you type; your latest words will appear here.</p>');Array.prototype.forEach.call(document.querySelectorAll('[data-rec]'),function(b){b.onclick=function(){var v=b.getAttribute('data-rec');var src=(v==='auto')?a:out[parseInt(v,10)];if(src&&src.html){ed.innerHTML=src.html;}try{cdCloseModal();}catch(e){}};});}catch(e){}};
+  var ed=document.getElementById('editor'); if(!ed) return;try{var _ub=document.getElementById('tabUndoBtn'),_rb=document.getElementById('tabRedoBtn');if(_ub)_ub.onclick=function(){try{ed.focus();document.execCommand('undo');}catch(e){}};if(_rb)_rb.onclick=function(){try{ed.focus();document.execCommand('redo');}catch(e){}};}catch(e){}var __asT=null;function cdAutosave(){try{var h=ed.innerHTML+(window.cdNotesHTML?window.cdNotesHTML():'');if(h===window.__cdAsPrev)return;if(!ed.textContent.trim()&&!ed.querySelector('img,table')&&!(window.__cdAsPrev&&window.__cdAsPrev.length)){/* a fresh instance that has never held content must not clobber the surviving autosave with emptiness */return;}if(h.length>4000000){if(!window.__cdAsBig){window.__cdAsBig=true;try{console.warn('Tabula autosave paused: document too large for local storage. Use File > Save.');}catch(e2){}}return;}window.__cdAsBig=false;var ti=document.querySelector('.titlebar input');try{localStorage.setItem('tabula_autosave'+__CDI,JSON.stringify({html:h,title:(ti&&ti.value)||'Untitled',ts:Date.now()}));window.__cdAsPrev=h;}catch(qe){if(!window.__cdAsQuota){window.__cdAsQuota=true;try{console.warn('Tabula autosave could not write: storage is full. Existing autosave kept.');}catch(e3){}}}}catch(e){}}try{ed.addEventListener('input',function(){clearTimeout(__asT);__asT=setTimeout(cdAutosave,1200);});setInterval(cdAutosave,20000);}catch(e){}try{window.__tabulaFlush=cdAutosave;window.__tabulaCapture=function(){try{var ti=document.querySelector('.titlebar input');return {html:ed.innerHTML+(window.cdNotesHTML?window.cdNotesHTML():''),title:(ti&&ti.value)||'Untitled'};}catch(e){return null;}};window.addEventListener('pagehide',cdAutosave);window.addEventListener('beforeunload',cdAutosave);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')cdAutosave();});}catch(e){}window.cdShowRecent=function(){try{var a=null;try{a=JSON.parse(localStorage.getItem('tabula_autosave'+__CDI)||'null');}catch(e){}var docs={};try{docs=JSON.parse(localStorage.getItem('tabula_docs')||'{}')||{};}catch(e){}var out=Object.keys(docs).map(function(k){var d=docs[k]||{};return {t:d.title||k,ts:d.ts||d.savedAt||0,html:d.html||''};});out.sort(function(x,y){return (y.ts||0)-(x.ts||0);});out=out.slice(0,8);var rows='';if(a&&a.html){rows+='<button class="fm-item" data-rec="auto" style="width:100%">Autosaved: '+(a.title||'Untitled')+' <span class="chev">'+new Date(a.ts).toLocaleString()+'</span></button>';}out.forEach(function(d,i){rows+='<button class="fm-item" data-rec="'+i+'" style="width:100%">'+(d.t||'Untitled')+' <span class="chev">'+(d.ts?new Date(d.ts).toLocaleString():'')+'</span></button>';});cdModal('Recent documents',rows||'<p style="font-size:13px;color:#5a616b">Nothing saved yet. Tabula autosaves as you type; your latest words will appear here.</p>');Array.prototype.forEach.call(document.querySelectorAll('[data-rec]'),function(b){b.onclick=function(){var v=b.getAttribute('data-rec');var src=(v==='auto')?a:out[parseInt(v,10)];if(src&&src.html){ed.innerHTML=src.html;}try{cdCloseModal();}catch(e){}};});}catch(e){}};
   function $g(i){return document.getElementById(i);}
   var savedRange=null, openPop=null;
   function saveSel(){try{var s=window.getSelection();if(s&&s.rangeCount&&ed.contains(s.anchorNode))savedRange=s.getRangeAt(0).cloneRange();}catch(e){}}
@@ -2895,7 +3046,13 @@ body.cd-cm-open .canvas{padding-right:312px;}
     var toks=[];
     var walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT,null);
     var t; while((t=walk.nextNode())){
-      if(t.nodeType===1){ if(t.nodeName==='BR')toks.push({br:t}); continue; }
+      if(t.nodeType===1){ if(t.nodeName==='BR')toks.push({br:t});
+        /* 7.48: a note's number is Word's own footnote (or endnote)
+           reference; until now it went into Word as a plain figure and the
+           notes were left out */
+        else if(t.nodeName==='SUP'&&t.classList&&t.classList.contains('fn-ref')&&t.getAttribute('data-note'))toks.push({fn:t});
+        continue; }
+      if(t.parentNode&&t.parentNode.closest&&t.parentNode.closest('sup.fn-ref'))continue;
       if(t.textContent) toks.push({tx:t});
     }
     /* only a BARE trailing br is the contenteditable placeholder; one carrying
@@ -2904,12 +3061,35 @@ body.cd-cm-open .canvas{padding-right:312px;}
     var runs='';
     toks.forEach(function(tk){
       if(tk.br){var bt=tk.br.getAttribute('data-w-brtype')||'';runs+='<w:r><w:br'+(bt?' w:type="'+bt+'"':'')+'/></w:r>';return;}
+      if(tk.fn){runs+=noteRefXml(tk.fn);return;}
       runs+=runXml(tk.tx);
     });
     if(!runs)runs='<w:r><w:t xml:space="preserve"></w:t></w:r>';
     return '<w:p>'+(pPr?('<w:pPr>'+pPr+'</w:pPr>'):'')+runs+'</w:p>';
   }
 
+  /* the notes met while the body is written: foot and end, in order */
+  var FNC={foot:[],end:[]};
+  function noteRefXml(ref){
+    var kind=ref.getAttribute('data-note')==='end'?'end':'foot',nid=ref.getAttribute('data-nid');
+    var box=document.getElementById(kind==='end'?'endnotes':'footnotes'),en=box&&nid?box.querySelector('.fn[data-nid="'+nid+'"]'):null;
+    if(!en)return '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:t>'+esc(ref.textContent)+'</w:t></w:r>';
+    var cl=en.cloneNode(true),sp=cl.querySelector('sup');if(sp&&sp===cl.firstElementChild)sp.remove();
+    var runs='',w=document.createTreeWalker(cl,NodeFilter.SHOW_TEXT,null),n,first=true;
+    while((n=w.nextNode())){if(first){n.nodeValue=n.nodeValue.replace(/^\s+/,'');if(!n.nodeValue)continue;first=false;}runs+=runXml(n);}
+    FNC[kind].push(runs);var id=FNC[kind].length;
+    return kind==='end'?'<w:r><w:rPr><w:rStyle w:val="EndnoteReference"/></w:rPr><w:endnoteReference w:id="'+id+'"/></w:r>'
+      :'<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteReference w:id="'+id+'"/></w:r>';}
+  /* Word's notes parts: the two separators, then each note in the Footnote
+     (Endnote) Text style, opening with its number */
+  function notesPartXml(kind){
+    var tag=kind==='end'?'endnote':'footnote',St=kind==='end'?'Endnote':'Footnote';
+    var x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:'+tag+'s xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+      +'<w:'+tag+' w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:separator/></w:r></w:p></w:'+tag+'>'
+      +'<w:'+tag+' w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:'+tag+'>';
+    FNC[kind].forEach(function(runs,i){x+='<w:'+tag+' w:id="'+(i+1)+'"><w:p><w:pPr><w:pStyle w:val="'+St+'Text"/></w:pPr>'
+      +'<w:r><w:rPr><w:rStyle w:val="'+St+'Reference"/></w:rPr><w:'+tag+'Ref/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>'+runs+'</w:p></w:'+tag+'>';});
+    return x+'</w:'+tag+'s>';}
   function sectPr(idx,kind){
     var ref=(window.__cdSectXml?window.__cdSectXml(idx):'');
     var type=(kind&&kind!=='nextPage')?('<w:type w:val="'+kind+'"/>'):'';
@@ -2917,7 +3097,7 @@ body.cd-cm-open .canvas{padding-right:312px;}
       +'<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>';
   }
   function documentXml(){
-    var body='';
+    var body='';FNC={foot:[],end:[]};
     var nodes=ed.querySelectorAll('p,h1,h2,h3,h4,h5,blockquote,pre,li,hr.cd-sect');
     var idx=0;
     if(!nodes.length)body='<w:p><w:r><w:t xml:space="preserve">'+esc(ed.innerText||'')+'</w:t></w:r></w:p>';
@@ -2941,7 +3121,16 @@ body.cd-cm-open .canvas{padding-right:312px;}
         +'<w:sz w:val="'+sz+'"/>'+(colour?'<w:color w:val="'+colour+'"/>':'')+'</w:rPr></w:style>';}
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       +'<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-      +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+      /* 7.48: the page's own type (Times New Roman, 12 pt), so Word sets the
+         text as Tabula shows it and the notes smaller than it */
+      +'<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:rPrDefault></w:docDefaults>'
+      /* and its own spacing: lines at 1.7, 9 pt after a paragraph (a Word
+         file's own spacing still comes back on each of its paragraphs) */
+      +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:spacing w:after="180" w:line="408" w:lineRule="auto"/></w:pPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="FootnoteText"><w:name w:val="footnote text"/><w:basedOn w:val="Normal"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>'
+      +'<w:style w:type="character" w:styleId="FootnoteReference"><w:name w:val="footnote reference"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style>'
+      +'<w:style w:type="paragraph" w:styleId="EndnoteText"><w:name w:val="endnote text"/><w:basedOn w:val="Normal"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>'
+      +'<w:style w:type="character" w:styleId="EndnoteReference"><w:name w:val="endnote reference"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style>'
       +st('Title','Title',56,true,false,'1B6B93',null)
       +st('Subtitle','Subtitle',28,false,true,'5F5A54',null)
       +st('Heading1','heading 1',36,true,false,'1B6B93',0)
@@ -3069,6 +3258,7 @@ function hfXml(tag,html){
   window.cdBuildDocx=function(){
     var secs=sectionsForExport();
     var parts=[], rels='', ctOver='';
+    var DOCXML=null;
  /* Media and its content type are added only when there is a picture to carry,
     so an ordinary document gains nothing it has no use for. */
  var __cdWmSt = window.__cdWmState && window.__cdWmState();
@@ -3095,13 +3285,26 @@ function hfXml(tag,html){
     };
     if(__cdWmNeedsMedia){ ctOver+='<Default Extension="png" ContentType="image/png"/>';
    parts.push({name:'word/media/cdwatermark.png',data:__cdWmSt.png}); }
+ /* 7.48: the body is written first, so its notes are known */
+    DOCXML=documentXml();
+    var nF=FNC.foot.length,nE=FNC.end.length;
+    if(nF){parts.push({name:'word/footnotes.xml',data:notesPartXml('foot')});
+      rels+='<Relationship Id="rIdFn" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>';
+      ctOver+='<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>';}
+    if(nE){parts.push({name:'word/endnotes.xml',data:notesPartXml('end')});
+      rels+='<Relationship Id="rIdEn" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"/>';
+      ctOver+='<Override PartName="/word/endnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>';}
+    if(nF||nE){parts.push({name:'word/settings.xml',data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        +(nF?'<w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr>':'')+(nE?'<w:endnotePr><w:endnote w:id="-1"/><w:endnote w:id="0"/></w:endnotePr>':'')+'</w:settings>'});
+      rels+='<Relationship Id="rIdSet" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>';
+      ctOver+='<Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>';}
  var CT2=CT.replace('</Types>',ctOver+'</Types>');
     var DRELS2=DRELS.replace('</Relationships>',rels+'</Relationships>');
     return zip([
       {name:'[Content_Types].xml',data:CT},
       {name:'_rels/.rels',data:RELS},
       {name:'word/_rels/document.xml.rels',data:DRELS},
-      {name:'word/document.xml',data:documentXml()},
+      {name:'word/document.xml',data:DOCXML},
       {name:'word/styles.xml',data:stylesXml()}
     ].concat(parts).map(function(p){
       if(p.name==='[Content_Types].xml')p.data=CT2;
@@ -4425,7 +4628,9 @@ function runsFrom(node,state){
    return;
   }
   if(tag==='sup'&&ch.getAttribute&&ch.getAttribute('data-note')){
-   state.notes.push((function(){ try{ var nid=ch.getAttribute('data-nid'); if(ch.classList&&ch.classList.contains('fn-ref')&&nid){ var en=document.querySelector('#footnotes .fn[data-nid="'+nid+'"]'); if(en){ var cl=en.cloneNode(true); var sp=cl.querySelector('sup'); if(sp)sp.remove(); return cl.textContent.trim(); } } }catch(e){} return ch.getAttribute('data-note'); })());
+   /* 7.48: a note keeps its own italics, bold and the rest in Word (it was
+      written as plain text) */
+   state.notes.push((function(){ try{ var nid=ch.getAttribute('data-nid'); if(ch.classList&&ch.classList.contains('fn-ref')&&nid){ var en=document.querySelector('#footnotes .fn[data-nid="'+nid+'"]'); if(en){ var cl=en.cloneNode(true); var sp=cl.querySelector('sup'); if(sp)sp.remove(); if(cl.firstChild&&cl.firstChild.nodeType===3)cl.firstChild.nodeValue=cl.firstChild.nodeValue.replace(/^\s+/,''); return {text:cl.textContent.trim(),node:cl}; } } }catch(e){} return {text:ch.getAttribute('data-note')||'',node:null}; })());
    out+='<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/><w:vertAlign w:val="superscript"/></w:rPr>'
     +'<w:footnoteReference w:id="'+(state.notes.length)+'"/></w:r>';
    return;
@@ -4527,7 +4732,6 @@ function buildDocx(){
   +'xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>'+body
   +'<w:sectPr>'
   +(HF&&HF.refs?HF.refs:'')+(HF&&HF.titlePage?'<w:titlePg/>':'')
-  +(NOTES.length?'<w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr>':'')
   +'<w:pgSz w:w="11906" w:h="16838"/>'
   +'<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>';
  var styles=XH+'<w:styles xmlns:w="'+W+'">'
@@ -4562,7 +4766,7 @@ function buildDocx(){
   +'<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
   +'<Default Extension="png" ContentType="image/png"/><Default Extension="jpeg" ContentType="image/jpeg"/>'
   +'<Default Extension="gif" ContentType="image/gif"/>'
-  +(NOTES.length?'<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>':'')+(USED_NUM?'<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>':'')+((HF&&HF.header)?'<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>':'')+((HF&&HF.footer)?'<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>':'')
+  +(NOTES.length?'<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>':'')+(USED_NUM?'<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>':'')+((HF&&HF.header)?'<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>':'')+((HF&&HF.footer)?'<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>':'')
   +(CMTS.length?'<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>':'')
   +'</Types>';
  var rootRels=XH+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
@@ -4574,7 +4778,7 @@ function buildDocx(){
   var ext=(mm&&mm[1]==='image/png')?'png':(mm&&mm[1]==='image/gif')?'gif':'jpeg';
   docRels+='<Relationship Id="rIdImg'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image'+(i+1)+'.'+ext+'"/>';
  });
- if(NOTES.length)docRels+='<Relationship Id="rIdFootnotes" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>'; if(USED_NUM)docRels+='<Relationship Id="rIdNumbering" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>';
+ if(NOTES.length)docRels+='<Relationship Id="rIdFootnotes" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/><Relationship Id="rIdSettings" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>'; if(USED_NUM)docRels+='<Relationship Id="rIdNumbering" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>';
  if(CMTS.length)docRels+='<Relationship Id="rIdComments" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"/>';
  if(HF&&HF.header){ docRels+='<Relationship Id="rIdHdr1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>'; } if(HF&&HF.footer){ docRels+='<Relationship Id="rIdFtr1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>'; } docRels+='</Relationships>';
  var entries=[{name:'[Content_Types].xml',text:ct},{name:'_rels/.rels',text:rootRels},
@@ -4597,13 +4801,20 @@ function buildDocx(){
    +'<w:r><w:separator/></w:r></w:p></w:footnote>'
    +'<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
    +'<w:r><w:continuationSeparator/></w:r></w:p></w:footnote>';
-  NOTES.forEach(function(text,i){
+  NOTES.forEach(function(nt,i){
+   var text=(nt&&typeof nt==='object')?nt.text:String(nt||''),runs='';
+   try{if(nt&&nt.node)runs=runsFrom(nt.node,{b:false,i:false,u:false,imgs:IMGS,rev:1,notes:[],comments:[]});}catch(e){runs='';}
+   if(!runs)runs='<w:r><w:t xml:space="preserve">'+esc(text)+'</w:t></w:r>';
    fx+='<w:footnote w:id="'+(i+1)+'"><w:p><w:pPr><w:pStyle w:val="FootnoteText"/></w:pPr>'
     +'<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteRef/></w:r>'
-    +'<w:r><w:t xml:space="preserve"> '+esc(text)+'</w:t></w:r></w:p></w:footnote>';
+    +'<w:r><w:t xml:space="preserve"> </w:t></w:r>'+runs+'</w:p></w:footnote>';
   });
   fx+='</w:footnotes>';
   entries.push({name:'word/footnotes.xml',text:fx});
+  /* 7.48: the two separator notes are named in the settings, as Word's own
+     files name them (they stood in the section's properties, where Word's
+     schema has no place for them) */
+  entries.push({name:'word/settings.xml',text:XH+'<w:settings xmlns:w="'+W+'"><w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr></w:settings>'});
  }
  IMGS.forEach(function(src,i){
   var m=/^data:([^;]+);base64,(.*)$/.exec(src||'');

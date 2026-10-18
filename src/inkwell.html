@@ -232,6 +232,24 @@ body.sprinting #paper{box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 0 0 1px r
 .pgfolio{position:absolute;bottom:-24px;right:6px;font:10.5px/1 Georgia,serif;letter-spacing:.12em;color:var(--mut);pointer-events:none;-webkit-user-select:none;user-select:none}
 #editFlow.docEmpty .pgsheet.pfirst .pgt:empty::before{content:'Start writing… Inkwell marks issues as you type.';color:var(--mut);pointer-events:none}
 .pgt-probe{position:absolute;visibility:hidden;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;font:18px/1.8 Georgia,'Times New Roman',serif;padding:0;box-sizing:content-box;height:auto}
+/* 7.48: footnotes as Word sets them: the reference a small raised number
+   after the word, the notes at the foot of the page under a short rule, in
+   smaller type, single spaced, each opening with its raised number */
+/* raised by moving it, not by vertical-align: a raised box inside the page's
+   inline span made its line taller, and the page measured wrong */
+.fnr{position:relative;top:-.62em;vertical-align:baseline;font-size:.64em;line-height:1;cursor:default}
+.fnh,.fnhide{display:none}
+.pgnotes{position:absolute;left:44px;right:44px;bottom:44px;padding-top:14px;font:15px/1.45 Georgia,'Times New Roman',serif;color:var(--ink);white-space:pre-wrap;word-wrap:break-word;text-align:left;-webkit-user-select:text;user-select:text}
+.pgnrule{width:33%;max-width:2in;border-top:1px solid currentColor;opacity:.55;margin:0 0 5px}
+.pgn{padding:0 0 1px;cursor:text}
+.pgnno{position:relative;top:-.55em;vertical-align:baseline;font-size:.64em;line-height:1;margin-right:.32em;cursor:pointer}
+.pgnt{outline:none;border-radius:2px}
+.pgn.pgn-ed .pgnt{box-shadow:0 0 0 2px rgba(156,195,234,.65);background:rgba(156,195,234,.12)}
+.pgn.pgn-ed .pgnt:empty::after{content:'Type the note';color:var(--mut)}
+[data-theme=dark] .pgn.pgn-ed .pgnt{box-shadow:0 0 0 2px rgba(120,160,205,.6);background:rgba(120,160,205,.12)}
+.pgnotes-probe{position:absolute;visibility:hidden;pointer-events:none;left:auto;right:auto;bottom:auto;top:0;box-sizing:content-box}
+html.ink-comfort .pgt span,html.ink-comfort .pgt-probe span,html.ink-comfort .pgnotes span{font-family:var(--cf-font) !important}
+html.ink-comfort .pgnotes{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * .83) !important;letter-spacing:var(--cf-letter) !important}
 /* 7.44: My way of working. Reading comfort sets the page and the probe that
    measures it alike; only the screen changes */
 html.ink-comfort .pgt,html.ink-comfort .pgt-probe{font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important}
@@ -396,6 +414,32 @@ body[data-motion=minimal] #status .foldBtn{transform:none !important}
 .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
 .t-g{background:#d6454518;color:var(--red)}.t-c{background:#3e63dd14;color:var(--blue)}.t-s{background:#8e4ec616;color:var(--purp)}.t-r{background:#d6409f14;color:var(--pink)}.t-ai{background:#2f9e6e16;color:var(--green)}
 .orig{background:#d6454512;border-radius:9px;padding:6px 9px;font-size:13.5px;margin:9px 0 4px;text-decoration:line-through;text-decoration-color:#d6454588;font-family:Georgia,serif}
+/* 7.45: words a note asks about but does not change are not struck out */
+.orig.keep{text-decoration:none;background:#3e63dd0d}
+/* 7.45: the note card under its marker, in the desk's raised style */
+/* 7.45: Revise, change by change */
+.rvIntro{font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 12px;font-family:Georgia,serif}
+.rvRow{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 10px}
+.rvLab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);min-width:78px}
+.rvRow .tipchip{font-size:12.5px;padding:6px 12px;cursor:pointer;transition:transform .16s cubic-bezier(.2,1.4,.35,1),box-shadow .16s}
+.rvRow .tipchip:hover{transform:translateY(-1px)}
+.rvRow .tipchip.rvOn{background:linear-gradient(180deg,#2b6884,#1a4157);color:#fdfaf2;border-color:#1a4157;box-shadow:0 1px 0 #0d2a39,0 3px 8px rgba(31,79,104,.25),inset 0 1px 0 rgba(255,255,255,.25)}
+.rvRow .tipchip i{font-style:normal;font-weight:500;opacity:.85}
+.rvN{font-weight:500;opacity:.75;font-size:11.5px;margin-left:3px}
+.rvGo{margin-top:14px}
+.rvRes{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.rvProg{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--mut);margin:0 0 12px}
+.rvBar{flex:0 0 180px;height:8px;border-radius:99px;background:var(--line);overflow:hidden;box-shadow:inset 0 1px 2px #0002}
+.rvBar i{display:block;height:100%;background:linear-gradient(90deg,#c9a24a,#e8c77a);border-radius:99px;transition:width .2s}
+.rvSum{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;margin:0 0 12px}
+.rvSumB{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rvPara{margin:0 0 12px}
+.rvPH{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}
+.altOpt.rvPara .rvPH .ak{flex:1;min-width:180px;font-family:Georgia,serif;font-style:italic;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink)}
+.rvPB{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.rvMore{text-align:center;font-size:12px;color:var(--mut);margin:6px 0 2px}
+.rvEmpty{font-size:13px;color:var(--mut);font-family:Georgia,serif;padding:6px 0}
+html.iw-quiet .rvRow .tipchip:hover{transform:none}
 .fix{background:#2f9e6e12;border-radius:9px;padding:6px 9px;font-size:13.5px;margin-bottom:7px;font-family:Georgia,serif}
 .why{font-size:12px;color:var(--mut);margin-bottom:9px}
 .learn{display:none;font-size:12.8px;line-height:1.65;color:var(--ink);background:var(--accSoft);border-radius:10px;padding:9px 11px;margin:2px 0 9px;font-family:Georgia,serif}
@@ -1763,6 +1807,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_MYWAY_CORE@@
 @@LIB_ATKINSON_FONT@@
 @@LIB_DPHIL_CORE@@
+@@LIB_REVISE_CORE@@
+@@LIB_FNCLIP_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -1991,7 +2037,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.47 · XVIII · OCTOBRIS · MMXXVI';
+const BUILD='7.48 · XVIII · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -2458,14 +2504,155 @@ function _fCanonNode(n){
  return s;
 }
 function _fDomText(){let s='';for(const sh of _fSheets)s+=_fCanonNode(sh.txt);return s;}
+/* 7.48: footnotes as Word shows them. The text keeps its notes as before (a
+   marker [^n] where a note is cited, the note on a line "[^n]: ..." under
+   # Notes), so every check, export and device reads them as it did. Only
+   the sheets show them otherwise: the marker as a small raised number after
+   the word (its brackets are in the page, hidden, so every place in the
+   text is where it was), and each page's notes at the foot of that page,
+   under a short rule, in smaller type, as in Word. A page holds less text
+   when it holds notes. The definitions and their # Notes heading are not
+   shown; a definition with no marker is shown where it is, so nothing is
+   ever hidden that cannot be reached. */
+let _fFnC={t:null,N:null};
+/* the note being written at a page's foot: {k, el} */
+var INKFNED=null;
+function _fNotes(t){
+ if(_fFnC.t===t)return _fFnC.N;
+ const N={any:false,marks:[],defs:Object.create(null),hide:[]};
+ if(t.indexOf('[^')>=0){
+  const re=/\[\^([^\]\s]{1,12})\](:?)/g,used=Object.create(null),dl=[];let m;
+  while((m=re.exec(t))){const a=m.index;
+   if(m[2]&&(a===0||t[a-1]==='\n')){
+    const le=t.indexOf('\n',a),e=le<0?t.length:le;let ta=a+m[0].length;if(t[ta]===' '||t[ta]==='\t')ta++;
+    if(!(m[1] in N.defs)){N.defs[m[1]]={a:a,b:le<0?e:e+1,ta:Math.min(ta,e),tb:e,text:t.slice(Math.min(ta,e),e)};dl.push(m[1]);}
+    re.lastIndex=e;continue;}
+   N.marks.push({a:a,b:a+m[0].length-m[2].length,k:m[1],first:!used[m[1]]});used[m[1]]=1;}
+  const H=[];
+  for(const k of dl)if(used[k])H.push([N.defs[k].a,N.defs[k].b]);
+  /* the Notes heading goes too when nothing else is left under it */
+  const hm=/^#[ \t]*Notes?[ \t]*$/mi.exec(t);
+  if(hm&&H.length){const hs=hm.index,after=t.slice(hs+hm[0].length),nx=/\n\s*#\s/.exec(after);
+   const se=nx?hs+hm[0].length+nx.index+nx[0].lastIndexOf('\n')+1:t.length;
+   let rest='',q=hs+hm[0].length;
+   for(const k of dl){const d=N.defs[k];if(used[k]&&d.a>=q&&d.b<=se){rest+=t.slice(q,d.a);q=d.b;}}
+   rest+=t.slice(q,se);
+   /* at the end of the text the blank line before the heading goes too,
+      so the page ends where the writing ends; a line the writer adds at
+      the end stays theirs */
+   if(!/\S/.test(rest)){let a0=hs;if(se>=t.length){if(a0>0&&t[a0-1]==='\n')a0--;if(a0>0&&t[a0-1]==='\n')a0--;}H.push([a0,se]);}}
+  H.sort((x,y)=>x[0]-y[0]);
+  for(const h of H){const l=N.hide[N.hide.length-1];if(l&&h[0]<=l[1]){if(h[1]>l[1])l[1]=h[1];}else N.hide.push([h[0],h[1]]);}
+  N.any=N.marks.length>0||N.hide.length>0;}
+ _fFnC={t:t,N:N};return N;}
+/* the first index in a list sorted by .a (or [0]) whose end passes x */
+function _fFirstEnd(L,x,arr){let lo=0,hi=L.length;while(lo<hi){const md=(lo+hi)>>1;if((arr?L[md][1]:L[md].b)<=x)lo=md+1;else hi=md;}return lo;}
+/* the decorations a stretch of the text crosses, in order */
+function _fDecos(N,a,b){
+ const out=[];if(!N.any)return out;
+ for(let i=_fFirstEnd(N.marks,a,false);i<N.marks.length&&N.marks[i].a<b;i++){const m=N.marks[i];out.push({a:m.a,b:m.b,k:m.k,m:1});}
+ for(let i=_fFirstEnd(N.hide,a,true);i<N.hide.length&&N.hide[i][0]<b;i++)out.push({a:N.hide[i][0],b:N.hide[i][1],m:0});
+ if(out.length>1)out.sort((x,y)=>x.a-y.a);
+ return out;}
+/* the page's markup for the text from a to b: plain text, with the markers
+   raised and the definitions hidden */
+function _fSegHTML(t,a,b,D){
+ const N=_fNotes(t);D=D||_fDecos(N,a,b);
+ if(!D.length)return esc(t.slice(a,b));
+ let out='',p=a;
+ for(const d of D){const x=Math.max(a,d.a,p),y=Math.min(b,d.b);if(y<=x)continue;
+  if(x>p)out+=esc(t.slice(p,x));
+  if(!d.m)out+='<span class="fnhide">'+esc(t.slice(x,y))+'</span>';
+  else{const la=d.a+2,lb=d.b-1;let s='';
+   if(x<la)s+='<span class="fnh">'+esc(t.slice(x,Math.min(y,la)))+'</span>';
+   const u=Math.max(x,la),v=Math.min(y,lb);if(v>u)s+=esc(t.slice(u,v));
+   if(y>lb)s+='<span class="fnh">'+esc(t.slice(Math.max(x,lb),y))+'</span>';
+   out+='<span class="fnr" data-fn="'+esc(d.k)+'">'+s+'</span>';}
+  p=y;}
+ if(p<b)out+=esc(t.slice(p,b));
+ return out;}
+/* a page's decorations, from its own start: a page whose text is as it was
+   keeps its drawing when an edit before it moves it along */
+function _fDecoSig(D,o){o=o||0;let s='';for(const d of D)s+=(d.a-o)+(d.m?'m':'h')+(d.b-o)+',';return s;}
+/* the notes cited on a page, in order: [{k, text}] */
+function _fPageNotes(t,a,b){
+ const N=_fNotes(t),out=[];if(!N.marks.length)return out;const seen=Object.create(null);
+ for(let i=_fFirstEnd(N.marks,a,false);i<N.marks.length&&N.marks[i].a<b;i++){const m=N.marks[i];
+  /* a second marker for the same note shows its number only */
+  if(m.a<a||!m.first||seen[m.k])continue;const d=N.defs[m.k];if(!d)continue;
+  seen[m.k]=1;out.push({k:m.k,text:d.text});}
+ return out;}
+function _fNoteSig(L){let s='';for(const n of L)s+=n.k+'\u0001'+n.text+'\u0002';return s;}
+/* a note's text as the page sets it: *a title* in italics, **this** in bold,
+   as the Word file has them; while it is written, the text as typed */
+const _FN_EM=/\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g;
+function _fNoteRich(x){return esc(x).replace(_FN_EM,function(m,b,i){return b!=null?'<b>'+b+'</b>':'<i>'+i+'</i>';});}
+/* a place in the shown note, as a place in its text as typed */
+function _fNoteRawOff(raw,off){let shown=0,i=0;const re=new RegExp(_FN_EM.source,'g');let m,cut=[];
+ while((m=re.exec(raw))){const d=m[1]!=null?2:1;cut.push([m.index,d],[m.index+m[0].length-d,d]);}
+ let c=0;while(i<raw.length){if(c<cut.length&&cut[c][0]===i){i+=cut[c][1];c++;continue;}if(shown>=off)break;shown++;i++;}
+ return i;}
+function _fNoteItemHTML(n){return '<div class="pgn" data-fn="'+esc(n.k)+'"><span class="pgnno">'+esc(n.k)+'</span><span class="pgnt">'+_fNoteRich(n.text)+'</span></div>';}
+/* the height of each note at the page's width, measured once (by width and
+   text); a page's notes take the rule's space and the sum of theirs */
+let _fNProbe=null,_fNH=new Map(),_fNBase=new Map();
+function _fNoteHeights(L){
+ const w=_fTW||_fTextW(),need=[];
+ for(const n of L){if(!_fNH.has(w+'|'+n.k.length+'|'+n.text))need.push(n);}
+ if(need.length||!_fNBase.has(w)){
+  if(!_fNProbe){const p=document.createElement('div');p.className='pgnotes pgnotes-probe';p.setAttribute('aria-hidden','true');
+   _fProbeHost().appendChild(p);_fNProbe=p;}
+  const P=_fNProbe,list=need.length?need:L.slice(0,1);P.style.width=w+'px';
+  P.innerHTML='<div class="pgnrule"></div>'+list.map(_fNoteItemHTML).join('');
+  const kids=P.querySelectorAll('.pgn');let sum=0;
+  kids.forEach(function(el,i){const h=el.getBoundingClientRect().height;sum+=h;_fNH.set(w+'|'+list[i].k.length+'|'+list[i].text,h);});
+  _fNBase.set(w,P.getBoundingClientRect().height-sum);
+  if(_fNH.size>20000)_fNH.clear();}
+ return {w:w,base:_fNBase.get(w)};}
+function _fNotesH(L){
+ if(!L.length)return 0;const H=_fNoteHeights(L);let h=H.base;
+ for(const n of L)h+=_fNH.get(H.w+'|'+n.k.length+'|'+n.text)||0;
+ return h;}
+/* the probe set to the text from g, len characters */
+/* where a page's text ends before its closing line breaks (those not in a
+   hidden note): they are set after the page's inline span, not in it. A
+   line break that ends an inline span opens one more line, empty, at the
+   foot of the page; directly in the page it does not. */
+function _fTailAt(t,a,b){
+ const H=_fNotes(t).hide;let e=b;
+ while(e>a&&t.charCodeAt(e-1)===10){const h=H[_fFirstEnd(H,e-1,true)];if(h&&h[0]<=e-1)break;e--;}
+ return e;}
+/* 7.48: the probe holds its text in the page's own inline span, as a sheet
+   does. Since 7.33 a sheet's words sit in a span (.pgw), which takes the
+   page's general typeface, while the probe measured them in the sheet's
+   serif; pages were measured in one face and drawn in another, and ran
+   past their foot. */
+function _fProbeSet(probe,t,g,len){
+ let w=probe.__w;
+ if(!w||w.parentNode!==probe){probe.textContent='';w=document.createElement('span');w.className='pgw';probe.appendChild(w);
+  probe.__tail=document.createTextNode('');probe.appendChild(probe.__tail);probe.__w=w;probe.__tn=null;}
+ const e=_fTailAt(t,g,g+len),N=_fNotes(t),D=N.any?_fDecos(N,g,e):[];
+ if(!D.length){let tn=probe.__tn;if(!tn||tn.parentNode!==w){w.textContent='';tn=document.createTextNode('');w.appendChild(tn);probe.__tn=tn;}tn.data=t.slice(g,e);}
+ else{probe.__tn=null;w.innerHTML=_fSegHTML(t,g,e,D);}
+ probe.__tail.data=t.slice(e,g+len);}
 function _fTextW(){
  const sh=_fSheets.length?_fSheets[0].root:null;
  if(sh){const w=sh.clientWidth;if(w>200)return Math.max(120,w-88);}
  const p=document.getElementById('paper');return p?Math.max(120,p.clientWidth-88):600;
 }
+/* 7.48: the probes stand in a box of their own, closed to the page's layout
+   (contain), so a measurement lays out the probe alone; inside the paper
+   each one laid out the whole document again, and a thesis of 390 pages
+   took seven seconds to lay out instead of two */
+function _fProbeHost(){
+ let h=document.getElementById('pgProbeHost');
+ if(!h){h=document.createElement('div');h.id='pgProbeHost';h.setAttribute('aria-hidden','true');
+  h.style.cssText='position:absolute;left:-20000px;top:0;width:1px;height:1px;overflow:hidden;contain:strict;visibility:hidden;pointer-events:none';
+  document.body.appendChild(h);}
+ return h;}
 function _fProbeEnsure(){
  if(!_fProbe){const p=document.createElement('div');p.className='pgt-probe';p.setAttribute('aria-hidden','true');
-  const paper=document.getElementById('paper');(paper||_fRoot).appendChild(p);_fProbe=p;}
+  _fProbeHost().appendChild(p);_fProbe=p;}
  _fProbe.style.width=_fTextW()+'px';
  return _fProbe;
 }
@@ -2476,50 +2663,115 @@ function _fProbeEnsure(){
    about two pages' text, and after an edit the layout starts on the page
    before the edit and stops at the first page break that lines up with an
    old one: the pages after it are the old pages, unchanged. */
-let _fPages=[],_fBest=[],_fLaidText=null,_fLaidKey='';
-function _fMeasure(rest,cap,probe,guess,hint){
+let _fPages=[],_fBest=[],_fLaidText=null,_fLaidKey='',_fLaidNotes=null,_fPNS=[],_fOvers=[],_fTW=0;
+function _fMeasure(rest,cap,probe,guess,hint,t,g,near){
  /* the longest start of rest that fits in cap, cut at a line or a space;
-    returns the cut and the longest fit */
+    returns the cut and the longest fit. 7.48: rest begins at g in t; the
+    notes cited in a stretch take their room at the page's foot */
+ if(t==null){t=rest;g=0;}
+ const N=_fNotes(t);
+ let notesOn=N.marks.length>0,over=false;
+ const fit=function(len){_fProbeSet(probe,t,g,len);let h=probe.offsetHeight;
+  if(notesOn&&h<=cap){const L=_fPageNotes(t,g,g+len);if(L.length)h+=_fNotesH(L);}
+  return h<=cap;};
  let best=-1;
  /* 7.45: a page whose text changed only in its figures (the notes
     renumbered) is tried at its old fit first: two measurements, not about
     fourteen */
- if(hint>0&&hint<rest.length){probe.textContent=rest.slice(0,hint);
-  if(probe.offsetHeight<=cap){probe.textContent=rest.slice(0,hint+1);if(probe.offsetHeight>cap)best=hint;}}
+ /* a break is taken when its text fits and the rest of the word it falls
+    in does not: the page is then cut at the same space or line as at the
+    last letter that fits, which is all a page needs */
+ const wordEnd=function(e){let q=e;while(q<rest.length&&(rest[q]===' '||rest[q]==='\t'))q++;
+  if(q>=rest.length||rest[q]==='\n')return -1;while(q<rest.length&&!/\s/.test(rest[q]))q++;return q;};
+ const accept=function(e){if(e<=0||e>=rest.length)return false;const q=wordEnd(e);return q>e&&fit(e)&&!fit(q);};
+ if(hint>0&&hint<rest.length){if(accept(hint))best=hint;}
+ /* 7.48: the page is laid out once, a little past where it should break
+    (where it broke before, after an edit), and the break is read from the
+    places of its lines; two measurements then confirm it: about four
+    layouts a page, not fourteen. Each layout of the probe costs more in a
+    long document, so this is most of the time a thesis takes to lay out. */
+ const gallop=function(n0){let lo,hi,st=48;
+  if(fit(n0)){lo=n0;hi=Math.min(rest.length,n0+st);
+   while(hi<rest.length&&fit(hi)){lo=hi;st*=2;hi=Math.min(rest.length,lo+st);}
+   if(hi>=rest.length&&fit(rest.length))return rest.length;}
+  else{hi=n0;lo=Math.max(0,n0-st);while(lo>0&&!fit(lo)){hi=lo;st*=2;lo=Math.max(0,hi-st);}}
+  while(hi-lo>1){const md=(lo+hi)>>1;if(fit(md))lo=md;else hi=md;}
+  return lo;};
  if(best<0){
-  let W=Math.min(rest.length,Math.max(1500,Math.round((guess||3000)*1.7)));
-  for(;;){probe.textContent=rest.slice(0,W);
-   if(probe.offsetHeight<=cap){if(W>=rest.length)return [rest.length,rest.length];W=Math.min(rest.length,W*2);}
+  let W=near>0&&near<rest.length?Math.min(rest.length,Math.max(near+600,Math.round(near*1.25))):Math.min(rest.length,Math.max(1500,Math.round((guess||3000)*1.7)));
+  for(;;){
+   if(fit(W)){if(W>=rest.length)return [rest.length,rest.length];W=Math.min(rest.length,W*2);}
    else break;}
-  let lo=0,hi=W;best=0;
-  while(lo<=hi){const mid=(lo+hi)>>1;probe.textContent=rest.slice(0,mid);
-   if(probe.offsetHeight<=cap){best=mid;lo=mid+1;}else{hi=mid-1;}}}
+  const search=function(){let lo=0,hi=W,b=0;
+   while(lo<=hi){const mid=(lo+hi)>>1;if(fit(mid)){b=mid;lo=mid+1;}else{hi=mid-1;}}return b;};
+  const est=_fRectBest(probe,t,g,W,cap,notesOn);
+  if(est>0&&accept(est))best=est;
+  else best=est>0?Math.min(W,gallop(est)):search();
+  /* a note longer than a page: the page takes its text as if it had none,
+     and the note runs past the foot, rather than no page ever fitting */
+  if(notesOn&&best<40){notesOn=false;over=true;best=search();}}
  let cut=best;
- const nl=rest.lastIndexOf('\n',best);
+ /* 7.48: the line break is looked for in what fits (from best - 1): one at
+    best itself was taken too, and a page ending in a blank line then held
+    one line more than fits */
+ const nl=rest.lastIndexOf('\n',best-1);
  if(nl>best-340&&nl>0)cut=nl+1;
  else{const sp=Math.max(rest.lastIndexOf(' ',best),rest.lastIndexOf('\t',best));
   if(sp>best-80&&sp>0)cut=sp+1;}
  if(cut<=0)cut=Math.max(1,best);
- return [cut,best];}
-function _fSplitFrom(t,probe,pages,bests,pos,guess,stop,reuse){
+ return [cut,best,over];}
+/* the longest start of the probe's text (W characters from g, laid out)
+   whose lines and notes fit in cap, read from the places of its lines
+   without laying anything out again; -1 when it cannot be read */
+function _fRectBest(probe,t,g,W,cap,notesOn){
+ const LH=parseFloat(getComputedStyle(probe).lineHeight);if(!(LH>0))return -1;
+ const nodes=[];let acc=0;const tw=document.createTreeWalker(probe,4,null);let n;
+ while((n=tw.nextNode())){const pe=n.parentNode,cl=pe&&pe.classList;
+  nodes.push({n:n,s:acc,hid:!!(cl&&(cl.contains('fnh')||cl.contains('fnhide')||cl.contains('fnr')))});acc+=n.data.length;}
+ if(acc!==W||!nodes.length)return -1;
+ if(notesOn){const LN=_fPageNotes(t,g,g+W);if(LN.length)_fNoteHeights(LN);}
+ const top=probe.getBoundingClientRect().top,r=document.createRange();
+ const H=function(p){
+  if(p<=0)return 0;
+  let lo=0,hi=nodes.length-1;while(lo<hi){const md=(lo+hi+1)>>1;if(nodes[md].s<=p-1)lo=md;else hi=md-1;}
+  let i=lo,off=p-1-nodes[i].s,vi=-1;
+  while(i>=0){const x=nodes[i];if(!x.hid){const d=x.n.data;while(off>=0&&d.charCodeAt(off)===10)off--;if(off>=0){vi=i;break;}}
+   i--;if(i>=0)off=nodes[i].n.data.length-1;}
+  let line=0,from=0,fi=0;
+  if(vi>=0){const x=nodes[vi];r.setStart(x.n,off);r.setEnd(x.n,off+1);const rs=r.getClientRects();if(!rs.length)return NaN;
+   const bx=rs[rs.length-1];line=Math.floor(((bx.top+bx.bottom)/2-top)/LH)+1;fi=vi;from=off+1;}
+  /* line breaks after the last letter: the first ends its line, each one
+     after it opens an empty line */
+  let k=0;for(let j=fi;j<nodes.length&&nodes[j].s<p;j++){const y=nodes[j];if(y.hid)continue;const d=y.n.data,f0=(j===fi&&vi>=0)?from:0,to=Math.min(d.length,p-y.s);
+   for(let q=f0;q<to;q++)if(d.charCodeAt(q)===10)k++;}
+  if(vi<0)line=k?k:0;else line+=Math.max(0,k-1);
+  let h=Math.round(line*LH);
+  if(notesOn&&h<=cap){const L=_fPageNotes(t,g,g+p);if(L.length)h+=_fNotesH(L);}
+  return h;};
+ let lo=0,hi=W,b=0;
+ while(lo<=hi){const md=(lo+hi)>>1,h=H(md);if(h!==h)return -1;if(h<=cap){b=md;lo=md+1;}else hi=md-1;}
+ return b;}
+function _fSplitFrom(t,probe,pages,bests,pos,guess,stop,reuse,nearAt,overs){
+ overs=overs||_fOvers;
  for(;;){
   let hint=0;
   if(reuse&&pos<t.length){const r=reuse(pos,pages);
-   if(r&&r.page){pages.push(r.page);bests.push(r.best);pos+=r.page.length;if(pos>=t.length)return pages;continue;}
+   if(r&&r.page){pages.push(r.page);bests.push(r.best);overs[pages.length-1]=!!r.over;pos+=r.page.length;if(pos>=t.length){overs.length=pages.length;return pages;}continue;}
    if(r&&r.hint)hint=r.hint;}
   const cap=(pages.length===0)?F_CAP1:F_CAPN,rest=t.slice(pos);
-  const mr=rest===''?[0,0]:_fMeasure(rest,cap,probe,guess,hint),n=mr[0];
-  if(n>=rest.length){pages.push(rest);bests.push(rest.length);return pages;}
-  pages.push(rest.slice(0,n));bests.push(mr[1]);pos+=n;guess=n;
+  const near=nearAt?(nearAt.get(pos)||0):0;
+  const mr=rest===''?[0,0]:_fMeasure(rest,cap,probe,guess,hint,t,pos,near),n=mr[0];
+  if(n>=rest.length){pages.push(rest);bests.push(rest.length);overs[pages.length-1]=!!mr[2];overs.length=pages.length;return pages;}
+  pages.push(rest.slice(0,n));bests.push(mr[1]);overs[pages.length-1]=!!mr[2];pos+=n;guess=n;
   if(stop&&stop(pos,pages))return pages;}}
 function _fSplitPages(t){
  /* the key is all a page's fit depends on: the width and the type (a change
     of either lays the whole document out again) */
- const probe=_fProbeEnsure(),cs=getComputedStyle(probe),key=probe.style.width+'|'+F_CAP1+'|'+F_CAPN+'|'+cs.fontFamily+'|'+cs.fontSize+'|'+cs.lineHeight+'|'+cs.letterSpacing+'|'+cs.wordSpacing;
+ const probe=_fProbeEnsure(),cs=getComputedStyle(probe);_fTW=parseFloat(probe.style.width)||_fTextW();const key=probe.style.width+'|'+F_CAP1+'|'+F_CAPN+'|'+cs.fontFamily+'|'+cs.fontSize+'|'+cs.lineHeight+'|'+cs.letterSpacing+'|'+cs.wordSpacing;
  const old=_fLaidText,P=_fPages,B=_fBest;
  let pages,bests=[];
  if(old!==null&&key===_fLaidKey&&t===old&&P.length){pages=P.slice();bests=B.slice();}
- else if(old===null||key!==_fLaidKey||!P.length||t.length<6000)pages=_fSplitFrom(t,probe,[],bests,0,3000,null);
+ else if(old===null||key!==_fLaidKey||!P.length||t.length<6000){_fOvers=[];pages=_fSplitFrom(t,probe,[],bests,0,3000,null,null,null,_fOvers);}
  else{
   /* the stretch that changed: what the old and new text share at each end */
   const m=Math.min(old.length,t.length);let a=0;while(a<m&&old.charCodeAt(a)===t.charCodeAt(a))a++;
@@ -2527,6 +2779,12 @@ function _fSplitPages(t){
   let k=0;while(k+1<P.length&&starts[k+1]<=a)k++;
   /* an edit near the top of a page can move the break before it */
   k=Math.max(0,k-1);if(k>0&&P[k-1].length<400)k--;
+  /* 7.48: a note whose text changed (at the end, under # Notes) is measured
+     again on the page that cites it, which may be far before the change */
+  const NN=_fNotes(t),LN=_fLaidNotes||{};
+  for(const m of NN.marks){if(m.a>=starts[k])break;if(!m.first)continue;
+   const d=NN.defs[m.k],now=d?d.text:null;
+   if((LN[m.k]===undefined?null:LN[m.k])!==now){let j=0;while(j+1<P.length&&starts[j+1]<=m.a)j++;if(j<k)k=j;break;}}
   /* 7.45: a page whose text is as it was is kept, wherever it now begins,
      so an edit in two places (a note's marker in chapter two and the note
      in the Notes at the end, or every marker renumbered) lays out only the
@@ -2535,16 +2793,23 @@ function _fSplitPages(t){
      2.9 s. A page is kept when its text and the 400 characters after it
      (which decide where it breaks) are unchanged; one whose text changed
      only in its figures is measured at its old fit. */
-  const dz=x=>x.replace(/\d/g,'0'),byHead=new Map();
+  const dz=x=>x.replace(/\d/g,'0'),byHead=new Map(),OV=_fOvers.slice();
   for(let i=k;i<P.length;i++){const h=dz(old.substr(starts[i],48));let l=byHead.get(h);if(!l)byHead.set(h,l=[]);l.push(i);}
   const reuse=function(pos,pg){const l=byHead.get(dz(t.substr(pos,48)));if(!l)return null;let hint=0;
    for(const j of l){if((j===0)!==(pg.length===0)||!P[j])continue;const n=P[j].length+400,x=old.substr(starts[j],n),y=t.substr(pos,n);
-    if(x===y&&B[j]!=null)return {page:P[j],best:B[j]};
+    if(x===y&&B[j]!=null&&(_fPNS[j]||'')===_fNoteSig(_fPageNotes(t,pos,pos+P[j].length)))return {page:P[j],best:B[j],over:OV[j]};
     if(!hint&&x.length===y.length&&B[j]>0&&dz(x)===dz(y))hint=B[j];}
    return hint?{hint:hint}:null;};
   bests=B.slice(0,k);
-  pages=_fSplitFrom(t,probe,P.slice(0,k),bests,starts[k],P[k].length||3000,null,reuse);
+  /* where each old page broke, moved by the edit, as a place to start from */
+  const d=t.length-old.length,nearAt=new Map();
+  for(let j=k;j<P.length&&j<k+40;j++){if(B[j]==null)continue;const s0=starts[j],s1=s0+P[j].length;
+   if(s1<=a)nearAt.set(s0,B[j]);else if(s0<=a)nearAt.set(s0,Math.max(1,B[j]+d));else nearAt.set(s0+d,B[j]);}
+  _fOvers=OV.slice(0,k);
+  pages=_fSplitFrom(t,probe,P.slice(0,k),bests,starts[k],P[k].length||3000,null,reuse,nearAt,_fOvers);
  }
+ {const N=_fNotes(t),LN={};for(const k in N.defs)LN[k]=N.defs[k].text;_fLaidNotes=LN;
+  let acc=0;_fPNS=pages.map(function(pg){const sg=N.marks.length?_fNoteSig(_fPageNotes(t,acc,acc+pg.length)):'';acc+=pg.length;return sg;});}
  _fBest=bests;
  _fPages=pages;_fLaidText=t;_fLaidKey=key;
  return pages;
@@ -2555,7 +2820,7 @@ function _fSplitPages(t){
    Every repaint now notes the selection first and puts it back after. */
 function _fSelSnap(){
  const sel=window.getSelection();
- if(!_fRoot||!sel||!sel.rangeCount||!_fRoot.contains(sel.anchorNode))return null;
+ if(!_fRoot||!sel||!sel.rangeCount||!_fRoot.contains(sel.anchorNode)||_fInNotes(sel.anchorNode))return null;
  const p=flowSelPos();return p?{s:p.s,e:p.e}:null;}
 function _fSelRestore(p){if(p){try{flowSetSel(p.s,p.e,true);}catch(e){}}}
 function _fSyncSheets(pages){
@@ -2572,11 +2837,14 @@ function _fSyncSheetsDo(pages){
   _fSheets.push({root:sh,txt:tx,folio:fo,start:0,end:0,_raw:null,_html:null});
  }
  while(_fSheets.length>pages.length){const sh=_fSheets.pop();sh.root.remove();}
- let pos=0;
+ let pos=0;const T=_fText,N=_fNotes(T);
  for(let i=0;i<_fSheets.length;i++){
   const sh=_fSheets[i];const t=pages[i]||'';
   sh.start=pos;sh.end=pos+t.length;pos+=t.length;
-  if(sh._raw!==t){sh._raw=t;sh._html=null;sh.txt.textContent=t;}
+  const D=N.any?_fDecos(N,sh.start,sh.end):[],raw=t+'\u0000'+_fDecoSig(D,sh.start);
+  if(sh._raw!==raw){sh._raw=raw;const te=_fTailAt(T,sh.start,sh.end),h=t?(te>sh.start?'<span class="pgw">'+_fSegHTML(T,sh.start,te,D)+'</span>':'')+T.slice(te,sh.end):'';sh._sub=null;sh._html=h;sh.txt.innerHTML=h;}
+  const ov=pages===_fPages&&!!_fOvers[i];if(ov!==!!sh.over){sh.over=ov;sh._nsig=null;}
+  _fSheetNotes(sh,N.marks.length?_fPageNotes(T,sh.start,sh.end):[]);
   sh.root.classList.toggle('pfirst',i===0);
   sh.folio.textContent=(i>0&&pages.length>1)?('Page '+(i+1)):'';
  }
@@ -2584,6 +2852,29 @@ function _fSyncSheetsDo(pages){
  window.__fLastSheetN=pages.length;
  root.classList.toggle('docEmpty',_fText==='');
 }
+/* a sheet's notes, at its foot: a short rule, then each note with its
+   number raised, as Word sets them. A note being written in place keeps its
+   own element, so the pen stays in it while the pages move around it. */
+function _fSheetNotes(sh,L){
+ const sig=_fNoteSig(L);
+ if(sh._nsig===sig)return;
+ sh._nsig=sig;
+ if(!L.length){if(sh.notes){sh.notes.remove();sh.notes=null;}sh.root.style.minHeight='';return;}
+ if(!sh.notes){const nb=document.createElement('div');nb.className='pgnotes';nb.setAttribute('contenteditable','false');
+  sh.root.insertBefore(nb,sh.folio);sh.notes=nb;}
+ const nb=sh.notes,keep=(INKFNED&&L.some(n=>n.k===INKFNED.k))?INKFNED:null;
+ const live=keep?keep.el.closest('.pgn'):null;
+ if(live)live.remove();
+ nb.innerHTML='<div class="pgnrule"></div>'+L.map(function(n){return (keep&&n.k===keep.k)?'<div class="pgn-keep"></div>':_fNoteItemHTML(n);}).join('');
+ if(live){const slot=nb.querySelector('.pgn-keep');slot.replaceWith(live);inkFnRefocus();}
+ _fSheetGrow(sh);}
+/* a note longer than the room left (the page measured without its notes):
+   the sheet grows to hold it. Only those pages are measured here; reading
+   every sheet's height would lay out the whole document once per page */
+function _fSheetGrow(sh){
+ if(!sh.over||!sh.notes){if(sh.root.style.minHeight)sh.root.style.minHeight='';return;}
+ const need=sh.txt.offsetHeight+sh.notes.offsetHeight,minH=sh.root.classList.contains('pfirst')?F_F:F_S;
+ sh.root.style.minHeight=need>minH?need+'px':'';}
 function _fLayout(){if(!_fRoot)return;_fSyncSheets(_fSplitPages(_fText));}
 function _fSheetOf(node){
  let n=node;
@@ -2607,11 +2898,114 @@ function _fPointFromGlobal(g){
  let node;
  while(node=tw.nextNode()){
   const L=node.data.length;
-  if(off<=L)return{node:node,off:off};
+  /* 7.48: a place in the hidden part of a note's marker (or in a hidden
+     definition) is put where the pen can stand: at the start of the next
+     text that is shown */
+  if(off<=L){
+   const pe=node.parentNode,cl=pe&&pe.classList;
+   if(cl&&cl.contains('fnh')){const r=pe.parentNode,host=r.parentNode,ix=Array.prototype.indexOf.call(host.childNodes,r);
+    return{node:host,off:(pe===r.firstChild&&off===0)?ix:ix+1};}
+   if(cl&&cl.contains('fnhide')){const host=pe.parentNode,ix=Array.prototype.indexOf.call(host.childNodes,pe);return{node:host,off:off===0?ix:ix+1};}
+   return{node:node,off:off};}
   off-=L;
  }
- return{node:sh.txt,off:0};
+ return{node:sh.txt,off:sh.txt.childNodes.length};
 }
+function _fInNotes(n){while(n&&n!==_fRoot){if(n.classList&&n.classList.contains('pgnotes'))return true;n=n.parentNode;}return false;}
+/* a place inside a marker or a hidden definition, moved to where the pen
+   can stand: past the marker when coming from before it, before it when
+   coming from after */
+function _fSnap(p,prev){
+ const t=_fText,N=_fNotes(t);if(!N.any)return p;
+ const i=_fFirstEnd(N.marks,p,false),m=N.marks[i];
+ if(m&&m.a<p&&p<m.b){if(prev>=m.b)return m.a;if(prev<=m.a)return m.b;return (p-m.a<m.b-p)?m.a:m.b;}
+ return _fCaretOK(p);}
+/* a place in hidden text, moved to the text shown: after the writing when
+   the hidden part ends the document, otherwise to the line after it (a
+   hidden part begins a line, so its start is that line's start too) */
+function _fCaretOK(p){
+ const t=_fText,N=_fNotes(t);if(!N.hide.length)return p;
+ const L=N.hide,last=L[L.length-1];
+ if(last[1]>=t.length&&p>last[0])return last[0];
+ let j=0;while(j<L.length&&L[j][1]<p)j++;const h=L[j];
+ if(h&&h[1]<t.length&&p>=h[0]&&p<h[1])return h[1];
+ return p;}
+/* 7.48: an edit by the writer. A marker cut through is taken whole, and a
+   note whose marker goes goes with it, as in Word; the notes left are
+   numbered again in order. Anything else is an ordinary edit. */
+function _fUserEdit(f,e,rep,mode,extra){
+ const t=_fText,N=_fNotes(t),more=!!(extra&&extra.length);
+ if(f===e&&N.hide.length){f=e=_fCaretOK(f);}
+ if(!N.marks.length&&!more){_fSplice(f,e,rep,mode);return;}
+ for(let i=_fFirstEnd(N.marks,f,false);i<N.marks.length&&N.marks[i].a<Math.max(e,f+1);i++){const m=N.marks[i];
+  if(f===e){if(m.a<f&&f<m.b){f=e=m.b;}break;}
+  if(f>m.a&&f<m.b)f=m.a;if(e>m.a&&e<m.b)e=m.b;}
+ const gone=[],rescue=[];
+ for(let i=_fFirstEnd(N.marks,f,false);i<N.marks.length&&N.marks[i].a<e;i++){const m=N.marks[i];if(m.a>=f&&m.b<=e)gone.push(m);}
+ const keep=Object.create(null);for(const m of N.marks)if(m.a<f||m.b>e)keep[m.k]=1;
+ /* a selection that runs across the hidden notes takes only the notes of
+    the markers it takes; the others are kept */
+ if(e>f)for(const k in N.defs){const d=N.defs[k];if(keep[k]&&d.a>=f&&d.b<=e)rescue.push(t.slice(d.a,d.b).replace(/\n$/,''));}
+ if(!gone.length&&!rescue.length&&!more){_fSplice(f,e,rep,mode);return;}
+ const delta=rep.length-(e-f),cuts=[];
+ for(const m of gone){if(keep[m.k])continue;keep[m.k]=1;const d=N.defs[m.k];if(!d)continue;
+  if(d.a>=f&&d.b<=e)continue;if(d.a>=e)cuts.push([d.a+delta,d.b+delta]);else if(d.b<=f)cuts.push([d.a,d.b]);}
+ let nt=t.slice(0,f)+rep+'\u0007'+t.slice(e);
+ cuts.sort((x,y)=>y[0]-x[0]);
+ for(const c of cuts){const a=c[0]+(c[0]>f+rep.length?1:0),b=c[1]+(c[0]>f+rep.length?1:0);nt=nt.slice(0,a)+nt.slice(b);}
+ if(rescue.length)nt=inkNotesAppend(nt,rescue.join('\n')).t;
+ /* the notes a paste brings, put with the others */
+ if(more)nt=inkNotesAppend(nt,extra.join('\n')).t;
+ const r=inkNotesRenumber(nt),doc=inkDoc();
+ if(doc&&doc.citeRec)doc.citeRec.forEach(c=>{if(c.note&&r.map[c.k])c.k=r.map[c.k];});
+ nt=inkNotesDropEmpty(r.t);
+ let at=nt.indexOf('\u0007');nt=nt.replace('\u0007','');if(at<0)at=Math.min(nt.length,f+rep.length);
+ _fShiftEdits(f,e,rep);
+ inkTextSwap(nt);
+ flowSetSel(mode==='select'?f:at,at);
+ try{if(typeof onType==='function')onType();}catch(_){}
+ try{persist();}catch(_){}
+ if(more)toast(extra.length===1?'Pasted with its footnote':'Pasted with its '+extra.length+' footnotes');
+ else if(gone.length&&!rep)toast(gone.length===1?'Footnote '+gone[0].k+' removed (undo brings it back)':gone.length+' footnotes removed (undo brings them back)');}
+/* 7.48: the clipboard. A selection that holds notes is copied with them:
+   in plain text as the desk keeps them ([^1] in the text, "[^1]: ..." after
+   it), and in HTML as Word writes its own footnotes, which Word reads as
+   footnotes. null when the selection holds no note and nothing hidden. */
+function _fClipInline(l){return esc(l).replace(/\u0001(\d+)\u0002/g,'<sup data-fnk="$1">$1</sup>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>');}
+function _fClip(s,e){
+ const t=_fText,N=_fNotes(t),D=_fDecos(N,s,e);if(!D.length)return null;
+ let txt='',p=s;const notes=[],seen={};
+ for(const d of D){const x=Math.max(s,d.a,p),y=Math.min(e,d.b);if(x>p)txt+=t.slice(p,x);
+  if(d.m&&d.a>=s&&d.b<=e){const df=N.defs[d.k];if(df){if(!seen[d.k]){notes.push(df.text);seen[d.k]=notes.length;}txt+='\u0001'+seen[d.k]+'\u0002';}else txt+=t.slice(d.a,d.b);}
+  p=Math.max(p,y);}
+ if(p<e)txt+=t.slice(p,e);
+ txt=txt.replace(/\s+$/,'');
+ const plain=txt.replace(/\u0001(\d+)\u0002/g,'[^$1]')+(notes.length?'\n\n'+notes.map((x,i)=>'[^'+(i+1)+']: '+x).join('\n'):'');
+ const paras=txt.split(/\n{2,}/).map(q=>'<p>'+q.split('\n').map(_fClipInline).join('<br>')+'</p>').join('');
+ const html=window.INKFNCLIP?INKFNCLIP.wordHTML(paras,notes.map(x=>({html:_fClipInline(x)}))):'';
+ return {text:plain,html:html};}
+/* pasted text that brings notes: from HTML (Word, LibreOffice, Google Docs,
+   Tabula, the desk) or from plain text written as the desk keeps them. The
+   notes take fresh numbers in their place among the document's own.
+   Returns false when the paste brings none. */
+function _fPasteNotes(s,e,txt,html){
+ let body=null,defs=[];
+ const P=html&&window.INKFNCLIP?INKFNCLIP.parse(html):null;
+ if(P&&P.notes.length){
+  const box=document.createElement('div');box.style.cssText='position:fixed;left:-99999px;top:0;width:800px;white-space:normal';
+  box.innerHTML=P.html;box.querySelectorAll('sup[data-fnk]').forEach(function(x){x.replaceWith('[^@'+(90000+(+x.getAttribute('data-fnk')))+']');});
+  box.querySelectorAll('style,script,head,meta,title').forEach(function(x){x.remove();});
+  document.body.appendChild(box);body=box.innerText;box.remove();
+  P.notes.forEach(function(n,i){defs.push('[^@'+(90001+i)+']: '+n.text);});}
+ else if(txt&&/^\[\^[^\]\s]{1,12}\]:/m.test(txt)&&/\[\^[^\]\s]{1,12}\](?!:)/.test(txt)){
+  const map={};let n=0;const lines=[];
+  txt=txt.replace(/\r\n?/g,'\n').replace(/\[\^([^\]\s]{1,12})\]/g,function(m,k){if(!(k in map))map[k]='@'+(90000+(++n));return '[^'+map[k]+']';});
+  txt.split('\n').forEach(function(l){if(/^\[\^@9\d{4}\]:/.test(l))defs.push(l);else lines.push(l);});
+  body=lines.join('\n').replace(/\n#\s*Notes?\s*$/i,'');}
+ if(body==null||!defs.length)return false;
+ body=String(body).replace(/\u00a0/g,' ').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\s+$/g,'');
+ _fUserEdit(s,e,body,'end',defs);
+ return true;}
 function _fLocalFromDom(node,off){
  for(const sh of _fSheets){
   if(sh.root===node||sh.txt===node||sh.root.contains(node)){
@@ -2630,6 +3024,7 @@ function flowSelPos(){
  if(!sel||!sel.rangeCount||!_fRoot)return{s:_fSel.s,e:_fSel.e};
  const r=sel.getRangeAt(0);
  if(!_fRoot.contains(r.commonAncestorContainer))return{s:_fSel.s,e:_fSel.e};
+ if(_fInNotes(r.startContainer)||_fInNotes(r.endContainer))return{s:_fSel.s,e:_fSel.e};
  const a=_fSheetOf(r.startContainer),b=_fSheetOf(r.endContainer);
  if(!a||!b)return{s:_fSel.s,e:_fSel.e};
  const la=_fLocalFromDom(r.startContainer,r.startOffset);
@@ -2643,6 +3038,7 @@ function flowSetSel(a,b,quiet){
  a=Math.max(0,Math.min(_fText.length,a));
  if(typeof b!=='number'||isNaN(b))b=a;
  b=Math.max(0,Math.min(_fText.length,b));
+ a=_fCaretOK(a);b=_fCaretOK(b);if(b<a)b=a;
  _fSel={s:a,e:b};
  const pa=_fPointFromGlobal(a),pb=(b===a)?pa:_fPointFromGlobal(b);
  if(!pa||!pb)return;
@@ -2715,17 +3111,23 @@ function _fWireFlow(el){
  document.addEventListener('selectionchange',function(){
   if(!_fRoot)return;
   const sel=window.getSelection();
-  if(sel&&sel.rangeCount&&_fRoot.contains(sel.anchorNode)){const p=flowSelPos();_fSel={s:p.s,e:p.e};}
+  if(sel&&sel.rangeCount&&_fRoot.contains(sel.anchorNode)){
+   if(_fInNotes(sel.anchorNode))return;
+   const p=flowSelPos();
+   if(p.s===p.e){const q=_fSnap(p.s,_fSel.s);if(q!==p.s){_fSel={s:q,e:q};flowSetSel(q,q,true);return;}}
+   _fSel={s:p.s,e:p.e};}
  });
  /* after the real layout lands, re-measure against it — the boot may have
     measured the flow while the paper was still settling */
  window.addEventListener('load',function(){ setTimeout(function(){ try{ if(typeof _fLayout==='function'){_fLayout();renderHL();} }catch(e){} },60); });
- el.addEventListener('input',function(){
+ el.addEventListener('input',function(ev){
+  if(ev&&_fInNotes(ev.target))return;
   if(_fComposing){_fDirtyDom=true;return;}
   const dom=_fDomText();
   if(dom!==_fText){_fText=dom;_fLayout();renderHL();}
  });
  el.addEventListener('beforeinput',function(ev){
+  if(_fInNotes(ev.target))return;
   if(_fComposing)return;
   const t=ev.inputType||'';
   if(t==='historyUndo'){ev.preventDefault();_fUndo();return;}
@@ -2735,13 +3137,13 @@ function _fWireFlow(el){
   if(t==='insertText'||t==='insertReplacementText'||t==='insertCompositionText'){
    ev.preventDefault();
    const sel=flowSelPos();
-   _fSplice(sel.s,sel.e,ev.data||'','end');
+   _fUserEdit(sel.s,sel.e,ev.data||'','end');
    return;
   }
   if(t==='insertParagraph'||t==='insertLineBreak'){
    ev.preventDefault();
    const sel=flowSelPos();
-   _fSplice(sel.s,sel.e,'\n','end');
+   _fUserEdit(sel.s,sel.e,'\n','end');
    return;
   }
   if(t.indexOf('delete')===0){
@@ -2754,17 +3156,32 @@ function _fWireFlow(el){
     else if(t==='deleteWordBackward'){f=_fWordBack(f);}
     else if(t==='deleteWordForward'){e2=_fWordFwd(e2);}
     else{e2=Math.min(_fText.length,e2+1);}
+    /* 7.48: a key never deletes into hidden notes: Backspace at the line
+       after them takes the character shown before them */
+    const N=_fNotes(_fText),h=N.hide[_fFirstEnd(N.hide,f,true)];
+    if(h&&f>=h[0]&&f<h[1]){if(e2===h[1]&&h[0]>0&&(t==='deleteContentBackward'||t==='deleteSoftLineBackward')){f=h[0]-1;e2=h[0];}else{f=e2;}}
+    else if(h&&f<h[0]&&e2>h[0])e2=h[0];
    }
-   if(f!==e2)_fSplice(f,e2,'','end');
+   if(f!==e2)_fUserEdit(f,e2,'','end');
    return;
   }
  });
  el.addEventListener('paste',function(ev){
+  if(_fInNotes(ev.target))return;
   ev.preventDefault();
-  let txt='';
-  try{txt=(ev.clipboardData&&ev.clipboardData.getData('text/plain'))||'';}catch(_){}
+  let txt='',html='';
+  try{txt=(ev.clipboardData&&ev.clipboardData.getData('text/plain'))||'';html=(ev.clipboardData&&ev.clipboardData.getData('text/html'))||'';}catch(_){}
   const sel=flowSelPos();
-  inkAuthMark('p');_fSplice(sel.s,sel.e,String(txt),'end');
+  inkAuthMark('p');
+  /* 7.48: a paste that brings footnotes keeps them as footnotes */
+  try{if(_fPasteNotes(sel.s,sel.e,String(txt),html))return;}catch(e){}
+  _fUserEdit(sel.s,sel.e,String(txt),'end');
+ });
+ el.addEventListener('copy',function(ev){
+  if(_fInNotes(ev.target))return;
+  const sel=flowSelPos();if(sel.s===sel.e)return;
+  const c=_fClip(sel.s,sel.e);if(!c)return;
+  try{ev.clipboardData.setData('text/plain',c.text);if(c.html)ev.clipboardData.setData('text/html',c.html);ev.preventDefault();}catch(_){}
  });
  el.addEventListener('drop',function(ev){
   try{
@@ -2773,14 +3190,19 @@ function _fWireFlow(el){
   }catch(_){}
  });
  el.addEventListener('cut',function(ev){
+  if(_fInNotes(ev.target))return;
   const sel=flowSelPos();
   if(sel.s===sel.e)return;
-  try{ev.clipboardData.setData('text/plain',_fText.slice(sel.s,sel.e));}catch(_){}
+  const c=_fClip(sel.s,sel.e);
+  try{ev.clipboardData.setData('text/plain',c?c.text:_fText.slice(sel.s,sel.e));if(c&&c.html)ev.clipboardData.setData('text/html',c.html);}catch(_){}
   ev.preventDefault();
-  _fSplice(sel.s,sel.e,'','end');
+  _fUserEdit(sel.s,sel.e,'','end');
  });
  el.addEventListener('keydown',function(ev){
+  if(_fInNotes(ev.target))return;
   const mod=ev.metaKey||ev.ctrlKey;
+  /* 7.48: Word's keys for a footnote (Ctrl+Alt+F, on a Mac Cmd+Option+F) */
+  if(mod&&ev.altKey&&ev.code==='KeyF'&&typeof insFootnote==='function'){ev.preventDefault();insFootnote();return;}
   if(mod&&(ev.key==='z'||ev.key==='Z')){ev.preventDefault();if(ev.shiftKey)_fRedo();else _fUndo();return;}
   if(mod&&ev.key==='y'){ev.preventDefault();_fRedo();return;}
  });
@@ -2857,6 +3279,20 @@ function tabulaEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&'
    a single line break carries data-ink-l, so the text comes back exactly. */
 function tabularHTMLFromText(t){
  t=String(t||'').replace(/\r\n?/g,'\n');
+ /* 7.48: the notes go as Tabula's own: each marker a raised number that
+    names its note, the notes in a box Tabula takes into its Notes (the #
+    Notes section itself stays behind) */
+ var N=_fNotes(t),ids={},notes=[];
+ if(N.marks.length){
+  N.marks.forEach(function(m){if(m.first&&N.defs[m.k]&&!ids[m.k]){ids[m.k]='fn'+(notes.length+1);notes.push({nid:ids[m.k],text:N.defs[m.k].text});}});
+  for(var hi=N.hide.length-1;hi>=0;hi--){var h=N.hide[hi];t=t.slice(0,h[0])+t.slice(h[1]);}}
+ var html=tabularHTMLFromTextBody(t);
+ if(!notes.length)return html;
+ var done={};
+ html=html.replace(/\[\^([^\]\s]{1,12})\]/g,function(m,k){if(!ids[k]||done[k])return '<sup>'+k+'</sup>';done[k]=1;return '<sup class="fn-ref" data-note="foot" data-nid="'+ids[k]+'">'+(notes.findIndex(function(x){return x.nid===ids[k];})+1)+'</sup>';});
+ return html+'<div data-ink-notes="1" style="display:none">'+notes.map(function(n,i){return '<div class="fn" data-nid="'+n.nid+'" data-kind="foot"><sup>'+(i+1)+'</sup> '+_fNoteRich(n.text)+'</div>';}).join('')+'</div>';
+}
+function tabularHTMLFromTextBody(t){
  return t.split(/\n{2,}/).map(function(p){
   var lines=p.split('\n'),out='';
   if(lines.length&&/^#{1,3}\s/.test(lines[0])){
@@ -2870,6 +3306,11 @@ function tabularHTMLFromText(t){
 }
 function tabularTextFromHTML(markup){
  var d=document.createElement('div');d.innerHTML=markup||'';
+ /* 7.48: Tabula's notes come home as the desk's: a marker for each number,
+    the notes under # Notes */
+ var nb=d.querySelector('[data-ink-notes]'),notes={},defs=[],seq=0;
+ if(nb){nb.querySelectorAll('.fn[data-nid]').forEach(function(e){var c=e.cloneNode(true),sp=c.querySelector('sup');if(sp&&sp===c.firstElementChild)sp.remove();notes[e.getAttribute('data-nid')]=window.INKFNCLIP?INKFNCLIP.noteText(c):c.textContent.trim();});nb.remove();}
+ d.querySelectorAll('sup.fn-ref[data-nid]').forEach(function(x){var t2=notes[x.getAttribute('data-nid')];if(t2==null)return;seq++;defs.push('[^@'+seq+']: '+t2);x.replaceWith('[^@'+seq+']');});
  /* 7.43: headings come home as the desk writes them ("# ", "## "), so the
     Outline keeps them; until 7.42 they came back as plain lines */
  d.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(function(x){var n=+x.tagName[1];var marks='#'.repeat(Math.max(1,Math.min(3,n-1)));
@@ -2877,7 +3318,9 @@ function tabularTextFromHTML(markup){
  d.querySelectorAll('li').forEach(function(x){x.replaceWith('• '+x.textContent+'\n');});
  d.querySelectorAll('p,div,tr,table,blockquote,section').forEach(function(x){x.append(x.matches('p[data-ink-l]')?'\n':'\n\n');});
  d.querySelectorAll('br').forEach(function(x){x.replaceWith('\n');});
- return (d.textContent||'').replace(/\n{3,}/g,'\n\n').replace(/[ \t]+\n/g,'\n').trim();
+ var out=(d.textContent||'').replace(/\n{3,}/g,'\n\n').replace(/[ \t]+\n/g,'\n').trim();
+ if(defs.length)out=inkNotesRenumber(inkNotesAppend(out,defs.join('\n')).t).t;
+ return out;
 }
 function tabulaStageHTML(handoff, instN){
  /* floats (instN) are separate seats of the room: they must NOT take the desk's
@@ -5516,7 +5959,7 @@ const MENUS={
   ['📚 References: check and edit',()=>refEditor()],
   ['🛡 Originality: library & document',()=>originality()],
   ['🧭 Authenticity: machine-trace reading',()=>textureCheck()]],
- rewrite:[['✍ Rewrite with a prompt…',()=>openPromptRewrite()],['div'],['lbl','The selection'],
+ rewrite:[['✎ Revise a paragraph, a section or the whole document…',()=>inkReviseOpen()],['✍ Rewrite with a prompt…',()=>openPromptRewrite()],['div'],['lbl','The selection'],
   ['Scholarly',()=>rewrite('scholarly')],['Professional',()=>rewrite('professional')],
   ['Casual',()=>rewrite('casual')],['Plainer',()=>rewrite('plain')],['Concise',()=>rewrite('concise')],
   ['Confident',()=>rewrite('confident')],['Shorten',()=>rewrite('shorten')],
@@ -8188,6 +8631,9 @@ function inflateRaw(input){
  var DB=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
  var DE=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
  for(;;){
+  /* 7.48: input that ends too soon is an error, not a loop without end (an
+     empty entry kept the page busy for ever) */
+  if(bp>input.length*8)throw new Error('deflate data ends too soon');
   var bfinal=bit(),btype=bits(2);
   if(btype===0){
    bp=(bp+7)&~7;
@@ -8215,6 +8661,7 @@ function inflateRaw(input){
     lit=build(lens.slice(0,hlit));dist=build(lens.slice(hlit,hlit+hdist));
    }
    for(;;){
+    if(bp>input.length*8+16)throw new Error('deflate data ends too soon');
     var s=decode(lit);
     if(s===256)break;
     if(s<256)out.push(s);
@@ -8254,6 +8701,21 @@ async function zipEntryText(f,want){
   function u32(o){return (buf[o]|(buf[o+1]<<8)|(buf[o+2]<<16)|((buf[o+3]<<24)>>>0))>>>0;}
   function u16(o){return buf[o]|(buf[o+1]<<8);}
   var dec=new TextDecoder(),o=0,guard=0;
+  /* 7.48: the entry is found through the zip's own table of contents at its
+     end, which holds each entry's true size. Files that write the sizes
+     after the data (LibreOffice does, and others) give 0 in the entry's own
+     header, and the entry was read as empty */
+  for(var e=buf.length-22;e>=Math.max(0,buf.length-65600);e--){
+   if(u32(e)!==0x06054b50)continue;
+   var cn=u16(e+10),co=u32(e+16),k2=0;
+   for(var c=co;k2<cn&&c+46<=buf.length&&u32(c)===0x02014b50;k2++){
+    var cm=u16(c+10),cs=u32(c+20),cnl=u16(c+28),cxl=u16(c+30),ccl=u16(c+32),lo=u32(c+42);
+    if(dec.decode(buf.subarray(c+46,c+46+cnl))===want&&u32(lo)===0x04034b50){
+     var ds0=lo+30+u16(lo+26)+u16(lo+28),dat0=buf.subarray(ds0,ds0+cs);
+     if(cm===8)return dec.decode(await inflateBytes(dat0));
+     return dec.decode(dat0);}
+    c+=46+cnl+cxl+ccl;}
+   break;}
   while(o+4<buf.length&&guard++<1000000){
    if(u32(o)!==0x04034b50){o++;continue;}
    var how=u16(o+8),cres=u32(o+18),nl=u16(o+26),xl=u16(o+28);
@@ -8982,8 +9444,8 @@ function hideBubble(){bub.style.display='none';document.getElementById('bubTones
 function cardHTML(e,i,solo){
  const L=lessonFor(e.why||'');
  return '<div class="card'+(solo?' solo':'')+'" style="animation-delay:'+Math.min(i*40,300)+'ms">'+
- '<span class="tag t-'+e.cat+'">'+NAMES[e.cat]+'</span>'+
- '<div class="orig">'+esc(e.orig)+'</div>'+
+ '<span class="tag t-'+e.cat+'">'+(e.tag||NAMES[e.cat])+'</span>'+
+ '<div class="orig'+(e.fix==null&&!e.cut?' keep':'')+'">'+esc(e.orig)+'</div>'+
  (e.cut?'<div class="fix" style="opacity:.75">'+(e.fix?'(cut it, so the sentence begins “'+esc(e.fix)+'”)':'(cut it)')+'</div>':(typeof e.fix==='string'&&e.fix!=='')?'<div class="fix">'+esc(e.fix)+'</div>':(e.fix===''?'<div class="fix" style="opacity:.75">(remove the word)</div>':''))+
  '<div class="why">'+esc(inkCap1(e.why||'Suggested edit'))+'</div>'+
  (e.ask?'<div class="wbalt askrow"><span>'+esc(e.ask.q)+'</span><input id="ask'+i+'" value="'+esc(e.askVal||'')+'" placeholder="'+esc(e.ask.ph||'')+'" aria-label="'+esc(e.ask.q)+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();inkAskBuild('+i+');}"><button class="lkbtn" onclick="inkAskBuild('+i+')" title="Build the new wording from your answer">Build it</button></div>':'')+
@@ -10435,7 +10897,9 @@ function renderOutline(){
  outlineBlocks(ed.value);
  const box=document.getElementById('outline');
  if(!OUT.length){box.innerHTML='<div style="font-size:12px;color:var(--mut);padding:0 8px">Add <b>#</b> headings to see the map. Drag to reorder sections.</div>';return;}
- box.innerHTML=OUT.map((b,i)=>'<div class="oitem'+(b.level>1?' l2':'')+'" draggable="true" data-i="'+i+'">'+
+ /* 7.48: the Notes, shown at the pages' feet, are not a section of the page */
+ const NH=_fNotes(ed.value).hide,hid=b=>NH.some(h=>b.start+(ed.value[b.start]==='\n'?1:0)>=h[0]&&b.start<h[1]);
+ box.innerHTML=OUT.map((b,i)=>hid(b)?'':'<div class="oitem'+(b.level>1?' l2':'')+'" draggable="true" data-i="'+i+'">'+
   '<span style="cursor:pointer" title="Go to this heading" onclick="locatePos('+b.start+','+(b.start+b.title.length+3)+')">≡</span>'+
   '<span class="t" onclick="locatePos('+b.start+','+(b.start+b.title.length+3)+')">'+esc(b.title)+'</span>'+
   '<small>'+b.words+'w</small></div>').join('');
@@ -10642,7 +11106,12 @@ function insertMarginNotes(){
   t=t.slice(0,p.end)+note+t.slice(p.end);});
  ed.value=t;afterChange();closeModal();
  toast((flagged.length===1?'One margin note':flagged.length+' margin notes')+' inserted. Delete each as you address it.');}
-function locatePos(a,b){ed.focus();ed.setSelectionRange(a,Math.min(ed.value.length,b));}
+function locatePos(a,b){
+ /* 7.48: a place in a note is shown in the note itself, at its page's
+    foot, the words selected (the note's line under # Notes is not shown) */
+ try{const N=_fNotes(ed.value);if(N.hide.length)for(const k in N.defs){const d=N.defs[k];
+  if(a>=d.ta&&a<=d.tb&&N.marks.some(m=>m.k===k&&m.first)){inkNoteOpen(k,{off:a-d.ta,end:Math.min(b,d.tb)-d.ta,raw:true});return;}}}catch(e){}
+ ed.focus();ed.setSelectionRange(a,Math.min(ed.value.length,b));}
 /* locate(i): step to the i-th suggestion in the sheet text (called by the
    suggestion navigation; was lost with the old mirror and never redeclared) */
 function locate(i){const e=EDITS[i];if(!e)return;locatePos(e.start,e.end);}
@@ -11388,16 +11857,22 @@ function renderHL(){const t=ed.value;
   const s0=sh.start,s1=sh.end,sub=t.slice(s0,s1);
   while(k<n&&E[k].start<s0-4000)k++;
   let sig='',html='',pos=0;const parts=[];
+  /* the closing line breaks are set after the page's span (see _fTailAt) */
+  const te=_fTailAt(t,s0,s1)-s0;
   for(let idx=k;idx<n&&E[idx].start<s1;idx++){const e=E[idx];if(e.end<=s0)continue;
    if(INK3_VIS&&!INK3_VIS.has(idx))continue;
-   const a=Math.max(e.start,s0)-s0,b=Math.min(e.end,s1)-s0;
+   const a=Math.max(e.start,s0)-s0,b=Math.min(e.end,s0+te)-s0;
    if(b<=a||a<pos)continue;
    parts.push([a,b,e.cat,idx]);pos=b;sig+=a+','+b+','+e.cat+','+idx+(idx===FLASHIDX?'!':'')+';';}
+  /* 7.48: the notes' markers raised and their definitions hidden, inside
+     and between the underlines */
+  const NT=_fNotes(t),DD=NT.any?_fDecos(NT,s0,s1):[],seg=DD.length?function(x,y){return _fSegHTML(t,s0+x,s0+y);}:function(x,y){return esc(sub.slice(x,y));};
+  if(DD.length)sig+='|'+_fDecoSig(DD,s0);
   if(sh._sub===sub&&sh._sig===sig&&sh._html!==null)return;
   pos=0;
-  for(const [a,b,cat,idx] of parts){html+=esc(sub.slice(pos,a))+'<span class="hl c-'+cat+(idx===FLASHIDX?' flash':'')+'" data-hi="'+idx+'">'+esc(sub.slice(a,b))+'</span>';pos=b;}
-  html+=esc(sub.slice(pos));
-  if(sub)html='<span class="pgw">'+html+'</span>';
+  for(const [a,b,cat,idx] of parts){html+=seg(pos,a)+'<span class="hl c-'+cat+(idx===FLASHIDX?' flash':'')+'" data-hi="'+idx+'">'+seg(a,b)+'</span>';pos=b;}
+  html+=seg(pos,te);
+  if(sub)html=(te>0?'<span class="pgw">'+html+'</span>':'')+sub.slice(te);
   sh._sub=sub;sh._sig=sig;
   if(sh._html!==html){sh._html=html;sh.txt.innerHTML=html;}
  });
@@ -12132,7 +12607,7 @@ function inkDomSelText(){
  const sel=window.getSelection();
  if(!_fRoot||!sel||!sel.rangeCount||sel.isCollapsed||!_fRoot.contains(sel.anchorNode))return null;
  const frag=sel.getRangeAt(0).cloneContents();
- frag.querySelectorAll&&frag.querySelectorAll('.pgfolio').forEach(function(n){n.remove();});
+ frag.querySelectorAll&&frag.querySelectorAll('.pgfolio,.pgnotes').forEach(function(n){n.remove();});
  const box=document.createElement('div');box.appendChild(frag);
  return _fCanonNode(box);}
 function inkNorm(x){return String(x||'').replace(/\s+/g,' ').trim();}
@@ -12178,6 +12653,115 @@ function rewrite(mode){
  inkAltsOpen(sel,'');ACST.mode='rewrite';
  inkRewriteTab(mode);
  if(typeof INKLEX!=='undefined'&&!INKLEX.ready)inkLexLoad();}
+/* 7.45: a paragraph, a section or the whole document revised at once
+   (src/lib/revise_core.js), change by change. The writer chooses how much
+   and how: the corrections Inkwell has found, or a rewrite in a style,
+   offline or by the writing model. Inkwell reads paragraph by paragraph,
+   with its progress shown and a Stop; each change has its reason and can be
+   kept or refused, paragraph by paragraph or all at once; nothing changes
+   on the page until "Use the kept changes", which is one step to undo. A
+   paragraph the writer has changed since is left as it is. */
+let REVZ=null;
+const REV_HOW=[['correct','Corrections'],['scholarly','Scholarly'],['plain','Plainer'],['concise','Concise'],['confident','Confident'],['professional','Professional']];
+function inkReviseOpen(){
+ const t=ed.value,c=ed.selectionStart;
+ if(!REVZ||REVZ.doc!==S.active)REVZ={doc:S.active,kind:'para',how:'correct',model:false,items:null,busy:false,shown:10};
+ REVZ.caret=c;
+ inkReviseDraw();
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}
+function inkReviseScopes(){
+ const t=ed.value,c=REVZ.caret,out={};
+ for(const k of ['para','section','doc']){const sc=INKREVISE.scope(t,c,k),ps=INKREVISE.paragraphs(t,sc.from,sc.to);
+  out[k]={sc:sc,n:ps.length,words:ps.reduce((a,p)=>a+wordCt(p.text),0)};}
+ return out;}
+function inkReviseDraw(){
+ const b=document.getElementById('modalBody');if(!b||!REVZ)return;
+ const Z=REVZ,sc=inkReviseScopes(),model=!!(inkSrv()||PRO);
+ const chip=(on,label,js,tip)=>'<button class="tipchip'+(on?' rvOn':'')+'" aria-pressed="'+on+'" onclick="'+js+'"'+(tip?' title="'+esc(tip)+'"':'')+'>'+label+'</button>';
+ const nm={para:'This paragraph',section:'This section',doc:'The whole document'};
+ let h='<h3>✎ Revise, change by change</h3>'
+  +'<p class="rvIntro">Choose how much, and how. Inkwell reads it paragraph by paragraph; you keep or refuse each change. Nothing changes on the page until you use the changes you keep.</p>'
+  +'<div class="rvRow"><span class="rvLab">How much</span>'+['para','section','doc'].map(k=>chip(Z.kind===k,esc(nm[k])+(k==='section'&&sc.section.sc.head?' <i>'+esc(sc.section.sc.label)+'</i>':'')+' <span class="rvN">'+inkN(sc[k].words,'word')+'</span>','inkReviseSet(\'kind\',\''+k+'\')',sc[k].n+' paragraph'+(sc[k].n===1?'':'s'))).join('')+'</div>'
+  +'<div class="rvRow"><span class="rvLab">How</span>'+REV_HOW.map(x=>chip(Z.how===x[0],esc(x[1]),'inkReviseSet(\'how\',\''+x[0]+'\')',x[0]==='correct'?'The grammar, spelling and punctuation fixes Inkwell has found':'Rewritten in this style, offline'+(model?', or by the writing model':''))).join('')+'</div>';
+ if(model&&Z.how!=='correct')h+='<div class="rvRow"><span class="rvLab">By</span>'+chip(!Z.model,'Inkwell’s own rules','inkReviseSet(\'model\',false)')+chip(Z.model,'The writing model','inkReviseSet(\'model\',true)','Each paragraph in turn; slower, and every version is checked for lost citations and numbers')+'</div>';
+ h+='<div class="rvRow rvGo"><button class="primary" onclick="inkReviseRun()"'+(Z.busy?' disabled':'')+'>'+(Z.items?'Look again':'Find the changes')+'</button>'
+  +(Z.busy?'<button onclick="inkReviseStop()">Stop</button>':'')
+  +'<button class="lkbtn" onclick="closeModal()">Close</button></div>';
+ if(Z.busy||Z.items)h+=inkReviseResults();
+ const keep=b.scrollTop;b.innerHTML=h;b.scrollTop=keep;}
+function inkReviseSet(k,v){if(!REVZ||REVZ.busy)return;REVZ[k]=v;REVZ.items=null;REVZ.shown=10;inkReviseDraw();}
+function inkReviseStop(){if(REVZ){REVZ.stop=true;}}
+function inkRevisePage(p){try{const sh=_fSheetAt(p);const i=_fSheets.indexOf(sh);return i>=0?i+1:0;}catch(e){return 0;}}
+async function inkReviseRun(){
+ const Z=REVZ;if(!Z||Z.busy)return;
+ const t=ed.value,sc=INKREVISE.scope(t,Z.caret,Z.kind),ps=INKREVISE.paragraphs(t,sc.from,sc.to);
+ Z.text=t;Z.items=[];Z.done=0;Z.total=ps.length;Z.busy=true;Z.stop=false;Z.shown=10;Z.label=sc.label;
+ const how=Z.how,model=Z.model&&how!=='correct'&&!!(inkSrv()||PRO),P=(typeof INKPARA!=='undefined')?INKPARA:null;
+ const one=async p=>{
+  let version=null,G=null,warn='';
+  if(how==='correct'){const r=INKREVISE.fromEdits(p.text,p.start,EDITS);if(!r.groups.length)return;version=r.version;G=r.groups;}
+  else{
+   let base=p.text,fixes=[];try{const c=inkCorrectOnly(p.text);if(c.text!==p.text){base=c.text;fixes=c.changes;}}catch(e){}
+   if(model){
+    try{const r=await inkWrite((RW_INSTR[how]||RW_INSTR.plain)+' Register: '+(how==='plain'?'plain':S.reg)+'.',base,{light:true});version=String(r.text||'').trim();}catch(e){version=null;}
+    if(!version)return;
+    const f=inkFactCheck(p.text,version);if(!f.ok)warn='The model’s version '+(f.lost.length?'drops '+f.lost.map(x=>'“'+x+'”').join(', '):'adds '+f.added.map(x=>'“'+x+'”').join(', '))+'; its changes start refused.';
+    try{G=INKEXPLAIN.analyse(p.text,version,fixes,{model:true,mode:how==='plain'?'simplify':how});}catch(e){G=null;}}
+   else{
+    let v=null;try{const vs=P&&AC_OFFLINE[how]?P.restyle(base,how):[];v=vs&&vs[0];}catch(e){v=null;}
+    version=v?v.text:base;if(version===p.text)return;
+    try{G=INKEXPLAIN.analyse(p.text,version,fixes.concat(v&&v.changes||[]),{model:false,mode:how==='plain'?'simplify':how});}catch(e){G=null;}}
+   if(!G||!G.length)return;}
+  const ch={};if(warn)G.forEach((g,k)=>{ch[k]='o';});
+  Z.items.push({start:p.start,end:p.end,orig:p.text,version:version,G:G,ch:ch,warn:warn,page:inkRevisePage(p.start)});};
+ inkReviseDraw();
+ let i=0;
+ while(i<ps.length&&!Z.stop&&REVZ===Z){
+  const t0=performance.now();
+  while(i<ps.length&&!Z.stop&&(model||performance.now()-t0<30)){await one(ps[i]);i++;Z.done=i;if(model)break;}
+  inkReviseDraw();await new Promise(r=>setTimeout(r,0));}
+ Z.busy=false;Z.stopped=Z.stop&&i<ps.length;inkReviseDraw();}
+function inkReviseResults(){
+ const Z=REVZ,its=Z.items||[];
+ let n=0,kept=0;its.forEach(x=>x.G.forEach((g,k)=>{n++;if(x.ch[k]!=='o')kept++;}));
+ let h='<div class="rvRes">';
+ if(Z.busy)h+='<div class="rvProg"><div class="rvBar"><i style="width:'+(Z.total?Math.round(100*Z.done/Z.total):0)+'%"></i></div><span>Reading paragraph '+Math.min(Z.done+1,Z.total)+' of '+Z.total+(Z.model?', with the writing model':'')+'…</span></div>';
+ if(!Z.busy&&!its.length){h+='<div class="rvEmpty">'+(Z.how==='correct'?'No corrections to make in '+esc(Z.label)+'. ':'No change found that keeps the meaning in '+esc(Z.label)+'. ')+(Z.stopped?'(Stopped before the end.)':'')+'</div></div>';return h;}
+ if(its.length)h+='<div class="rvSum"><b>'+inkN(n,'change')+'</b> in '+inkN(its.length,'paragraph')+' · '+kept+' kept'+(Z.stopped?' · stopped after '+Z.done+' of '+Z.total:'')
+  +'<span class="rvSumB"><button class="lkbtn" onclick="inkReviseAll(\'v\')">Keep all</button><button class="lkbtn" onclick="inkReviseAll(\'o\')">Keep none</button>'
+  +'<button class="primary" onclick="inkReviseUse()"'+(kept&&!Z.busy?'':' disabled')+'>Use the kept changes ▸</button></span></div>';
+ const short=x=>{x=String(x||'').trim();const w=x.split(/\s+/);return w.length>12?w.slice(0,6).join(' ')+' … '+w.slice(-4).join(' '):x;};
+ its.slice(0,Z.shown).forEach((x,i)=>{
+  const k2=x.G.filter((g,k)=>x.ch[k]!=='o').length;
+  h+='<div class="altOpt rvPara"><div class="rvPH"><span class="ak">'+(x.page?'Page '+x.page+' · ':'')+'“'+esc(short(x.orig.slice(0,90)))+'”</span>'
+   +'<span class="rvPB"><span class="chgN">'+k2+' of '+x.G.length+' kept</span><button class="lkbtn" onclick="inkRevisePara('+i+',\'v\')">All here</button><button class="lkbtn" onclick="inkRevisePara('+i+',\'o\')">None here</button><button class="lkbtn" onclick="inkReviseGo('+i+')" title="Show this paragraph on the page">Go to it</button></span></div>'
+   +(x.warn?'<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ '+esc(x.warn)+'</div>':'')
+   +x.G.map((g,k)=>{const c=x.ch[k],off=c==='o',shown=typeof c==='number'?g.alts[c]:g.to;
+    return '<div class="chg'+(off?' off':'')+'"><button class="chgT" aria-pressed="'+(!off)+'" title="'+(off?'Your words are kept here. Tap to take the change.':'Tap to keep your own words here.')+'" onclick="inkReviseOne('+i+','+k+')">'+(off?'↺':'✓')+'</button>'
+     +'<div class="chgB"><div class="chgW">'+(g.from?'<del>'+esc(short(g.from))+'</del>':'')+(g.from&&shown?' → ':'')+(shown?'<ins>'+esc(short(shown))+'</ins>':(g.from?' <i>taken out</i>':''))+'</div>'
+     +'<div class="chgR">'+g.reasons.map(r=>esc(r.text)).join(' ')+'</div>'
+     +(g.alts&&g.alts.length?'<div class="chgA"><span>Or</span>'+g.alts.map((a,j)=>'<button class="'+(c===j?'on':'')+'" onclick="inkReviseAlt('+i+','+k+','+j+')">'+esc(short(a))+'</button>').join('')+'</div>':'')
+     +'</div></div>';}).join('')+'</div>';});
+ if(its.length>Z.shown)h+='<div class="rvMore"><button onclick="REVZ.shown+=10;inkReviseDraw()">Show 10 more paragraphs</button> <span>'+(its.length-Z.shown)+' more</span></div>';
+ return h+'</div>';}
+function inkReviseOne(i,k){const x=REVZ&&REVZ.items[i];if(!x)return;x.ch[k]=x.ch[k]==='o'?'v':'o';inkReviseDraw();}
+function inkReviseAlt(i,k,j){const x=REVZ&&REVZ.items[i];if(!x)return;x.ch[k]=x.ch[k]===j?'v':j;inkReviseDraw();}
+function inkRevisePara(i,v){const x=REVZ&&REVZ.items[i];if(!x)return;x.G.forEach((g,k)=>{x.ch[k]=v;});inkReviseDraw();}
+function inkReviseAll(v){if(!REVZ||!REVZ.items)return;REVZ.items.forEach(x=>x.G.forEach((g,k)=>{x.ch[k]=v;}));inkReviseDraw();}
+function inkReviseGo(i){const x=REVZ&&REVZ.items[i];if(!x)return;closeModal();
+ const t=ed.value;let a=x.start;if(t.slice(a,a+x.orig.length)!==x.orig){const f=t.indexOf(x.orig);if(f>=0)a=f;}
+ flowSetSel(a,a+x.orig.length,false);toast('Rewrite ▸ Revise brings the changes back');}
+function inkReviseUse(){
+ const Z=REVZ;if(!Z||!Z.items||Z.busy)return;
+ const items=Z.items.map(x=>({start:x.start,end:x.end,orig:x.orig,final:INKEXPLAIN.compose(x.orig,x.version,x.G,x.ch)}));
+ const r=INKREVISE.apply(ed.value,items);
+ if(!r.applied){toast(r.skipped?'Those paragraphs have changed since, so nothing was changed. Look again.':'Every change is set to your own words.');return;}
+ if(r.applied>=4)snap('Before Revise');
+ pushUndo();inkAuthMark(Z.model?'a':'f');
+ inkTextSwap(r.text);afterChange();persist();
+ const n=Z.items.reduce((a,x)=>a+x.G.filter((g,k)=>x.ch[k]!=='o').length,0);
+ REVZ.items=null;closeModal();SND.fixall();showUndoChip();
+ toast(inkN(r.applied,'paragraph')+' revised, '+inkN(n,'change')+(r.skipped?'; '+inkN(r.skipped,'paragraph')+' changed since, left as it was':'')+' ✔');}
 function inkRewriteTab(mode){
  if(!ALTSEL||!ALTSEL.t)return;
  ALTSEL.prompt=false;ACST.mode='rewrite';ACST.style=mode;ACST.words=null;ACST.chips=null;
@@ -12620,15 +13204,19 @@ const CRC=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=
 function crc32(bytes){let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=CRC[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
 function makeZip(files){ /* files: [{name, data:Uint8Array}]; stored, no compression */
  const enc=new TextEncoder();const out=[];const central=[];let off=0;
+ /* 7.48: each entry carries today's date in the zip's own form; until now
+    the date was 0 (no month, no day), and the table of contents held part
+    of the checksum where the time goes */
+ const nd=new Date(),dT=(nd.getHours()<<11)|(nd.getMinutes()<<5)|(nd.getSeconds()>>1),dD=((Math.max(1980,nd.getFullYear())-1980)<<9)|((nd.getMonth()+1)<<5)|nd.getDate();
  for(const f of files){const n=enc.encode(f.name);const crc=crc32(f.data);const sz=f.data.length;
   const lh=new DataView(new ArrayBuffer(30));
   lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0,true);lh.setUint16(8,0,true);
-  lh.setUint16(10,0,true);lh.setUint16(12,0,true);lh.setUint32(14,crc,true);
+  lh.setUint16(10,dT,true);lh.setUint16(12,dD,true);lh.setUint32(14,crc,true);
   lh.setUint32(18,sz,true);lh.setUint32(22,sz,true);lh.setUint16(26,n.length,true);lh.setUint16(28,0,true);
   out.push(new Uint8Array(lh.buffer),n,f.data);
   const ch=new DataView(new ArrayBuffer(46));
   ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);
-  ch.setUint16(12,crc,true);ch.setUint32(16,crc,true);ch.setUint32(20,sz,true);ch.setUint32(24,sz,true);
+  ch.setUint16(12,dT,true);ch.setUint16(14,dD,true);ch.setUint32(16,crc,true);ch.setUint32(20,sz,true);ch.setUint32(24,sz,true);
   ch.setUint16(28,n.length,true);ch.setUint32(42,off,true);
   central.push(new Uint8Array(ch.buffer),n);off+=30+n.length+sz;}
  const cdOff=off;let cdSize=0;central.forEach(c=>cdSize+=c.length);
@@ -12639,15 +13227,38 @@ function makeZip(files){ /* files: [{name, data:Uint8Array}]; stored, no compres
  const blob=new Uint8Array(all.reduce((a,c)=>a+c.length,0));let p=0;
  for(const c of all){blob.set(c,p);p+=c.length;}return blob;}
 function docxEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function docxRun(t){
- /* footnote markers become true superscripts, as a typesetter sets them */
- let runs='';const parts=t.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[\^\d+\])/g);
+/* 7.48: the notes of the document being written to Word: {ids: marker ->
+   footnote id, notes: [{id, text}], done: markers already placed} */
+let DOCX_FN=null;
+function docxRun(t,inNote){
+ /* a footnote's marker becomes Word's own footnote reference (7.48; until
+    then a raised number, with the notes as a list at the end) */
+ let runs='';const parts=t.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[\^[^\]\s]{1,12}\])/g);
  for(const pt of parts){if(!pt)continue;
   if(/^\*\*.*\*\*$/.test(pt))runs+='<w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">'+docxEsc(pt.slice(2,-2))+'</w:t></w:r>';
   else if(/^\*.*\*$/.test(pt))runs+='<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">'+docxEsc(pt.slice(1,-1))+'</w:t></w:r>';
-  else if(/^\[\^\d+\]$/.test(pt))runs+='<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:t>'+docxEsc(pt.slice(2,-1))+'</w:t></w:r>';
+  else if(/^\[\^[^\]\s]{1,12}\]$/.test(pt)){const k=pt.slice(2,-1),id=(!inNote&&DOCX_FN)?DOCX_FN.ids[k]:0;
+   if(id&&!DOCX_FN.done[k]){DOCX_FN.done[k]=1;runs+='<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteReference w:id="'+id+'"/></w:r>';}
+   else runs+='<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr><w:t>'+docxEsc(k)+'</w:t></w:r>';}
   else runs+='<w:r><w:t xml:space="preserve">'+docxEsc(pt)+'</w:t></w:r>';}
  return runs;}
+/* the text for Word: the notes the pages show at their feet taken out of
+   the body (with their # Notes heading), each made a footnote */
+function docxNotesPrep(t){
+ const N=_fNotes(t),ids={},notes=[];let id=0;
+ for(const m of N.marks){if(!m.first||!N.defs[m.k]||ids[m.k])continue;ids[m.k]=++id;notes.push({id:id,text:N.defs[m.k].text});}
+ let body=t;for(let i=N.hide.length-1;i>=0;i--){const h=N.hide[i];body=body.slice(0,h[0])+body.slice(h[1]);}
+ return {body:body,ids:ids,notes:notes,done:{}};}
+/* Word's footnotes part: the two separators Word draws above the notes,
+   then each note in the Footnote Text style, opening with its number */
+function docxFootnotesXML(FN){
+ const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:footnotes xmlns:w="'+W+'">'+
+  '<w:footnote w:type="separator" w:id="-1"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:separator/></w:r></w:p></w:footnote>'+
+  '<w:footnote w:type="continuationSeparator" w:id="0"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:continuationSeparator/></w:r></w:p></w:footnote>';
+ for(const n of FN.notes)x+='<w:footnote w:id="'+n.id+'"><w:p><w:pPr><w:pStyle w:val="FootnoteText"/></w:pPr>'+
+  '<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr><w:footnoteRef/></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>'+docxRun(n.text,true)+'</w:p></w:footnote>';
+ return x+'</w:footnotes>';}
 /* a markdown table block becomes a real Word table: bordered, head row bold */
 function docxTableXML(block){
  const rows=block.map(l=>l.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim()));
@@ -12660,7 +13271,8 @@ function docxTableXML(block){
     return '<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/></w:tcPr><w:p>'+inner+'</w:p></w:tc>';}).join('')+'</w:tr>';}).join('')+'</w:tbl>';}
 function exportDocx(){markExported();
  const title=(document.getElementById('docTitle').value||'Untitled').trim();
- const body=ed.value.replace(/⟦[^⟧]*⟧/g,''); /* margin notes stay at home */
+ const FN=docxNotesPrep(ed.value.replace(/⟦[^⟧]*⟧/g,'')); /* margin notes stay at home */
+ const body=FN.body,hasFn=FN.notes.length>0;DOCX_FN=FN;
  const paras=[];
  const lines=body.split('\n');
  let buf=[];
@@ -12678,6 +13290,7 @@ function exportDocx(){markExported();
    else if(mN)paras.push('<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="2"/></w:numPr></w:pPr>'+docxRun(mN[1])+'</w:p>');
    else paras.push('<w:p>'+docxRun(raw)+'</w:p>');}};
  buf=lines;
+ DOCX_FN.done={};
  flush();
  const docXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
  '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+
@@ -12692,6 +13305,11 @@ function exportDocx(){markExported();
  '<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:pPr><w:keepNext/><w:spacing w:before="280" w:after="120"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>'+
  '<w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="100"/><w:outlineLvl w:val="2"/></w:pPr><w:rPr><w:b/><w:i/><w:sz w:val="24"/></w:rPr></w:style>'+
  '<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/><w:pPr><w:spacing w:after="80"/><w:ind w:left="720"/><w:contextualSpacing/></w:pPr></w:style>'+
+ /* Word's own footnote styles: the notes in 10 pt, single spaced, their
+    numbers raised in the text and in the note */
+ '<w:style w:type="paragraph" w:styleId="FootnoteText"><w:name w:val="footnote text"/><w:basedOn w:val="Normal"/><w:link w:val="FootnoteTextChar"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>'+
+ '<w:style w:type="character" w:customStyle="1" w:styleId="FootnoteTextChar"><w:name w:val="Footnote Text Char"/><w:link w:val="FootnoteText"/><w:uiPriority w:val="99"/><w:rPr><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:style>'+
+ '<w:style w:type="character" w:styleId="FootnoteReference"><w:name w:val="footnote reference"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style>'+
  '</w:styles>';
  /* A standard Word numbering part, so a "- " line becomes a real bullet and a
     "1. " line a real numbered item, both indenting and wrapping the Word way.
@@ -12703,9 +13321,16 @@ function exportDocx(){markExported();
  '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>'+
  '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>'+
  '</w:numbering>';
- const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>';
+ const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'+
+ '<Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>'+
+ (hasFn?'<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>':'')+'</Types>';
  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>';
- const wrels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/></Relationships>';
+ const wrels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>'+
+ '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>'+
+ (hasFn?'<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>':'')+'</Relationships>';
+ /* the settings name the two separator notes, as Word's own files do */
+ const settings='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
+  (hasFn?'<w:footnotePr><w:footnote w:id="-1"/><w:footnote w:id="0"/></w:footnotePr>':'')+'<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>';
  const core='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>'+docxEsc(title)+'</dc:title><dc:creator>Inkwell</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">'+new Date().toISOString()+'</dcterms:created></cp:coreProperties>';
  const enc=new TextEncoder();
  const bytes=makeZip([
@@ -12715,7 +13340,9 @@ function exportDocx(){markExported();
   {name:'word/_rels/document.xml.rels',data:enc.encode(wrels)},
   {name:'word/styles.xml',data:enc.encode(styles)},
   {name:'word/numbering.xml',data:enc.encode(numbering)},
-  {name:'docProps/core.xml',data:enc.encode(core)}]);
+  {name:'word/settings.xml',data:enc.encode(settings)}].concat(hasFn?[{name:'word/footnotes.xml',data:enc.encode(docxFootnotesXML(FN))}]:[]).concat([
+  {name:'docProps/core.xml',data:enc.encode(core)}]));
+ DOCX_FN=null;
  let b64='';for(let i=0;i<bytes.length;i+=8192)b64+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));
  b64=btoa(b64);
  const name=title+'.docx';const mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -12724,7 +13351,7 @@ function exportDocx(){markExported();
   if(window.pywebview&&window.pywebview.api&&window.pywebview.api.save_file){Promise.resolve(window.pywebview.api.save_file(name,mime,b64));return toast('Word document saved via the system dialog 📄');}}catch(e){console.warn(e);}
  const blob=new Blob([bytes],{type:mime});const a=document.createElement('a');
  a.href=URL.createObjectURL(blob);a.download=name;a.click();
- toast('Word document exported 📄 '+(wordCt(ed.value))+' words, headings carried');}
+ toast('Word document exported 📄 '+(wordCt(ed.value))+' words, headings'+(hasFn?' and footnotes':'')+' carried');}
 function nativeSave(name,text){
  /* Inside a packaged Inkwell (pywebview on Mac/Windows, WebView on Fire) a blob
     download is mishandled; the native bridge shows the system Save dialog instead. */
@@ -12900,9 +13527,20 @@ async function readDocxText(f){
     gone for good */
  var xml=await zipEntryText(f,'word/document.xml');
  if(xml===null||xml===undefined)return null;
+ /* 7.48: Word's footnotes (and endnotes) come in as the desk's notes: a
+    marker where each is cited, its text under # Notes, titles in italics
+    kept as *title*; until now they were dropped */
+ var notes={},defs=[],seq=0;
+ for(var pk of [['word/footnotes.xml','footnote'],['word/endnotes.xml','endnote']]){
+  var fx=null;try{fx=await zipEntryText(f,pk[0]);}catch(e){}
+  if(!fx)continue;
+  String(fx).replace(new RegExp('<w:'+pk[1]+'\\b([^>]*)>([\\s\\S]*?)</w:'+pk[1]+'>','g'),function(m,at,inner){
+   if(/w:type="(separator|continuationSeparator|continuationNotice)"/.test(at))return '';
+   var id=(/w:id="(-?\d+)"/.exec(at)||[])[1];if(id!=null)notes[pk[1][0]+id]=docxNoteText(inner);return '';});}
  try{
   var t=String(xml)
    .replace(/<w:p[ >][\s\S]*?<\/w:p>/g,function(p){
+    p=p.replace(/<w:(footnote|endnote)Reference\b[^>]*?w:id="(\d+)"[^>]*\/>/g,function(m,k,id){var n=notes[k[0]+id];if(n==null)return '';seq++;defs.push('[^@'+seq+']: '+n);return '<w:t>[^@'+seq+']</w:t>';});
     var parts=[];p.replace(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g,function(_,tt){parts.push(tt);return '';});
     return parts.join('')+'\n';
    })
@@ -12910,9 +13548,27 @@ async function readDocxText(f){
    .replace(/<w:br\s*\/?>/g,'\n')
    .replace(/<[^>]+>/g,'');
   try{var dq=document.createElement('textarea');dq.innerHTML=t;t=dq.value;}catch(e){}
-  return t.replace(/\n{3,}/g,'\n\n').trim();
+  t=t.replace(/\n{3,}/g,'\n\n').trim();
+  if(defs.length){var dl=defs.join('\n');try{var dq2=document.createElement('textarea');dq2.innerHTML=dl;dl=dq2.value;}catch(e){}
+   t=inkNotesRenumber(inkNotesAppend(t,dl).t).t;}
+  return t;
  }catch(e){return null;}
 }
+/* a Word note's text: its paragraphs as one line, italic runs as *this* */
+function docxNoteText(x){
+ var paras=[];
+ x.replace(/<w:p[ >][\s\S]*?<\/w:p>/g,function(p){
+  var segs=[];
+  p.replace(/<w:r[ >][\s\S]*?<\/w:r>/g,function(r){
+   var it=/<w:i(\s[^>]*)?\/>/.test(r)&&!/<w:i\s+w:val="(0|false|off)"/.test(r),tx='';
+   r.replace(/<w:t[^>]*>([\s\S]*?)<\/w:t>|<w:tab\s*\/>|<w:br\s*\/>/g,function(m,tt){tx+=tt!=null?tt:' ';return '';});
+   if(tx)segs.push([it,tx]);return '';});
+  var out='',cur=null,buf='';
+  var wrap=function(b){return b.replace(/^(\s*)([\s\S]*?)(\s*)$/,function(m,a,c,d){return c?a+'*'+c+'*'+d:m;});};
+  segs.forEach(function(sg){if(cur===sg[0])buf+=sg[1];else{if(buf)out+=cur?wrap(buf):buf;cur=sg[0];buf=sg[1];}});
+  if(buf)out+=cur?wrap(buf):buf;
+  paras.push(out);return '';});
+ return paras.join(' ').replace(/\s+/g,' ').trim();}
 /* dropping a file on the page is the familiar gesture; it lands where Upload
    points. The guard lights when something drags over the desk. */
 function inkDropEnable(){
@@ -12998,37 +13654,126 @@ function insertTable(){
  const c=parseInt((document.getElementById('tbCols')||{}).value)||3;
  const head=(document.getElementById('tbHead')||{}).checked!==false;
  pushUndo();insertAtCursor(mdTable(r,c,head));closeModal();toast('Table laid down ▦');}
+/* 7.45: a footnote is written beside its marker. Placing one numbers it at
+   once in its place among the others (until now it took the next number up
+   and waited for Renumber) and opens a card under the marker for its text,
+   while the cursor stays in the paragraph: in a thesis the Notes are
+   hundreds of pages away, and the cursor used to go there. The card also
+   opens, without taking the keys, when the cursor rests on a marker, so a
+   note can be read and corrected where it is cited. The notes are kept, as
+   before, under # Notes at the end. */
 function insFootnote(){
  pushUndo();
- let t=ed.value;const s=ed.selectionStart;
- /* the next number is one past the largest marker now in the text */
- let mx=0,m;const re=/\[\^(\d+)\]/g;
- while((m=re.exec(t)))mx=Math.max(mx,parseInt(m[1],10));
- const k=mx+1,mark='[^'+k+']';
- /* the definition lives under a "# Notes" heading at the end of the document */
- const notesIx=t.search(/^#\s*Notes?\s*$/mi);
- let newT,defPos;
- const def='\n[^'+k+']: ';
- if(notesIx>=0){
-  /* the definition belongs at the end of the Notes SECTION; if another heading
-     follows Notes (References, for instance), the note must not jump past it */
-  const after=t.slice(notesIx);
-  const nxt=after.search(/\n\s*#\s/);
-  const sectEnd=nxt>=0?notesIx+nxt:t.length;
-  const before=t.slice(0,sectEnd).replace(/\s*$/,'');
-  newT=before+def+t.slice(sectEnd);
-  defPos=before.length+def.length;
- }else{
-  newT=t.replace(/\s*$/,'')+'\n\n# Notes\n[^'+k+']: ';
-  defPos=newT.length;
- }
- /* marker goes where the pen is */
- newT=newT.slice(0,s)+mark+newT.slice(s);
- ed.value=newT;
- /* the marker insertion shifts the definition only when the pen sat before it */
- ed.setSelectionRange(defPos+(s<=defPos?mark.length:0),defPos+(s<=defPos?mark.length:0));
- ed.focus();afterChange();closeModal();
- toast('Footnote '+k+' placed; write it at the foot of the page');}
+ const t0=ed.value,s=ed.selectionStart;
+ let t=t0.slice(0,s)+'[^@0]'+t0.slice(s);
+ /* 7.48: an empty note has no space after its colon (the space is written
+    with its first word), so it is not taken for a stray space */
+ t=inkNotesAppend(t,'[^@0]:').t;
+ const r=inkNotesRenumber(t),k=r.map['@0'],doc=inkDoc();
+ if(doc&&doc.citeRec)doc.citeRec.forEach(c=>{if(c.note&&r.map[c.k])c.k=r.map[c.k];});
+ closeModal();
+ inkTextSwap(r.t);
+ const mp=inkNoteMarkPos(r.t,k);if(mp)flowSetSel(mp.b,mp.b,true);
+ onType();persist();
+ inkNoteOpen(k,{focus:true});
+ toast('Footnote '+k+' placed');}
+/* the text replaced in one step of the page's own undo; the pages whose
+   text did not change are kept */
+function inkTextSwap(nt){_fLastType=0;_fMaybeShot();_fText=String(nt);_fLayout();renderHL();}
+/* note k's marker in the text (not its definition), and its definition */
+function inkNoteMarkPos(t,k){
+ for(const m of t.matchAll(new RegExp('\\[\\^'+k+'\\](:?)','g')))if(!(m[1]&&(m.index===0||t[m.index-1]==='\n')))return {a:m.index,b:m.index+m[0].length-m[1].length};
+ return null;}
+function inkNoteDefRange(t,k){
+ const m=new RegExp('^\\[\\^'+k+'\\]:[ \\t]?(.*)$','m').exec(t);if(!m)return null;
+ return {a:m.index+m[0].length-m[1].length,b:m.index+m[0].length,text:m[1]};}
+/* the marker a cursor at p is in, or just after */
+function inkNoteMarkAt(t,p){
+ const ls=t.lastIndexOf('[^',p);if(ls<0||p-ls>14)return null;
+ const m=/^\[\^(\d+)\]/.exec(t.slice(ls,ls+16));if(!m)return null;
+ const e=ls+m[0].length;if(p>e||p<ls)return null;
+ if(t[e]===':'&&(ls===0||t[ls-1]==='\n'))return null;
+ return {k:+m[1],a:ls,b:e};}
+/* 7.48: a note is written where Word writes it, at the foot of its page.
+   Placing a footnote raises its number at the pen and takes the pen to the
+   foot of the page; a click on a note there writes in it; Enter or Esc, or
+   a click back in the text, ends it, and a click on the note's number goes
+   back to its place in the text (Word's double-click on the number). A
+   double-click on a number in the text opens its note. */
+function inkFnSheetOf(g){for(const sh of _fSheets){if(g>=sh.start&&g<sh.end)return sh;}return _fSheets[_fSheets.length-1]||null;}
+function inkNoteOpen(k,o){o=o||{};k=String(k);
+ const N=_fNotes(_fText),m=N.marks.find(x=>x.k===k&&x.first);if(!m||!N.defs[k])return;
+ if(INKFNED&&INKFNED.k===k){inkFnRefocus();return;}
+ if(INKFNED)inkNoteDone(true);
+ _fLayout();
+ const sh=inkFnSheetOf(m.a);if(!sh||!sh.notes)return;
+ const row=[].slice.call(sh.notes.querySelectorAll('.pgn')).find(x=>x.getAttribute('data-fn')===k);if(!row)return;
+ const el=row.querySelector('.pgnt'),raw=N.defs[k].text;
+ if(typeof o.off==='number'&&!o.raw)o.off=_fNoteRawOff(raw,o.off);
+ el.textContent=raw;
+ try{el.contentEditable='plaintext-only';}catch(e){el.contentEditable='true';}
+ if(el.contentEditable!=='plaintext-only')el.contentEditable='true';
+ el.setAttribute('spellcheck','true');el.setAttribute('aria-label','The text of note '+k);
+ row.classList.add('pgn-ed');
+ INKFNED={k:k,el:el,off:(typeof o.off==='number')?o.off:el.textContent.length,end:(typeof o.end==='number')?o.end:null,timer:0,moving:false};
+ inkFnRefocus();
+ if(o.scroll!==false){try{row.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){try{row.scrollIntoView(false);}catch(_){}}}}
+/* the pen put back in the note being written, where it was */
+function inkFnRefocus(){
+ const E=INKFNED;if(!E||!E.el.isConnected)return;
+ E.moving=true;
+ try{E.el.focus({preventScroll:true});}catch(e){E.el.focus();}
+ const tn=E.el.firstChild,sel=window.getSelection();
+ try{if(tn&&tn.nodeType===3){const o=Math.min(E.off,tn.data.length),o2=E.end!=null?Math.min(Math.max(o,E.end),tn.data.length):o;sel.setBaseAndExtent(tn,o,tn,o2);}else sel.setBaseAndExtent(E.el,0,E.el,0);}catch(e){}
+ E.end=null;E.moving=false;}
+function inkNoteWrite(k,txt){
+ txt=String(txt||'').replace(/\s*\n\s*/g,' ');
+ const t=_fText,d=inkNoteDefRange(t,k);let nt;
+ if(d&&txt&&t[d.a-1]===':'){d.a=d.b;txt=' '+txt.replace(/^\s+/,'');}
+ if(d){if(d.text===txt)return;nt=t.slice(0,d.a)+txt+t.slice(d.b);}
+ else nt=inkNotesAppend(t,'[^'+k+']: '+txt).t;
+ _fMaybeShot();
+ _fText=nt;
+ if(d){_fShiftEdits(d.a,d.b,txt);const sh=txt.length-(d.b-d.a);if(_fSel.s>d.b)_fSel={s:_fSel.s+sh,e:_fSel.e+sh};}
+ _fLayout();renderHL();onType();}
+function inkNoteDone(stay){
+ const E=INKFNED;if(!E)return;
+ clearTimeout(E.timer);
+ const txt=E.el.textContent;INKFNED=null;
+ E.el.removeAttribute('contenteditable');const row=E.el.closest('.pgn');if(row)row.classList.remove('pgn-ed');
+ for(const sh of _fSheets)if(sh.notes&&sh.notes.contains(E.el))sh._nsig=null;
+ inkNoteWrite(E.k,txt);_fSyncSheets(_fPages);try{persist();}catch(e){}
+ if(stay)return;
+ const N=_fNotes(_fText),m=N.marks.find(x=>x.k===E.k&&x.first);
+ if(m){try{_fRoot.focus({preventScroll:true});}catch(e){}flowSetSel(m.b,m.b,false);}}
+/* kept for callers from before 7.48 */
+function inkNoteClose(){inkNoteDone(true);}
+(function(){
+ const root=document.getElementById('editFlow');if(!root)return;
+ root.addEventListener('input',function(e){const E=INKFNED;if(!E||e.target!==E.el)return;
+  clearTimeout(E.timer);E.timer=setTimeout(function(){if(INKFNED===E)inkNoteWrite(E.k,E.el.textContent);},260);});
+ root.addEventListener('keydown',function(e){const E=INKFNED;if(!E||e.target!==E.el)return;
+  if(e.key==='Escape'||(e.key==='Enter'&&!e.shiftKey)){e.preventDefault();e.stopPropagation();inkNoteDone();}
+  else if(e.key==='Enter'){e.preventDefault();}},true);
+ root.addEventListener('paste',function(e){const E=INKFNED;if(!E||!E.el.contains(e.target))return;
+  e.preventDefault();e.stopPropagation();let x='';try{x=e.clipboardData.getData('text/plain')||'';}catch(_){}
+  x=x.replace(/\s*\n\s*/g,' ');try{document.execCommand('insertText',false,x);}catch(_){}},true);
+ root.addEventListener('focusout',function(e){const E=INKFNED;if(!E||e.target!==E.el||E.moving)return;
+  setTimeout(function(){if(INKFNED===E&&document.activeElement!==E.el)inkNoteDone(true);},0);});
+ document.addEventListener('selectionchange',function(){const E=INKFNED;if(!E)return;const sel=window.getSelection();
+  if(sel&&sel.rangeCount&&E.el.contains(sel.anchorNode)){try{const r=document.createRange();r.selectNodeContents(E.el);r.setEnd(sel.anchorNode,sel.anchorOffset);E.off=r.toString().length;}catch(_){}}});
+ root.addEventListener('mousedown',function(e){
+  const no=e.target.closest&&e.target.closest('.pgnno');
+  if(no){e.preventDefault();const k=no.parentNode.getAttribute('data-fn');if(INKFNED)inkNoteDone(true);
+   const N=_fNotes(_fText),m=N.marks.find(x=>x.k===k&&x.first);if(m){try{_fRoot.focus({preventScroll:true});}catch(_){}flowSetSel(m.b,m.b,false);}return;}
+  const row=e.target.closest&&e.target.closest('.pgn');
+  if(row&&!row.classList.contains('pgn-ed')){e.preventDefault();
+   let off=null;try{const cp=document.caretPositionFromPoint?document.caretPositionFromPoint(e.clientX,e.clientY):null,cr=!cp&&document.caretRangeFromPoint?document.caretRangeFromPoint(e.clientX,e.clientY):null;
+    const n=cp?cp.offsetNode:cr?cr.startContainer:null,o=cp?cp.offset:cr?cr.startOffset:0,tx=row.querySelector('.pgnt');
+    if(n&&tx&&tx.contains(n)){const r=document.createRange();r.selectNodeContents(tx);r.setEnd(n,o);off=r.toString().length;}}catch(_){}
+   inkNoteOpen(row.getAttribute('data-fn'),{off:off==null?undefined:off,scroll:false});}});
+ root.addEventListener('dblclick',function(e){const r=e.target.closest&&e.target.closest('.fnr');if(!r)return;e.preventDefault();inkNoteOpen(r.getAttribute('data-fn'));});
+})();
 function renumberNotes(){
  pushUndo();
  /* markers renumber in order of appearance; definitions follow their marker
@@ -13290,7 +14035,7 @@ function openModalDo(which){
   ['Never lose a page','Your writing saves to this device on every keystroke; the footer shows the save state ("✓ saved" means it is written to disk). Versions snapshot every quarter hour of drafting and before every Fix-all. Inkwell also keeps whole copies of your library by itself, every room included: File ▸ Earlier copies brings any one back. There is never a file to save.'],
   ['Tables, notes, contents','The ▦ key on the top bar (or Studio ▸ Tabula tools) lays down a table (Word tables on export), places footnotes that renumber themselves as you move them, and builds the Contents page from your # headings. As the document lengthens, page-turn bands and folio numbers mark the sheet.'],
   ['Check authenticity','Coach ▸ 🧭 Authenticity reads the texture of the hand (pacing, lexical variety, telltale connectives) and reports it honestly; 🛡 Originality catches shared passages against your library and echoes within the document itself.'],
-  ['Send it onward','File ▸ exports a real Word .docx (headings, tables and footnote markers kept), plain text, or the whole library as JSON.']]
+  ['Send it onward','File ▸ exports a real Word .docx (headings, tables, and footnotes as Word\u2019s own footnotes), plain text, or the whole library as JSON.']]
  .map((s,i)=>'<div class="stp"><div class="n">'+(i+1)+'</div><div><b style="font-family:Georgia,serif">'+s[0]+'</b><p>'+s[1]+'</p></div></div>').join('')+
  '</div><div style="margin:14px 0 2px;text-align:center"><button onclick="bakeAppIcon()" title="Redraw the Desktop icon from this seal, exactly as the app draws it">Redraw the Desktop icon from this seal</button></div><div style="margin:10px 0 6px;text-align:center;font-size:11px;letter-spacing:.14em;color:var(--mut)">Inkwell &nbsp;·&nbsp; build '+BUILD+'</div><div style="text-align:center;font-size:10.5px;color:var(--acc);font-weight:600;margin:6px 0 1px">Designed and built by Yannie D. Forest.</div><div style="text-align:center;font-size:10px;color:var(--mut);margin:0 0 6px">&copy; 2026. All rights reserved.</div><button class="primary" onclick="closeModal()">Begin</button>';}
  if(which==='tabula'){b.innerHTML='<div class="guideHead"><div class="guideHeadL"><span style="font-size:22px;line-height:1">▦</span><h3>Tabula tools</h3></div></div>'+
@@ -13303,7 +14048,7 @@ function openModalDo(which){
  '<h4 style="font-family:Georgia,serif;margin:16px 0 6px">A footnote</h4>'+
  '<div class="tabTool"><button class="tabula-btn" onclick="insFootnote()">¹ Place a footnote at the pen</button>'+
  '<button onclick="renumberNotes()" title="Renumber every marker in order of appearance">↻ Renumber the notes</button></div>'+
- '<p style="font-size:11.5px;color:var(--mut);margin-top:2px">The marker lands where the cursor is; the note itself waits at the end of the document under a # Notes heading, numbered in order of appearance.</p>'+
+ '<p style="font-size:11.5px;color:var(--mut);margin-top:2px">As in Word: a small raised number lands after the word at the pen, and you write the note at the foot of the page, under a short rule. Enter or Esc brings you back to the text; a click on a note writes in it; deleting the number deletes its note. Keys: Ctrl+Alt+F (on a Mac, Cmd+Option+F).</p>'+
  '<h4 style="font-family:Georgia,serif;margin:16px 0 6px">Contents</h4>'+
  '<div class="tabTool"><button class="tabula-btn" onclick="insertTOC()">▤ Build or refresh the contents</button></div>'+
  '<p style="font-size:11.5px;color:var(--mut);margin-top:2px">Every #, ## and ### heading enters the list; an existing Contents section refreshes in place.</p>'+
