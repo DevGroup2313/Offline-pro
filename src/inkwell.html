@@ -671,12 +671,15 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
 .cdfab{width:46px !important;height:46px !important;border-radius:50% !important;border:none !important;background:transparent !important;background-color:transparent !important;background-image:none !important;color:#1B6B93 !important;cursor:pointer;box-shadow:none !important;display:flex !important;align-items:center !important;justify-content:center !important;padding:0 !important;margin:0 !important;min-height:0 !important;font:600 22px/1 Georgia,serif !important;text-shadow:none !important;outline:none !important;filter:none !important;transition:transform .18s cubic-bezier(.2,.8,.3,1),opacity .28s ease !important}
 .cdfab:hover{transform:translateY(-2px) scale(1.05) !important}
 .cdfab:active{transform:translateY(0) scale(.98) !important}
-/* 7.38: the lift is a shadow on the glyph itself, never a filter. Safari draws a
-   filtered glyph that turns (the hourglass, the notes) as a square of shadow, which
-   the writer saw; a text shadow is part of the letter and follows its outline. Tight
-   and close, as Carpe Diem's: a lit rim above, a contact shadow, one short cast. */
-.cdfab>span{display:inline-block;font-size:36px !important;line-height:1 !important;width:36px !important;height:36px !important;box-sizing:border-box !important;box-shadow:none !important;filter:none !important;text-shadow:0 -1px 0 rgba(255,255,255,.75),0 1px 0 rgba(16,42,58,.42),0 3px 3px rgba(16,42,58,.30) !important}
-.cdfab>span.cdXptIc{text-shadow:none !important;filter:drop-shadow(0 -1px 0 rgba(255,255,255,.75)) drop-shadow(0 1px 0 rgba(16,42,58,.42)) drop-shadow(0 3px 3px rgba(16,42,58,.30)) !important}
+/* 7.43: no shadow on the glyph at all, as in Carpe Diem, The Forge and
+   Ingenium ("background transparent, box-shadow none, filter none"). 7.38 had
+   moved the lift from a filter to a text shadow, but Safari's engine still
+   drew the shadow of a colour emoji as a dark square. The 3D look is the
+   emoji's own, with the lift and the scale on hover and the turns. */
+.cdfab{-webkit-tap-highlight-color:transparent}
+.cdfab:focus,.cdfab:focus-visible{outline:none !important;box-shadow:none !important}
+.cdfab>span{display:inline-block;font-size:36px !important;line-height:1 !important;width:36px !important;height:36px !important;box-sizing:border-box !important;box-shadow:none !important;filter:none !important;text-shadow:none !important;background:transparent !important}
+.cdfab>span.cdXptIc{text-shadow:none !important;filter:none !important}
 #tabDockSche>span,.cdDockSche>span{animation:cdHourTurn 12s ease-in-out infinite}
 #tabDockHoro>span,.cdDockHoro>span{animation:cdHourTurn 14s ease-in-out infinite}
 #tabDockTheme>span,.cdDockTheme>span{animation:none !important}
@@ -690,8 +693,7 @@ body[data-motion=minimal] .cdDockXpt{animation:none !important}
 #tabDockTgl{opacity:.55;color:#1B6B93;font:600 22px/1 Georgia,serif !important;width:46px !important;height:46px !important;border-radius:50% !important;border:none !important;background:transparent !important;cursor:pointer !important;box-shadow:none !important;display:flex !important;align-items:center !important;justify-content:center !important;transition:transform .15s ease,opacity .15s ease !important}
 #tabDockTgl:hover{opacity:1 !important;transform:translateY(-2px) scale(1.05) !important}
 [data-theme=dark] #tabDockTgl{color:#5BAEDB;opacity:.9}
-[data-theme=dark] .cdfab>span{filter:none !important;text-shadow:0 -1px 0 rgba(255,255,255,.22),0 1px 0 rgba(0,0,0,.62),0 3px 3px rgba(0,0,0,.45) !important}
-[data-theme=dark] .cdfab>span.cdXptIc{text-shadow:none !important;filter:drop-shadow(0 -1px 0 rgba(255,255,255,.22)) drop-shadow(0 1px 0 rgba(0,0,0,.62)) drop-shadow(0 3px 3px rgba(0,0,0,.45)) !important}
+[data-theme=dark] .cdfab>span,[data-theme=dark] .cdfab>span.cdXptIc{filter:none !important;text-shadow:none !important}
 body[data-motion=minimal] .cdfab>span,body[data-motion=minimal] #tabDockTgl{animation:none !important;transform:none !important}
 body[data-motion=calm] .cdfab>span{animation-duration:24s}
 #tabStage.cd-dock-collapsed .cdfab:not(.cdDockTgl),.appStage.cd-dock-collapsed .cdfab:not(.cdDockTgl){transform:translateX(150%) !important;opacity:0 !important;pointer-events:none !important}
@@ -3230,10 +3232,12 @@ function inkFwEnsureCSS(){
  +".cd-fw .fw-win-dock .cdfab{width:38px;height:38px;border-radius:50%;border:none;background:transparent;color:#1B6B93;cursor:pointer;box-shadow:none;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:transform .18s cubic-bezier(.2,.8,.3,1),opacity .28s ease}"
  +".cd-fw .fw-win-dock .cdfab:hover{transform:translateY(-2px) scale(1.05)}"
  +".cd-fw .fw-win-dock .cdfab:active{transform:translateY(0) scale(.98)}"
+ /* 7.43: no glyph shadow, as in the rooms' column and in Carpe Diem */
+ +".cd-fw .fw-win-dock .cdfab{-webkit-tap-highlight-color:transparent;outline:none}"
  +".cd-fw .fw-win-dock .cdfab>span{display:inline-block;font-size:24px;line-height:1;"
-  +  "filter:none;text-shadow:0 -1px 0 rgba(255,255,255,.75),0 1px 0 rgba(16,42,58,.40),0 2px 3px rgba(16,42,58,.26)}"
- +"[data-theme=dark] .cd-fw .fw-win-dock .cdfab>span{filter:none;text-shadow:0 -1px 0 rgba(255,255,255,.22),0 1px 0 rgba(0,0,0,.6),0 2px 3px rgba(0,0,0,.42)}"
- +".cd-fw .fw-win-dock .cdfab>span.cdXptIc{text-shadow:none;filter:drop-shadow(0 1px 0 rgba(16,42,58,.40)) drop-shadow(0 2px 3px rgba(16,42,58,.26))}"
+  +  "filter:none !important;text-shadow:none !important;box-shadow:none !important;background:transparent !important}"
+ +"[data-theme=dark] .cd-fw .fw-win-dock .cdfab>span{filter:none !important;text-shadow:none !important}"
+ +".cd-fw .fw-win-dock .cdfab>span.cdXptIc{text-shadow:none !important;filter:none !important}"
  +".cd-fw .fw-win-dock .cdDockWd{width:38px;height:38px;border:none !important;border-radius:50%;background:transparent !important;color:#1B6B93;opacity:.55;cursor:pointer;box-shadow:none !important;outline:none;display:flex;align-items:center;justify-content:center;font:600 22px/1 Georgia,serif;padding:0;transition:transform .15s ease,opacity .15s ease}"
  +".cd-fw .fw-win-dock .cdDockWd:hover{opacity:1;transform:translateY(-2px) scale(1.05)}"
  +"[data-theme=dark] .cd-fw .fw-win-dock .cdDockWd{color:#5BAEDB;opacity:.9;background:transparent !important;box-shadow:none !important;border:none !important}"
