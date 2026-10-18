@@ -158,7 +158,19 @@ jobs:
           rm -rf dmgroot && mkdir dmgroot
           cp -R stage/dist/Inkwell.app dmgroot/
           ln -s /Applications dmgroot/Applications
-          hdiutil create -volname "Inkwell ${INKWELL_VERSION}" -srcfolder dmgroot -ov -format UDZO "$dmg"
+          # 7.45: on the Intel runner hdiutil once stopped with "Resource busy"
+          # (the same build passed on the other runners), so a failed try detaches
+          # anything it left mounted, waits and tries again
+          made=0
+          for i in 1 2 3 4 5; do
+            if hdiutil create -volname "Inkwell ${INKWELL_VERSION}" -srcfolder dmgroot -ov -format UDZO "$dmg"; then made=1; break; fi
+            echo "hdiutil create failed (try $i of 5)"
+            for v in "/Volumes/Inkwell ${INKWELL_VERSION}"*; do
+              if [ -d "$v" ]; then hdiutil detach "$v" -force || true; fi
+            done
+            sleep $((i * 15))
+          done
+          if [ "$made" != 1 ]; then echo "::error::hdiutil could not make the disk image in 5 tries."; exit 1; fi
           echo "DMG_NAME=$dmg" >> "$GITHUB_ENV"
           ls -la "$dmg"
 
