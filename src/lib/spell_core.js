@@ -5,7 +5,12 @@
    and by how common the word is. The dictionary is SCOWL (Kevin Atkinson's
    word lists, permissive licence; vendor/SCOWL-LICENCE.txt), British,
    American and Canadian spellings, sizes 10 to 70, each word kept with its
-   size as a measure of how common it is.
+   size as a measure of how common it is. 7.43: and size 80, the vocabulary
+   of specialised and scholarly writing (tools/grammar/mkdict.py), counted
+   as known but never offered as a correction; words formed from known
+   words by the usual prefixes and suffixes of scholarly English
+   ("neuroethics", "operationalize", "sagehood"); a name at the start of a
+   sentence; and a term the writer uses three times or more.
    Pure functions; shared by the app and its test harness. */
 (function (root) {
   const LEVEL_COST = { 10: 0, 20: 0.04, 35: 0.08, 40: 0.12, 50: 0.2, 55: 0.26, 60: 0.38, 70: 0.7 };
@@ -15,7 +20,10 @@
   const near = (a, b) => { const p = POS[a], q = POS[b]; return p && q && Math.abs(p[0] - q[0]) <= 1.01 && Math.abs(p[1] - q[1]) <= 1; };
   const VOW = new Set('aeiouy');
   const ABC = 'abcdefghijklmnopqrstuvwxyz';
-  const PREFIX = new Set('pre post non anti co re self semi multi inter intra sub super ultra mid ex pro counter neo quasi pseudo micro macro mini bi tri un well cross over under out e'.split(' '));
+  const PREFIX = new Set('pre post non anti co re self semi multi inter intra sub super ultra mid ex pro counter neo quasi pseudo micro macro mini bi tri un well cross over under out e socio neuro psycho bio meta proto techno cyber geo eco auto hyper hypo trans infra extra retro tele mono poly para'.split(' '));
+  /* 7.43: the Latin of scholarly prose and its apparatus, and Roman numerals */
+  const LATIN = new Set('se vitro vivo situ sensus communis ibid idem passim viz alia mutandis mutatis facie priori posteriori jure sui generis paribus ceteris qua quo versa fide bona ante sine ergo sic supra infra et al cf vs'.split(' '));
+  const ROMAN = /^(?=[ivxlc]{1,7}$)(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3})$/;
   const RUN_ON = new Set('a an in at as of on up so no to each even every any some all thank per out over be'.split(' '));
   const CALENDAR = /^(January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/;
 
@@ -48,6 +56,38 @@
     if (level(D, w) >= 0) return true;
     const m = /^(.+?)(?:'s|’s|s'|’)$/.exec(w); if (m && level(D, m[1]) >= 0) return true;
     if (w.indexOf('-') > 0) return w.split('-').every(p => p && (level(D, p) >= 0 || /^\d+$/.test(p) || PREFIX.has(p.toLowerCase())));
+    const lw = w.toLowerCase();
+    return formed(D, lw, 2) && !nearCommon(D, lw);
+  }
+  /* a formation one slip from a common word is that word misspelt:
+     "intergrated" (integrated), "transpotation" (transportation) */
+  function nearCommon(D, w) {
+    for (const [c] of edits1(w)) {
+      if (c + 's' === w) continue; // its own singular: "declaratives"
+      const e = D.lower.get(c); if (e && e.plain && e.lv <= 70) return true;
+    }
+    return false;
+  }
+  /* 7.43: a word formed from a known one by a prefix or suffix of scholarly
+     English. Each part must be a known word of five letters or more, so a
+     slip is not taken for a formation: "unecessary" (no "ecessary"),
+     "basicly" (no "-ly" after "-ic"), "accidently" (no "-ly" after
+     "-ent"), "occuring" ("-ing" only replaces a final "e": "triaging"). */
+  const FORM_PRE = ['neuro', 'socio', 'psycho', 'bio', 'meta', 'proto', 'pseudo', 'post', 'pre', 'non', 'anti', 'counter', 'inter', 'intra', 'multi', 'trans', 'hetero', 'homo', 'cyber', 'techno', 'geo', 'eco', 'auto', 'hyper', 'hypo', 'macro', 'micro', 'mis', 'dis', 'de', 're', 'un', 'over', 'under', 'co', 'sub', 'super', 'semi', 'mono', 'poly', 'para', 'infra', 'extra', 'ultra', 'quasi', 'neo', 'retro', 'tele', 'cross', 'self'];
+  const FORM_SUF = [['ness', ''], ['hood', ''], ['ship', ''], ['ism', ''], ['isms', ''], ['ist', ''], ['ists', ''], ['ity', ''], ['ities', ''],
+    ['ize', ''], ['ise', ''], ['izes', ''], ['ises', ''], ['ized', ''], ['ised', ''], ['izing', ''], ['ising', ''], ['ization', ''], ['isation', ''], ['izations', ''], ['isations', ''],
+    ['ability', 'able'], ['ibility', 'ible'], ['s', ''], ['ing', 'e'], ['ly', '']];
+  const knownBase = (D, w, depth) => w.length >= 5 && ((D.lower.has(w) && D.lower.get(w).plain) || (depth > 1 && formed(D, w, depth - 1)));
+  function formed(D, w, depth) {
+    if (!/^[a-z]{7,}$/.test(w) || !depth) return false;
+    for (const p of FORM_PRE) if (w.startsWith(p) && w.length - p.length >= (p.length <= 3 ? 5 : 4) && knownBase(D, w.slice(p.length), depth)) return true;
+    for (const [suf, add] of FORM_SUF) {
+      if (!w.endsWith(suf)) continue;
+      const stem = w.slice(0, w.length - suf.length) + add;
+      if (suf === 'ly' && !/(?:ive|al|ous|ar)$/.test(stem)) continue;
+      if (suf === 'ing' && !add) continue;
+      if (knownBase(D, stem, depth)) return true;
+    }
     return false;
   }
   /* the cost of one slip turning the intended word a into the written word w */
@@ -75,7 +115,7 @@
   function suggest0(D, word, max, names) {
     const w = word.toLowerCase(), best = new Map(), cap = !!names;
     const take = (cand, cost) => {
-      const e = D.lower.get(cand); if (!e) return;
+      const e = D.lower.get(cand); if (!e || e.lv >= 80) return;
       const s = cost + lc(e.lv) + (e.plain || cap ? 0 : 0.35);
       const f = e.plain ? cand : e.form;
       if (!best.has(f) || best.get(f) > s) best.set(f, s);
@@ -109,6 +149,9 @@
   function check(D, text, opt) {
     opt = opt || {}; const out = [], ignore = opt.ignore || new Set();
     const re = /[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'’]*(?:-[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'’]*)*/g; let m;
+    /* 7.43: how often each word is written; a term used three times or more
+       is the writer's own, unless one cheap slip turns it into a known word */
+    const uses = new Map(); for (const x of String(text).match(re) || []) { const k = x.toLowerCase(); uses.set(k, (uses.get(k) || 0) + 1); }
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
@@ -122,6 +165,7 @@
       if (w.length > 1 && w === w.toUpperCase()) continue; // an acronym
       if (/[a-z][A-Z]/.test(w)) continue; // camelCase, iPhone
       if (known(D, w)) continue;
+      if (LATIN.has(w.toLowerCase()) || ROMAN.test(w)) continue;
       const sentenceStart = !before.trim() || /[.!?]["”’)]?\s+$|\n\s*$|^\s*["“(]\s*$/.test(before);
       if (/^[A-Z]/.test(w) && !sentenceStart) {
         /* a capital mid-sentence is a name the dictionary may lack; it is
@@ -142,6 +186,11 @@
       const ok0 = sug.length && sug[0].score <= mx && (sug.length < 2 || sug[1].score - sug[0].score >= mg);
       const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35);
       if (ok0 && capOk) o.fix = matchCase(w, sug[0].word);
+      /* 7.43: a capital at a sentence's start with no clear fix is a name
+         ("Kraemer discusses"); a term the writer uses three times or more
+         with no clear fix is theirs ("gaslighting") */
+      const nearPlain = sug.some(x => x.score < 1.2 && x.word === x.word.toLowerCase());
+      if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 3)) continue;
       out.push(o);
     }
     return out;
