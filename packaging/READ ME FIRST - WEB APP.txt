@@ -1,9 +1,9 @@
-INKWELL 7.43: THE WEB APP
+INKWELL 7.44: THE WEB APP
 =========================
 
 WHAT IS IN THIS PACKAGE
 -----------------------
-Unzipping this package gives one folder, "Inkwell_Web_App_v7p43". That
+Unzipping this package gives one folder, "Inkwell_Web_App_v7p44". That
 folder IS the finished web site: index.html is at its top, beside sw.js, the
 manifest, and the icons and vendor folders. There is nothing to build and no
 GitHub Actions is needed. No file in it is larger than 9 MB.
@@ -20,11 +20,11 @@ A. Netlify (free, and the simplest)
    1. On a computer, open  https://app.netlify.com/drop  in a browser and
       log in (free). A site dropped without an account is kept behind a
       temporary password until it is claimed.
-   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p43" onto the
+   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p44" onto the
       page. Drag the FOLDER, not the .zip file: Netlify asks for the
       unzipped folder.
    3. Netlify shows the address, ending in .netlify.app. Keep it. Open it:
-      Inkwell should appear, with "v7.43" beside the date at the top.
+      Inkwell should appear, with "v7.44" beside the date at the top.
    Netlify's guidance is that a drop works best under 50 MB; this site is
    about 66 MB, most of it the files for the optional models. If the drop
    stalls, try once more on a steady connection, or use B.
@@ -32,7 +32,7 @@ A. Netlify (free, and the simplest)
 B. GitHub Pages (free for a PUBLIC repository)
    1. github.com, "+", New repository, for example inkwell-site. Choose
       Public. Create repository.
-   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p43"
+   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p44"
       and drag in EVERYTHING INSIDE it (index.html, sw.js,
       manifest.webmanifest, and the icons and vendor folders). Commit.
    3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.43" beside the date at the top.
+Look for "v7.44" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,29 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.44
+-----------
+- A thesis of 100,000 words opens in about two seconds, and typing stays
+  quick (about 40 ms a key, where it would have taken many seconds).
+  Checking runs in the background and shows how far it has got. Saved
+  versions are kept in the browser's larger store, so a long document is
+  safe.
+- Tabula searches like Word. Ctrl+F (Cmd+F on a Mac, or Home, Find) opens
+  the Navigation pane: every result is highlighted and listed with its
+  page and the words around it. Enter goes to the next, Shift+Enter to the
+  one before, and "Back to where I was" returns you. Replace and Replace
+  all can be undone; with Track changes on, they are tracked. Footnotes
+  are searched too. The Headings tab shows the outline, with the pages and
+  "you are here".
+- My way of working (Studio, in Inkwell; View, Comfort, in Tabula; a
+  button in Scriba and Fontes): eleven supports, each off until you switch
+  it on. Start small, One next step, Draft now fix later, Focus ruler,
+  Gentle time, Where was I?, Today so far, Three at a time, Messages wait
+  for me, Quiet senses, and Reading comfort (text size, spacing, the clear
+  Atkinson Hyperlegible typeface, and the tint of the paper). One choice
+  serves all four apps.
+- A footnote's number is legible in night mode.
 
 NEW IN 7.43
 -----------

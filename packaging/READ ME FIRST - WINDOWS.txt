@@ -1,28 +1,28 @@
-INKWELL 7.43 FOR WINDOWS
+INKWELL 7.44 FOR WINDOWS
 ========================
 
-This zip brings Inkwell 7.43 to the Inkwell already installed on your
+This zip brings Inkwell 7.44 to the Inkwell already installed on your
 Windows computer (from Inkwell-7.37-Windows-Setup.exe). There is no new
 installer this time: GitHub Actions, which builds the Windows installer, has
 not started since 10 October. The installed program always opens the newest
-Inkwell page it finds in its own folder, so 7.43 is one folder dropped in.
+Inkwell page it finds in its own folder, so 7.44 is one folder dropped in.
 
 INSTALL (ABOUT A MINUTE)
 ------------------------
 1. Close Inkwell if it is open.
 2. Unzip: right-click the zip, Extract All, Extract. A window opens with the
-   folder "Inkwell 7.43 page" in it.
+   folder "Inkwell 7.44 page" in it.
 3. Open Inkwell's own folder: click the address bar at the top of a File
    Explorer window, type   %LOCALAPPDATA%\Programs\Inkwell   and press Enter.
    You should see Inkwell.exe there.
-4. Drag the folder "Inkwell 7.43 page" into that window.
+4. Drag the folder "Inkwell 7.44 page" into that window.
    If an older folder such as "Inkwell 7.40 page" is there, you can delete
    it: Inkwell always opens the newest page.
-5. Open Inkwell from the Start menu as usual. Look for "v7.43" beside the
+5. Open Inkwell from the Start menu as usual. Look for "v7.44" beside the
    date at the top.
 
 Your documents, the Start menu entry and the uninstaller stay as they are.
-To go back to 7.37, delete the folder "Inkwell 7.43 page" from Inkwell's
+To go back to 7.37, delete the folder "Inkwell 7.44 page" from Inkwell's
 folder.
 
 If Inkwell is not installed on this computer yet: install
@@ -36,6 +36,29 @@ On the Mac mini: Studio, Engine, "Share with my other devices on this
 Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
+
+NEW IN 7.44
+-----------
+- A thesis of 100,000 words opens in about two seconds, and typing stays
+  quick (about 40 ms a key, where it would have taken many seconds).
+  Checking runs in the background and shows how far it has got. Saved
+  versions are kept in the browser's larger store, so a long document is
+  safe.
+- Tabula searches like Word. Ctrl+F (Cmd+F on a Mac, or Home, Find) opens
+  the Navigation pane: every result is highlighted and listed with its
+  page and the words around it. Enter goes to the next, Shift+Enter to the
+  one before, and "Back to where I was" returns you. Replace and Replace
+  all can be undone; with Track changes on, they are tracked. Footnotes
+  are searched too. The Headings tab shows the outline, with the pages and
+  "you are here".
+- My way of working (Studio, in Inkwell; View, Comfort, in Tabula; a
+  button in Scriba and Fontes): eleven supports, each off until you switch
+  it on. Start small, One next step, Draft now fix later, Focus ruler,
+  Gentle time, Where was I?, Today so far, Three at a time, Messages wait
+  for me, Quiet senses, and Reading comfort (text size, spacing, the clear
+  Atkinson Hyperlegible typeface, and the tint of the paper). One choice
+  serves all four apps.
+- A footnote's number is legible in night mode.
 
 NEW IN 7.43
 -----------

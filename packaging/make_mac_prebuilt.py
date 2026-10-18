@@ -329,6 +329,26 @@ def make_one(label, dmg, build, out, work):
     if os.path.exists(z):
         os.remove(z)
     run(["zip", "-qry9", "-X", z, name], cwd=work)
+    if os.path.getsize(z) >= CHAT_LIMIT and shutil.which("7z"):
+        # 7.44: over the limit by a little, the ordinary files are packed
+        # again with 7-Zip's stronger deflate; the symbolic links go in first,
+        # stored by zip exactly as before (the Python framework needs them)
+        os.remove(z)
+        links, files = [], []
+        for dirpath, dirnames, filenames in os.walk(os.path.join(work, name)):
+            for n in dirnames + filenames:
+                p = os.path.join(dirpath, n)
+                rel = os.path.relpath(p, work)
+                if os.path.islink(p):
+                    links.append(rel)
+                elif os.path.isfile(p):
+                    files.append(rel)
+        lst = os.path.join(work, name + ".files")
+        with open(lst, "w") as f:
+            f.write("\n".join(files) + "\n")
+        subprocess.run(["zip", "-qy9", "-X", z, "-@"], cwd=work, input="\n".join(links).encode(), check=True)
+        run(["7z", "a", "-tzip", "-mx=9", "-mfb=258", "-mpass=15", z, "@" + lst], cwd=work)
+        os.remove(lst)
     if os.path.getsize(z) >= CHAT_LIMIT:
         raise SystemExit("%s is %.1f MiB, over the chat's 30 MiB limit" % (z, os.path.getsize(z) / 1048576))
     info.update({"zip": z, "version": version, "build": build})
