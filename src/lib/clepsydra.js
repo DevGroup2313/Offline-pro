@@ -1,12 +1,13 @@
 /* CLEPSYDRA, carried from Carpe Diem (carpe_diem.html, <script id="cd-mod-pomo">,
-   "the REAL extracted engine"), unchanged except four lines marked here:
+   "the REAL extracted engine"), unchanged except the lines marked here:
    1. Custodia's two settings are kept in localStorage (ink_custodia_v1), and
       the audio context the chime needs is declared (Carpe Diem's main app
       declares it; the module assumed it).
    2. Carpe Diem's own loader of the saved timer settings (cd_pomo_v1).
    3. pomoPill tells Inkwell's hourglasses (Tabula's dock, the floating
       windows) the dial's state: window.inkClepDocks.
-   4. window.inkClep: open, stop, pill, running. */
+   4. window.inkClep: open, stop, pill, running.
+   5. (7.44) window.inkClep.state, for Gentle time's band. */
 (function(){
 'use strict';
 var $=function(s,r){try{return (r||document).querySelector(s);}catch(e){return null;}};var $$=function(s,r){try{return [].slice.call((r||document).querySelectorAll(s));}catch(e){return [];}};var state=(function(){var s={lang:(window.__cdSelfLang||'en')};try{var o=JSON.parse(localStorage.getItem('ink_custodia_v1')||'{}');if(typeof o.custodiaOn==='boolean')s.custodiaOn=o.custodiaOn;if(typeof o.custodiaLimit==='number')s.custodiaLimit=o.custodiaLimit;}catch(e){}return s;})();function saveState(){try{localStorage.setItem('ink_custodia_v1',JSON.stringify({custodiaOn:state.custodiaOn,custodiaLimit:state.custodiaLimit}));}catch(e){}} function loadState(){return state;}var __cdAC=null;function tr(key,en){return en;}function pomoPresenceEnter(){} function pomoPresenceLeave(){} function pomoSyncToPresence(){}
@@ -227,5 +228,7 @@ function pomoRingSVG(){ var C=565.48; return '<svg viewBox="0 0 200 200" width="
   +'<text id="pomo-time" x="100" y="98" text-anchor="middle" dominant-baseline="central" style="fill:var(--text-primary)" font-size="42" font-family="var(--cd-serif)">'+pomoFmt(pomo.remaining)+'</text>'
   +'<text id="pomo-phase" x="100" y="134" text-anchor="middle" style="fill:var(--text-tertiary)" font-size="12.5" letter-spacing="0.4">'+pomoPhaseLabel()+'</text></svg>'; }
 try{window.__cdEng=window.__cdEng||{};window.__cdEng.pomo=openPomodoro;}catch(e){}
-try{window.inkClep={open:openPomodoro,stop:pomoReset,pill:pomoPill,running:function(){return !!pomo.running;}};}catch(e){}
+try{window.inkClep={open:openPomodoro,stop:pomoReset,pill:pomoPill,running:function(){return !!pomo.running;},
+  /* 5. (7.44) Gentle time reads the dial: its phase and the seconds left */
+  state:function(){return {running:!!pomo.running,phase:pomo.phase,remaining:pomo.remaining,len:pomoPhaseLen(pomo.phase)};}};}catch(e){}
 })();

@@ -6,7 +6,8 @@
 #   src/inkwell.html        the main page, with @@TABULA_B64@@, @@SCRIBA_B64@@
 #                           and @@FONTES_B64@@ where the rooms go
 #   src/rooms/*.html        Tabula, Scriba and Fontes, each a whole page
-#   src/lib/*.js            scripts shared by the page and its model worker (listed in build())
+#   src/lib/*.js            scripts shared by the page and its model worker (listed in build());
+#                           a room names the ones it takes as @@LIB_NAME@@
 # The rooms are embedded base64-encoded, as before. The result is written to
 # every place that carries Inkwell (the Android assets, which the iOS app and
 # the web app also take, and the top-level standalone copies).
@@ -33,6 +34,14 @@ def build():
     rooms = {}
     for room in ROOMS:
         raw = read(os.path.join(SRC, "rooms", room + ".html"))
+        # 7.44: a room may name shared scripts too (@@LIB_FIND_CORE@@)
+        text = raw.decode("utf-8")
+        for name in sorted(set(re.findall(r"@@LIB_([A-Z0-9_]+)@@", text))):
+            lib = os.path.join(SRC, "lib", name.lower() + ".js")
+            if not os.path.exists(lib):
+                sys.exit("src/rooms/%s.html names %s, which src/lib does not hold" % (room, name))
+            text = text.replace("@@LIB_%s@@" % name, read(lib).decode("utf-8"))
+        raw = text.encode("utf-8")
         rooms[room] = raw
         marker = "@@%s_B64@@" % room.upper()
         if page.count(marker) != 1:
@@ -40,7 +49,7 @@ def build():
         page = page.replace(marker, base64.b64encode(raw).decode("ascii"))
     # 7.32: shared scripts (the grammar model's decoder and the safety filter)
     # are written once in src/lib and placed in the page where it names them
-    for name in ("gector_core", "gec_filter", "fontes_core", "clepsydra", "spell_core", "rewrite_core", "explain_core", "coach_core", "lexicon_core", "synonyms_core", "paraphrase_core", "refine_core", "learner_data", "learner_core", "mark_core"):
+    for name in ("gector_core", "gec_filter", "fontes_core", "clepsydra", "spell_core", "rewrite_core", "explain_core", "coach_core", "lexicon_core", "synonyms_core", "paraphrase_core", "refine_core", "learner_data", "learner_core", "mark_core", "myway_core", "atkinson_font"):
         marker = "@@LIB_%s@@" % name.upper()
         if page.count(marker) != 1:
             sys.exit("src/inkwell.html must hold %s exactly once" % marker)

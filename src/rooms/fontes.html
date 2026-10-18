@@ -715,5 +715,53 @@ if (INK) {
 
 render();
 </script>
+<script>
+@@LIB_MYWAY_CORE@@
+</script>
+<style>
+  /* 7.44: Reading comfort in Fontes: the sources and the fields */
+  html.ink-comfort #list .src .ref,html.ink-comfort #list .src>div:not(.rowbtns){font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important;}
+  html.ink-comfort .wrap input:not([type=checkbox]):not([type=file]),html.ink-comfort .wrap textarea,html.ink-comfort .wrap select{font-family:var(--cf-font) !important;font-size:calc(14px * var(--cf-scale)) !important;letter-spacing:var(--cf-letter) !important;}
+  html.ink-comfort .wrap .card label{font-size:calc(11px * var(--cf-scale)) !important;}
+  html.ink-cf-paper .wrap .card{background:var(--cf-paper) !important;}
+  #iwOpen{margin-left:auto;}
+  #iwNote[hidden]{display:none;}
+  .iw-flash{outline:3px solid #c9a24a;outline-offset:3px;border-radius:8px;transition:outline-color .8s;}
+</style>
+<script>(function(){
+/* 7.44: My way of working in Fontes (INKWAY): the button in the heading,
+   Reading comfort on the sources and the fields, and Where was I?: the source
+   you were adding (its fields come back) or the place in your list */
+var W=window.INKWAY;if(!W)return;
+function $(id){return document.getElementById(id);}
+function night(){return document.documentElement.classList.contains('cd-dark');}
+var IDS=['f_type','f_author','f_title','f_container','f_editor','f_city','f_pub','f_vol','f_iss','f_year','f_pages','f_url','f_acc','f_tags','f_notes'];
+var head=document.querySelector('header');
+function rowIn(){var rows=document.querySelectorAll('#list .src');for(var i=0;i<rows.length;i++){if(rows[i].getBoundingClientRect().bottom>70)return rows[i];}return null;}
+W.room({app:'fontes',doc:document,night:night,
+  base:{size:15,line:1.6,font:'var(--serif)'},
+  slot:head,noteSlot:head,
+  key:function(){return 'library';},
+  here:function(){
+    var d={},any=false;
+    IDS.forEach(function(id){var e=$(id);if(!e)return;d[id]=e.value;if(id!=='f_type'&&e.value.trim())any=true;});
+    var q=$('srcSearch')?$('srcSearch').value:'',row=rowIn(),rs=row?W.cut((row.querySelector('.ref')||row).textContent,110):'';
+    if(any)return {draft:d,q:q,row:rs,snip:W.cut([d.f_author,d.f_title,d.f_year].filter(Boolean).join(', '),110),label:'adding a source'+(d.f_title.trim()?', “'+W.cut(d.f_title,60)+'”':'')};
+    if(!rs&&!q)return null;
+    return {draft:null,q:q,row:rs,snip:rs,label:q?'in your sources, searching for “'+W.cut(q,40)+'”':'in your sources'};
+  },
+  worth:function(r){return !!(r.draft||r.row||r.q);},
+  go:function(r){
+    var s=$('srcSearch');
+    if(s&&r.q&&s.value!==r.q){s.value=r.q;s.dispatchEvent(new Event('input',{bubbles:true}));}
+    if(r.draft){var first=null;IDS.forEach(function(id){var e=$(id);if(!e||r.draft[id]==null)return;if(!e.value||id==='f_type')e.value=r.draft[id];});
+      ['f_author','f_title','f_year','f_pub','f_city','f_pages'].some(function(id){var e=$(id);if(e&&!e.value.trim()){first=e;return true;}return false;});
+      var f=first||$('f_title');if(f){f.scrollIntoView({block:'center'});try{f.focus({preventScroll:true});}catch(e){f.focus();}}
+      return;}
+    if(r.row){var want=r.row.replace(/…$/,'').slice(0,50),rows=document.querySelectorAll('#list .src');
+      for(var i=0;i<rows.length;i++){var t=(rows[i].querySelector('.ref')||rows[i]).textContent.replace(/\s+/g,' ').trim();if(t.indexOf(want)===0){rows[i].scrollIntoView({block:'center'});rows[i].classList.add('iw-flash');(function(el){setTimeout(function(){el.classList.remove('iw-flash');},1600);})(rows[i]);break;}}}
+  }
+});
+})();</script>
 </body>
 </html>

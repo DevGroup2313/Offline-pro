@@ -364,7 +364,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
       <div class="grp"><div class="grp-tools"><div class="grp-line">
         <span class="sty-strip" id="styStrip"></span><button class="tb tb-arrow" id="styleGalBtn" title="Styles gallery">▾</button><button class="tb" id="stylesPaneBtn" title="Styles pane">Styles</button><select class="tb-sel" id="blockSel" style="display:none"><option value="&lt;p&gt;">Normal</option><option value="&lt;h1&gt;">Title</option><option value="subtitle">Subtitle</option><option value="&lt;h2&gt;">Heading 1</option><option value="&lt;h3&gt;">Heading 2</option><option value="&lt;blockquote&gt;">Quote</option><option value="&lt;h4&gt;">Heading 3</option><option value="&lt;h5&gt;">Heading 4</option><option value="&lt;pre&gt;">Code block</option></select>
       </div></div><div class="grp-label">Styles</div></div>
-      <div class="grp"><div class="grp-tools"><div class="grp-line"><button class="tb edit-row" id="findBtn">Find</button></div><div class="grp-line"><button class="tb edit-row" data-cmd="selectAll">Select all</button></div></div><div class="grp-label">Editing</div></div>
+      <div class="grp"><div class="grp-tools"><div class="grp-line"><button class="tb edit-row" id="findBtn" title="Search the document (Ctrl+F, or Cmd+F on a Mac)">Find</button></div><div class="grp-line"><button class="tb edit-row" id="replBtn" title="Find and replace (Ctrl+H, or Cmd+Shift+H on a Mac)">Replace</button></div><div class="grp-line"><button class="tb edit-row" data-cmd="selectAll">Select all</button></div></div><div class="grp-label">Editing</div></div>
       <div class="grp"><div class="grp-tools"><div class="grp-line"><button class="tb" id="goAbacus" title="Open Abacus (spreadsheet)" onclick="try{parent.postMessage({kind:&#39;carpe-open&#39;,which:&#39;abacus&#39;},&#39;*&#39;)}catch(e){}">Abacus</button><button class="tb" id="goImago" title="Open Imago (slides)" onclick="try{parent.postMessage({kind:&#39;carpe-open&#39;,which:&#39;slides&#39;},&#39;*&#39;)}catch(e){}">Imago</button></div><div class="grp-line"><button class="tb scriba-tb" id="scribaBtn" title="Scriba: dictate by voice"><span class="sc-dot"></span><svg class="mic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.5c2.9 2.2 4.3 4.6 4.3 7.2L13.5 20l-4.3-9.3c0-2.6 1.4-5 4.3-7.2z"/><path d="M13.5 11.6V20"/><circle cx="13.5" cy="10.4" r="1"/><path d="M6 9c-.8.9-1.2 1.9-1.2 3s.4 2.1 1.2 3"/><path d="M3.6 7.2C2.6 8.6 2 10.4 2 12s.6 3.4 1.6 4.8"/></svg>Scriba</button></div></div><div class="grp-label">Apps</div></div>
     </div>
     <div class="rib-row" data-rib="insert">
@@ -405,6 +405,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
       <div class="grp"><div class="grp-tools"><button class="tb" id="readMode">Read mode</button></div><div class="grp-label">Views</div></div>
       <div class="grp"><div class="grp-tools grp-cols"><div class="grp-col"><button class="tb" id="zoomOut" title="Zoom out">&minus;</button><span id="zoomPct" style="font-size:12px;color:var(--ink-2);min-width:42px;text-align:center">100%</span><button class="tb" id="zoomIn" title="Zoom in">+</button></div><div class="grp-col"><button class="tb" id="zoomReset">Reset</button></div></div><div class="grp-label">Zoom</div></div>
       <div class="grp"><div class="grp-tools grp-cols"><div class="grp-col"><button class="tb" id="navPaneBtn">Navigation</button><label class="chk"><input type="checkbox" id="rulerChk"> Ruler</label></div></div><div class="grp-label">Show</div></div>
+    <div class="grp"><div class="grp-tools"><div class="grp-line" id="iwSlot"></div></div><div class="grp-label">Comfort</div></div>
     <div class="grp"><div class="grp-tools grp-cols"><div class="grp-col"><button class="tb" id="macroBtn">Macros <span class="tb-caret">▾</span></button></div></div><div class="grp-label">Macros</div></div></div>
   </div>
 
@@ -510,7 +511,8 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   bindColor('foreColor','foreBar','foreColor');bindColor('hiliteColor','hiliteBar','hiliteColor');
   $('lineSel').addEventListener('change',function(){var v=this.value;if(!v)return;var bl=selBlocks();if(bl.length)bl.forEach(function(b){b.style.lineHeight=v;});else editor.style.lineHeight=v;this.selectedIndex=0;editor.focus();layout();});
   function selBlocks(){var out=[],sel=window.getSelection();if(!sel||!sel.rangeCount)return out;var range=sel.getRangeAt(0);editor.querySelectorAll('p,h1,h2,h3,blockquote,li,div,td').forEach(function(b){try{if(range.intersectsNode(b))out.push(b);}catch(e){}});if(!out.length){var n=sel.anchorNode;while(n&&n!==editor&&!/^(P|H1|H2|H3|BLOCKQUOTE|LI|DIV|TD)$/.test(n.nodeName))n=n.parentNode;if(n&&n!==editor)out.push(n);}return out;}
-  $('findBtn').addEventListener('click',function(){modal('Find and replace','<input class="fld" id="findIn" placeholder="Find"><input class="fld" id="replIn" placeholder="Replace with"><button class="prim" id="doFind" style="margin-right:8px">Find next</button><button class="prim" id="doRepl">Replace all</button>');$('doFind').addEventListener('click',function(){var f=$('findIn').value;if(!f)return;closeModal();try{if(window.find)window.find(f);else alert('Find next is not available in this browser.');}catch(e){}});$('doRepl').addEventListener('click',function(){var f=$('findIn').value;if(!f)return;var rp=$('replIn').value;var w=document.createTreeWalker(editor,NodeFilter.SHOW_TEXT,null);var nodes=[],n;while((n=w.nextNode()))nodes.push(n);var flat='',map=[];nodes.forEach(function(t){map.push({node:t,start:flat.length});flat+=t.nodeValue;});if(!flat){closeModal();return;}var hits=[],from=0,at;while((at=flat.indexOf(f,from))!==-1){hits.push(at);from=at+f.length;}if(!hits.length){closeModal();layout();return;}function locate(pos){for(var i=map.length-1;i>=0;i--){if(map[i].start<=pos)return {node:map[i].node,off:pos-map[i].start};}return null;}hits.reverse().forEach(function(pos){var a=locate(pos),b2=locate(pos+f.length);if(!a||!b2)return;try{var r=document.createRange();r.setStart(a.node,a.off);r.setEnd(b2.node,b2.off);r.deleteContents();if(rp)r.insertNode(document.createTextNode(rp));}catch(e){}});editor.normalize();closeModal();layout();});});
+  $('findBtn').addEventListener('click',function(){if(window.tabFind)window.tabFind.open(false);});
+  if($('replBtn'))$('replBtn').addEventListener('click',function(){if(window.tabFind)window.tabFind.open(true);});
 
   // Insert
   $('insBlankPage').addEventListener('click',function(){run('insertHTML','<div class="pagebreak"></div><p><br></p>');});
@@ -739,7 +741,7 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   $('rulerChk').addEventListener('change',function(){$('ruler').classList.toggle('on',this.checked);});
   $('readMode').addEventListener('click',function(){document.body.classList.add('read');});
   $('exitRead').addEventListener('click',function(){document.body.classList.remove('read');});
-  $('navPaneBtn').addEventListener('click',function(){var np=$('navpane');if(np.classList.toggle('open'))buildNav();});
+  $('navPaneBtn').addEventListener('click',function(){if(window.tabFind){window.tabFind.toggle('heads');return;}var np=$('navpane');if(np.classList.toggle('open'))buildNav();});
   function buildNav(){var np=$('navpane');var heads=editor.querySelectorAll('h1,h2,h3');var h='<div class="np-h">Navigation</div>';if(!heads.length){h+='<div style="font-size:12px;color:#868d96">No headings yet.</div>';}var i=0;heads.forEach(function(hd){i++;var id=hd.id||('nv_'+i);hd.id=id;h+='<a class="'+(hd.tagName!=='H1'?'l2':'')+'" href="#'+id+'">'+E(hd.textContent||'Untitled')+'</a>';});np.innerHTML=h;}
 
   // ---- sticky notes (matched to the desk) ----
@@ -809,6 +811,8 @@ try{var mo=new MutationObserver(tick);mo.observe(document.documentElement,{attri
   function insertTracked(text){var sel=window.getSelection();if(!sel.rangeCount)return;var r=sel.getRangeAt(0);if(!r.collapsed){trackedDeleteRange(r);r=sel.getRangeAt(0);}var sc=r.startContainer;if(sc.nodeType===3&&sc.parentNode&&sc.parentNode.classList&&sc.parentNode.classList.contains('trk-ins')){sc.parentNode.appendChild(document.createTextNode(text));var rr=document.createRange();rr.selectNodeContents(sc.parentNode);rr.collapse(false);sel.removeAllRanges();sel.addRange(rr);}else{var ins=document.createElement('ins');ins.className='trk-ins';ins.textContent=text;r.insertNode(ins);var rr2=document.createRange();rr2.setStartAfter(ins);rr2.collapse(true);sel.removeAllRanges();sel.addRange(rr2);}}
   function trackedDelete(dir){var sel=window.getSelection();if(!sel.rangeCount)return;var r=sel.getRangeAt(0);if(!r.collapsed){trackedDeleteRange(r);return;}var range=r.cloneRange();try{if(dir==='back')range.setStart(range.startContainer,Math.max(0,range.startOffset-1));else range.setEnd(range.endContainer,range.endOffset+1);}catch(e){return;}if(range.collapsed)return;var sc=range.startContainer;if(sc.nodeType===3&&sc.parentNode&&sc.parentNode.classList&&sc.parentNode.classList.contains('trk-ins')){range.deleteContents();}else{var frag=range.extractContents();var del=document.createElement('del');del.className='trk-del';del.appendChild(frag);range.insertNode(del);range.setStartAfter(del);}range.collapse(true);sel.removeAllRanges();sel.addRange(range);}
   editor.addEventListener('beforeinput',function(e){if(!tracking)return;var t=e.inputType;if(t==='insertText'){e.preventDefault();if(e.data)insertTracked(e.data);layout();}else if(t==='insertReplacementText'||t==='insertFromPaste'){e.preventDefault();var d='';try{d=e.dataTransfer?e.dataTransfer.getData('text/plain'):'';}catch(x){}if(d)insertTracked(d);layout();}else if(t==='deleteContentBackward'){e.preventDefault();trackedDelete('back');layout();}else if(t==='deleteContentForward'){e.preventDefault();trackedDelete('forward');layout();}else if(t==='deleteByCut'){e.preventDefault();trackedDelete('selection');layout();}});
+  /* 7.44: Replace in the Navigation pane records a tracked change when tracking is on */
+  window.__tabTrk={on:function(){return tracking;},ins:insertTracked,swap:function(r,text){var frag=r.extractContents();var del=document.createElement('del');del.className='trk-del';del.appendChild(frag);del.querySelectorAll('ins.trk-ins').forEach(function(x){x.parentNode.removeChild(x);});if(del.textContent.length)r.insertNode(del);r.collapse(false);if(text){var ins=document.createElement('ins');ins.className='trk-ins';ins.textContent=text;r.insertNode(ins);}}};
   function changeAtCaret(){var sel=window.getSelection();if(!sel.rangeCount)return null;var n=sel.anchorNode;while(n&&n!==editor){if(n.nodeType===1&&n.classList&&(n.classList.contains('trk-ins')||n.classList.contains('trk-del')))return n;n=n.parentNode;}return null;}
   function acceptOne(){var c=changeAtCaret()||editor.querySelector('ins.trk-ins,del.trk-del');if(!c){alert('Put the cursor on a tracked change first.');return;}if(c.tagName==='INS')unwrap(c);else c.parentNode.removeChild(c);layout();}
   function rejectOne(){var c=changeAtCaret()||editor.querySelector('ins.trk-ins,del.trk-del');if(!c){alert('Put the cursor on a tracked change first.');return;}if(c.tagName==='INS')c.parentNode.removeChild(c);else unwrap(c);layout();}
@@ -1138,14 +1142,14 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
     var sep=document.createElement('div');sep.className='pg-sep';sep.style.top=y+'px';g.appendChild(sep);
     var lab=document.createElement('div');lab.className='pg-num';lab.style.top=y+'px';lab.textContent='Page '+(i+2);g.appendChild(lab);
   }
-  var n=seps.length+1;
+  var n=seps.length+1;window.__tabSeps=seps;
   try{var paper=document.querySelector('[data-panel="write"] .paper');if(paper)paper.style.minHeight=(top+editor.scrollHeight+120)+'px';}catch(e){}
   var text=editor.innerText||'';
   var words=(text.trim().match(/\S+/g)||[]).length;
   var chars=text.replace(/\s/g,'').length;
   $('wcWords').textContent=words+(words===1?' word':' words');
   $('wcChars').textContent=chars+' characters';
-  $('wcPages').textContent='Page 1 of '+n;}
+  $('wcPages').textContent=window.__tabPageNow?window.__tabPageNow(n):'Page 1 of '+n;}
   function syncState(){[['bold','b'],['italic','i'],['underline','u'],['strikeThrough','s']].forEach(function(p){var btn=document.querySelector('.tb.'+p[1]);if(!btn)return;try{btn.classList.toggle('on',document.queryCommandState(p[0]));}catch(e){}});}
   editor.addEventListener('keyup',function(){syncState();layout();});
   editor.addEventListener('mouseup',syncState);
@@ -1173,6 +1177,544 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
   layout();
 })();
 </script>
+<script>
+@@LIB_FIND_CORE@@
+</script>
+<style>
+  /* 7.44: the Navigation pane (search), raised like the rest of the app:
+     bevelled controls that lift under the pointer and press in */
+  .tf-pane{position:fixed;left:0;top:232px;bottom:40px;width:280px;display:none;flex-direction:column;z-index:300;
+    background:linear-gradient(180deg,#ffffff 0%,#f7f8fa 100%);border-right:1px solid var(--line-2);border-radius:0 16px 16px 0;
+    box-shadow:0 2px 4px rgba(31,35,41,.08),6px 0 18px rgba(31,35,41,.10),14px 0 40px rgba(31,35,41,.08),inset -1px 0 0 #fff;font-family:var(--ui);color:var(--ink);}
+  .tf-pane.open{display:flex;animation:tfIn .32s cubic-bezier(.2,1.4,.35,1) both;}
+  @keyframes tfIn{from{opacity:0;transform:translateX(-14px);}to{opacity:1;transform:none;}}
+  .tf-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px;font-size:12.5px;font-weight:700;letter-spacing:.02em;}
+  .tf-in{display:flex;align-items:center;gap:6px;margin:0 12px;border:1px solid var(--line-2);border-radius:11px;padding:0 9px;background:#fff;
+    box-shadow:inset 0 2px 4px rgba(31,35,41,.08),0 1px 0 #fff;}
+  .tf-in:focus-within{border-color:#2f6fb0;box-shadow:inset 0 2px 4px rgba(31,35,41,.08),0 0 0 3px rgba(47,111,176,.18);}
+  .tf-in svg{flex:0 0 auto;color:var(--ink-2);}
+  .tf-in input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:13.5px;color:var(--ink);padding:8px 0;}
+  .tf-nav{display:flex;align-items:center;gap:6px;margin:9px 12px 2px;min-height:28px;}
+  .tf-count{flex:1;font-size:12.5px;color:var(--ink-2);}
+  .tf-head button,.tf-nav button,.tf-act,.tf-tabs button,.tf-chip{position:relative;cursor:pointer;font:inherit;color:var(--ink);
+    border:1px solid #cfd5dc;background:linear-gradient(180deg,#ffffff 0%,#eef1f4 100%);
+    box-shadow:0 1px 0 rgba(31,35,41,.22),0 2px 4px rgba(31,35,41,.12),0 5px 10px rgba(31,35,41,.08),inset 0 1px 0 #fff,inset 0 -2px 3px rgba(31,35,41,.05);
+    transition:transform .15s cubic-bezier(.2,1.4,.35,1),box-shadow .15s;}
+  .tf-head button:hover,.tf-nav button:hover:not(:disabled),.tf-act:hover:not(:disabled),.tf-chip:hover,.tf-tabs button[aria-selected="false"]:hover{transform:translateY(-2px);
+    box-shadow:0 1px 0 rgba(31,35,41,.24),0 4px 8px rgba(31,35,41,.15),0 9px 18px rgba(31,35,41,.10),inset 0 1px 0 #fff,inset 0 -2px 3px rgba(31,35,41,.05);}
+  .tf-head button:active,.tf-nav button:active:not(:disabled),.tf-act:active:not(:disabled),.tf-chip:active{transform:translateY(1px) scale(.97);
+    box-shadow:0 1px 1px rgba(31,35,41,.10),inset 0 2px 5px rgba(31,35,41,.16);transition-duration:.04s;}
+  .tf-head button{width:28px;height:28px;border-radius:50%;padding:0;font-size:16px;line-height:1;color:var(--ink-2);}
+  .tf-nav button{width:32px;height:28px;border-radius:9px;padding:0;font-size:12px;}
+  .tf-act{border-radius:10px;font-size:12.5px;font-weight:600;padding:6px 12px;line-height:1.2;}
+  .tf-nav button:disabled,.tf-act:disabled{opacity:.5;cursor:default;}
+  .tf-opts{display:flex;flex-wrap:wrap;gap:4px 12px;margin:7px 12px 0;font-size:12px;color:var(--ink-2);}
+  .tf-opts label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;}
+  .tf-links{display:flex;gap:12px;margin:9px 12px 0;flex-wrap:wrap;}
+  .tf-link{border:0;background:transparent;padding:0;font:inherit;font-size:12.5px;color:#1f5f86;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .tf-repl{margin:8px 12px 0;display:flex;flex-direction:column;gap:7px;}
+  .tf-repl[hidden],.tf-opts[hidden]{display:none;}
+  .tf-repl input{border:1px solid var(--line-2);border-radius:11px;padding:7px 9px;font:inherit;font-size:13.5px;color:var(--ink);background:#fff;box-shadow:inset 0 2px 4px rgba(31,35,41,.08);}
+  .tf-repl input:focus{outline:0;border-color:#2f6fb0;box-shadow:inset 0 2px 4px rgba(31,35,41,.08),0 0 0 3px rgba(47,111,176,.18);}
+  .tf-rb{display:flex;gap:7px;}
+  .tf-msg{font-size:12px;color:var(--ink-2);min-height:16px;}
+  .tf-tabs{display:flex;gap:4px;margin:11px 12px 0;padding:3px;border-radius:12px;background:#e7eaee;box-shadow:inset 0 2px 4px rgba(31,35,41,.12),inset 0 -1px 0 #fff;}
+  .tf-tabs button{flex:1;border-color:transparent;background:transparent;box-shadow:none;border-radius:9px;padding:5px 0;font-size:12.5px;color:var(--ink-2);}
+  .tf-tabs button[aria-selected="true"]{border-color:#cfd5dc;background:linear-gradient(180deg,#ffffff,#f3f5f7);color:var(--ink);font-weight:700;
+    box-shadow:0 1px 0 rgba(31,35,41,.20),0 2px 5px rgba(31,35,41,.12),inset 0 1px 0 #fff;}
+  .tf-list[hidden]{display:none;}
+  .tf-hd{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;border:1px solid transparent;border-radius:10px;background:transparent;cursor:pointer;padding:6px 8px;margin:2px 0;font:inherit;font-size:13px;color:var(--ink);transition:transform .14s cubic-bezier(.2,1.4,.35,1),box-shadow .14s,background-color .14s;}
+  .tf-hd:hover{background:#fff;border-color:#dde2e8;transform:translateY(-1px);box-shadow:0 1px 0 rgba(31,35,41,.12),0 3px 8px rgba(31,35,41,.08);}
+  .tf-hd.l1{font-weight:600;}
+  .tf-hd.l2{padding-left:19px;}
+  .tf-hd.l3{padding-left:31px;font-size:12.5px;color:var(--ink-2);}
+  .tf-hd.l4{padding-left:43px;font-size:12.5px;color:var(--ink-2);}
+  .tf-hd .tf-ht{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tf-hd .tf-hp{flex:0 0 auto;font-size:11px;color:var(--ink-2);}
+  .tf-hd.on{border-color:#2f6fb0;background:linear-gradient(180deg,#f3f8fd,#e8f1fa);box-shadow:0 1px 0 rgba(31,35,41,.12),0 3px 8px rgba(47,111,176,.14),inset 0 1px 0 #fff;}
+  .tf-hd.on .tf-ht::after{content:'  \00b7  you are here';font-weight:400;font-size:11px;color:#1f5f86;}
+  .tf-recent{display:flex;flex-wrap:wrap;gap:6px;margin:9px 12px 0;}
+  .tf-recent:empty{display:none;}
+  .tf-chip{border-radius:999px;padding:3px 10px;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tf-list{flex:1;overflow:auto;margin-top:9px;border-top:1px solid var(--line);padding:6px 8px 12px;}
+  .tf-list:empty{border-top:0;}
+  .tf-row{display:block;width:100%;text-align:left;border:1px solid #e1e5ea;border-radius:12px;cursor:pointer;padding:7px 9px;margin:0 0 6px;font:inherit;color:var(--ink);
+    background:linear-gradient(180deg,#ffffff,#fafbfc);box-shadow:0 1px 0 rgba(31,35,41,.10),0 2px 5px rgba(31,35,41,.07),inset 0 1px 0 #fff;
+    transition:transform .14s cubic-bezier(.2,1.4,.35,1),box-shadow .14s;}
+  .tf-row:hover{transform:translateY(-1px);box-shadow:0 1px 0 rgba(31,35,41,.12),0 4px 10px rgba(31,35,41,.10),inset 0 1px 0 #fff;}
+  .tf-row.on{border-color:#e39a2d;background:linear-gradient(180deg,#fffaf1,#fff1dc);box-shadow:0 0 0 1px rgba(227,154,45,.45),0 3px 9px rgba(227,154,45,.18),inset 0 1px 0 #fff;}
+  .tf-pg{display:block;font-size:11px;color:var(--ink-2);margin-bottom:1px;letter-spacing:.01em;}
+  .tf-ctx{display:block;font-family:var(--serif);font-size:13px;line-height:1.4;color:var(--ink);overflow-wrap:anywhere;}
+  .tf-ctx b{background:#ffe9a8;color:#1f2329;border-radius:3px;padding:0 2px;font-weight:700;box-shadow:0 1px 0 rgba(31,35,41,.10);}
+  .tf-row.on .tf-ctx b{background:#f6a53b;}
+  .tf-more{display:block;margin:8px auto 4px;}
+  .tf-help{font-size:12px;color:var(--ink-2);line-height:1.5;padding:10px 8px;}
+  ::highlight(tf-all){background-color:#ffe9a8;color:#1f2329;}
+  ::highlight(tf-cur){background-color:#f6a53b;color:#1f2329;}
+  .tf-box{position:absolute;pointer-events:none;background:rgba(246,165,59,.45);border-radius:2px;z-index:5;}
+  body.tf-sheet .tf-pane{top:auto !important;left:0;right:0;width:auto;max-height:58vh;border-right:0;border-top:1px solid var(--line-2);box-shadow:0 -6px 18px rgba(31,35,41,.10);border-radius:12px 12px 0 0;}
+  html.cd-dark .tf-pane{background:linear-gradient(180deg,#1c2733 0%,#17202a 100%);border-color:#334050;box-shadow:0 2px 4px #0008,6px 0 18px #0009,14px 0 40px #0007;}
+  html.cd-dark .tf-in,html.cd-dark .tf-repl input{background:#121a22;border-color:#3a4859;color:#f2f5f8;box-shadow:inset 0 2px 4px #000a;}
+  html.cd-dark .tf-head button,html.cd-dark .tf-nav button,html.cd-dark .tf-act,html.cd-dark .tf-chip,html.cd-dark .tf-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#2c3947,#1f2934);border-color:#3d4c5e;color:#f2f5f8;
+    box-shadow:0 1px 0 #000a,0 2px 4px #0009,0 5px 10px #0007,inset 0 1px 0 rgba(255,255,255,.10),inset 0 -2px 3px #0006;}
+  html.cd-dark .tf-tabs{background:#121a22;box-shadow:inset 0 2px 4px #000b;}
+  html.cd-dark .tf-tabs button{color:#cfd5dc;}
+  html.cd-dark .tf-link{color:#8cc2ff;}
+  html.cd-dark .tf-row{background:linear-gradient(180deg,#1f2a36,#1a232e);border-color:#334050;box-shadow:0 1px 0 #000a,0 2px 5px #0007;}
+  html.cd-dark .tf-row.on{border-color:#f2b04c;background:linear-gradient(180deg,#2e2a1e,#26231a);box-shadow:0 0 0 1px rgba(242,176,76,.45),0 3px 9px #0008;}
+  html.cd-dark .tf-hd:hover{background:#1f2a36;border-color:#334050;}
+  html.cd-dark .tf-hd.on{border-color:#8cc2ff;background:linear-gradient(180deg,#1f2e40,#1a2736);}
+  html.cd-dark .tf-hd.on .tf-ht::after{color:#8cc2ff;}
+  html.cd-dark .tf-ctx b{background:#6b5a26;color:#fff7e0;}
+  html.cd-dark .tf-row.on .tf-ctx b{background:#f2b04c;color:#111;}
+  html.cd-dark .tf-pg,html.cd-dark .tf-hd .tf-hp{color:#cfd5dc;}
+  html.cd-dark ::highlight(tf-all){background-color:#5d5124;color:#fff7e0;}
+  html.cd-dark ::highlight(tf-cur){background-color:#f2b04c;color:#111;}
+  html.iw-quiet .tf-pane.open{animation:none;}
+  html.iw-quiet .tf-pane button:hover,html.iw-quiet .tf-row:hover,html.iw-quiet .tf-hd:hover{transform:none;}
+  @media (prefers-reduced-motion:reduce){.tf-pane.open{animation:none;}.tf-pane button,.tf-row,.tf-hd{transition:none;}}
+  /* inside Inkwell the side buttons stand at the right edge */
+  body.tf-sheet.tf-framed .tf-pane{right:64px;}
+  /* a footnote's number was the dark ribbon colour on the night page */
+  html.cd-dark .editor sup.fn-ref{color:#8cc2ff;}
+</style>
+<script>(function(){
+/* 7.44: search the document as Word does. Ctrl+F (Cmd+F on a Mac) opens the
+   Navigation pane: every result is lit in the text and listed with its page
+   and the words around it; Enter and Shift+Enter (or the arrows, F3, Cmd+G)
+   go from the cursor to the next and the previous; Esc closes it and leaves
+   the result selected. Replace and Replace all, recorded as tracked changes
+   when tracking is on; Replace all is undone in one step. The text is read
+   once and again only after an edit, so a thesis of 100,000 words is
+   searched as you type. Footnotes and endnotes are searched too. */
+var F=window.INKFIND,ed=document.getElementById('editor');
+if(!F||!ed)return;
+function $(id){return document.getElementById(id);}
+function E(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var MAC=/Mac|iPhone|iPad|iPod/.test(navigator.platform||'');
+var HL=(window.CSS&&CSS.highlights&&typeof window.Highlight==='function')?CSS.highlights:null;
+var ST=typeof window.StaticRange==='function'?window.StaticRange:null;
+var LIMIT=50000,LIT=2000,BATCH=100,PANE_W=280;
+var NAMES=['','Footnote','Endnote','Bibliography'];
+var st={tab:'results',q:'',o:{matchCase:false,wholeWord:false,ignoreAccents:false},ix:null,fk:'',folded:'',m:[],cur:-1,lit:false,dirty:true,lo:0,hi:0,open:false,home:null,undo:null,timer:null,recent:[]};
+try{var sv=JSON.parse(localStorage.getItem('tabula_find')||'null');if(sv){st.o.matchCase=!!sv.mc;st.o.wholeWord=!!sv.ww;st.o.ignoreAccents=!!sv.ia;st.recent=(sv.recent||[]).slice(0,6);}}catch(e){}
+function keep(){try{localStorage.setItem('tabula_find',JSON.stringify({mc:st.o.matchCase,ww:st.o.wholeWord,ia:st.o.ignoreAccents,recent:st.recent}));}catch(e){}}
+function roots(){return [ed,$('footnotes'),$('endnotes'),$('biblio')];}
+function inRoots(n){var R=roots();for(var i=0;i<R.length;i++)if(R[i]&&n&&R[i].contains(n))return true;return false;}
+
+var pane=document.createElement('aside');
+pane.id='tfPane';pane.className='tf-pane';pane.setAttribute('role','search');pane.setAttribute('aria-label','Search the document');
+pane.innerHTML='<div class="tf-head"><span>Navigation</span><button type="button" id="tfClose" title="Close (Esc)" aria-label="Close the search">×</button></div>'
+ +'<div class="tf-in"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.5 10.5 14 14"/></svg>'
+ +'<input id="tfQ" type="text" placeholder="Search document" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search document" aria-describedby="tfCount"></div>'
+ +'<div class="tf-nav"><span class="tf-count" id="tfCount" aria-live="polite"></span>'
+ +'<button type="button" id="tfPrev" title="Previous result (Shift+Enter)" aria-label="Previous result">▲</button><button type="button" id="tfNext" title="Next result (Enter)" aria-label="Next result">▼</button></div>'
+ +'<div class="tf-opts"><label><input type="checkbox" id="tfMC"> Match case</label><label><input type="checkbox" id="tfWW"> Whole words only</label><label><input type="checkbox" id="tfIA"> Ignore accents</label></div>'
+ +'<div class="tf-links"><button type="button" class="tf-link" id="tfReplTog" aria-expanded="false">Replace…</button><button type="button" class="tf-link" id="tfHome" hidden>Back to where I was</button></div>'
+ +'<div class="tf-repl" id="tfRepl" hidden><input id="tfR" type="text" placeholder="Replace with" autocomplete="off" spellcheck="false" aria-label="Replace with">'
+ +'<div class="tf-rb"><button type="button" class="tf-act" id="tfR1" title="Replace this result and go to the next">Replace</button><button type="button" class="tf-act" id="tfRA">Replace all</button></div><div class="tf-msg" id="tfMsg" aria-live="polite"></div></div>'
+ +'<div class="tf-tabs" role="tablist"><button type="button" role="tab" id="tfTabH" aria-selected="false">Headings</button><button type="button" role="tab" id="tfTabR" aria-selected="true">Results</button></div>'
+ +'<div class="tf-recent" id="tfRecent"></div><div class="tf-list" id="tfList" role="tabpanel"></div><div class="tf-list" id="tfHeads" role="tabpanel" hidden></div>';
+document.body.appendChild(pane);
+var boxes=document.createElement('div');boxes.id='tfBoxes';document.body.appendChild(boxes);
+try{if(window.parent&&window.parent!==window)document.body.classList.add('tf-framed');}catch(e){}
+$('tfMC').checked=st.o.matchCase;$('tfWW').checked=st.o.wholeWord;$('tfIA').checked=st.o.ignoreAccents;
+
+/* where the pane sits: under the ribbon, above the counter bar; beside the
+   page when there is room, else as a sheet at the bottom */
+function place(full){
+  if(!st.open)return;
+  var tabs=document.querySelector('.tabs')||document.querySelector('.ribbon');
+  var top=tabs?Math.max(0,tabs.getBoundingClientRect().bottom):0;
+  var sb=document.querySelector('.statusbar'),bot=0;
+  if(sb){var r=sb.getBoundingClientRect();if(r.height&&getComputedStyle(sb).display!=='none'&&r.top<innerHeight)bot=Math.max(0,innerHeight-r.top);}
+  if(full){
+    var paper=document.querySelector('.paper'),pw=paper?paper.offsetWidth:720;
+    var sheet=innerWidth-PANE_W<pw+24;
+    document.body.classList.toggle('tf-sheet',sheet);
+    var cv=document.querySelector('.canvas'),pad=(!sheet&&innerWidth<pw+2*PANE_W+24)?PANE_W+'px':'';
+    if(cv&&cv.style.paddingLeft!==pad){cv.style.paddingLeft=pad;try{if(window.cdScheduleLayout)window.cdScheduleLayout(0);}catch(e){}}
+  }
+  var sh=document.body.classList.contains('tf-sheet');
+  pane.style.top=sh?'':top+'px';pane.style.bottom=bot+'px';
+}
+function chromeTop(){var t=document.querySelector('.tabs');return t?Math.max(0,t.getBoundingClientRect().bottom):0;}
+function viewBottom(){var b=innerHeight;var sb=document.querySelector('.statusbar');if(sb){var r=sb.getBoundingClientRect();if(r.height&&r.top<b)b=r.top;}if(st.open&&document.body.classList.contains('tf-sheet')){var p=pane.getBoundingClientRect();if(p.top<b)b=p.top;}return b;}
+
+function ensure(){
+  if(st.dirty||!st.ix){st.ix=F.index(roots(),{skip:F.SKIP+',.fn>sup,#footnotes>.h,#endnotes>.h'});st.dirty=false;st.fk='';st.pos=null;}
+  var k=(st.o.matchCase?'1':'0')+(st.o.ignoreAccents?'1':'0');
+  if(st.fk!==k){st.folded=F.fold(st.ix.text,st.o);st.fk=k;}
+}
+function posOf(node,off){
+  if(!node)return 0;
+  if(!st.pos){st.pos=new Map();for(var i=0;i<st.ix.nodes.length;i++)st.pos.set(st.ix.nodes[i],i);}
+  if(node.nodeType!==3){
+    var c=node.childNodes[off]||null,w=document.createTreeWalker(ed,NodeFilter.SHOW_TEXT,null);
+    if(c){w.currentNode=c;node=c.nodeType===3?c:w.nextNode();}else{w.currentNode=node;var nx=null;try{nx=w.nextNode();}catch(e){}node=nx;}
+    off=0;
+    while(node&&!st.pos.has(node)){node=w.nextNode();}
+    if(!node)return st.ix.text.length;
+  }
+  var k=st.pos.get(node);
+  return k==null?0:st.ix.starts[k]+Math.min(off,node.nodeValue.length);
+}
+function homePos(){try{return st.home?posOf(st.home.startContainer,st.home.startOffset):0;}catch(e){return 0;}}
+function firstFrom(p){var m=st.m,lo=0,hi=m.length;while(lo<hi){var md=(lo+hi)>>1;if(m[md][0]<p)lo=md+1;else hi=md;}return lo<m.length?lo:0;}
+
+function run(keepAt){
+  var q=$('tfQ').value;st.q=q;
+  clearTimeout(st.timer);st.timer=null;
+  if(!q){st.m=[];st.cur=-1;st.lit=false;paintAll();paintCur();list();count();recent();return;}
+  ensure();
+  st.m=F.find(st.ix.text,q,{matchCase:st.o.matchCase,wholeWord:st.o.wholeWord,ignoreAccents:st.o.ignoreAccents,folded:st.folded,limit:LIMIT});
+  if(!st.m.length){st.cur=-1;st.lit=false;}
+  else if(keepAt!=null){st.cur=firstFrom(keepAt);}
+  else{st.cur=-1;st.lit=false;}
+  paintAll();paintCur();list(keepAt!=null);count();recent();
+}
+function count(){
+  var c=$('tfCount'),n=st.m.length;
+  $('tfPrev').disabled=$('tfNext').disabled=!n;
+  if(!st.q){c.textContent='';return;}
+  if(!n){c.textContent='No results';return;}
+  var tot=n>=LIMIT?'more than '+LIMIT.toLocaleString():n.toLocaleString();
+  c.textContent=(st.lit&&st.cur>=0)?'Result '+(st.cur+1).toLocaleString()+' of '+tot+(st.wrap&&st.m.length>1?(st.cur===0?' (from the top again)':' (from the end again)'):''):(n>=LIMIT?'More than '+LIMIT.toLocaleString()+' results':tot+(n===1?' result':' results'));
+}
+/* every result is lit; past two thousand (a word like "the"), the two
+   thousand around the current one, so scrolling stays smooth */
+function paintAll(){
+  if(!HL)return;
+  try{
+    if(!st.open||!st.m.length){HL.delete('tf-all');st.pa=st.pb=0;return;}
+    var n=st.m.length,a=0,b=n;
+    if(n>LIT){var c=st.lit&&st.cur>=0?st.cur:firstFrom(homePos());a=Math.max(0,Math.min(n-LIT,c-LIT/2));b=a+LIT;}
+    var h=new Highlight();
+    for(var i=a;i<b;i++){var r=F.range(st.ix,st.m[i][0],st.m[i][1],ST);if(r)h.add(r);}
+    HL.set('tf-all',h);st.pa=a;st.pb=b;
+  }catch(e){}
+}
+function paintCur(){
+  boxes.innerHTML='';
+  var ok=st.open&&st.lit&&st.cur>=0&&st.m[st.cur];
+  if(HL){try{if(!ok){HL.delete('tf-cur');return;}var h=new Highlight();h.priority=1;var r=F.range(st.ix,st.m[st.cur][0],st.m[st.cur][1],ST);if(r)h.add(r);HL.set('tf-cur',h);}catch(e){}return;}
+  if(!ok)return;
+  var lr=F.range(st.ix,st.m[st.cur][0],st.m[st.cur][1]);if(!lr)return;
+  var rs=lr.getClientRects();
+  for(var i=0;i<rs.length;i++){var b=document.createElement('div');b.className='tf-box';b.style.left=(rs[i].left+scrollX)+'px';b.style.top=(rs[i].top+scrollY)+'px';b.style.width=rs[i].width+'px';b.style.height=rs[i].height+'px';boxes.appendChild(b);}
+}
+/* the page a result is on, as the page guides draw it, or its note */
+function where(i){
+  var a=F.nodeAt(st.ix,st.m[i][0],false);if(!a)return '';
+  var ow=st.ix.owner[a.k];
+  if(ow>0){
+    if(ow===3)return NAMES[3];
+    var fn=a.node.parentNode&&a.node.parentNode.closest?a.node.parentNode.closest('.fn'):null,sup=fn&&fn.querySelector('sup');
+    return NAMES[ow]+(sup?' '+sup.textContent.trim():'');
+  }
+  var r=F.range(st.ix,st.m[i][0],st.m[i][1]);if(!r)return '';
+  var y=r.getBoundingClientRect().top-ed.getBoundingClientRect().top;
+  var seps=window.__tabSeps||[],p=1;
+  for(var j=0;j<seps.length;j++){if(seps[j]<=y)p=j+2;else break;}
+  return 'Page '+p;
+}
+function rowHTML(i){
+  var c=F.context(st.ix.text,st.m[i][0],st.m[i][1]);
+  return '<button type="button" class="tf-row'+(st.lit&&i===st.cur?' on':'')+'" data-i="'+i+'" role="listitem"><span class="tf-pg">'+E(where(i))+'</span><span class="tf-ctx">'+E(c.pre)+'<b>'+E(c.hit)+'</b>'+E(c.post)+'</span></button>';
+}
+/* the list holds a hundred results at a time, around the current one */
+function list(keepScroll){
+  var L=$('tfList'),top=L.scrollTop,n=st.m.length;
+  if(!st.q){L.innerHTML='<div class="tf-help">Type a word or phrase. Every result is lit on the page and listed here with its page. Enter goes to the next, Shift+Enter to the one before.</div>';st.lo=st.hi=0;return;}
+  if(!n){L.innerHTML='<div class="tf-help">Nothing matches \u201c'+E(st.q)+'\u201d'+(st.o.matchCase||st.o.wholeWord||st.o.ignoreAccents?' with these options':'')+'.</div>';st.lo=st.hi=0;return;}
+  var c=st.lit&&st.cur>=0?st.cur:0;
+  if(!keepScroll||c<st.lo||c>=st.hi||st.hi>n){st.lo=Math.floor(c/BATCH)*BATCH;st.hi=Math.min(n,st.lo+BATCH);keepScroll=false;}
+  var h=[];
+  if(st.lo>0)h.push('<button type="button" class="tf-act tf-more" id="tfLess">Show '+Math.min(BATCH,st.lo)+' earlier</button>');
+  for(var i=st.lo;i<st.hi;i++)h.push(rowHTML(i));
+  if(st.hi<n)h.push('<button type="button" class="tf-act tf-more" id="tfMore">Show '+Math.min(BATCH,n-st.hi)+' more</button>');
+  L.innerHTML=h.join('');
+  if(keepScroll)L.scrollTop=top;
+}
+function more(){
+  var b=$('tfMore');if(!b)return;
+  var to=Math.min(st.m.length,st.hi+BATCH),h=[];
+  for(var i=st.hi;i<to;i++)h.push(rowHTML(i));
+  b.insertAdjacentHTML('beforebegin',h.join(''));st.hi=to;
+  if(to>=st.m.length)b.remove();else b.textContent='Show '+Math.min(BATCH,st.m.length-to)+' more';
+}
+function less(){
+  var b=$('tfLess');if(!b)return;
+  var L=$('tfList'),from=Math.max(0,st.lo-BATCH),h=[],first=b.nextElementSibling,y=first?first.getBoundingClientRect().top:0;
+  for(var i=from;i<st.lo;i++)h.push(rowHTML(i));
+  b.insertAdjacentHTML('afterend',h.join(''));st.lo=from;
+  if(first)L.scrollTop+=first.getBoundingClientRect().top-y;
+  if(from<=0)b.remove();else b.textContent='Show '+Math.min(BATCH,from)+' earlier';
+}
+function rowOn(){
+  var L=$('tfList'),o=L.querySelector('.tf-row.on');if(o)o.classList.remove('on');
+  if(!st.lit||st.cur<0)return;
+  if(st.cur<st.lo||st.cur>=st.hi)list(false);
+  var r=L.querySelector('.tf-row[data-i="'+st.cur+'"]');
+  if(r){r.classList.add('on');var lr=L.getBoundingClientRect(),rr=r.getBoundingClientRect();if(rr.top<lr.top||rr.bottom>lr.bottom)r.scrollIntoView({block:'nearest'});}
+}
+/* go to result i: lit, scrolled to a third of the way down the view */
+function go(i){
+  if(st.dirty){run(st.m[st.cur]?st.m[st.cur][0]:homePos());}
+  if(!st.m.length)return;
+  st.cur=((i%st.m.length)+st.m.length)%st.m.length;st.lit=true;
+  var r=F.range(st.ix,st.m[st.cur][0],st.m[st.cur][1]);
+  if(r){
+    var rc=r.getBoundingClientRect(),top=chromeTop(),bot=viewBottom();
+    if(rc.top<top+24||rc.bottom>bot-24)window.scrollBy(0,rc.top-(top+(bot-top)/3));
+  }
+  if(st.m.length>LIT&&(st.cur<st.pa+LIT/4||st.cur>=st.pb-LIT/4))paintAll();
+  paintCur();rowOn();count();
+  $('tfHome').hidden=!st.home;
+}
+function step(d){
+  if(!st.q)return;
+  if(st.dirty||!st.ix)run(null);
+  if(!st.m.length)return;
+  var to;
+  if(!st.lit||st.cur<0){var hp=homePos(),f=firstFrom(hp);to=d>0?f:f-1;st.wrap=(d>0&&st.m[f][0]<hp)||to<0;}
+  else{to=st.cur+d;st.wrap=to<0||to>=st.m.length;}
+  go(to);
+}
+function recent(){
+  var R=$('tfRecent');
+  if(st.q){R.innerHTML='';return;}
+  R.innerHTML=st.recent.map(function(q){return '<button type="button" class="tf-chip" data-q="'+E(q)+'" title="Search for this again">'+E(q)+'</button>';}).join('');
+}
+function remember(){
+  var q=st.q.trim();if(!q||!st.m.length)return;
+  st.recent=[q].concat(st.recent.filter(function(x){return x!==q;})).slice(0,6);keep();
+}
+/* the Headings tab: the document's outline, with its pages, and the heading
+   you are under marked; a press takes you there */
+var HEADS='h1,h2,h3,h4';
+function pageOfY(y){var seps=window.__tabSeps||[],p=1;for(var j=0;j<seps.length;j++){if(seps[j]<=y)p=j+2;else break;}return p;}
+function heads(){
+  var H=$('tfHeads'),hs=ed.querySelectorAll(HEADS),et=ed.getBoundingClientRect().top,h=[];
+  st.hs=hs;
+  if(!hs.length){H.innerHTML='<div class="tf-help">No headings yet. Give a chapter or a section a heading (Home, Styles: Heading 1, 2 or 3) and it appears here, so you can go straight to it.</div>';return;}
+  for(var i=0;i<hs.length;i++){var e=hs[i],lv=+e.tagName.slice(1),t=(e.textContent||'').trim()||'Untitled';
+    h.push('<button type="button" class="tf-hd l'+lv+'" data-h="'+i+'" title="'+E(t)+'"><span class="tf-ht">'+E(t)+'</span><span class="tf-hp">p. '+pageOfY(e.getBoundingClientRect().top-et)+'</span></button>');}
+  H.innerHTML=h.join('');headOn();
+}
+function headOn(){
+  if(st.tab!=='heads'||!st.hs||!st.hs.length)return;
+  var y=chromeTop()+(viewBottom()-chromeTop())/3,k=-1;
+  for(var i=0;i<st.hs.length;i++){if(st.hs[i].getBoundingClientRect().top<=y)k=i;else break;}
+  var H=$('tfHeads'),o=H.querySelector('.tf-hd.on');if(o)o.classList.remove('on');
+  var b=k>=0?H.querySelector('.tf-hd[data-h="'+k+'"]'):null;
+  if(b){b.classList.add('on');var lr=H.getBoundingClientRect(),rr=b.getBoundingClientRect();if(rr.top<lr.top||rr.bottom>lr.bottom)b.scrollIntoView({block:'nearest'});}
+}
+function goHead(i){
+  var e=st.hs&&st.hs[i];if(!e||!e.isConnected){heads();e=st.hs&&st.hs[i];if(!e)return;}
+  var rc=e.getBoundingClientRect(),top=chromeTop();
+  window.scrollBy(0,rc.top-top-24);
+  try{var r=document.createRange();r.selectNodeContents(e);r.collapse(true);st.home=r;}catch(x){}
+  setTimeout(headOn,60);
+}
+function tab(t){
+  st.tab=t;
+  $('tfTabH').setAttribute('aria-selected',t==='heads'?'true':'false');$('tfTabR').setAttribute('aria-selected',t==='heads'?'false':'true');
+  $('tfHeads').hidden=t!=='heads';$('tfList').hidden=t==='heads';$('tfRecent').hidden=t==='heads';
+  if(t==='heads')heads();
+}
+function select(r){try{var s=getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}}
+function open(rep,which){
+  var s=getSelection(),pick='',was=st.open;
+  if(!was){
+    st.home=null;st.lit=false;
+    if(s&&s.rangeCount&&inRoots(s.anchorNode)){st.home=s.getRangeAt(0).cloneRange();if(!s.isCollapsed)pick=String(s).trim();}
+  }
+  st.open=true;pane.classList.add('open');document.body.classList.add('tf-on');place(true);
+  if(rep)repl(true);
+  tab(which==='heads'?'heads':'results');
+  var q=$('tfQ');
+  if(pick&&pick.length<=80&&!/\n/.test(pick))q.value=pick;
+  q.focus();q.select();
+  if(!was||st.dirty||q.value!==st.q)run(null);else{paintAll();paintCur();count();}
+  if(pick&&st.m.length)step(1);
+}
+function close(){
+  if(!st.open)return;
+  remember();
+  st.open=false;pane.classList.remove('open');document.body.classList.remove('tf-on','tf-sheet');
+  var cv=document.querySelector('.canvas');if(cv&&cv.style.paddingLeft){cv.style.paddingLeft='';try{if(window.cdScheduleLayout)window.cdScheduleLayout(0);}catch(e){}}
+  var r=(st.lit&&st.cur>=0&&st.m[st.cur]&&!st.dirty)?F.range(st.ix,st.m[st.cur][0],st.m[st.cur][1]):null;
+  paintAll();paintCur();
+  try{ed.focus({preventScroll:true});}catch(e){ed.focus();}
+  if(r)select(r);else if(st.home)select(st.home);
+}
+function backHome(){
+  if(!st.home)return;
+  st.lit=false;paintCur();rowOn();count();
+  var r=st.home,rc=r.getBoundingClientRect(),top=chromeTop(),bot=viewBottom();
+  if(!rc.height&&r.startContainer.nodeType===1&&r.startContainer.getBoundingClientRect)rc=r.startContainer.getBoundingClientRect();
+  if(rc.top<top+24||rc.bottom>bot-24)window.scrollBy(0,rc.top-(top+(bot-top)/3));
+  $('tfHome').hidden=true;
+}
+function repl(on){var b=$('tfRepl');b.hidden=!on;$('tfReplTog').setAttribute('aria-expanded',on?'true':'false');$('tfReplTog').textContent=on?'Hide Replace':'Replace…';if(on)$('tfMsg').textContent='';}
+function poke(){try{ed.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}}
+function snap(){return roots().map(function(x){return x?x.innerHTML:null;});}
+function replaceOne(){
+  if(!st.q)return;
+  if(st.dirty)run(st.m[st.cur]?st.m[st.cur][0]:homePos());
+  if(!st.m.length){$('tfMsg').textContent='Nothing to replace.';return;}
+  if(!st.lit||st.cur<0){step(1);return;}
+  var mm=st.m[st.cur],r=F.range(st.ix,mm[0],mm[1]),rep=$('tfR').value,T=window.__tabTrk;
+  if(!r)return;
+  if(T&&T.on()){T.swap(r,rep);poke();}
+  else{
+    /* in the text, the browser's own edit, so Ctrl+Z undoes it; where the
+       text cannot be edited in place (the notes' list), the words directly */
+    var pe=r.startContainer.parentElement,host=pe&&pe.closest('[contenteditable="true"]');
+    if(host&&host.isContentEditable){
+      try{host.focus({preventScroll:true});}catch(e){host.focus();}
+      select(r);try{document.execCommand(rep?'insertText':'delete',false,rep);}catch(e){}
+    }else{F.replaceAll(st.ix,[mm],rep);poke();}
+  }
+  st.undo=null;
+  st.dirty=true;run(mm[0]+rep.length);
+  if(st.m.length)go(st.cur);else{st.lit=false;count();}
+  $('tfMsg').textContent='Replaced one.';
+  $('tfR').focus();
+}
+function replaceAll(){
+  if(!st.q)return;
+  if(st.dirty)run(null);
+  if(!st.m.length){$('tfMsg').textContent='Nothing to replace.';return;}
+  var rep=$('tfR').value,T=window.__tabTrk,before=snap(),t0=Date.now();
+  var n=F.replaceAll(st.ix,st.m,rep,T&&T.on()?{track:function(r,t){T.swap(r,t);}}:null);
+  poke();
+  st.undo={before:before,after:snap()};
+  st.dirty=true;remember();run(null);
+  var msg=$('tfMsg');
+  msg.innerHTML='Replaced '+n.toLocaleString()+(n===1?' result':' results')+(T&&T.on()?', tracked':'')+'. <button type="button" class="tf-link" id="tfUndo">Undo</button>';
+  $('tfUndo').addEventListener('click',undoAll);
+  try{if(window.console&&console.debug)console.debug('tabula replace all',n,Date.now()-t0+'ms');}catch(e){}
+}
+function undoable(){if(!st.undo)return false;var a=snap();for(var i=0;i<a.length;i++)if(a[i]!==st.undo.after[i])return false;return true;}
+function undoAll(){
+  if(!st.undo)return;
+  var R=roots(),b=st.undo.before;
+  R.forEach(function(x,i){if(x&&b[i]!=null)x.innerHTML=b[i];});
+  st.undo=null;
+  try{if(window.__cdAfterImport)window.__cdAfterImport();}catch(e){}
+  poke();st.dirty=true;
+  $('tfMsg').textContent='Replace all undone.';
+  if(st.open)run(null);
+}
+
+/* wiring */
+$('tfQ').addEventListener('input',function(){
+  if(st.tab!=='results')tab('results');
+  clearTimeout(st.timer);
+  var big=(st.ix&&st.ix.text.length>200000)||ed.textContent.length>200000;
+  st.timer=setTimeout(function(){run(null);},big?220:90);
+});
+$('tfQ').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();if(st.timer)run(null);step(e.shiftKey?-1:1);remember();}
+  else if(e.key==='Escape'){e.preventDefault();close();}
+  else if(e.key==='ArrowDown'&&st.m.length){e.preventDefault();step(1);}
+  else if(e.key==='ArrowUp'&&st.m.length){e.preventDefault();step(-1);}
+});
+$('tfR').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();replaceOne();}else if(e.key==='Escape'){e.preventDefault();close();}});
+$('tfNext').addEventListener('click',function(){step(1);});
+$('tfPrev').addEventListener('click',function(){step(-1);});
+$('tfClose').addEventListener('click',close);
+$('tfReplTog').addEventListener('click',function(){repl($('tfRepl').hidden);if(!$('tfRepl').hidden)$('tfR').focus();});
+$('tfHome').addEventListener('click',backHome);
+$('tfTabH').addEventListener('click',function(){tab('heads');});
+$('tfTabR').addEventListener('click',function(){tab('results');});
+$('tfHeads').addEventListener('click',function(e){var t=e.target.closest?e.target.closest('.tf-hd'):null;if(t)goHead(+t.getAttribute('data-h'));});
+$('tfR1').addEventListener('click',replaceOne);
+$('tfRA').addEventListener('click',replaceAll);
+[['tfMC','matchCase'],['tfWW','wholeWord'],['tfIA','ignoreAccents']].forEach(function(p){
+  $(p[0]).addEventListener('change',function(){st.o[p[1]]=this.checked;keep();run(st.lit&&st.m[st.cur]?st.m[st.cur][0]:null);if(st.lit&&st.m.length)go(st.cur);});
+});
+$('tfList').addEventListener('click',function(e){
+  var t=e.target.closest?e.target.closest('.tf-row,#tfMore,#tfLess'):null;if(!t)return;
+  if(t.id==='tfMore'){more();return;}
+  if(t.id==='tfLess'){less();return;}
+  go(+t.getAttribute('data-i'));remember();
+});
+$('tfRecent').addEventListener('click',function(e){var t=e.target.closest?e.target.closest('.tf-chip'):null;if(!t)return;$('tfQ').value=t.getAttribute('data-q');run(null);$('tfQ').focus();});
+document.addEventListener('keydown',function(e){
+  var k=(e.key||'').toLowerCase();
+  if(e.altKey&&e.code&&e.code.indexOf('Key')===0)k=e.code.slice(3).toLowerCase();
+  var mod=MAC?e.metaKey:e.ctrlKey;
+  if(mod&&!e.shiftKey&&!e.altKey&&k==='f'){e.preventDefault();e.stopPropagation();open(false);return;}
+  if((e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey&&k==='h')||(MAC&&e.metaKey&&((e.shiftKey&&k==='h')||(e.altKey&&k==='f')))){e.preventDefault();e.stopPropagation();open(true);return;}
+  if((mod&&!e.altKey&&k==='g')||e.key==='F3'){if(st.q){e.preventDefault();if(!st.open)open(false);step(e.shiftKey?-1:1);}return;}
+  if(mod&&!e.shiftKey&&!e.altKey&&k==='z'&&st.undo&&inRoots(document.activeElement)&&undoable()){e.preventDefault();e.stopPropagation();undoAll();return;}
+  if(e.key==='Escape'&&st.open&&!pane.contains(document.activeElement)&&!document.querySelector('#modalBack.open')){close();}
+},true);
+var mo=new MutationObserver(function(){
+  st.dirty=true;
+  if(st.open&&st.tab==='heads'){clearTimeout(st.htimer);st.htimer=setTimeout(heads,600);}
+  if(st.open&&st.q){clearTimeout(st.timer);st.timer=setTimeout(function(){run(st.lit&&st.m[st.cur]?st.m[st.cur][0]:homePos());},450);}
+});
+roots().forEach(function(r){if(r)mo.observe(r,{childList:true,characterData:true,subtree:true});});
+addEventListener('resize',function(){place(true);paintCur();});
+var hdT=null;
+addEventListener('scroll',function(){if(!st.open)return;place(false);if(st.tab==='heads'&&!hdT)hdT=setTimeout(function(){hdT=null;headOn();},120);},{passive:true});
+/* the counter bar names the page in view, as Word does */
+var pgT=null;
+function pageNow(n){
+  var seps=window.__tabSeps||[],y=chromeTop()+(viewBottom()-chromeTop())/3-ed.getBoundingClientRect().top,p=1;
+  for(var j=0;j<seps.length;j++){if(seps[j]<=y)p=j+2;else break;}
+  return 'Page '+Math.min(p,n||seps.length+1)+' of '+(n||seps.length+1)+(document.documentElement.classList.contains('ink-comfort')?' (comfort view)':'');
+}
+window.__tabPageNow=pageNow;
+addEventListener('scroll',function(){if(pgT)return;pgT=setTimeout(function(){pgT=null;var w=$('wcPages');if(w)w.textContent=pageNow();},120);},{passive:true});
+window.tabFind={open:open,close:close,toggle:function(which){if(st.open&&st.tab===which){close();return;}open(false,which);},run:function(q,o){if(o){for(var k in o)st.o[k]=o[k];}open(false);$('tfQ').value=q;run(null);return st.m.length;},next:function(){step(1);},prev:function(){step(-1);},state:function(){return {q:st.q,n:st.m.length,cur:st.cur,lit:st.lit,open:st.open};},replaceAll:function(rep){repl(true);$('tfR').value=rep;replaceAll();},undo:undoAll};
+})();</script>
+
+<script>
+@@LIB_MYWAY_CORE@@
+</script>
+<style>
+  /* 7.44: Reading comfort in Tabula. The page as you see it; the document's
+     own fonts and sizes go into Word files, PDFs and print unchanged */
+  html.ink-comfort #editor,html.ink-comfort #footnotes,html.ink-comfort #endnotes{font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important;}
+  html.ink-comfort #editor :is(p,div,li,span,font,a,b,i,em,strong,u,s,td,th,blockquote,ins,del,label),html.ink-comfort #footnotes .fn,html.ink-comfort #endnotes .fn{font-family:inherit !important;font-size:inherit !important;line-height:inherit !important;letter-spacing:inherit !important;}
+  html.ink-comfort #editor h1{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * 1.6) !important;line-height:1.3 !important;}
+  html.ink-comfort #editor h2{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * 1.35) !important;line-height:1.35 !important;}
+  html.ink-comfort #editor h3{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * 1.15) !important;line-height:1.4 !important;}
+  html.ink-comfort #editor h4{font-family:var(--cf-font) !important;font-size:calc(var(--cf-size) * 1.05) !important;}
+  html.ink-cf-paper .paper:not(.cd-realpaper),html.ink-cf-paper .cd-page{background:var(--cf-paper) !important;}
+  .iw-tnote{margin-left:14px;border:1px solid #cfd5dc;background:linear-gradient(180deg,#ffffff,#eef1f4);color:inherit;border-radius:999px;padding:3px 11px;font:12px/1.4 var(--ui);cursor:pointer;
+    box-shadow:0 1px 0 rgba(31,35,41,.22),0 2px 4px rgba(31,35,41,.12),inset 0 1px 0 #fff;transition:transform .15s cubic-bezier(.2,1.4,.35,1);}
+  .iw-tnote:hover{transform:translateY(-1px);}
+  .iw-tnote:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(31,35,41,.16);}
+  html.cd-dark .iw-tnote{background:linear-gradient(180deg,#2c3947,#1f2934);border-color:#3d4c5e;color:#f2f5f8;box-shadow:0 1px 0 #000a,0 2px 4px #0009;}
+  .iw-tnote[hidden]{display:none;}
+</style>
+<script>(function(){
+/* 7.44: My way of working in Tabula (INKWAY, src/lib/myway_core.js): the
+   View tab's Comfort button, Reading comfort on the page, and Where was I?
+   for each document, by its title */
+var W=window.INKWAY,F=window.INKFIND,ed=document.getElementById('editor');
+if(!W||!ed)return;
+function night(){return document.documentElement.classList.contains('cd-dark');}
+function title(){var t=document.getElementById('docTitle');return (t&&t.value.trim())||'Untitled';}
+function pageAt(r){var seps=window.__tabSeps||[],y=r.getBoundingClientRect().top-ed.getBoundingClientRect().top,p=1;for(var j=0;j<seps.length;j++){if(seps[j]<=y)p=j+2;else break;}return p;}
+function top(){var t=document.querySelector('.tabs');return t?Math.max(0,t.getBoundingClientRect().bottom):0;}
+W.room({app:'tabula',doc:document,night:night,
+  base:{size:16,line:1.7,font:"'Times New Roman',Times,serif"},
+  after:function(){try{if(window.cdLayoutNow)window.cdLayoutNow();}catch(e){}},
+  slot:document.getElementById('iwSlot'),btnClass:'tb',ruler:ed,
+  noteSlot:document.querySelector('.statusbar'),noteClass:'iw-tnote',
+  key:title,
+  here:function(){var s=getSelection();if(!s.rangeCount||!ed.contains(s.anchorNode))return null;var p=W.domPlace(ed,F);if(!p)return null;p.label='on page '+pageAt(s.getRangeAt(0))+(p.head?', under “'+p.head+'”':'');return p;},
+  worth:function(r){return (r.pos||0)>200;},
+  go:function(r){var rg=W.domGo(ed,r,F);if(rg)W.into(rg,top());}
+});
+})();</script>
 <script>(function(){if(window.__APP_LANG__!=="fr")return;var FR={"Write with the full ribbon: styles, lists and tables with live preview, citations from Fontes, footnotes, tracked changes and page numbers. Tap Guide for help.": "\u00c9crivez avec le ruban complet : styles, listes et tableaux avec aper\u00e7u en direct, citations depuis Fontes, notes de bas de page, suivi des modifications et num\u00e9ros de page. Touchez Guide pour de l\u2019aide.", "Back": "Pr\u00e9c\u00e9dent", "Forward": "Suivant", "Exit reading": "Quitter la lecture", "File": "Fichier", "Document name": "Nom du document", "How to use": "Comment l\u2019utiliser", "Untitled": "Sans titre", "New": "Nouveau", "templates": "mod\u00e8les", "Open": "Ouvrir", "documents": "documents", "Save": "Enregistrer", "Save As": "Enregistrer sous", "Save as": "Enregistrer sous", "Export": "Exporter", ".docx, PDF, text, web": ".docx, PDF, texte, web", "Print": "Imprimer", "Share": "Partager", "Info": "Informations", "More": "Plus", "Home": "Accueil", "Insert": "Insertion", "Layout": "Disposition", "Design": "Cr\u00e9ation", "References": "R\u00e9f\u00e9rences", "Review": "R\u00e9vision", "View": "Affichage", "Copy": "Copier", "Paste": "Coller", "Paste as plain text": "Coller en texte brut", "Bold": "Gras", "Italic": "Italique", "Underline": "Soulign\u00e9", "Strikethrough": "Barr\u00e9", "Subscript": "Indice", "Superscript": "Exposant", "Text color": "Couleur de police", "Highlight": "Surlignage", "Change case": "Modifier la casse", "Case": "Casse", "Sentence case": "Majuscule en d\u00e9but de phrase", "lowercase": "minuscules", "UPPERCASE": "MAJUSCULES", "Capitalise Each Word": "Majuscule \u00c0 Chaque Mot", "Clear": "Effacer", "Clear formatting": "Effacer la mise en forme", "Scriba: dictate by voice": "Scriba : dict\u00e9e vocale", "Font": "Police", "Grow font": "Agrandir la police", "Shrink font": "R\u00e9duire la police", "Show formatting marks": "Afficher les marques de mise en forme", "Bullets": "Puces", "Numbered": "Num\u00e9rotation", "Outdent": "Diminuer le retrait", "Indent": "Augmenter le retrait", "Left": "Gauche", "Center": "Centre", "Right": "Droite", "Justify": "Justifier", "Spacing": "Interligne", "Single": "Simple", "Sort": "Trier", "Sort A to Z": "Trier de A \u00e0 Z", "Paragraph": "Paragraphe", "Title": "Titre", "Subtitle": "Sous-titre", "Heading 1": "Titre 1", "Heading 2": "Titre 2", "Heading 3": "Titre 3", "Heading 4": "Titre 4", "Quote": "Citation", "Code block": "Bloc de code", "Styles": "Styles", "Find": "Rechercher", "Select all": "S\u00e9lectionner tout", "Editing": "Modification", "Format painter": "Reproduire la mise en forme", "Cover page": "Page de garde", "Blank page": "Page vierge", "Page break": "Saut de page", "Line": "Ligne", "Pages": "Pages", "Table": "Tableau", "Row \u2212": "Ligne \u2212", "Col \u2212": "Col. \u2212", "Add row": "Ajouter une ligne", "Delete row": "Supprimer la ligne", "Add column": "Ajouter une colonne", "Delete column": "Supprimer la colonne", "Tables": "Tableaux", "Comment": "Commentaire", "Comments": "Commentaires", "Header": "En-t\u00eate", "Footer": "Pied de page", "Page numbers": "Num\u00e9ros de page", "Header & Footer": "En-t\u00eate et pied de page", "Link": "Lien", "Bookmark": "Signet", "Links": "Liens", "Text box": "Zone de texte", "Drop cap": "Lettrine", "Text": "Texte", "Equation": "\u00c9quation", "Symbol": "Symbole", "Symbols": "Symboles", "Quick parts": "QuickPart", "Fields": "Champs", "Apps": "Applications", "Open Abacus (spreadsheet)": "Ouvrir Abacus (tableur)", "Open Imago (slides)": "Ouvrir Imago (diapositives)", "Table of Contents": "Table des mati\u00e8res", "Contents": "Table des mati\u00e8res", "Insert footnote": "Ins\u00e9rer une note de bas de page", "Insert endnote": "Ins\u00e9rer une note de fin", "Footnotes": "Notes de bas de page", "Insert caption": "Ins\u00e9rer une l\u00e9gende", "Cross-reference": "Renvoi", "Captions": "L\u00e9gendes", "Insert citation": "Ins\u00e9rer une citation", "Bibliography": "Bibliographie", "Citations & Bibliography": "Citations et bibliographie", "Citation style": "Style de citation", "Check spelling": "V\u00e9rifier l\u2019orthographe", "Word count": "Statistiques", "Read aloud": "Lecture \u00e0 voix haute", "Proofing": "V\u00e9rification", "New comment": "Nouveau commentaire", "Show comments": "Afficher les commentaires", "Track changes": "Suivi des modifications", "Accept": "Accepter", "Reject": "Refuser", "Accept all": "Tout accepter", "Reject all": "Tout refuser", "Previous": "Pr\u00e9c\u00e9dent", "Next": "Suivant", "Tracking": "Suivi", "Restrict editing": "Restreindre la modification", "Protect": "Prot\u00e9ger", "Previous change": "Modification pr\u00e9c\u00e9dente", "Next change": "Modification suivante", "Margins": "Marges", "Margins: Normal": "Marges : Normales", "Narrow": "\u00c9troites", "Wide": "Larges", "Orientation": "Orientation", "Landscape": "Paysage", "Page Setup": "Mise en page", "One column": "Une colonne", "Two": "Deux", "Three": "Trois", "Columns": "Colonnes", "Line numbers": "Num\u00e9ros de ligne", "None": "Aucun", "Small": "Petit", "Large": "Grand", "First-line indent": "Retrait de premi\u00e8re ligne", "First line indent": "Retrait de premi\u00e8re ligne", "Border": "Bordure", "Paragraph spacing": "Espacement des paragraphes", "Paragraph border": "Bordure de paragraphe", "Page color": "Couleur de page", "White": "Blanc", "Cream": "Cr\u00e8me", "Parchment": "Parchemin", "Cool grey": "Gris froid", "Dark": "Sombre", "Page Background": "Arri\u00e8re-plan de page", "Watermark": "Filigrane", "Page borders": "Bordures de page", "Page Borders": "Bordures de page", "Read mode": "Mode lecture", "Views": "Affichages", "Reset": "R\u00e9initialiser", "Ruler": "R\u00e8gle", "Show": "Afficher", "Cancel": "Annuler", "Close": "Fermer", "Find next": "Rechercher le suivant", "Replace all": "Remplacer tout", "Replace with": "Remplacer par", "Find and replace": "Rechercher et remplacer", "Sticky notes": "Notes", "Basics": "Notions de base", "is your writing room. The File menu holds new documents, templates, saving, and export to .docx or PDF. The ribbon tabs hold the tools, and your saved work lives under Documents.": "est votre salle d\u2019\u00e9criture. Le menu Fichier contient les nouveaux documents, les mod\u00e8les, l\u2019enregistrement et l\u2019exportation vers .docx ou PDF. Les onglets du ruban contiennent les outils, et votre travail enregistr\u00e9 se trouve sous Documents.", "is voice typing. On a computer, tap Scriba in the Font group and allow the microphone once; it then types what you say. On a phone or tablet, tap in the page to raise the keyboard, then tap the microphone on the keyboard. Please note that on iPhone and iPad this dictation may not reach the page, which is a known limitation of how Apple handles embedded apps like this one. If it does not work, dictate in another app such as Notes and paste the text here, or use Scriba on a computer.": "est la saisie vocale. Sur un ordinateur, touchez Scriba dans le groupe Police et autorisez le microphone une fois ; il tape alors ce que vous dites. Sur un t\u00e9l\u00e9phone ou une tablette, touchez la page pour faire appara\u00eetre le clavier, puis touchez le microphone du clavier. Veuillez noter que sur iPhone et iPad, cette dict\u00e9e peut ne pas atteindre la page, ce qui est une limite connue de la fa\u00e7on dont Apple g\u00e8re les applications int\u00e9gr\u00e9es comme celle-ci. Si cela ne fonctionne pas, dictez dans une autre application comme Notes et collez le texte ici, ou utilisez Scriba sur un ordinateur.", "keeps your sources. Open it from References, add a source once, and choose the style on the ribbon: Chicago, MLA, APA, or Harvard. Insert citation places it in the text, as a footnote for Chicago or in line for the others, and Bibliography builds the full list.": "conserve vos sources. Ouvrez-le depuis R\u00e9f\u00e9rences, ajoutez une source une fois, et choisissez le style sur le ruban : Chicago, MLA, APA ou Harvard. Ins\u00e9rer une citation la place dans le texte, en note de bas de page pour Chicago ou dans la ligne pour les autres, et Bibliographie construit la liste compl\u00e8te.", "File menu": "Menu Fichier", "Import a file": "Importer un fichier", "Ribbon tabs": "Onglets du ruban", "Font and size": "Police et taille", "Right-click menu": "Menu clic droit", "Bold, Italic, Underline, Strikethrough": "Gras, Italique, Soulign\u00e9, Barr\u00e9", "Grow and shrink font": "Agrandir et r\u00e9duire la police", "Text colour and highlight": "Couleur du texte et surlignage", "Bullets and numbering": "Puces et num\u00e9rotation", "Alignment and line spacing": "Alignement et interligne", "Formatting marks": "Marques de mise en forme", "Cover and blank pages": "Pages de garde et vierges", "Header, footer, page numbers": "En-t\u00eate, pied de page, num\u00e9ros de page", "Links and bookmarks": "Liens et signets", "Text box, drop cap, date, image": "Zone de texte, lettrine, date, image", "Equation and symbol": "\u00c9quation et symbole", "Quick parts and Art text": "QuickPart et texte d\u00e9coratif", "Page colour": "Couleur de page", "Margins and orientation": "Marges et orientation", "Columns and line numbers": "Colonnes et num\u00e9ros de ligne", "Paragraph spacing, first-line indent, border": "Espacement des paragraphes, retrait de premi\u00e8re ligne, bordure", "Table of contents": "Table des mati\u00e8res", "Footnotes and endnotes": "Notes de bas de page et de fin", "Captions and cross-references": "L\u00e9gendes et renvois", "Spelling, word count, read aloud": "Orthographe, statistiques, lecture \u00e0 voix haute", "Read mode, zoom, navigation, ruler": "Mode lecture, zoom, navigation, r\u00e8gle", "The File button opens new documents, templates, Open to import a file, Save, Save As, Export, Print, and Share.": "Le bouton Fichier ouvre les nouveaux documents, les mod\u00e8les, Ouvrir pour importer un fichier, Enregistrer, Enregistrer sous, Exporter, Imprimer et Partager.", "Your saved writing lives under the Documents tab. Tap a card to open it, or start a new one.": "Vos \u00e9crits enregistr\u00e9s se trouvent sous l\u2019onglet Documents. Touchez une carte pour l\u2019ouvrir, ou commencez-en un nouveau.", "File then Open, or the Import button in Documents, brings a text, .docx, or web file onto the page to edit.": "Fichier puis Ouvrir, ou le bouton Importer dans Documents, am\u00e8ne un fichier texte, .docx ou web sur la page pour le modifier.", "Tools are grouped under Home, Insert, Design, Layout, References, Review, and View.": "Les outils sont regroup\u00e9s sous Accueil, Insertion, Cr\u00e9ation, Disposition, R\u00e9f\u00e9rences, R\u00e9vision et Affichage.", "Save your work as a .docx document, a PDF through Print, plain text, or a web page.": "Enregistrez votre travail comme document .docx, comme PDF via Imprimer, comme texte brut ou comme page web.", "Choose from more than eighty fonts and set the point size in the Font group.": "Choisissez parmi plus de quatre-vingts polices et r\u00e9glez la taille en points dans le groupe Police.", "Cut, copy, paste, the format painter, strikethrough and quick styling live on the right-click menu inside the page. Ctrl+V always pastes with full formatting.": "Couper, copier, coller, la reproduction de la mise en forme, le barr\u00e9 et la mise en forme rapide se trouvent dans le menu clic droit \u00e0 l\u2019int\u00e9rieur de la page. Ctrl+V colle toujours avec la mise en forme compl\u00e8te.", "The B, I, U and S buttons style the selected text. Subscript and superscript sit beside them.": "Ces boutons mettent le texte s\u00e9lectionn\u00e9 en gras, italique, soulign\u00e9 ou barr\u00e9. L\u2019indice et l\u2019exposant se trouvent \u00e0 c\u00f4t\u00e9.", "A+ and A make the selected text one step larger or smaller.": "A+ et A agrandissent ou r\u00e9duisent le texte s\u00e9lectionn\u00e9 d\u2019un cran.", "The A and H swatches set the colour of the text and the highlight behind it.": "Les pastilles A et H r\u00e8glent la couleur du texte et celle du surlignage derri\u00e8re.", "Turn a selection into Sentence case, lowercase, UPPERCASE, or Capitalise Each Word.": "Transformez une s\u00e9lection en Majuscule en d\u00e9but de phrase, minuscules, MAJUSCULES ou Majuscule \u00c0 Chaque Mot.", "Clear removes styling from the selection and returns it to plain text.": "Effacer retire la mise en forme de la s\u00e9lection et la ram\u00e8ne en texte brut.", "Voice typing. On a computer, tap Scriba and allow the microphone once. On a phone or tablet, tap in the page to raise the keyboard, then tap its microphone. On iPhone and iPad the dictation may not reach the page, a known limitation of embedded apps; if so, dictate in another app and paste, or use a computer. The light is red when off and green when on.": "Saisie vocale. Sur un ordinateur, touchez Scriba et autorisez le microphone une fois. Sur un t\u00e9l\u00e9phone ou une tablette, touchez la page pour faire appara\u00eetre le clavier, puis touchez son microphone. Sur iPhone et iPad, la dict\u00e9e peut ne pas atteindre la page, une limite connue des applications int\u00e9gr\u00e9es ; si c\u2019est le cas, dictez dans une autre application et collez, ou utilisez un ordinateur. Le voyant est rouge \u00e0 l\u2019arr\u00eat et vert en marche.", "Make lists, and use Indent and Outdent to set their depth.": "Cr\u00e9ez des listes, et utilisez Augmenter le retrait et Diminuer le retrait pour r\u00e9gler leur profondeur.", "Align left, centre, right, or justify, and set single through double line spacing.": "Alignez \u00e0 gauche, au centre, \u00e0 droite ou justifiez, et r\u00e9glez l\u2019interligne de simple \u00e0 double.", "The paragraph mark button shows or hides the hidden marks at the end of each paragraph.": "Le bouton de marque de paragraphe affiche ou masque les marques cach\u00e9es \u00e0 la fin de chaque paragraphe.", "Select two or more paragraphs and Sort arranges them from A to Z.": "S\u00e9lectionnez deux paragraphes ou plus, et Trier les classe de A \u00e0 Z.", "Apply Normal, Title, Subtitle, Heading 1, Heading 2, or Quote from the Styles menu.": "Appliquez Normal, Titre, Sous-titre, Titre 1, Titre 2 ou Citation depuis le menu Styles.", "Find next jumps to the next match; Replace all changes every match at once.": "Rechercher le suivant saute \u00e0 la correspondance suivante ; Remplacer tout change toutes les correspondances d\u2019un coup.", "Add a cover page, a blank page, a page break, or a horizontal line.": "Ajoutez une page de garde, une page vierge, un saut de page ou une ligne horizontale.", "Insert a table, then add or delete rows and columns with the Row and Col buttons.": "Ins\u00e9rez un tableau, puis ajoutez ou supprimez des lignes et des colonnes avec les boutons Ligne et Col.", "Turn on a header or footer and add page numbers, which appear when you export.": "Activez un en-t\u00eate ou un pied de page et ajoutez des num\u00e9ros de page, qui apparaissent \u00e0 l\u2019exportation.", "Add a web link or a bookmark you can jump to.": "Ajoutez un lien web ou un signet vers lequel sauter.", "Insert a text box, a large opening capital, the date, or a picture from your device.": "Ins\u00e9rez une zone de texte, une grande capitale initiale, la date, ou une image depuis votre appareil.", "Insert a styled equation or pick a symbol such as an accented letter or an arrow.": "Ins\u00e9rez une \u00e9quation mise en forme ou choisissez un symbole comme une lettre accentu\u00e9e ou une fl\u00e8che.", "Quick parts inserts fields like the date, title, or page number. Art text adds a decorative heading.": "QuickPart ins\u00e8re des champs comme la date, le titre ou le num\u00e9ro de page. Le texte d\u00e9coratif ajoute un titre orn\u00e9.", "Set the colour of the page, from white and cream to a dark background.": "R\u00e9glez la couleur de la page, du blanc et du cr\u00e8me \u00e0 un fond sombre.", "Place a faint word such as DRAFT behind your text. Tap again to remove it.": "Placez un mot p\u00e2le comme DRAFT derri\u00e8re votre texte. Touchez \u00e0 nouveau pour le retirer.", "Draw a border around the whole page. Tap again to remove it.": "Tracez une bordure autour de toute la page. Touchez \u00e0 nouveau pour la retirer.", "Set normal, narrow, or wide margins, and portrait or landscape.": "R\u00e9glez des marges normales, \u00e9troites ou larges, et le mode portrait ou paysage.", "Flow the text into one, two, or three columns, and show line numbers.": "Disposez le texte en une, deux ou trois colonnes, et affichez les num\u00e9ros de ligne.", "Adjust the space between paragraphs, indent the first line, or draw a border around a paragraph.": "Ajustez l\u2019espace entre les paragraphes, mettez la premi\u00e8re ligne en retrait, ou tracez une bordure autour d\u2019un paragraphe.", "Build a contents list from your headings.": "Construisez une liste du contenu \u00e0 partir de vos titres.", "Add a footnote or endnote where the cursor sits.": "Ajoutez une note de bas de page ou de fin l\u00e0 o\u00f9 se trouve le curseur.", "Label figures and tables, and refer back to them.": "\u00c9tiquetez les figures et les tableaux, et renvoyez-y.", "Your citation manager. Add a source once, choose Chicago, MLA, APA, or Harvard, then Insert citation in the text and Bibliography for the full list.": "Votre gestionnaire de citations. Ajoutez une source une fois, choisissez Chicago, MLA, APA ou Harvard, puis Ins\u00e9rer une citation dans le texte et Bibliographie pour la liste compl\u00e8te.", "Toggle spell check, count words, or have the page read to you.": "Activez la v\u00e9rification orthographique, comptez les mots, ou faites-vous lire la page.", "Leave a note on the text and show or hide existing notes.": "Laissez une note sur le texte et affichez ou masquez les notes existantes.", "Record edits as you type, then Accept or Reject them, and step through them with Previous and Next.": "Enregistrez les modifications \u00e0 mesure que vous tapez, puis Accepter ou Refuser, et parcourez-les avec Pr\u00e9c\u00e9dent et Suivant.", "Lock the page so it cannot be changed. Tap again to unlock.": "Verrouillez la page pour qu\u2019elle ne puisse pas \u00eatre modifi\u00e9e. Touchez \u00e0 nouveau pour d\u00e9verrouiller.", "Read without the tools, zoom in or out, jump by heading, or show the ruler.": "Lisez sans les outils, zoomez ou d\u00e9zoomez, sautez par titre, ou affichez la r\u00e8gle.", "Tabula guide": "Guide de Tabula", "Essay": "Dissertation", "Essay title": "Titre de la dissertation", "State your arguable claim in the first paragraph.": "\u00c9noncez votre th\u00e8se d\u00e9fendable dans le premier paragraphe.", "First movement": "Premier mouvement", "Evidence and analysis.": "Preuves et analyse.", "Counter-argument": "Contre-argument", "The strongest objection, and your reply.": "L\u2019objection la plus forte, et votre r\u00e9ponse.", "Synthesis": "Synth\u00e8se", "What the reading has trained in you.": "Ce que la lecture a form\u00e9 en vous.", "Reading note": "Note de lecture", "Text, edition, date.": "Texte, \u00e9dition, date.", "What it says": "Ce qu\u2019il dit", "What I keep": "Ce que je garde", "One line worth keeping.": "Une ligne qui m\u00e9rite d\u2019\u00eatre gard\u00e9e.", "Seminar prep": "S\u00e9minaire", "Seminar preparation": "Pr\u00e9paration de s\u00e9minaire", "Claim": "Th\u00e8se", "Evidence": "Preuves", "Counter": "Objection", "Proposal section": "Section de proposition", "Research question": "Question de recherche", "Significance": "Importance", "Method": "M\u00e9thode", "Book": "Livre", "Journal article": "Article de revue", "Chapter in edited book": "Chapitre d\u2019ouvrage collectif", "Thesis or dissertation": "Th\u00e8se ou m\u00e9moire", "Newspaper or magazine article": "Article de journal ou de magazine", "Conference paper": "Communication de conf\u00e9rence", "Website": "Site web", "Add source": "Ajouter une source", "No sources yet.": "Aucune source pour l\u2019instant.", "Delete": "Supprimer", "Cite this": "Citer ceci", "Author": "Auteur", "Author (Last, First; separate several with ;)": "Auteur (Nom, Pr\u00e9nom ; s\u00e9parez-en plusieurs par ;)", "Journal or book title, or thesis type (e.g. PhD diss.)": "Titre de la revue ou du livre, ou type de th\u00e8se (p. ex. th\u00e8se de doctorat)", "Editor(s)": "Direction (dir.)", "City": "Ville", "Publisher, or university for a thesis": "\u00c9diteur, ou universit\u00e9 pour une th\u00e8se", "Volume": "Volume", "Issue": "Num\u00e9ro", "Year": "Ann\u00e9e", "URL (for websites)": "URL (pour les sites web)", "Accessed date (Harvard websites)": "Date de consultation (sites web Harvard)", "Works Cited": "Ouvrages cit\u00e9s", "Add sources in Fontes first.": "Ajoutez d\u2019abord des sources dans Fontes.", "Add a Title or Heading first using the Styles menu.": "Ajoutez d\u2019abord un Titre avec le menu Styles.", "Add each source once with its details below. Pick the style on the ribbon (now": "Ajoutez chaque source une fois avec ses d\u00e9tails ci-dessous. Choisissez le style sur le ruban (actuellement", "). Then use": "). Utilisez ensuite", "in the text and": "dans le texte et", "for the full list.": "pour la liste compl\u00e8te.", "Need help? Tap Guide at the top right.": "Besoin d\u2019aide ? Touchez Guide en haut \u00e0 droite.", "Write": "\u00c9crire", "Daily": "Journal", "What is worth keeping today?": "Qu\u2019est-ce qui m\u00e9rite d\u2019\u00eatre gard\u00e9 aujourd\u2019hui ?", "Your saved documents, the home of Tabula": "Vos documents enregistr\u00e9s, le foyer de Tabula", "+ New document": "+ Nouveau document", "Import a file from your device": "Importer un fichier depuis votre appareil", "Daily entries": "Entr\u00e9es quotidiennes", "Read, Keep, Carry": "Lire, Garder, Emporter", "The Stoics": "Les Sto\u00efciens", "Conversations with Magister": "Conversations avec Magister", "Saved from the dialogues": "Enregistr\u00e9 depuis les dialogues", "On the dichotomy of control": "Sur la dichotomie du contr\u00f4le", "No saved documents yet. Use File then Save, or New document above.": "Aucun document enregistr\u00e9 pour l\u2019instant. Utilisez Fichier puis Enregistrer, ou Nouveau document ci-dessus.", "Document:": "Document :", "Words:": "Mots :", "Characters:": "Caract\u00e8res :", "Pages (estimate):": "Pages (estimation) :", "Sources in Fontes:": "Sources dans Fontes :", "No headings yet.": "Aucun titre pour l\u2019instant.", "Endnotes": "Notes de fin", "No matches.": "Aucune correspondance.", "Footnote text": "Texte de la note de bas de page", "Endnote text": "Texte de la note de fin", "Note menu": "Menu de la note", "Drag to move": "Glisser pour d\u00e9placer", "This note is empty.": "Cette note est vide.", "Saved the note into your Tabula document.": "Note enregistr\u00e9e dans votre document Tabula.", "No comments yet. Select text, then New comment.": "Aucun commentaire pour l\u2019instant. S\u00e9lectionnez du texte, puis Nouveau commentaire.", "Imported": "Import\u00e9", "Replace the current document?": "Remplacer le document actuel ?", "Plain text": "Texte brut", "Web page": "Page web", "No tracked changes to navigate.": "Aucune modification suivie \u00e0 parcourir."};function rep(node){var k=node.nodeValue.trim();if(k&&Object.prototype.hasOwnProperty.call(FR,k)){var nv=node.nodeValue.replace(k,FR[k]);if(nv!==node.nodeValue)node.nodeValue=nv;}}function fix(node){if(node.nodeType===3){rep(node);return;}if(node.nodeType!==1)return;var w=document.createTreeWalker(node,NodeFilter.SHOW_TEXT,null,false),t,arr=[];while(t=w.nextNode())arr.push(t);arr.forEach(rep);["title","placeholder","aria-label"].forEach(function(a){if(node.getAttribute){var v=node.getAttribute(a);if(v){var k=v.trim();if(Object.prototype.hasOwnProperty.call(FR,k))node.setAttribute(a,FR[k]);}}var els=node.querySelectorAll?node.querySelectorAll("["+a+"]"):[];Array.prototype.forEach.call(els,function(el){var v=el.getAttribute(a);var k=v&&v.trim();if(k&&Object.prototype.hasOwnProperty.call(FR,k))el.setAttribute(a,FR[k]);});});}function all(){fix(document.body);var dt=document.getElementById("docTitle");if(dt){var k=(dt.value||"").trim();if(Object.prototype.hasOwnProperty.call(FR,k))dt.value=FR[k];}}function start(){all();var mo=new MutationObserver(function(ms){ms.forEach(function(m){if(m.type==="characterData"){rep(m.target);}else{Array.prototype.forEach.call(m.addedNodes,function(n){fix(n);});}});});mo.observe(document.body,{childList:true,subtree:true,characterData:true});document.addEventListener("click",function(){setTimeout(all,0);},true);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();window.addEventListener("load",all);})();</script><script>
 (function () {
   var tries = 0;

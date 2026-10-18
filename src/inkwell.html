@@ -232,6 +232,66 @@ body.sprinting #paper{box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 0 0 1px r
 .pgfolio{position:absolute;bottom:-24px;right:6px;font:10.5px/1 Georgia,serif;letter-spacing:.12em;color:var(--mut);pointer-events:none;-webkit-user-select:none;user-select:none}
 #editFlow.docEmpty .pgsheet.pfirst .pgt:empty::before{content:'Start writing… Inkwell marks issues as you type.';color:var(--mut);pointer-events:none}
 .pgt-probe{position:absolute;visibility:hidden;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;font:18px/1.8 Georgia,'Times New Roman',serif;padding:0;box-sizing:content-box;height:auto}
+/* 7.44: My way of working. Reading comfort sets the page and the probe that
+   measures it alike; only the screen changes */
+html.ink-comfort .pgt,html.ink-comfort .pgt-probe{font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important}
+html.ink-cf-paper .pgsheet{background:var(--cf-paper) !important}
+.ink3Head{font:600 12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#5f5646;margin:2px 2px 8px}
+[data-theme=dark] .ink3Head{color:#cfd5dc}
+.ink3Done{font:14px/1.6 Georgia,serif;color:var(--mut);padding:10px 4px}
+.ink3Next{display:block;width:100%;margin:10px 0 4px;padding:9px 12px;border-radius:12px;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.inkNoteBtn{margin:0 6px;align-self:center;border-radius:999px;padding:3px 11px;font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.inkNoteBtn[hidden]{display:none}
+/* Draft now, fix later */
+.pgt .hl{transition:background-color .35s,border-color .35s}
+html.iw-drafting .pgt .hl{background:transparent !important;border-bottom-color:transparent !important;box-shadow:none !important}
+html.iw-drafting #cards{opacity:.45;transition:opacity .35s}
+/* Focus ruler */
+#iwRulerWrap{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.iwVeil{position:absolute;left:0;right:0;background:rgba(250,247,240,.68);transition:height .18s,top .18s}
+.iwV1{top:0;height:0;border-radius:0 0 10px 10px}
+.iwV2{top:100%;bottom:0;border-radius:10px 10px 0 0}
+[data-theme=dark] .iwVeil{background:rgba(22,30,40,.70)}
+/* Gentle time */
+#iwBand{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:5px;z-index:2147482500;background:rgba(127,127,127,.18);pointer-events:auto}
+#iwBand[hidden]{display:none}
+#iwBand{box-shadow:inset 0 1px 2px #14100a26}
+#iwBand i{display:block;height:100%;background:linear-gradient(180deg,#e3c77f,#b98a2e);border-radius:0 3px 3px 0;box-shadow:0 1px 2px #14100a38,inset 0 1px 0 #ffffff70;transition:width 1s linear}
+#iwBand.rest i{background:linear-gradient(180deg,#7fbf96,#3f7d58)}
+/* Messages wait for me */
+#toast.iwWait{text-align:left;padding:11px 44px 11px 18px;border-radius:16px;pointer-events:auto}
+#toast .iwMsgL+.iwMsgL{margin-top:4px;padding-top:4px;border-top:1px solid rgba(127,127,127,.35)}
+#toast .iwMsgX{position:absolute;right:8px;top:7px;width:26px;height:26px;border-radius:50%;padding:0;font-size:15px;line-height:1;cursor:pointer}
+/* One next step */
+#iwNext{display:flex;align-items:center;gap:10px;margin:8px 20px 2px;padding:7px 8px 7px 14px;border:1px solid var(--line,#d8dde3);border-radius:14px;background:var(--face,#fff);box-shadow:var(--sh-sm),inset 0 -2px 4px #14100a0d;animation:rise .3s var(--pop)}
+#iwNext[hidden]{display:none}
+#iwNext label{font:700 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#5f5646;white-space:nowrap}
+[data-theme=dark] #iwNext label{color:#cfd5dc}
+#iwNext input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font:15px/1.4 Georgia,serif;padding:4px 0}
+#iwNext button{padding:5px 12px;font:600 12.5px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;border-radius:10px}
+/* Start small */
+#iwSmallBtn[hidden]{display:none}
+#iwSmall{position:fixed;inset:0;z-index:2147482000;background:#fbf7ee;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+#iwSmall.iw-night{background:#10161c}
+#iwSmall .iws-band{position:absolute;left:0;right:0;top:0;height:6px;background:rgba(127,127,127,.18)}
+#iwSmall .iws-band i{display:block;height:100%;background:#c9a24a;transition:width 1s linear}
+#iwSmall{background:radial-gradient(ellipse at 50% 38%,#fffdf8 0%,#f6efe0 70%)}
+#iwSmall.iw-night{background:radial-gradient(ellipse at 50% 38%,#1b2430 0%,#10161c 70%)}
+#iwSmall .iws-box{width:min(680px,100%);padding:30px 32px 26px;border-radius:24px;border:1px solid #e3d6ba;background:linear-gradient(180deg,#fffefb 0%,#fbf6ea 100%);box-shadow:0 3px 6px #14100a16,0 14px 28px #14100a14,0 34px 66px #14100a1c,inset 0 1px 0 #fff;animation:iwSmallIn .4s var(--pop) both}
+#iwSmall.iw-night .iws-box{border-color:#334050;background:linear-gradient(180deg,#1e2834 0%,#17202a 100%);box-shadow:0 3px 6px #000b,0 14px 28px #000a,0 34px 66px #000b,inset 0 1px 0 #ffffff12}
+@keyframes iwSmallIn{from{opacity:0;transform:translateY(14px) scale(.965)}to{opacity:1;transform:none}}
+body:has(#iwSmall) #iwBand{display:none}
+#iwSmall .iws-k{font:700 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6b5a2e;margin-bottom:10px}
+#iwSmall.iw-night .iws-k{color:#e8c77a}
+#iwSmall h3{margin:0 0 16px;font:600 26px/1.3 Georgia,serif;color:#1f2329}
+#iwSmall.iw-night h3{color:#f2f5f8}
+#iwSmall textarea{width:100%;box-sizing:border-box;border:0;border-bottom:2px solid #c9a24a;background:transparent;color:#1f2329;font:20px/1.6 var(--cf-font,Georgia),Georgia,serif;letter-spacing:var(--cf-letter,0);padding:8px 2px;resize:none;outline:none;min-height:60px}
+#iwSmall.iw-night textarea{color:#f2f5f8}
+#iwSmall .iws-t{margin:10px 0 14px;font:13px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#4a515b}
+#iwSmall.iw-night .iws-t,#iwSmall.iw-night .iws-end{color:#cfd5dc}
+#iwSmall .iws-end{margin:0 0 14px;font:15px/1.5 Georgia,serif;color:#3a3f47}
+.iwList{margin:4px 0 10px;padding-left:20px}
+.iwList li{margin:2px 0}
 body.readable #editor,body.readable #hli{font:19px/2.05 Tahoma,Verdana,Georgia,sans-serif;letter-spacing:.015em}
 #editor{position:relative;z-index:2;background:transparent;color:var(--ink);border:none;outline:none;resize:none;overflow:hidden;min-height:55vh;caret-color:var(--acc)}
 #editor::selection{background:#3f6f8f33}
@@ -1594,11 +1654,13 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
    <div class="tray">
     <button onclick="undo()" title="Undo">↺</button>
     <button id="clepBtn" class="clepChip" onclick="inkClepPress()" title="Clepsydra: focus sprints with breaks" aria-label="Clepsydra"><span class="clepIc" aria-hidden="true">⏳</span><span id="clepT">25:00</span></button>
+    <button type="button" id="iwSmallBtn" onclick="inkSmall()" title="One sentence, five minutes, mess allowed" hidden>✎ Start small</button>
     <button onclick="toggleRight()" title="Suggestions &amp; instruments panel">☰ Panel</button>
    </div>
 
 <div id="thinkPane"><div class="tipHead" style="cursor:default"><div class="lbl">💭 THINKING</div><button class="tipMini" onclick="closeThinkPane()" title="Close">✕</button></div><div id="thinkTxt" style="font:12.5px/1.7 Georgia,serif;max-height:36vh;overflow:auto;white-space:pre-wrap;font-style:italic;color:var(--ink)"></div></div>
   </div>
+  <div id="iwNext" hidden><label for="iwNextIn">Next step</label><input id="iwNextIn" type="text" maxlength="200" autocomplete="off" placeholder="The very next thing to do, in a few words" oninput="inkNextSave()" onkeydown="if(event.key==='Enter'){event.preventDefault();inkNextDone();}"><button type="button" id="iwNextDone" onclick="inkNextDone()" title="Mark it done">✓ Done</button></div>
   <div id="editWrap">
    <div id="paper">
     <div id="pageguides"></div>
@@ -1609,7 +1671,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   <div id="status">
    <span id="stWords">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
    <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="The writing mark: accuracy, clarity, vocabulary, sentences and register, on the scale you chose">· mark</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
-   <span id="stSel"></span><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
+   <span id="stSel"></span><button type="button" id="inkNoteNext" class="inkNoteBtn" onclick="inkNoteNext()" title="Leave yourself a note: it is shown with your place next time" hidden>✎ Note for next time</button><button type="button" id="iwToday" class="inkNoteBtn" onclick="inkTodayCard()" title="Today's words and time, by document" hidden></button><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
   </div>
  </section>
  <aside id="right">
@@ -1687,6 +1749,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_LEARNER_DATA@@
 @@LIB_LEARNER_CORE@@
 @@LIB_MARK_CORE@@
+@@LIB_MYWAY_CORE@@
+@@LIB_ATKINSON_FONT@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -5448,6 +5512,7 @@ const MENUS={
   ['Aa Readable type',()=>toggleReadable(),()=>S.readable?'on':''],
   ['💭 Chain of thought',()=>toggleThink(),()=>S.showThink?'on':''],
   ['☀ Display & Sound',()=>openModal('display'),()=>''],
+  ['🧩 My way of working: comfort, where I was, three at a time',()=>openModal('myway'),()=>{try{const g=INKWAY.get();return (g.comfort.on||g.where.on||g.three.on)?'on':'';}catch(e){return '';}}],
   ['🔊 Soundscape',()=>toggleSound(),()=>S.sound?'on':''],
   ['🎯 Goals: who, what, why',()=>openModal('goals')],
   ['🧭 Guided tour',()=>startTour()],
@@ -8470,19 +8535,24 @@ function expandRow(i){EXPID=(EXPID===i?-1:i);renderCards();}
 function inkStyleSwitch(){
  return '<div style="margin:0 2px 10px"><button class="lkbtn" onclick="inkToggleStyle()">'+(S.showStyle?'Hide clarity and style notes':'Show clarity and style notes'+(INK_STYLE_HIDDEN?' ('+INK_STYLE_HIDDEN+')':''))+'</button></div>';}
 function renderCards(){
- const c=document.getElementById('cards');
- document.getElementById('stCerr').textContent=EDITS.length+' issue'+(EDITS.length===1?'':'s');
- document.getElementById('rhCount').textContent=EDITS.length;
+ const c=document.getElementById('cards'),three=ink3On();
+ document.getElementById('stCerr').textContent=three?(EDITS.length?'Worth a look':'Nothing to note'):EDITS.length+' issue'+(EDITS.length===1?'':'s');
+ document.getElementById('rhCount').textContent=three?'':EDITS.length;
  /* typing shifts offsets but not marks; the panel rebuilds only when the set of
     marks itself changes. The counts above stay truthful either way. */
  /* the signature keys on spans and fix lengths, not on whole strings, so a
     thesis-scale list does not spend its render budget copying text */
- const sig=(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
+ const sig=(three?'3:'+ink3Shown().join(',')+':':'')+(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
  if(sig===CARDSIG)return;
  CARDSIG=sig;
  if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">'+(S.showStyle?'✨ Nothing to note.':'✨ No correctness issues found.')+'</div>'+inkStyleSwitch();return;}
  if(S.solo){SOLOI=Math.max(0,Math.min(SOLOI,EDITS.length-1));
   c.innerHTML='<div class="soloNav"><button title="The previous suggestion" onclick="soloMove(-1)">‹</button><span>'+(SOLOI+1)+' of '+EDITS.length+'</span><button title="The next suggestion" onclick="soloMove(1)">›</button></div>'+cardHTML(EDITS[SOLOI],SOLOI,true);
+  return;}
+ if(three){const ids=ink3Shown(),more=EDITS.length>ids.length;
+  c.innerHTML='<div class="ink3Head">Worth a look</div>'+
+   (ids.length?ids.map(i=>EXPID===i?cardHTML(EDITS[i],i,false):inkRowHTML(EDITS[i],i)).join(''):'<div class="ink3Done">These three are done. Well worked.</div>')+
+   (more?'<button class="ink3Next" onclick="ink3Next()">Show the next three</button>':'')+inkStyleSwitch();
   return;}
  const counts={};EDITS.forEach(e=>counts[e.cat]=(counts[e.cat]||0)+1);
  const leg=['g','c','s','r','ai'].filter(k=>counts[k]).map(k=>'<span><i class="cdot c-'+k+'"></i>'+inkCap1(NAMES[k])+' <b>'+counts[k]+'</b></span>').join('');
@@ -8492,15 +8562,227 @@ function renderCards(){
  const CARCAP=400,shown=EDITS.slice(0,CARCAP),restN=EDITS.length-shown.length;
  c.innerHTML=(leg?'<div class="catLeg">'+leg+'</div>':'')+
   '<div style="font-size:11px;color:var(--mut);margin:0 2px 9px">A quiet list. Tap a row to open it, or press <b>1×</b> above to go one at a time.</div>'+inkStyleSwitch()+
-  shown.map((e,i)=>EXPID===i?cardHTML(e,i,false):
-   '<div class="crow" onclick="expandRow('+i+')"><span class="cdot c-'+e.cat+'"></span>'+
+  shown.map((e,i)=>EXPID===i?cardHTML(e,i,false):inkRowHTML(e,i)).join('')+
+  (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
+/* ================= MY WAY OF WORKING (7.44) =================
+   INKWAY (src/lib/myway_core.js) holds the settings and the look; here they
+   reach the desk. Reading comfort sets the page's type (.pgt and the probe
+   that measures the pages, together, so the pages stay exact); Where was I?
+   keeps each document's place and the writer's note; Three at a time shows
+   the suggestions three by three, correctness first, and marks only those
+   three on the page. */
+const INK3={keys:null,later:new Set()},INK3_RANK={g:0,c:1,s:2,r:3,ai:4};
+function ink3On(){try{return typeof INKWAY!=='undefined'&&INKWAY.get().three.on&&!S.solo;}catch(e){return false;}}
+function ink3Order(){const seen={},out=[];
+ EDITS.forEach((e,i)=>{const b=e.cat+'|'+(e.why||'')+'|'+(e.orig||'')+'|'+(typeof e.fix==='string'?e.fix:'');const n=seen[b]=(seen[b]||0)+1;
+  out.push({i:i,k:b+'|'+n,r:(e.cat in INK3_RANK?INK3_RANK[e.cat]:5),s:e.start});});
+ return out.sort((a,b)=>a.r-b.r||a.s-b.s);}
+function ink3Shown(){const o=ink3Order();
+ if(!INK3.keys||!INK3.keys.size){let pick=o.filter(x=>!INK3.later.has(x.k)).slice(0,3);if(!pick.length&&o.length){INK3.later.clear();pick=o.slice(0,3);}INK3.keys=new Set(pick.map(x=>x.k));}
+ return o.filter(x=>INK3.keys.has(x.k)).map(x=>x.i).slice(0,3);}
+function ink3Next(){if(INK3.keys)INK3.keys.forEach(k=>INK3.later.add(k));INK3.keys=null;EXPID=-1;CARDSIG='';renderCards();renderHL();
+ const s=ink3Shown();if(s.length)locate(s[0]);}
+function inkWayNight(){return document.documentElement.getAttribute('data-theme')==='dark';}
+function inkWayOn(k){try{return typeof INKWAY!=='undefined'&&!!INKWAY.get()[k].on;}catch(e){return false;}}
+function inkWayApply(){if(typeof INKWAY==='undefined')return;
+ const p=INKWAY.apply(document,{size:18,line:1.8,font:"Georgia,'Times New Roman',serif"},inkWayNight());
+ try{pagesReset();}catch(e){}
+ if(p&&p.then)p.then(function(){try{pagesReset();}catch(e){}});}
+let INKWAY_LAST='';
+function inkWayChanged(g){const k=JSON.stringify(g.comfort)+inkWayNight();
+ if(k!==INKWAY_LAST){INKWAY_LAST=k;inkWayApply();}
+ INK3.keys=null;CARDSIG='';try{renderCards();renderHL();}catch(e){}
+ inkWayShow(g);}
+function inkWhereSave(){if(!inkWayOn('where'))return;const d=S.docs.find(x=>x.id===S.active);if(!d)return;
+ let pos=0;try{pos=ed.selectionStart;}catch(e){return;}
+ const t=ed.value;if(typeof pos!=='number'||!t.trim())return;
+ INKWAY.save('inkwell',d.id,INKWAY.place(t,pos));}
+const INKW_SHOWN=new Set();
+function inkWhereOffer(id){if(!inkWayOn('where'))return;const d=S.docs.find(x=>x.id===(id||S.active));if(!d||INKW_SHOWN.has(d.id))return;
+ const r=INKWAY.load('inkwell',d.id);if(!r||(!r.note&&(r.pos||0)<40))return;
+ INKW_SHOWN.add(d.id);
+ INKWAY.card({doc:document,night:inkWayNight(),rec:r,
+  onGo:function(){const p=INKWAY.find(ed.value,r);locatePos(p,p);},
+  onNoteDone:function(){INKWAY.note('inkwell',d.id,'');}});}
+function inkNoteNext(){const d=S.docs.find(x=>x.id===S.active);if(!d||typeof INKWAY==='undefined')return;
+ const r=INKWAY.load('inkwell',d.id)||{};
+ INKWAY.noteBox({doc:document,night:inkWayNight(),note:r.note||'',onSave:function(v){inkWhereSave();INKWAY.note('inkwell',d.id,v);toast(v.trim()?'Your note will be here next time':'Note cleared');}});}
+/* ---- 7.44, later: the other supports (src/lib/myway_core.js lists them) ---- */
+/* Quiet senses: movement stops (the class iw-quiet) and the sounds go
+   quiet; the sound comes back as it was when this is switched off. Motion
+   is left alone: Minimal motion would also flatten the raised look */
+function inkWayQuiet(g){const on=!!g.quiet.on;try{INKWAY.quiet(document);}catch(e){}
+ let was=null;try{was=JSON.parse(localStorage.getItem('ink_wayQuietWas')||'null');}catch(e){}
+ if(on&&!was){try{localStorage.setItem('ink_wayQuietWas',JSON.stringify({sound:!!S.sound}));}catch(e){}S.sound=false;SV('sound',false);}
+ else if(!on&&was){S.sound=!!was.sound;SV('sound',S.sound);try{localStorage.removeItem('ink_wayQuietWas');}catch(e){}}}
+/* Messages wait for me: a message stays until it is closed (the last three
+   are kept), and a tip that would open by itself waits behind a button */
+const INKMSG=[];let _inkToastPlain=null,_inkTipPlain=null;
+function inkWayMsg(msg){const t=document.getElementById('toast');if(!t)return;clearTimeout(t._t);
+ INKMSG.push(String(msg));while(INKMSG.length>3)INKMSG.shift();
+ t.innerHTML=INKMSG.map(m=>'<div class="iwMsgL">'+esc(m)+'</div>').join('')+'<button type="button" class="iwMsgX" onclick="inkWayMsgClose()" aria-label="Close the message" title="Close">×</button>';
+ t.classList.add('iwWait');t.setAttribute('role','status');t.style.display='block';}
+function inkWayMsgClose(){INKMSG.length=0;const t=document.getElementById('toast');if(t){t.style.display='none';t.classList.remove('iwWait');t.textContent='';}}
+function inkTipWait(id){let b=document.getElementById('iwTipWait');
+ if(!b){b=document.createElement('button');b.id='iwTipWait';b.type='button';b.className='inkNoteBtn';b.textContent='💡 A tip is ready';b.title='The tip waits until you want it';const st=document.getElementById('status');if(st)st.appendChild(b);else return;}
+ b.hidden=false;b.onclick=function(){b.hidden=true;_inkTipPlain(id);};}
+function inkWayWrap(){
+ if(!_inkToastPlain&&typeof toast==='function'){_inkToastPlain=toast;toast=function(msg,ms){if(!inkWayOn('wait'))return _inkToastPlain(msg,ms);inkWayMsg(msg);};}
+ if(!_inkTipPlain&&typeof showTip==='function'){_inkTipPlain=showTip;showTip=function(id){
+  const ev=window.event,asked=ev&&ev.isTrusted&&/click|pointerup|keydown|touchend/.test(ev.type);
+  if(!inkWayOn('wait')||asked)return _inkTipPlain(id);inkTipWait(id);};}}
+/* Draft now, fix later: the underlines fade while the keys move */
+let INKDRAFT_T=0;
+function inkDraftKey(e){if(!inkWayOn('draft'))return;
+ if(e&&e.type==='keydown'&&!(e.key&&(e.key.length===1||e.key==='Backspace'||e.key==='Delete'||e.key==='Enter')))return;
+ const h=document.documentElement;h.classList.add('iw-drafting');clearTimeout(INKDRAFT_T);
+ INKDRAFT_T=setTimeout(function(){h.classList.remove('iw-drafting');},2000);}
+/* Focus ruler: a clear window over the paragraph the cursor is in; the rest
+   of the page is veiled. It lies over the page, so the text is untouched */
+let IRUL=null,IRUL_Q=0;
+function inkRuler(){IRUL_Q=0;const paper=document.getElementById('paper');if(!paper)return;
+ if(!inkWayOn('ruler')){if(IRUL){IRUL.w.remove();IRUL=null;}return;}
+ if(IRUL&&!IRUL.w.isConnected)paper.appendChild(IRUL.w);
+ if(!IRUL){const w=document.createElement('div');w.id='iwRulerWrap';w.setAttribute('aria-hidden','true');w.innerHTML='<div class="iwVeil iwV1"></div><div class="iwVeil iwV2"></div>';paper.appendChild(w);IRUL={w:w,t:w.firstChild,b:w.lastChild};}
+ const t=_fText||'',s=_fSel?_fSel.s:0,a=t.lastIndexOf('\n',s-1)+1;let e=t.indexOf('\n',s);if(e<0)e=t.length;
+ if(e<=a){IRUL.t.style.height='0';IRUL.b.style.top='100%';return;}
+ const pa=_fPointFromGlobal(a),pb=_fPointFromGlobal(e);if(!pa||!pb)return;
+ let rs=[];try{const r=document.createRange();r.setStart(pa.node,pa.off);r.setEnd(pb.node,pb.off);rs=[...r.getClientRects()].filter(x=>x.width>0&&x.height>0);}catch(x){}
+ if(!rs.length)return;
+ const pr=paper.getBoundingClientRect();
+ const top=Math.min(...rs.map(x=>x.top))-pr.top-6,bot=Math.max(...rs.map(x=>x.bottom))-pr.top+6;
+ IRUL.t.style.height=Math.max(0,top)+'px';IRUL.b.style.top=bot+'px';}
+function inkRulerSoon(){if(IRUL_Q||!inkWayOn('ruler'))return;IRUL_Q=requestAnimationFrame(inkRuler);}
+/* Gentle time: the band (the hourglass's time, or a rest), the heads-up
+   five minutes before a sprint ends, and the one question after fifty
+   minutes of work without a pause of five */
+const IGT={band:null,warned:false,phase:'',sit:0,last:0,asked:false,rest:0,resting:false};
+function inkGentle(text,title){INKWAY.ask({doc:document,night:inkWayNight(),id:'iwGentle',title:title||'Gentle time',text:text,buttons:[['Thank you',null,true]]});}
+function inkTimeBand(){if(typeof INKWAY==='undefined')return;let b=IGT.band;const on=inkWayOn('time');
+ if(!b){b=document.createElement('div');b.id='iwBand';b.innerHTML='<i></i>';b.setAttribute('role','progressbar');b.setAttribute('aria-valuemin','0');b.setAttribute('aria-valuemax','100');document.body.appendChild(b);IGT.band=b;}
+ const now=Date.now(),rest=IGT.rest>now;
+ if(IGT.resting&&!rest){IGT.resting=false;if(on)inkGentle('Welcome back. Your place is where you left it.');}
+ const st=(on&&window.inkClep&&inkClep.state)?inkClep.state():null;
+ if(!on||(!rest&&(!st||!st.running))){b.hidden=true;if(!st||!st.running)IGT.warned=false;return;}
+ let frac,label,cls;
+ if(rest){IGT.resting=true;const left=IGT.rest-now,m=Math.ceil(left/60000);frac=left/300000;label=m+(m===1?' minute':' minutes')+' of rest left';cls='rest';}
+ else{frac=Math.max(0,Math.min(1,st.remaining/Math.max(1,st.len)));const m=Math.ceil(st.remaining/60);
+  label=m+(m===1?' minute':' minutes')+(st.phase==='focus'?' left in this sprint':' left in this break');cls=st.phase==='focus'?'focus':'rest';
+  if(st.phase!==IGT.phase){IGT.phase=st.phase;IGT.warned=false;}
+  if(st.phase==='focus'&&st.remaining<=300&&st.remaining>0&&!IGT.warned){IGT.warned=true;inkGentle('Five minutes left in this sprint. A good moment to finish the sentence you are in.');}}
+ b.hidden=false;b.className=cls;b.firstChild.style.width=(frac*100).toFixed(1)+'%';b.title=label;
+ b.setAttribute('aria-label',label);b.setAttribute('aria-valuenow',String(Math.round(frac*100)));}
+window.INKWAY_BEAT=function(){const now=Date.now();
+ if(!IGT.last||now-IGT.last>5*60e3){IGT.sit=now;IGT.asked=false;}IGT.last=now;
+ try{inkTodayBeat(now);}catch(e){}
+ if(inkWayOn('time')&&!IGT.asked&&now-IGT.sit>=50*60e3&&IGT.rest<now){IGT.asked=true;
+  INKWAY.ask({doc:document,night:inkWayNight(),id:'iwGentle',title:'Gentle time',text:'You have been working for fifty minutes. Some water, a stretch? Your place is kept.',
+   buttons:[['Take five',function(){IGT.rest=Date.now()+300000;IGT.last=0;inkTimeBand();},true],['Keep going',function(){IGT.sit=Date.now();IGT.asked=false;},false]]});}};
+let IBEAT=0;function inkBeatSoon(){const n=Date.now();if(n-IBEAT<10000)return;IBEAT=n;window.INKWAY_BEAT();}
+/* Today so far: today's words added and the minutes with work in them, by
+   document; a new day starts a new count */
+function inkDay(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function inkTodayRec(){let r=null;try{r=JSON.parse(localStorage.getItem('ink_today')||'null');}catch(e){}
+ if(!r||r.d!==inkDay())r={d:inkDay(),docs:{},mins:0,lastMin:0,steps:[]};return r;}
+function inkTodaySave(r){try{localStorage.setItem('ink_today',JSON.stringify(r));}catch(e){}}
+function inkTodayWords(r){const d=S.docs.find(x=>x.id===S.active);if(!d)return;const w=wordCt(ed.value);
+ const x=r.docs[d.id]||(r.docs[d.id]={base:w});x.now=w;x.t=d.title||'Untitled';}
+function inkTodayBeat(now){if(!inkWayOn('today'))return;const r=inkTodayRec(),m=Math.floor((now||Date.now())/60000);
+ if(m!==r.lastMin){r.mins++;r.lastMin=m;}inkTodayWords(r);inkTodaySave(r);inkTodayChip(r);}
+function inkMinutes(n){if(n<60)return n+(n===1?' minute':' minutes');const h=Math.floor(n/60),m=n%60;return h+(h===1?' hour':' hours')+(m?' '+m+' min':'');}
+function inkTodayChip(r){const b=document.getElementById('iwToday');if(!b)return;
+ if(!inkWayOn('today')){b.hidden=true;return;}r=r||inkTodayRec();
+ let w=0;for(const k in r.docs)w+=Math.max(0,(r.docs[k].now||0)-(r.docs[k].base||0));
+ b.hidden=false;b.textContent='Today: +'+w.toLocaleString()+(w===1?' word':' words')+' · '+inkMinutes(r.mins);}
+function inkTodayCard(){const r=inkTodayRec();inkTodayWords(r);inkTodaySave(r);
+ const rows=Object.keys(r.docs).map(k=>{const x=r.docs[k],w=Math.max(0,(x.now||0)-(x.base||0));return '<li><b>'+esc(x.t||'Untitled')+'</b>: +'+w.toLocaleString()+(w===1?' word':' words')+'</li>';}).join('');
+ const steps=(r.steps||[]).map(x=>'<li>'+esc(x.t)+'</li>').join('');
+ const old=document.getElementById('iwAsk');if(old)old.remove();
+ INKWAY.css(document);
+ const c=document.createElement('div');c.id='iwAsk';c.className='iw-card'+(inkWayNight()?' iw-night':'');c.setAttribute('role','dialog');c.setAttribute('aria-label','Today so far');
+ c.innerHTML='<h4>Today so far</h4><p>You worked for about '+inkMinutes(r.mins)+' (the minutes with typing, reading or pressing in them).</p>'+
+  (rows?'<ul class="iwList">'+rows+'</ul>':'<p>No words added yet today. Opening the page counts as a start.</p>')+
+  (steps?'<p style="margin-top:8px"><b>Steps done</b></p><ul class="iwList">'+steps+'</ul>':'')+
+  '<div class="iw-row"><button type="button" class="iw-btn iw-go" data-x>Close</button></div>';
+ c.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('[data-x]'))c.remove();});
+ document.body.appendChild(c);}
+/* One next step: one line above the page, the document's own */
+function inkNextKey(){const d=S.docs.find(x=>x.id===S.active);return 'ink_next:'+(d?d.id:'');}
+function inkNextShow(){const bar=document.getElementById('iwNext'),inp=document.getElementById('iwNextIn');if(!bar||!inp)return;
+ bar.hidden=!inkWayOn('next');let v='';try{v=localStorage.getItem(inkNextKey())||'';}catch(e){}if(document.activeElement!==inp)inp.value=v;}
+function inkNextSave(){const inp=document.getElementById('iwNextIn');if(!inp)return;try{localStorage.setItem(inkNextKey(),inp.value);}catch(e){}}
+function inkNextDone(){const inp=document.getElementById('iwNextIn');if(!inp)return;const v=inp.value.trim();
+ if(!v){inp.focus();return;}
+ if(inkWayOn('today')){const r=inkTodayRec();(r.steps=r.steps||[]).push({t:v,at:Date.now()});inkTodaySave(r);}
+ inp.value='';inp.placeholder='And the next one?';inkNextSave();toast('Done: '+v+'. Well worked.');inp.focus();}
+/* Start small: one line, five minutes, mess allowed; the sentence goes into
+   the document after the paragraph you were in */
+const INKSM={pos:0,end:0,timer:0};
+function inkSmall(){if(typeof INKWAY==='undefined')return;INKWAY.css(document);
+ try{INKSM.pos=ed.selectionStart;}catch(e){INKSM.pos=ed.value.length;}
+ let o=document.getElementById('iwSmall');if(o)o.remove();
+ o=document.createElement('div');o.id='iwSmall';o.className=inkWayNight()?'iw-night':'';o.setAttribute('role','dialog');o.setAttribute('aria-label','Start small');
+ let draft='';try{draft=localStorage.getItem('ink_small_draft')||'';}catch(e){}
+ o.innerHTML='<div class="iws-band"><i></i></div><div class="iws-box"><div class="iws-k">Start small</div><h3>One sentence. Mess allowed.</h3>'+
+  '<textarea id="iwSmallIn" rows="2" placeholder="Write anything: the next sentence, or what this part is about." aria-label="Your sentence">'+esc(draft)+'</textarea>'+
+  '<div class="iws-t" id="iwSmallT" aria-live="polite">5 minutes</div><p class="iws-end" id="iwSmallEnd" hidden>Five minutes are up. Stop here or keep going: both count.</p>'+
+  '<div class="iw-row"><button type="button" class="iw-btn iw-go" data-a="put">Put it in my document</button><button type="button" class="iw-btn" data-a="more">Five more minutes</button><button type="button" class="iw-btn" data-a="close">Close</button></div></div>';
+ document.body.appendChild(o);
+ const ta=o.querySelector('textarea');ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+ ta.addEventListener('input',function(){try{localStorage.setItem('ink_small_draft',ta.value);}catch(e){}ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,innerHeight*0.5)+'px';});
+ function shut(){clearInterval(INKSM.timer);o.remove();}
+ function tick(){const left=Math.max(0,INKSM.end-Date.now()),m=Math.ceil(left/60000);
+  o.querySelector('.iws-band i').style.width=(left/3e5*100).toFixed(1)+'%';
+  document.getElementById('iwSmallT').textContent=left>0?m+(m===1?' minute':' minutes'):'Time';
+  document.getElementById('iwSmallEnd').hidden=left>0;}
+ function start(){INKSM.end=Date.now()+3e5;clearInterval(INKSM.timer);INKSM.timer=setInterval(tick,1000);tick();}
+ o.addEventListener('click',function(e){const b=e.target.closest?e.target.closest('[data-a]'):null;if(!b)return;const a=b.getAttribute('data-a');
+  if(a==='more'){start();ta.focus();return;}
+  if(a==='put'){const v=ta.value.trim();if(!v){ta.focus();return;}inkSmallPut(v);try{localStorage.removeItem('ink_small_draft');}catch(x){}}
+  shut();});
+ o.addEventListener('keydown',function(e){if(e.key==='Escape'){e.stopPropagation();shut();}});
+ start();}
+function inkSmallPut(text){const t=ed.value;let pos=INKSM.pos;if(typeof pos!=='number'||pos>t.length)pos=t.length;
+ let e=t.indexOf('\n',pos);if(e<0)e=t.length;pushUndo();
+ const ins=(t.trim()?'\n':'')+text;ed.value=t.slice(0,e)+ins+t.slice(e);const c=e+ins.length;
+ afterChange();try{locatePos(c,c);}catch(x){}toast('In your document. Well started.');}
+/* what each switch shows on the desk */
+function inkWayShow(g){
+ const v=(id,on)=>{const el=document.getElementById(id);if(el)el.hidden=!on;};
+ v('inkNoteNext',g.where.on);v('iwSmallBtn',g.small.on);
+ inkNextShow();inkTodayChip();inkRulerSoon();if(!g.ruler.on)inkRuler();inkTimeBand();
+ if(!g.draft.on)document.documentElement.classList.remove('iw-drafting');
+ if(!g.wait.on){const tw=document.getElementById('iwTipWait');if(tw)tw.hidden=true;const t=document.getElementById('toast');if(t&&t.classList.contains('iwWait'))inkWayMsgClose();}
+ inkWayQuiet(g);}
+function inkWayBoot(){if(typeof INKWAY==='undefined')return;
+ INKWAY.on(inkWayChanged);
+ const g=INKWAY.get();INKWAY_LAST=JSON.stringify(g.comfort)+inkWayNight();
+ if(g.comfort.on)inkWayApply();
+ inkWayWrap();inkWayShow(g);
+ /* the desk's own signs of work, for Gentle time and Today so far; the
+    rooms send theirs through INKWAY.beat */
+ ['keydown','pointerdown','input'].forEach(function(t){document.addEventListener(t,inkBeatSoon,true);});
+ setInterval(inkTimeBand,5000);
+ const fl=document.getElementById('editFlow');
+ if(fl){fl.addEventListener('keydown',inkDraftKey,true);fl.addEventListener('input',function(){inkRulerSoon();},true);}
+ document.addEventListener('selectionchange',inkRulerSoon);
+ window.addEventListener('resize',inkRulerSoon);
+ if(g.today.on)inkTodayBeat(Date.now());
+ /* night and day change the paper's tint */
+ try{new MutationObserver(function(){const g2=INKWAY.get();if(g2.comfort.on)inkWayChanged(g2);}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+ let wt=0;
+ document.addEventListener('selectionchange',function(){if(!inkWayOn('where'))return;clearTimeout(wt);wt=setTimeout(function(){if(_fRoot&&document.activeElement===_fRoot)inkWhereSave();},1500);});
+ document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')inkWhereSave();});
+ window.addEventListener('pagehide',inkWhereSave);
+ setTimeout(function(){const dr=document.getElementById('door');if(dr&&dr.style.display==='flex'){const w=setInterval(function(){if(dr.style.display!=='flex'){clearInterval(w);inkWhereOffer();}},700);}else inkWhereOffer();},600);}
+window.addEventListener('load',function(){setTimeout(inkWayBoot,700);});
+function inkRowHTML(e,i){return '<div class="crow" onclick="expandRow('+i+')"><span class="cdot c-'+e.cat+'"></span>'+
    '<span class="cor">'+esc(e.orig)+'</span>'+
    ((typeof e.fix==='string'&&e.fix!=='')?'<span class="cfx">→ '+esc(e.fix)+'</span>':
     (e.fix===''?'<span class="cfx" style="color:var(--gold)">remove ▸</span>':
     (e.alts&&e.alts.length?'<span class="cfx" style="color:var(--gold)">'+e.alts.length+(e.spell?(e.alts.length===1?' suggestion':' suggestions'):e.tryAlts?' to try':' stronger')+' ▸</span>':(e.ask?'<span class="cfx" style="color:var(--gold)">'+esc(e.ask.q)+' ▸</span>':''))))+
    '<span class="cwhy">'+esc(inkCap1(e.why||''))+'</span><span class="cexp">▾</span>'+
-   '<button class="cremove" title="Dismiss this suggestion" onclick="event.stopPropagation();dismissOne('+i+')">✕</button></div>').join('')+
-  (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
+   '<button class="cremove" title="Dismiss this suggestion" onclick="event.stopPropagation();dismissOne('+i+')">✕</button></div>';}
 function soloMove(d){SOLOI=Math.max(0,Math.min(EDITS.length-1,SOLOI+d));renderCards();
  if(EDITS[SOLOI])locate(SOLOI);}
 function pushUndo(){UNDO.push(ed.value);if(UNDO.length>60)UNDO.shift();inkTrimHistory(UNDO,0);}
@@ -10773,11 +11055,13 @@ function renderHL(){const t=ed.value;
  /* 7.44: the notes are walked once for all the pages (they are in order),
     and a page is drawn again only when its text or its notes changed */
  const E=EDITS,n=E.length;let k=0;
+ const INK3_VIS=ink3On()?new Set(ink3Shown()):null;
  _fSheets.forEach(function(sh){
   const s0=sh.start,s1=sh.end,sub=t.slice(s0,s1);
   while(k<n&&E[k].start<s0-4000)k++;
   let sig='',html='',pos=0;const parts=[];
   for(let idx=k;idx<n&&E[idx].start<s1;idx++){const e=E[idx];if(e.end<=s0)continue;
+   if(INK3_VIS&&!INK3_VIS.has(idx))continue;
    const a=Math.max(e.start,s0)-s0,b=Math.min(e.end,s1)-s0;
    if(b<=a||a<pos)continue;
    parts.push([a,b,e.cat,idx]);pos=b;sig+=a+','+b+','+e.cat+','+idx+(idx===FLASHIDX?'!':'')+';';}
@@ -11968,9 +12252,10 @@ function inkAuthSave(){const d=S.docs.find(x=>x.id===S.active);if(!d)return;cons
  (d.authLog||[]).forEach(e=>lines.push(new Date(e.t).toLocaleString()+'  '+(AUTH_NAMES[e.k]||e.k)+', '+e.n+' characters: '+e.x+'…'));
  const name=(d.title||'document').replace(/[^\w\- ]+/g,'_')+' - authorship.txt';
  if(window.inkSaveString)inkSaveString(name,'text/plain',lines.join('\n'));}
-function openDoc(id){const d=S.docs.find(x=>x.id===id);if(!d)return;S.active=id;UNDO=[];SND.flip();
+function openDoc(id){const d=S.docs.find(x=>x.id===id);if(!d)return;try{inkWhereSave();}catch(e){}S.active=id;UNDO=[];SND.flip();INK3.keys=null;INK3.later.clear();
  if(d.baseWords===undefined)d.baseWords=wordCt(d.text);
- ed.value=d.text;document.getElementById('docTitle').value=d.title;persist();renderDocs();scan();}
+ ed.value=d.text;document.getElementById('docTitle').value=d.title;persist();renderDocs();scan();
+ setTimeout(function(){try{inkWhereOffer(id);}catch(e){}try{inkNextShow();if(inkWayOn('today'))inkTodayBeat(Date.now());inkRulerSoon();}catch(e){}},400);}
 function titleChange(){const d=S.docs.find(x=>x.id===S.active);if(d){d.title=document.getElementById('docTitle').value;persist();renderDocs();}}
 var __persistTimer=0;
 function __persistNow(){try{persist();}catch(e){}}
@@ -12642,6 +12927,10 @@ function originality(){
    the line that shows it, so from the Coach menu they seemed to do nothing */
 function inkModalShow(){const b=document.getElementById('modalBody');if(b&&b.innerHTML.trim())document.getElementById('modal').style.display='flex';}
 function openModalDo(which){
+ if(which==='myway'&&typeof INKWAY!=='undefined'){const b=document.getElementById('modalBody');
+  b.innerHTML='<h3>My way of working</h3><p style="font-size:12.5px;color:var(--mut);margin:0 0 12px;line-height:1.6;font-family:Georgia,serif">Small supports for focus, for finding your place again, and for reading comfort.</p><div class="'+(inkWayNight()?'iw-night':'')+'">'+INKWAY.panelHTML({app:'inkwell'})+'</div>';
+  INKWAY.wire(b.querySelector('.iw-panel'),{night:inkWayNight});
+  document.getElementById('modal').style.display='flex';return;}
  const b=document.getElementById('modalBody');
  b.classList.toggle('guide3D',which==='guide');
  if(which==='keep'){b.innerHTML='';openKeep();return;}

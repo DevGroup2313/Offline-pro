@@ -2399,5 +2399,36 @@ function sessSlideView(list, k) {
 })();
 </script>
 
+<script>
+@@LIB_FIND_CORE@@
+</script>
+<script>
+@@LIB_MYWAY_CORE@@
+</script>
+<style>
+  /* 7.44: Reading comfort on Scriba's pad */
+  html.ink-comfort #pad{font-family:var(--cf-font) !important;font-size:var(--cf-size) !important;line-height:var(--cf-line) !important;letter-spacing:var(--cf-letter) !important;}
+  html.ink-comfort #pad *{font-family:inherit !important;font-size:inherit !important;line-height:inherit !important;letter-spacing:inherit !important;}
+  html.ink-cf-paper #pad{background:var(--cf-paper) !important;}
+  #iwOpen{font-size:13px;padding:8px 13px;}
+  #iwNote{margin-left:auto;}
+  #iwNote[hidden]{display:none;}
+</style>
+<script>(function(){
+/* 7.44: My way of working in Scriba (INKWAY): the button beside Your words,
+   Reading comfort on the pad, and Where was I? on the pad */
+var W=window.INKWAY,F=window.INKFIND,pad=document.getElementById('pad');
+if(!W||!pad)return;
+function night(){return document.documentElement.classList.contains('cd-dark');}
+W.room({app:'scriba',doc:document,night:night,
+  base:{size:16,line:1.75,font:'var(--serif)'},
+  slot:document.getElementById('scribaTop'),ruler:pad,
+  noteSlot:document.querySelector('.bar'),
+  key:function(){return 'pad';},
+  here:function(){var s=getSelection();if(!s.rangeCount||!pad.contains(s.anchorNode))return null;return W.domPlace(pad,F);},
+  worth:function(r){return (r.pos||0)>40;},
+  go:function(r){var t=document.getElementById('tabDictateBtn');if(t&&t.getAttribute('aria-selected')!=='true')t.click();var rg=W.domGo(pad,r,F);if(rg)W.into(rg,0);}
+});
+})();</script>
 </body>
 </html>

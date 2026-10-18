@@ -1,0 +1,66 @@
+INKWELL v7.44: HANDOFF NOTES (in progress)
+==========================================
+Date: 18 October 2026. Read INKWELL_HANDOFF_v7p43.txt and the earlier notes
+for everything before 7.44.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on.
+
+WHAT IS IN 7.44 SO FAR
+----------------------
+1. BIG2, a thesis of 100,000 words (committed ed6c727). Measured in
+   Chromium: opening 1.9 s, 324 pages; a keystroke 38 to 49 ms (about 40 s
+   extrapolated before); a pause re-checks only the changed block (0.19 s);
+   versions in IndexedDB; a reload is exact.
+2. FIND1, Tabula's search, as Word's Navigation pane (src/lib/find_core.js,
+   INKFIND; tools/find/find_test.js, 23). Ctrl+F (Cmd+F on a Mac) or Home,
+   Find. Every result lit in the text (the CSS Custom Highlight API; past
+   2,000 results, the 2,000 around the current one) and listed with its page
+   and the words around it, a hundred at a time; Enter and Shift+Enter, the
+   arrows, F3 and Cmd+G go from the cursor; "Back to where I was"; recent
+   searches; Match case, Whole words only, Ignore accents; a straight
+   apostrophe finds a curly one. Footnotes and endnotes are searched; note
+   numbers and tracked deletions are not. Replace (the browser's own undo)
+   and Replace all (one step back with Ctrl+Z or Undo), tracked when
+   tracking is on. A Headings tab holds the outline with pages and "you are
+   here" (View, Navigation). The counter bar names the page in view.
+   Measured on 100,000 words: "the", 7,513 results in 114 to 141 ms;
+   a phrase in about 11 ms; scrolling with them lit 18 ms a frame against
+   17 ms with none; typing with the pane open about 20 ms a key.
+   Also: a footnote's number was the dark ribbon colour on the night page.
+3. My way of working (src/lib/myway_core.js, INKWAY; tools/myway/
+   myway_test.js, 21), in Inkwell (Studio, My way of working), Tabula (View,
+   Comfort), Scriba and Fontes (a button in each). Eleven supports, each off
+   until switched on, one choice serving all four:
+   - Start small, One next step, Draft now fix later, Today so far,
+     Three at a time, Messages wait for me: on the desk.
+   - Focus ruler: desk, Tabula, Scriba (the rooms dim by a style rule, so
+     the document is never touched).
+   - Gentle time and Quiet senses: everywhere (the band and the questions
+     are drawn by the desk over the rooms; the rooms tell it of work).
+   - Where was I?: all four (Fontes keeps the source being added).
+   - Reading comfort: all four; Atkinson Hyperlegible (Braille Institute,
+     SIL OFL 1.1, src/lib/atkinson_font_OFL.txt), held once in Inkwell's page
+     and read by the rooms. Only the screen changes.
+   The look is the desk's own: raised, bevelled controls that lift and
+   press in, the brass-tipped switch, cards that pop out; still for Minimal
+   motion, Quiet senses and reduced motion. Contrast measured on 324 texts
+   in each mode: none under 4.5 to 1.
+4. The build lets a room take shared scripts (@@LIB_NAME@@ in a room).
+   Clepsydra gains inkClep.state for Gentle time (marked in its header).
+
+NOT DONE YET
+------------
+- BIG3 (a paragraph, a section or the whole document corrected and
+  rewritten, change by change), CITE1 (citations and Chicago notes at
+  thesis scale), G3c (src/lib/dphil_core.js is written but not wired).
+- Version numbers are still 7.43 until the release.
+- Tested in Chromium only here; Safari and Firefox not run.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 94, mark_test.js 26,
+find_test.js 23, myway_test.js 21; the browser regression.
