@@ -2014,6 +2014,11 @@ const SV=(k,v)=>{var ok=false;
  /* 7.40: while a copy of the library is being put back, the page that is about
     to reload must not write its old library over it */
  if(typeof KEEP!=='undefined'&&KEEP&&KEEP.reloading)return true;
+ /* 7.44: earlier versions live in IndexedDB, a far larger store, once it is
+    open. Measured: a 100,000-word thesis and its six versions filled 4.9
+    million characters of localStorage, near all Chrome allows and more than
+    Safari does, and a full localStorage would stop the documents saving. */
+ if(k==='snaps'&&IDB){idbPut('snaps',v);inkBridgeMirror(k,v);try{localStorage.removeItem('ink_snaps');}catch(e){}return true;}
  try{localStorage.setItem('ink_'+k,JSON.stringify(v));ok=true;inkBridgeMirror(k,v);}catch(e){}
  if(!ok){
   try{window.__inkBridgeStore=window.__inkBridgeStore||{};window.__inkBridgeStore[k]=JSON.stringify(v);
@@ -2388,25 +2393,61 @@ function _fProbeEnsure(){
  _fProbe.style.width=_fTextW()+'px';
  return _fProbe;
 }
+/* 7.44: pages laid out by need. Until 7.43 every key re-measured the whole
+   rest of the document from page one, setting all of it into the probe for
+   each page: a keystroke took 0.9 s at 10,000 words and 2.7 s at 20,000,
+   and a thesis could not be opened. Now a page is measured in a window of
+   about two pages' text, and after an edit the layout starts on the page
+   before the edit and stops at the first page break that lines up with an
+   old one: the pages after it are the old pages, unchanged. */
+let _fPages=[],_fLaidText=null,_fLaidKey='';
+function _fMeasure(rest,cap,probe,guess){
+ /* the longest start of rest that fits in cap, cut at a line or a space */
+ let W=Math.min(rest.length,Math.max(1500,Math.round((guess||3000)*1.7)));
+ for(;;){probe.textContent=rest.slice(0,W);
+  if(probe.offsetHeight<=cap){if(W>=rest.length)return rest.length;W=Math.min(rest.length,W*2);}
+  else break;}
+ let lo=0,hi=W,best=0;
+ while(lo<=hi){const mid=(lo+hi)>>1;probe.textContent=rest.slice(0,mid);
+  if(probe.offsetHeight<=cap){best=mid;lo=mid+1;}else{hi=mid-1;}}
+ let cut=best;
+ const nl=rest.lastIndexOf('\n',best);
+ if(nl>best-340&&nl>0)cut=nl+1;
+ else{const sp=Math.max(rest.lastIndexOf(' ',best),rest.lastIndexOf('\t',best));
+  if(sp>best-80&&sp>0)cut=sp+1;}
+ if(cut<=0)cut=Math.max(1,best);
+ return cut;}
+function _fSplitFrom(t,probe,pages,pos,guess,stop){
+ for(;;){
+  const cap=(pages.length===0)?F_CAP1:F_CAPN,rest=t.slice(pos);
+  const n=rest===''?0:_fMeasure(rest,cap,probe,guess);
+  if(n>=rest.length){pages.push(rest);return pages;}
+  pages.push(rest.slice(0,n));pos+=n;guess=n;
+  if(stop&&stop(pos,pages))return pages;}}
 function _fSplitPages(t){
- const probe=_fProbeEnsure();
- const out=[];let rest=t;
- while(true){
-  const cap=(out.length===0)?F_CAP1:F_CAPN;
-  probe.textContent=rest;
-  if(probe.offsetHeight<=cap||rest===''){out.push(rest);break;}
-  let lo=0,hi=rest.length,best=0;
-  while(lo<=hi){const mid=(lo+hi)>>1;probe.textContent=rest.slice(0,mid);
-   if(probe.offsetHeight<=cap){best=mid;lo=mid+1;}else{hi=mid-1;}}
-  let cut=best;
-  const nl=rest.lastIndexOf('\n',best);
-  if(nl>best-340&&nl>0)cut=nl+1;
-  else{const sp=Math.max(rest.lastIndexOf(' ',best),rest.lastIndexOf('\t',best));
-   if(sp>best-80&&sp>0)cut=sp+1;}
-  if(cut<=0)cut=Math.max(1,best);
-  out.push(rest.slice(0,cut));rest=rest.slice(cut);
+ /* the key is all a page's fit depends on: the width and the type (a change
+    of either lays the whole document out again) */
+ const probe=_fProbeEnsure(),cs=getComputedStyle(probe),key=probe.style.width+'|'+F_CAP1+'|'+F_CAPN+'|'+cs.fontFamily+'|'+cs.fontSize+'|'+cs.lineHeight+'|'+cs.letterSpacing+'|'+cs.wordSpacing;
+ const old=_fLaidText,P=_fPages;
+ let pages;
+ if(old!==null&&key===_fLaidKey&&t===old&&P.length)pages=P.slice();
+ else if(old===null||key!==_fLaidKey||!P.length||t.length<6000)pages=_fSplitFrom(t,probe,[],0,3000,null);
+ else{
+  /* the stretch that changed: what the old and new text share at each end */
+  const m=Math.min(old.length,t.length);let a=0;while(a<m&&old.charCodeAt(a)===t.charCodeAt(a))a++;
+  let b=0;while(b<m-a&&old.charCodeAt(old.length-1-b)===t.charCodeAt(t.length-1-b))b++;
+  const delta=t.length-old.length,oldEnd=old.length-b;
+  const starts=[];let acc=0;for(const pg of P){starts.push(acc);acc+=pg.length;}
+  let k=0;while(k+1<P.length&&starts[k+1]<=a)k++;
+  /* an edit near the top of a page can move the break before it */
+  k=Math.max(0,k-1);if(k>0&&P[k-1].length<400)k--;
+  const after=new Map();for(let i=k+1;i<P.length;i++)if(starts[i]>=oldEnd)after.set(starts[i]+delta,i);
+  pages=_fSplitFrom(t,probe,P.slice(0,k),starts[k],P[k].length||3000,function(pos,pg){
+   const j=after.get(pos);if(j===undefined)return false;
+   for(let i=j;i<P.length;i++)pg.push(P[i]);return true;});
  }
- return out;
+ _fPages=pages;_fLaidText=t;_fLaidKey=key;
+ return pages;
 }
 /* 7.33: replacing a sheet's text destroys the browser's selection in it; the
    browser then re-anchors it somewhere (Safari can move it to other text of
@@ -2516,6 +2557,10 @@ function _fMaybeShot(){
  _fHist=_fHist.slice(0,_fHistI+1);
  _fHist.push({t:_fText,s:_fSel.s,e:_fSel.e});
  if(_fHist.length>250)_fHist.shift();
+ /* 7.44: each step keeps a whole copy of the text; for a thesis, 250 copies
+    were about 350 MB, enough for an iPad or the Fire tablet to close the
+    app. The steps kept now hold at most about 24 million characters */
+ inkTrimHistory(_fHist,1);
  _fHistI=_fHist.length-1;
 }
 function _fApplyHist(){
@@ -2530,6 +2575,7 @@ function _fSplice(from,to,rep,mode){
  _fSel={s:from,e:to};
  _fMaybeShot();
  _fText=_fText.slice(0,from)+rep+_fText.slice(to);
+ _fShiftEdits(from,to,rep);
  _fLayout();renderHL();
  let ns,ne;
  if(mode==='select'){ns=from;ne=from+rep.length;}
@@ -2538,6 +2584,16 @@ function _fSplice(from,to,rep,mode){
  flowSetSel(ns,ne);
  try{if(typeof onType==='function')onType();}catch(e){}
 }
+/* 7.44: until the next check, the notes after an edit move with the text,
+   and a note on the words being edited is put aside; before, every note
+   after the pen pointed at the wrong words until the check came round,
+   and every page's underlines were drawn again on each key */
+function _fShiftEdits(from,to,rep){
+ if(typeof EDITS==='undefined'||!EDITS||!EDITS.length)return;
+ const d=rep.length-(to-from);
+ const hit=e=>to>from?(e.start<to&&e.end>from):(e.start<=from&&e.end>=from);
+ if(EDITS.some(hit))EDITS=EDITS.filter(e=>!hit(e));
+ if(d)for(const e of EDITS)if(e.start>=to){e.start+=d;e.end+=d;}}
 function flowSetText(t){
  _fText=String(t==null?'':t);
  _fHist=[{t:_fText,s:0,e:0}];_fHistI=0;
@@ -8284,9 +8340,12 @@ function inkCap1(t){t=String(t||'');const i=t.search(/[A-Za-z]/);return i<0?t:t.
 function ruleEdits(t){
  /* the engine re-reads nothing when nothing changed: the signature is the text
     plus every dial the rules read */
- var sig=t.length+'|'+t.slice(0,64)+'|'+t.slice(-64)+'|'+S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+(S.rules?S.rules.length:0)+'|'+(S.muteWords||[]).length+'|'+(S.citeStyle||'');
- if(__ruleSig===sig&&__ruleAns)return __ruleAns;
- __ruleSig=sig;WB=null;
+ /* 7.44: the whole text is the key. The old key (its length and its two
+    ends) returned stale notes after a same-length change in the middle,
+    such as "teh" corrected to "the" */
+ var sig=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+(S.rules?S.rules.length:0)+'|'+(S.muteWords||[]).length+'|'+(S.citeStyle||'')+'|'+(INK_BLOCK_MODE?1:0);
+ if(__ruleSig===sig&&__ruleText===t&&__ruleAns)return __ruleAns;
+ __ruleSig=sig;__ruleText=t;WB=null;
  const ms=masks(t);
  /* the pack is assembled once per settings signature, not once per scan: at
     five hundred rules the reassembly itself was the scan's first cost (7.24) */
@@ -8350,8 +8409,8 @@ function ruleEdits(t){
  introCommaCheck(t,ms,out);
  doubleHedgeCheck(t,ms,out);
  if(S.reg!=='casual'&&S.reg!=='creative')overuseCheck(t,ms,out);
- consistencyChecks(t,ms,out);
- headingChecks(t,ms,out);
+ /* checks of the whole document run once on it, never paragraph by paragraph */
+ if(!INK_BLOCK_MODE){consistencyChecks(t,ms,out);headingChecks(t,ms,out);}
  if(S.reg!=='casual')transitionCommaCheck(t,ms,out);
  if(typeof articleANCheck==='function')articleANCheck(t,ms,out);
  if(echoOpenCheck)echoOpenCheck(t,ms,out);
@@ -8444,7 +8503,12 @@ function renderCards(){
   (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
 function soloMove(d){SOLOI=Math.max(0,Math.min(EDITS.length-1,SOLOI+d));renderCards();
  if(EDITS[SOLOI])locate(SOLOI);}
-function pushUndo(){UNDO.push(ed.value);if(UNDO.length>60)UNDO.shift();}
+function pushUndo(){UNDO.push(ed.value);if(UNDO.length>60)UNDO.shift();inkTrimHistory(UNDO,0);}
+/* the oldest steps go first, until the copies hold at most about 24 million
+   characters; the newest few always stay (a thesis keeps about thirty) */
+function inkTrimHistory(arr,obj){
+ let tot=0;for(const h of arr)tot+=(obj?h.t:h).length;
+ while(arr.length>3&&tot>24e6){const h=arr.shift();tot-=(obj?h.t:h).length;if(obj&&arr===_fHist)_fHistI=Math.max(0,_fHistI-1);}}
 function undo(){if(!UNDO.length)return toast('Nothing to undo');ed.value=UNDO.pop();
  /* 7.34: Cite's record of its citations goes back with the text */
  try{const d=inkDoc(),r=CITE_UNDO.get(ed.value);if(d&&r!==undefined){d.citeRec=JSON.parse(r);persist();}}catch(e){}
@@ -8632,7 +8696,7 @@ function inkSpellEdits(t,taken){
  if(!SPELLD||S.spellOff)return [];
  const ms=masks(t),refAt=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
  const ignore=new Set((S.spellDict||[]).concat(S.muteWords||[]).map(w=>String(w).toLowerCase()));
- return INKSPELL.check(SPELLD,t,{margin:0.2,maxScore:1.35,ignore:ignore})
+ return INKSPELL.check(SPELLD,t,{margin:0.2,maxScore:1.35,ignore:ignore,uses:INK_DOC_USES||undefined})
   .filter(e=>!inMask(e.start,ms)&&(refAt<0||e.start<refAt)&&!taken.some(o=>o.start<e.end&&e.start<o.end))
   .map(e=>{e.why=e.fix?'Spelling':'Spelling: not in the dictionary';return e;});}
 function spellAdd(i){const e=EDITS[i];if(!e||!e.spell)return;const w=String(e.orig).toLowerCase();
@@ -8677,6 +8741,7 @@ async function inkModelPump(){
 const INKREF_H={plain:w=>!!SPELLD&&INKSPELL.level(SPELLD,String(w).toLowerCase())>=0,
  syn:w=>{const r=synFor(String(w));return r?r.syns.map(x=>inflectSyn(x,r.form)):[];}};
 function inkRules(t){
+ if(t.length>INK_CHUNK_MIN)return inkRulesLong(t);
  let all=inkRuleGate(t,ruleEdits(t));
  Array.prototype.push.apply(all,inkSpellEdits(t,all));
  if(typeof INKREF!=='undefined'){try{all=INKREF.refine(t,all,INKREF_H);}catch(e){console.warn('[inkwell] refine',e);}}
@@ -8686,8 +8751,84 @@ function inkRules(t){
  return keep;}
 function inkToggleStyle(){S.showStyle=!S.showStyle;SV('showStyle',S.showStyle);CARDSIG='';scan();
  toast(S.showStyle?'Clarity and style notes shown':'Only correctness: clarity and style notes hidden');}
-function scan(){EDITS=inkModelEdits(ed.value,inkRules(ed.value)).sort((a,b)=>a.start-b.start);EXPID=-1;
+function scan(){
+ if(ed.value.length>INK_CHUNK_MIN)return inkScanLong();
+ EDITS=inkModelEdits(ed.value,inkRules(ed.value)).sort((a,b)=>a.start-b.start);EXPID=-1;
  renderCards();updateStats();renderHL();renderOutline();}
+/* ===== 7.44: a thesis-length document =====
+   Measured with a 100,000-word thesis: the whole-document check took about
+   2.7 s at 20,000 words and grew from there, every time the writer paused.
+   A long document (over 40,000 characters, about 6,000 words) is checked a
+   paragraph at a time; each paragraph's notes are kept, keyed on its words
+   and the settings, so a pause re-checks only the paragraphs that changed.
+   The checks of the whole document (spelling kept consistent, headings in
+   one style, the writer's own terms) still read all of it. The first check
+   of a long document is done in slices of about 30 ms, so the page answers
+   while it runs. */
+let INK_CHUNK_MIN=40000;
+let INK_BLOCK_MODE=false,__ruleText=null,INK_DOC_USES=null,INKRC={sig:'',map:new Map()},INKSCAN=null;
+function inkRuleSettingsSig(){return [S.reg,S.docType||'',S.dialect||'',(S.rules||[]).map(r=>r.on?r.pat+'\u0002'+(r.rep||''):'').join('\u0001'),(S.muteWords||[]).join(','),(S.spellDict||[]).join(','),S.citeStyle||'',S.spellOff?1:0,SPELLD?1:0].join('|');}
+/* the paragraphs of a text, as [start, end) */
+function inkBlocks(t){const out=[],re=/\n{2,}/g;let last=0,m;
+ while((m=re.exec(t))){if(m.index>last)out.push([last,m.index]);last=m.index+m[0].length;}
+ if(t.length>last)out.push([last,t.length]);return out;}
+/* how often each word is written in the whole document: the spelling
+   checker's sign of the writer's own terms */
+function inkWordUses(t){const u=new Map(),re=/[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’]*(?:-[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’]*)*/g;let m;
+ while((m=re.exec(t))){const k=m[0].toLowerCase();u.set(k,(u.get(k)||0)+1);}return u;}
+function inkRulesBlock(b,refAfter){
+ INK_BLOCK_MODE=true;
+ try{let all=inkRuleGate(b,ruleEdits(b));
+  if(!refAfter)Array.prototype.push.apply(all,inkSpellEdits(b,all));
+  if(typeof INKREF!=='undefined'){try{all=INKREF.refine(b,all,INKREF_H);}catch(e){}}
+  return all;}
+ finally{INK_BLOCK_MODE=false;}}
+/* one paragraph's notes, from the store or checked now */
+function inkBlockNotes(t,a,b,refAt){
+ const block=t.slice(a,b),after=refAt>=0&&a>=refAt,key=(after?'\u0003':'')+block;
+ let es=INKRC.map.get(key);
+ if(!es){es=inkRulesBlock(block,after);INKRC.map.set(key,es);}
+ return es;}
+function inkRulesLong(t){
+ const sig=inkRuleSettingsSig();
+ if(INKRC.sig!==sig)INKRC={sig:sig,map:new Map()};
+ INK_DOC_USES=inkWordUses(t);
+ const refAt=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
+ let all=[];const live=new Set();
+ for(const [a,b] of inkBlocks(t)){
+  const es=inkBlockNotes(t,a,b,refAt);live.add((refAt>=0&&a>=refAt?'\u0003':'')+t.slice(a,b));
+  for(const e of es){const c=Object.assign({},e);c.start+=a;c.end+=a;all.push(c);}}
+ /* paragraphs no longer in the text are forgotten */
+ if(INKRC.map.size>live.size*2+200)for(const k of Array.from(INKRC.map.keys()))if(!live.has(k))INKRC.map.delete(k);
+ /* and the checks of the whole document */
+ const ms=masks(t);all.sort((x,y)=>x.start-y.start);
+ const doc=all.slice();consistencyChecks(t,ms,doc);headingChecks(t,ms,doc);
+ all=doc.slice();
+ INK_DOC_USES=null;
+ if(S.showStyle){INK_STYLE_HIDDEN=0;return all;}
+ const keep=all.filter(e=>e.cat!=='c'&&e.cat!=='s');
+ INK_STYLE_HIDDEN=all.length-keep.length;
+ return keep;}
+/* the first check of a long document, in slices, while the writer works */
+function inkScanLong(){
+ const t=ed.value,job={t:t};INKSCAN=job;
+ const sig=inkRuleSettingsSig();if(INKRC.sig!==sig)INKRC={sig:sig,map:new Map()};
+ const blocks=inkBlocks(t),refAt=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
+ let i=0;
+ const step=function(){
+  if(INKSCAN!==job)return;
+  if(ed.value!==job.t){INKSCAN=null;return scan();}
+  const t0=performance.now();
+  INK_DOC_USES=INK_DOC_USES||inkWordUses(t);
+  while(i<blocks.length&&performance.now()-t0<30){inkBlockNotes(t,blocks[i][0],blocks[i][1],refAt);i++;}
+  INK_DOC_USES=null;
+  if(i<blocks.length){inkScanSay(Math.round(100*i/blocks.length));return setTimeout(step,0);}
+  INKSCAN=null;inkScanSay(-1);
+  EDITS=inkModelEdits(t,inkRulesLong(t)).sort((a,b)=>a.start-b.start);EXPID=-1;
+  renderCards();updateStats();renderHL();renderOutline();};
+ step();}
+function inkScanSay(pc){const el=document.getElementById('stCerr');if(!el)return;
+ if(pc>=0){el.textContent='checking '+pc+'%';el.title='Inkwell is reading the whole document once; you can keep writing.';}}
 
 /* ================= LESSONS ================= */
 const LESSONS={
@@ -10629,15 +10770,23 @@ async function inkProgressiveCheck(engine,label){
 function renderHL(){const t=ed.value;
  if(!_fSheets||!_fSheets.length)return;
  const snap=_fSelSnap(),keep=snap||_fSel;
+ /* 7.44: the notes are walked once for all the pages (they are in order),
+    and a page is drawn again only when its text or its notes changed */
+ const E=EDITS,n=E.length;let k=0;
  _fSheets.forEach(function(sh){
   const s0=sh.start,s1=sh.end,sub=t.slice(s0,s1);
-  let html='',pos=0;
-  EDITS.forEach((e,idx)=>{if(e.end<=s0||e.start>=s1)return;
+  while(k<n&&E[k].start<s0-4000)k++;
+  let sig='',html='',pos=0;const parts=[];
+  for(let idx=k;idx<n&&E[idx].start<s1;idx++){const e=E[idx];if(e.end<=s0)continue;
    const a=Math.max(e.start,s0)-s0,b=Math.min(e.end,s1)-s0;
-   if(b<=a||a<pos)return;
-   html+=esc(sub.slice(pos,a))+'<span class="hl c-'+e.cat+(idx===FLASHIDX?' flash':'')+'" data-hi="'+idx+'">'+esc(sub.slice(a,b))+'</span>';pos=b;});
+   if(b<=a||a<pos)continue;
+   parts.push([a,b,e.cat,idx]);pos=b;sig+=a+','+b+','+e.cat+','+idx+(idx===FLASHIDX?'!':'')+';';}
+  if(sh._sub===sub&&sh._sig===sig&&sh._html!==null)return;
+  pos=0;
+  for(const [a,b,cat,idx] of parts){html+=esc(sub.slice(pos,a))+'<span class="hl c-'+cat+(idx===FLASHIDX?' flash':'')+'" data-hi="'+idx+'">'+esc(sub.slice(a,b))+'</span>';pos=b;}
   html+=esc(sub.slice(pos));
   if(sub)html='<span class="pgw">'+html+'</span>';
+  sh._sub=sub;sh._sig=sig;
   if(sh._html!==html){sh._html=html;sh.txt.innerHTML=html;}
  });
  FLASHIDX=-1;
@@ -10654,7 +10803,7 @@ function renderPages(){
     the entry point every caller knows. */
  if(_fSheets&&_fSheets.length)_fSyncSheets(_fSplitPages(_fText));
 }
-function pagesReset(){ if(_fSheets&&_fSheets.length){_fLayout();try{renderHL();}catch(e){}} }
+function pagesReset(){ _fLaidText=null; if(_fSheets&&_fSheets.length){_fLayout();try{renderHL();}catch(e){}} }
 function applySyn(w){
  var s=ed.selectionStart,e=ed.selectionEnd;if(e<=s)return;
  var orig=ed.value.slice(s,e);

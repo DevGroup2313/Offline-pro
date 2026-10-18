@@ -151,7 +151,9 @@
     const re = /[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'’]*(?:-[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F'’]*)*/g; let m;
     /* 7.43: how often each word is written; a term used three times or more
        is the writer's own, unless one cheap slip turns it into a known word */
-    const uses = new Map(); for (const x of String(text).match(re) || []) { const k = x.toLowerCase(); uses.set(k, (uses.get(k) || 0) + 1); }
+    /* 7.44: a long document is checked a paragraph at a time; opt.uses then
+       carries the counts of the whole document */
+    const uses = opt.uses || new Map(); if (!opt.uses) for (const x of String(text).match(re) || []) { const k = x.toLowerCase(); uses.set(k, (uses.get(k) || 0) + 1); }
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
