@@ -3461,7 +3461,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     const F = new Set(toks(e.from)), T = toks(e.to), I = new Set(toks(ins));
     const added = T.filter(w => !F.has(w)), Tset = new Set(T), removed = [...F].filter(w => !Tset.has(w));
     if (added.length) return added.every(w => I.has(w));
-    return removed.length > 0 && removed.every(w => !I.has(w));
+    /* a rule that only takes out "and" (a split) is no evidence */
+    const content = removed.filter(w => !/^(?:and|or|but|the|a|an|of|to|in|that|which|it|is|was|be|so)$/.test(w));
+    return content.length > 0 && removed.every(w => !I.has(w));
   }
   /* a span without the spaces at its ends */
   function trim(text, s, e) { while (e > s && /\s/.test(text[e - 1])) e--; while (s < e && /\s/.test(text[s])) s++; return [s, e]; }
@@ -3499,9 +3501,17 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     if (fromModel) {
       /* a model rewrites a sentence as a whole: its changes in one sentence
          are one change, kept or refused together */
-      const S = sentenceSpans(orig), sOf = p => { for (let k = 0; k < S.length; k++) if (p < S[k][1]) return k; return S.length - 1; };
-      const first = {};
-      H.forEach((h, i) => { const k = sOf(h.ae > h.as ? h.as : Math.max(0, h.as - 1)); if (k in first) join(first[k], i); else first[k] = i; });
+      /* and where the model merged or split sentences, the changes in one
+         of its sentences are one change too */
+      const SO = sentenceSpans(orig), SV = sentenceSpans(version);
+      const sOf = (S, p) => { for (let k = 0; k < S.length; k++) if (p < S[k][1]) return k; return S.length - 1; };
+      const firstO = {}, firstV = {};
+      H.forEach((h, i) => {
+        const ko = sOf(SO, h.ae > h.as ? h.as : Math.max(0, h.as - 1));
+        if (ko in firstO) join(firstO[ko], i); else firstO[ko] = i;
+        const a = sOf(SV, h.be > h.bs ? h.bs : Math.max(0, h.bs - 1)), b = sOf(SV, Math.max(h.bs, h.be - 1));
+        for (let kv = a; kv <= b; kv++) { if (kv in firstV) join(firstV[kv], i); else firstV[kv] = i; }
+      });
     } else {
       /* places one rule made are one change */
       entries.forEach((e, k) => { const hs = H.map((h, i) => why[i].indexOf(k) >= 0 ? i : -1).filter(i => i >= 0); for (let j = 1; j < hs.length; j++) join(hs[0], hs[j]); });
@@ -3609,7 +3619,73 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     return out;
   }
 
-  const api = { analyse, compose, parts, locate, generic };
+  /* 7.43: a writing model's answer made into a passage. Measured on LFM2.5
+     1.2B and Qwen3 4B through Inkwell's server, the answers carried a
+     reply's opening ("That's a great point."), a note after the passage,
+     characters of another script (Qwen3 4B once wrote two Chinese
+     characters into an English sentence), and dropped citations. */
+  const OTHER_SCRIPT = /[぀-ヿ㐀-鿿가-힯＀-￯]+/g;
+  function clean(src, out, opts) {
+    let o = String(out || '').replace(/\r\n?/g, '\n').trim();
+    o = o.replace(/^(?:passage|rewritten passage|rewritten text|revised passage|revision)\s*:\s*/i, '');
+    /* a spoken opening ("Hmm,", "Well,") the writer did not write */
+    const lead = (String(src).trim().match(/^\w+/) || [''])[0].toLowerCase();
+    o = o.replace(/^(?:hmm+|well|oh|okay|ok|so)[,.!]?\s+(?=[A-Za-z])/i, m => m.trim().replace(/[,.!]$/, '').toLowerCase() === lead ? m : '');
+    if (o && /^[a-z]/.test(o) && /^[A-Z]/.test(String(src).trim())) o = o[0].toUpperCase() + o.slice(1);
+    for (let k = 0; k < 2; k++) o = o.replace(/^\s*(?:(?:sure|certainly|of course|absolutely|great|okay|ok)\b[^.!?\n]*[.!?:]\s*|here(?:’s|'s| is| are)\b[^:\n]*:\s*|that(?:’s|'s) a (?:great|good|fair|interesting)[^.!?\n]*[.!?]\s*)/i, '');
+    /* a note the model adds after the passage */
+    o = o.replace(/\n+\s*(?:\(?note|\*\*note|explanation|changes made)\b[\s\S]*$/i, '');
+    if (/^["“][\s\S]*["”]$/.test(o) && !/^["“]/.test(String(src).trim())) o = o.slice(1, -1).trim();
+    if (!OTHER_SCRIPT.test(String(src))) o = o.replace(OTHER_SCRIPT, '').replace(/[ \t]{2,}/g, ' ').replace(/ +([,.;:!?])/g, '$1');
+    OTHER_SCRIPT.lastIndex = 0;
+    if (!opts || opts.repair !== false) o = citeRepair(src, o);
+    return o.trim();
+  }
+  /* a citation the model dropped goes back at the end of the sentence most
+     like the one it stood in; where no sentence is like it (the claim was
+     cut), it stays out, and the fact guard says so */
+  const CITE = /\([^()]*\b(?:1[5-9]\d\d|20\d\d)[a-z]?\b[^()]*\)|\[\^?\d+(?:[,–-]\s*\d+)*\]/g;
+  const STOPW = /^(?:the|a|an|of|and|to|in|is|that|it|for|as|with|was|on|be|by|this|are|or|not|from|at|which|have|has|but|their|they|his|her|its|were|been|also|we|our|can|more|one|all|would|there|what|so|if|about|into|than|other|some|such|these|may|who|will|no|only|them|do|when)$/;
+  const content = x => new Set((String(x).toLowerCase().match(/[a-z]{3,}/g) || []).filter(w => !STOPW.test(w)));
+  const sents = x => String(x).match(/[^.!?]+(?:[.!?]+["”’)]*)?\s*/g) || [];
+  function citeRepair(src, out) {
+    for (const c of String(src).match(CITE) || []) {
+      if (out.indexOf(c) >= 0) continue;
+      const home = sents(src).find(x => x.indexOf(c) >= 0) || '', W = content(home.replace(c, ''));
+      const ss = sents(out); if (!ss.length || !W.size) continue;
+      let best = -1, bs = 0;
+      ss.forEach((x, i) => { const X = content(x); let n = 0; X.forEach(w => { if (W.has(w)) n++; }); const j = n / ((W.size + X.size - n) || 1); if (j > bs) { bs = j; best = i; } });
+      if (best < 0 || bs < 0.15) continue;
+      const x = ss[best], m = x.match(/([.!?]+["”’)]*)(\s*)$/);
+      ss[best] = m ? x.slice(0, m.index).replace(/\s+$/, '') + ' ' + c + m[1] + m[2] : x.replace(/\s+$/, '') + ' ' + c + (x.match(/\s*$/) || [''])[0];
+      out = ss.join('');
+    }
+    return out;
+  }
+
+  /* what a careful reader would say of a model's version before using it:
+     it describes the passage instead of rewriting it (meta), it changes who
+     is speaking (voice), or it strays far from the writer's words (far).
+     Measured on LFM2.5 1.2B: "The passage discusses hermeneutic
+     perspectives...", "I find it hard to see how...", for a passage with no
+     "I" in it, and versions sharing a tenth of the passage's words. */
+  const FIRST = /\b(?:I|me|my|mine|we|us|our|ours)\b/g;
+  function judge(src, out, opts) {
+    const s = String(src || ''), o = String(out || ''), O = opts || {};
+    const meta = /^(?:the|this) (?:text|passage|original|precise wording|rewritten)\b|\b(?:the|this) (?:passage|text) (?:discusses|describes|examines|highlights|explores|argues|is about)\b/i.test(o)
+      && !/\b(?:the|this) (?:passage|text)\b/i.test(s);
+    const fs = (s.match(FIRST) || []).length, fo = (o.match(FIRST) || []).length;
+    let voice = '';
+    if (!fs && fo >= 1) voice = 'it speaks as “I” or “we”, where you did not';
+    else if (fs >= 2 && !fo) voice = 'it takes out your “I” and “we”';
+    else if (/\bthe (?:narrator|author|writer|speaker)\b/i.test(o) && !/\bthe (?:narrator|author|writer|speaker)\b/i.test(s)) voice = 'it turns your own voice into “the author’s”';
+    const A = content(s), B = content(o);
+    let n = 0; A.forEach(w => { if (B.has(w)) n++; });
+    const overlap = n / ((A.size + B.size - n) || 1);
+    return { meta, voice, overlap, far: !O.free && overlap < 0.12 };
+  }
+
+  const api = { analyse, compose, parts, locate, generic, clean, citeRepair, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.INKEXPLAIN = api;
 })(typeof self !== 'undefined' ? self : this);
@@ -15325,16 +15401,6 @@ function inkSafeEditsText(src,out,off,label){
  for(let k=0;k<ps.length;k++){if(k%2===0&&ps[k]!==qs[k])res=res.concat(inkSafeEdits(ps[k],qs[k],(off||0)+pos,label));pos+=ps[k].length;}
  return res;}
 /* ================= PRO MODEL ================= */
-const SYS_RW={scholarly:'You are Inkwell, a doctoral-level academic editor. Rewrite in formal, scholarly English: precise diction, third person, no contractions, no informal vocabulary; hedge speculative claims appropriately; preserve all citations, numbers and meaning exactly. Output ONLY the rewritten text.',
-professional:'You are Inkwell, a business editor. Rewrite to sound professional and polished while keeping the meaning. Output ONLY the rewritten text.',
-casual:'You are Inkwell, an editor. Rewrite to sound relaxed, warm and conversational. Output ONLY the rewritten text.',
-concise:'You are Inkwell. Make the text as concise as possible without losing meaning. Output ONLY the rewritten text.',
-confident:'You are Inkwell. Rewrite to sound confident and decisive; remove hedging. Output ONLY the rewritten text.',
-shorten:'You are Inkwell. Shorten significantly while keeping all key points. Output ONLY the result.',
-expand:'You are Inkwell. Expand with richer detail, examples and smoother flow. Output ONLY the result.',
-summarize:'You are Inkwell. Summarize into a tight paragraph. Output ONLY the summary.',
-paraphrase:'You are Inkwell. Paraphrase the text: same meaning, new wording and new sentence shapes; keep citations, numbers and register exactly. Output ONLY the paraphrase.',
-humanize:'You are Inkwell. Make the text sound natural and human: vary sentence length, prefer plain words, allow contractions where the register permits, keep every fact and citation. Output ONLY the result.'};
 const PRO_ALL=['onnx-community/Qwen2.5-3B-Instruct','onnx-community/Qwen2.5-1.5B-Instruct','onnx-community/Qwen2.5-0.5B-Instruct'];
 /* the device picks the list: WebGPU laptops climb from 3B, touch hardware starts at 0.5B */
 const PRO_CANDIDATES=(HAS_GPU&&!LOW_POWER)?PRO_ALL:(HAS_GPU?PRO_ALL.slice(1):PRO_ALL.slice(2));
@@ -16871,7 +16937,7 @@ async function improveAlternatives(){
 async function inkAiAlternatives(t){
  const instr='Give three different rewordings of the passage, each on its own line, numbered 1 to 3: 1. plainer, 2. more formal, 3. in other words. Keep the meaning and every fact, name, number and citation; add nothing new. Output only the three numbered lines.';
  ACST.busy='The writing model is writing its versions…';renderAlts('');
- try{const r=await inkWrite(instr,t);if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;r.by=String(r.by||'the writing model').replace(/\.gguf$/i,'');
+ try{const r=await inkWrite(instr,t,{repair:false});if(!ALTMODE||!ALTSEL||ALTSEL.t!==t)return;r.by=String(r.by||'the writing model').replace(/\.gguf$/i,'');
   const lines=[],re=/^\s*([123])[.)]\s*(.+)$/gm;let m;
   while((m=re.exec(r.text)))lines.push(m[2].trim().replace(/^(?:plainer|more formal|in other words)\s*[:\-–]\s*/i,''));
   const labels=['Plainer','More formal','In other words'];
@@ -16944,16 +17010,80 @@ function inkPromptKeep(){const v=(document.getElementById('pmIn')||{}).value||''
  const label=v.trim().split(/\s+/).slice(0,5).join(' ')+(v.trim().split(/\s+/).length>5?'…':'');
  const L=inkPromptsMine().filter(m=>m.instr!==v.trim());L.unshift({label:label,instr:v.trim()});inkPromptsSave(L);renderAlts('');toast('Prompt saved');}
 function inkPromptDrop(i){const L=inkPromptsMine();L.splice(i,1);inkPromptsSave(L);renderAlts('');}
-/* one rewrite through the best engine there is: the laptop's model, Apple's
-   on-device model, or the in-app model */
-async function inkWrite(instr,text){
- const rules=" Keep every claim, citation, name, number, quotation and dash unless the instruction says otherwise; add no facts, sources or examples that are not in the text. Output only the rewritten text.";
- if(inkSrv()){const r=await api('rewrite_custom',{text:text,instruction:instr});
-  if(r&&r.ok&&r.text&&r.text.trim())return {text:r.text.trim(),by:S.serverModel||'the laptop\u2019s model'};
-  throw new Error((r&&r.error)||'no answer');}
- if(PRO){const r=await proChat(instr+rules,text,Math.min(1500,wordCt(text)*3+200));
-  if(r&&r.trim())return {text:r.trim(),by:PRONAME||'the on-device model'};throw new Error('no answer');}
- throw new Error('none');}
+/* one rewrite through the best engine there is: the laptop's (or the Mac
+   mini's) model, Apple's on-device model, the tablet's model, or the
+   writing model in this window.
+   7.43: measured through Inkwell's own server on the small model the web
+   app runs (LFM2.5 1.2B) and the Mac mini's (Qwen3 4B), 18 rewrites each.
+   Sent as before (the instruction as the system message, the bare passage
+   as the user's), the small model dropped a citation or a number in 9 of
+   18, now and then answered the passage instead of rewriting it ("That's a
+   great point."), and "third person" in the scholarly instruction turned
+   "my brother" into "the narrator's brother". Now the passage comes
+   labelled as a passage, the rules name citations and the point of view,
+   and the answer is cleaned: a reply's opening is taken off, a citation the
+   model dropped goes back into the sentence that carries its claim, and
+   characters of another script are taken out (Qwen3 4B once wrote two
+   Chinese characters into an English sentence). With that the small model
+   lost no citation; it still rounded a figure twice ("62%" to "about
+   half"), which the fact guard names. */
+const INK_RW_RULES=' Copy every citation in brackets, such as (Smith, 2019), and every number exactly, in the sentence where it stands. Keep the writer’s point of view (I, we, they) and every fact; add no facts, sources or examples. Never reply to the passage or comment on it. Return only the rewritten passage.';
+const INK_RW_LIGHT=' Change as little as possible: keep the writer’s sentences, their order and most of their words; change only the words that do not yet do this.';
+async function inkWrite(instr,text,opts){
+ opts=opts||{};
+ const system='You are an editor. Rewrite the passage the user gives, as instructed. Instruction: '+instr+(opts.light?INK_RW_LIGHT:'')+INK_RW_RULES;
+ const user='Passage:\n\n'+text,n=Math.min(1500,wordCt(text)*(opts.long?4:3)+200);
+ let raw='',by='';
+ if(inkSrv()){
+  let r=null;try{r=await api('ask',{system:system,user:user,max_tokens:Math.min(1200,n)});}catch(e){r=null;}
+  /* a server from before 7.36 has no /api/ask */
+  if(!r||(!r.text&&r.ok!==true)){const c=await api('rewrite_custom',{text:text,instruction:instr+(opts.light?INK_RW_LIGHT:'')});r={text:c&&c.ok?c.text:'',error:c&&c.error};}
+  raw=String(r&&r.text||'');by=S.serverModel?inkModelName(S.serverModel):'the laptop’s model';
+  if(!raw.trim())throw new Error((r&&r.error)||'no answer');}
+ else if(PRO){raw=String(await proChat(system,user,n)||'');by=PRONAME||'the on-device model';if(!raw.trim())throw new Error('no answer');}
+ else throw new Error('none');
+ return {text:inkModelClean(text,raw,opts),by:by};}
+/* a model's file name as a reader would say it: "Qwen3-4B-Instruct-2507-
+   Q4_K_M.gguf" is "Qwen3 4B" */
+function inkModelName(n){return String(n||'').replace(/\.gguf$/i,'').replace(/[-_.]?(?:Q\d(?:_[A-Z0-9]+)*|F16|BF16|IQ\d\w*)$/i,'').replace(/-(?:Instruct|Chat|it)\b.*$/i,'').replace(/-/g,' ').trim()||String(n||'');}
+/* a model's answer, as a passage (INKEXPLAIN.clean): no reply around it, no
+   other script, and the writer's citations where their claims are */
+function inkModelClean(src,out,opts){return INKEXPLAIN.clean(src,out,opts);}
+/* the instruction each style gives a model; "third person" is gone from
+   Scholarly, where it changed whose story it was */
+const RW_INSTR={
+ scholarly:'Rewrite in formal scholarly English, as in a doctoral thesis: the precise word rather than the long one, no contractions, no informal words, ideas linked explicitly; hedge only what the passage itself treats as uncertain. Add no terms, fields or claims, and make it no longer than it needs to be.',
+ professional:'Rewrite to sound professional and polished: precise verbs, no slang, no contractions.',
+ casual:'Rewrite to sound relaxed, warm and conversational: everyday words, contractions where natural.',
+ plain:'Rewrite in plainer words and shorter sentences, for any reader.',
+ concise:'Make the passage as concise as possible: cut every word that carries no meaning, and lose no meaning.',
+ confident:'Rewrite to sound confident: take out the hedges on what the passage supports, and keep them where a claim is uncertain.',
+ shorten:'Shorten the passage by about a third and keep every key point.',
+ expand:'Expand the passage with fuller explanation and smoother links between its sentences, using only what it says or implies.',
+ summarize:'Summarise the passage in one tight paragraph that keeps its central claim and its key findings.',
+ paraphrase:'Paraphrase the passage: the same meaning in new wording and new sentence shapes, in the same register.',
+ humanize:'Make the passage sound natural, as a person writes: vary sentence length, prefer plain words, allow contractions where the register permits.'};
+/* 7.43: two versions from a model, a fuller one and a lighter one, each in
+   the card as it comes; the second starts when the first is in */
+async function inkModelVersions(instr,t,guard,label,ok){
+ let described=0;
+ const add=(r,light)=>{if(!ok())return;const x=String(r.text||'').trim();
+  if(!x||x===t.trim()||ALTS.some(a=>a.text.trim()===x))return;
+  const j=INKEXPLAIN.judge(t,x,{free:/summar|expand|paraphrase|other words/i.test(label+' '+instr)});
+  /* an answer that describes the passage is not a version of it */
+  if(j.meta){described++;return;}
+  const size=parseFloat((String(r.by).match(/(\d+(?:\.\d+)?)\s*B\b/i)||[])[1]||'0');
+  const small=size>0&&size<3?' It is a small model, so check each change; the Mac mini’s model (⚙ Engine) writes better.':'';
+  const v={kind:label+(light?' · lighter':'')+' · '+r.by,text:x,why:'Written by '+r.by+(light?', changing as little as it can':'')+'.'+small,diff:true,model:true,judge:j};
+  if(light)ALTS.push(v);else{const k=ALTS.findIndex(a=>a.off);ALTS.splice(k<0?ALTS.length:k,0,v);}};
+ ACST.busy='The writing model is writing its version…';renderAlts('');
+ let got=0;
+ try{add(await inkWrite(instr,t,{long:/expand/i.test(label)}),false);got++;}catch(e){if(e&&e.message==='none'){ACST.busy='';renderAlts('');return;}}
+ if(!ok())return;
+ ACST.busy='And a lighter version, closer to your words…';renderAlts('');
+ try{add(await inkWrite(instr,t,{light:true}),true);got++;}catch(e){}
+ if(!ok())return;
+ ACST.busy='';renderAlts(described?'The model described the passage instead of rewriting it'+(described>1?' twice':'')+', so that answer is not shown.':got?'':'The model did not answer. The offline versions still work.');}
 /* 7.36: Scriba's summaries ask through the same engines: the laptop's
    model, Apple's on-device model, the tablet's own model, or the writing
    model in this window. Scriba checks each answer with the fact guard. */
@@ -17038,11 +17168,9 @@ async function inkPromptRun(instr){
  (plan.coach||[]).forEach(id=>{const k=(typeof INKCOACH!=='undefined')?INKCOACH.read(id,ALTSEL.t):null;if(k)COACH.push(k);});
  const toResults=()=>setTimeout(()=>{const f=document.querySelector('#altCard .altOpt');if(f)try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}},60);
  if(!inkSrv()&&!PRO){renderAlts(inkOfflineNote(plan));toResults();return;}
- const n0=ALTS.length;renderAlts('Rewriting: '+instr.slice(0,80)+'…');toResults();
- try{const r=await inkWrite(instr,ALTSEL.t);
-  if(r.text.trim()!==ALTSEL.t.trim()){ALTS.unshift({kind:instr.length>48?instr.slice(0,46)+'…':instr,text:r.text,why:'Written by '+r.by,diff:true});}
-  renderAlts(ALTS.length>n0?'':'The model returned the passage unchanged.');}
- catch(e){renderAlts('The model did not answer: '+(e&&e.message||e)+'. The offline versions still work.');}}
+ toResults();
+ const t=ALTSEL.t;
+ await inkModelVersions(instr,t,t,instr.length>48?instr.slice(0,46)+'…':instr,()=>ALTMODE&&ALTSEL&&ALTSEL.t===t&&ALTSEL.prompt&&ALTSEL.instr===instr);}
 /* what changed in an offline version, grouped by why: "Shorter, and it
    means the same: in order to → to · due to the fact that → because" */
 function inkWhyList(a){
@@ -17138,7 +17266,7 @@ function renderAlts(status){
   return '<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
   '<div class="at">'+(a.G&&a.G.length?inkPartsHTML(a):ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,cur):esc(cur))+'</div>'+(a.why?'<div class="awhy">'+esc(a.why)+'</div>':'')+
   inkChangeList(a,i)+inkFactNote(a)+
-  '<div class="row">'+(same?'<button disabled title="Every change is set to your own words">Your words throughout</button>':'<button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button>')+'</div></div>';}).join('')
+  '<div class="row">'+(same?'<button disabled title="Every change is set to your own words">Your words throughout</button>':'<button class="'+(inkVersionOk(a)?'primary':'')+'" onclick="useAlt('+i+')">'+(inkVersionOk(a)?'Use this ▸':'Use anyway ▸')+'</button>')+'</div></div>';}).join('')
   +COACH.map(inkCoachCard).join('');}
  /* a passage: a word in it changed alone */
  if(ACST.chips&&ACST.chips.length)html+='<div class="acLab">Or change one word</div>'+ACST.chips.map((k,ci)=>'<div class="wg"><div class="wgl"><b>'+esc(k.text)+'</b></div>'+k.words.map((w,i)=>'<button onclick="inkUseChip('+ci+','+i+')" title="Use this word in the passage">'+esc(w)+'</button>').join('')+'</div>').join('');
@@ -17222,10 +17350,19 @@ function inkQuizUse(i){const a=ALTS[i];if(!a||!ALTSEL)return;const t=document.ge
 function inkChgToggle(i,k){const a=ALTS[i];if(!a||!a.G)return;a.ch[k]=a.ch[k]==='o'?'v':'o';a.fc=null;renderAlts('');}
 function inkChgAlt(i,k,j){const a=ALTS[i];if(!a||!a.G)return;a.ch[k]=a.ch[k]===j?'v':j;a.fc=null;renderAlts('');}
 function inkChgAll(i,v){const a=ALTS[i];if(!a||!a.G)return;a.G.forEach((g,k)=>{a.ch[k]=v;});a.fc=null;renderAlts('');}
-function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
- return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '
-  +(f.lost.length?'it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '):'')+(f.lost.length&&f.added.length?'; ':'')
-  +(f.added.length?'it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain':'')+'.</div>';}
+function inkFactNote(a){const f=inkFactOf(a);
+ /* 7.43: and what a careful reader says of a model's version: it changes who
+    is speaking, or it strays far from the writer's words */
+ const j=a.model&&a.judge&&ALTSEL?a.judge:null,more=[];
+ if(j&&j.voice)more.push(j.voice);
+ if(j&&j.far)more.push('it strays far from your words, so read it against your own meaning');
+ if(f.ok&&!more.length)return '';
+ const parts=[];
+ if(f.lost.length)parts.push('it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '));
+ if(f.added.length)parts.push('it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain');
+ more.forEach(m=>parts.push(esc(m)));
+ return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '+parts.join('; ')+'.</div>';}
+function inkVersionOk(a){return inkFactOf(a).ok&&!(a.model&&a.judge&&(a.judge.voice||a.judge.far));}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  pushUndo();inkAuthMark(a.mine?'t':(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f'));
  /* 7.43: the version as the writer chose it, change by change */
@@ -17340,16 +17477,10 @@ function inkRewriteTab(mode){
  ACST.busy='';renderAlts('');
  inkRewriteAI(mode,t,t0);}
 function inkRewriteAI(mode,t,sel){
- const label=RW_LABEL[mode]||mode,sysNote=' Register target: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes();
+ const label=RW_LABEL[mode]||mode,instr=RW_INSTR[mode]||RW_INSTR.plain;
  const guard=sel||t;
- const done=(txt,by)=>{if(!ALTMODE||!ALTSEL||ALTSEL.t!==guard||ACST.style!==mode)return;ACST.busy='';by=String(by||'the writing model').replace(/\.gguf$/i,'');
-  if(txt&&txt.trim()&&txt.trim()!==t.trim()&&!ALTS.some(a=>a.text===txt.trim()))ALTS.unshift({kind:label+' · '+by,text:txt.trim(),why:'Written by '+by+'.',mode:mode});
-  renderAlts('');};
- const sysMode=mode==='plain'?'simplify':mode;
- if(inkSrv()){ACST.busy='The writing model is writing its version…';renderAlts('');
-  api('rewrite',{text:t,mode:sysMode==='simplify'?'concise':sysMode,style:sysNote}).then(r=>{if(r&&r.think)maybeShowThink(r.think);done(r&&r.text,S.serverModel||'the local model');}).catch(()=>done('',''));}
- else if(PRO&&(SYS_RW[mode]||mode==='plain')){ACST.busy='The writing model is writing its version…';renderAlts('');
-  proChat((SYS_RW[mode]||'Rewrite the passage in plainer words and shorter sentences for any reader; keep every fact, name, number and citation. Output only the rewritten text.')+sysNote,t,Math.min(1200,wordCt(t)*(mode==='expand'?4:2)+150)).then(r=>done(r,inkProLabel())).catch(()=>done('',''));}}
+ if(!(inkSrv()||PRO))return;
+ inkModelVersions(instr+' Register: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes(),t,guard,label,()=>ALTMODE&&ALTSEL&&ALTSEL.t===guard&&ACST.style===mode);}
 function inkPromptTab(){if(!ALTSEL)return;ALTSEL.prompt=true;ACST.mode='prompt';ACST.style='';ACST.words=null;ACST.chips=null;renderAlts('');
  setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
 function compose(){
@@ -17415,7 +17546,7 @@ function rewritePreset(preset){
    'improve-flow':'Rewrite to improve flow. Vary sentence length, explicit logic.',
    'stronger-verbs':'Replace weak verbs with strong specific verbs.',
    'passive-to-active':'Convert passive to active voice where the actor is known.',
-   'academic-upgrade':'Elevate to doctoral academic standard. Precise vocabulary, third person, no contractions.',
+   'academic-upgrade':'Elevate to doctoral academic standard. Precise vocabulary, no contractions; keep the writer\u2019s point of view.',
    'tighten-argument':'Tighten the argument. Remove tangents, make progression explicit.',
    'tone-neutral':'Rewrite in neutral, objective tone. Remove emotional language.',
    'tone-confident':'Rewrite to sound more confident. Remove hedging from facts.',

@@ -1226,7 +1226,9 @@ def ep_correct(body):
 REWRITE_PROMPTS = {
     "professional": "Rewrite the following in polished professional English. Use precise verbs, active voice where natural, varied sentence structure. Keep every fact, number, citation and the original meaning intact.",
     "casual": "Rewrite the following in relaxed, warm, conversational English. Allow contractions, shorter sentences, everyday words. Keep every fact and the original meaning.",
-    "scholarly": "Rewrite the following in formal scholarly English suitable for a doctoral thesis. Use precise academic diction, third person, no contractions, hedged speculative claims with appropriate epistemic markers, varied sentence structure with subordinate clauses where they aid argument. Preserve every citation, number, proper noun and the original meaning exactly.",
+    # 7.43: "keep the writer's point of view", where "third person" turned
+    # "my brother" into "the narrator's brother"
+    "scholarly": "Rewrite the following in formal scholarly English suitable for a doctoral thesis. Use precise academic diction, keep the writer's point of view, no contractions, hedged speculative claims with appropriate epistemic markers, varied sentence structure with subordinate clauses where they aid argument. Preserve every citation, number, proper noun and the original meaning exactly.",
     "concise": "Rewrite the following as concisely as possible. Remove every redundant word, tighten clauses, merge sentences where the logic permits. Lose no meaning, no fact, no citation.",
     "confident": "Rewrite the following to sound confident and well-supported. Remove unnecessary hedging from factual statements, keep hedging only on genuinely speculative claims. Use strong precise verbs. Preserve all citations and meaning.",
     "shorten": "Shorten the following significantly. Keep all key points, citations and numbers but cut every word that does not carry meaning.",
@@ -1260,7 +1262,7 @@ REWRITE_PRESETS = {
     "tone-cautious": "Rewrite this passage with more cautious epistemic marking. Distinguish established findings from speculation, and qualify claims that extend beyond the evidence. Preserve all citations and facts.",
     "transition-fix": "Rewrite this passage adding or improving transitional words and phrases between sentences and ideas. Ensure the logical relationship between each sentence is explicit. Preserve all citations and facts.",
     "parallel-fix": "Rewrite this passage fixing any faulty parallel structure. Ensure items in a series, comparisons, and coordinated elements use the same grammatical form. Preserve all citations and facts.",
-    "academic-upgrade": "Rewrite this passage elevating the register to doctoral academic standard. Use precise disciplinary vocabulary, complex sentence structures where they aid argument, third person, no contractions, and careful epistemic hedging. Preserve every citation, number, and proper noun exactly. Do not add claims not supported by the text.",
+    "academic-upgrade": "Rewrite this passage elevating the register to doctoral academic standard. Use precise disciplinary vocabulary, complex sentence structures where they aid argument, the writer's own point of view, no contractions, and careful epistemic hedging. Preserve every citation, number, and proper noun exactly. Do not add claims not supported by the text.",
     "tighten-argument": "Rewrite this passage tightening the argument. Remove tangents, ensure each sentence advances the central claim, and make the logical progression from evidence to conclusion explicit. Preserve all citations and facts.",
 }
 

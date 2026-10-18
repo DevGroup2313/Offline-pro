@@ -38,6 +38,12 @@ const nm = {}; GM.forEach((g, i) => { nm[i] = 'o'; });
 ok('refusing all of a model\'s changes gives the writer\'s text', X.compose(T, M, GM, nm) === T);
 ok('the rules\' own version is offered beside the model\'s', GM[1].alts.length === 1 && /needs closer examination/.test(GM[1].alts[0]), GM[1].alts);
 
+/* a model that merged three sentences into one: one change, whole */
+const T2 = 'Two difficulties follow. First, it is unclear how to judge. Second, the evidence is ignored.';
+const M2 = 'The view cannot say how to judge, and it ignores the evidence.';
+const G2 = X.analyse(T2, M2, null, { model: true });
+ok('merged sentences are one change', G2.length === 1 && X.compose(T2, M2, G2, { 0: 'o' }) === T2, G2.map(g => [g.from, g.to]));
+
 /* the plain cases */
 ok('a version the same as the text has no changes', X.analyse('It works.', 'It works.', []).length === 0);
 const g1 = X.analyse('The result is very clear.', 'The result is clear.', [{ from: 'very ', to: '', why: 'intensifier' }]);
@@ -46,6 +52,24 @@ ok('generic: punctuation', X.generic('However', 'However,').why === 'mark');
 ok('generic: order', X.generic('quickly ran', 'ran quickly').why === 'order');
 ok('generic: added', X.generic('', 'indeed').why === 'added');
 ok('locate finds a rule\'s words through an earlier change', X.locate("It's clear that we're late.", 'It is clear that ').length === 1);
+
+/* a model's answer made into a passage */
+ok('a reply\'s opening is taken off', X.clean('It works.', "That's a great point. It does work.") === 'It does work.');
+ok('a label is taken off', X.clean('It works.', 'Rewritten passage: It does work.') === 'It does work.');
+ok('a note after the passage is taken off', X.clean('It works.', 'It does work.\n\nNote: I changed one word.') === 'It does work.');
+ok('another script is taken out', X.clean('It warrants study.', 'It warrants更为 extensive study.') === 'It warrants extensive study.', X.clean('It warrants study.', 'It warrants更为 extensive study.'));
+ok('a dropped citation goes back where its claim is', X.clean('Algorithms play a big role (Smith, 2019). More is needed.', 'Algorithms play a major role. More research is needed.') === 'Algorithms play a major role (Smith, 2019). More research is needed.', X.clean('Algorithms play a big role (Smith, 2019). More is needed.', 'Algorithms play a major role. More research is needed.'));
+ok('a citation whose claim was cut stays out', X.clean('Two points follow. Errors arise from closure (Graber, 2005).', 'Two points follow.') === 'Two points follow.');
+ok('nothing is repaired when asked not to', X.clean('A claim (Smith, 2019).', '1. A claim.\n2. Another.', { repair: false }) === '1. A claim.\n2. Another.');
+
+ok('a spoken opening the writer did not write is taken off', X.clean('The view holds.', 'Hmm, the view holds.') === 'The view holds.', X.clean('The view holds.', 'Hmm, the view holds.'));
+ok('the writer\'s own "So" stays', X.clean('So we went home.', 'So we went back home.') === 'So we went back home.');
+ok('judge: a description, not a rewrite', X.judge('Hermeneutic approaches treat understanding as an event.', 'The passage discusses hermeneutic perspectives on judgement.').meta === true);
+ok('judge: a rewrite is not a description', X.judge('Hermeneutic approaches treat understanding as an event.', 'Hermeneutic approaches see understanding as an event.').meta === false);
+ok('judge: a new "I"', /speaks as/.test(X.judge('The account fails.', 'I find that the account fails.').voice));
+ok('judge: "the narrator"', /author/.test(X.judge('My brother swam.', 'The narrator reports that the brother swam.').voice + X.judge('My brother swam.', 'The narrator\'s brother swam.').voice));
+ok('judge: far from the words', X.judge('Hermeneutic approaches to clinical judgement treat understanding as an event.', 'Doctors often think in stories that change over time.').far === true);
+ok('judge: a close version is not far', X.judge('Hermeneutic approaches to clinical judgement treat understanding as an event.', 'Hermeneutic approaches to clinical judgement see understanding as an event.').far === false);
 
 console.log(pass + ' of ' + (pass + fails.length) + ' pass');
 if (fails.length) { console.log(fails.join('\n')); process.exit(1); }

@@ -95,7 +95,9 @@
     const F = new Set(toks(e.from)), T = toks(e.to), I = new Set(toks(ins));
     const added = T.filter(w => !F.has(w)), Tset = new Set(T), removed = [...F].filter(w => !Tset.has(w));
     if (added.length) return added.every(w => I.has(w));
-    return removed.length > 0 && removed.every(w => !I.has(w));
+    /* a rule that only takes out "and" (a split) is no evidence */
+    const content = removed.filter(w => !/^(?:and|or|but|the|a|an|of|to|in|that|which|it|is|was|be|so)$/.test(w));
+    return content.length > 0 && removed.every(w => !I.has(w));
   }
   /* a span without the spaces at its ends */
   function trim(text, s, e) { while (e > s && /\s/.test(text[e - 1])) e--; while (s < e && /\s/.test(text[s])) s++; return [s, e]; }
@@ -133,9 +135,17 @@
     if (fromModel) {
       /* a model rewrites a sentence as a whole: its changes in one sentence
          are one change, kept or refused together */
-      const S = sentenceSpans(orig), sOf = p => { for (let k = 0; k < S.length; k++) if (p < S[k][1]) return k; return S.length - 1; };
-      const first = {};
-      H.forEach((h, i) => { const k = sOf(h.ae > h.as ? h.as : Math.max(0, h.as - 1)); if (k in first) join(first[k], i); else first[k] = i; });
+      /* and where the model merged or split sentences, the changes in one
+         of its sentences are one change too */
+      const SO = sentenceSpans(orig), SV = sentenceSpans(version);
+      const sOf = (S, p) => { for (let k = 0; k < S.length; k++) if (p < S[k][1]) return k; return S.length - 1; };
+      const firstO = {}, firstV = {};
+      H.forEach((h, i) => {
+        const ko = sOf(SO, h.ae > h.as ? h.as : Math.max(0, h.as - 1));
+        if (ko in firstO) join(firstO[ko], i); else firstO[ko] = i;
+        const a = sOf(SV, h.be > h.bs ? h.bs : Math.max(0, h.bs - 1)), b = sOf(SV, Math.max(h.bs, h.be - 1));
+        for (let kv = a; kv <= b; kv++) { if (kv in firstV) join(firstV[kv], i); else firstV[kv] = i; }
+      });
     } else {
       /* places one rule made are one change */
       entries.forEach((e, k) => { const hs = H.map((h, i) => why[i].indexOf(k) >= 0 ? i : -1).filter(i => i >= 0); for (let j = 1; j < hs.length; j++) join(hs[0], hs[j]); });
@@ -243,7 +253,73 @@
     return out;
   }
 
-  const api = { analyse, compose, parts, locate, generic };
+  /* 7.43: a writing model's answer made into a passage. Measured on LFM2.5
+     1.2B and Qwen3 4B through Inkwell's server, the answers carried a
+     reply's opening ("That's a great point."), a note after the passage,
+     characters of another script (Qwen3 4B once wrote two Chinese
+     characters into an English sentence), and dropped citations. */
+  const OTHER_SCRIPT = /[぀-ヿ㐀-鿿가-힯＀-￯]+/g;
+  function clean(src, out, opts) {
+    let o = String(out || '').replace(/\r\n?/g, '\n').trim();
+    o = o.replace(/^(?:passage|rewritten passage|rewritten text|revised passage|revision)\s*:\s*/i, '');
+    /* a spoken opening ("Hmm,", "Well,") the writer did not write */
+    const lead = (String(src).trim().match(/^\w+/) || [''])[0].toLowerCase();
+    o = o.replace(/^(?:hmm+|well|oh|okay|ok|so)[,.!]?\s+(?=[A-Za-z])/i, m => m.trim().replace(/[,.!]$/, '').toLowerCase() === lead ? m : '');
+    if (o && /^[a-z]/.test(o) && /^[A-Z]/.test(String(src).trim())) o = o[0].toUpperCase() + o.slice(1);
+    for (let k = 0; k < 2; k++) o = o.replace(/^\s*(?:(?:sure|certainly|of course|absolutely|great|okay|ok)\b[^.!?\n]*[.!?:]\s*|here(?:’s|'s| is| are)\b[^:\n]*:\s*|that(?:’s|'s) a (?:great|good|fair|interesting)[^.!?\n]*[.!?]\s*)/i, '');
+    /* a note the model adds after the passage */
+    o = o.replace(/\n+\s*(?:\(?note|\*\*note|explanation|changes made)\b[\s\S]*$/i, '');
+    if (/^["“][\s\S]*["”]$/.test(o) && !/^["“]/.test(String(src).trim())) o = o.slice(1, -1).trim();
+    if (!OTHER_SCRIPT.test(String(src))) o = o.replace(OTHER_SCRIPT, '').replace(/[ \t]{2,}/g, ' ').replace(/ +([,.;:!?])/g, '$1');
+    OTHER_SCRIPT.lastIndex = 0;
+    if (!opts || opts.repair !== false) o = citeRepair(src, o);
+    return o.trim();
+  }
+  /* a citation the model dropped goes back at the end of the sentence most
+     like the one it stood in; where no sentence is like it (the claim was
+     cut), it stays out, and the fact guard says so */
+  const CITE = /\([^()]*\b(?:1[5-9]\d\d|20\d\d)[a-z]?\b[^()]*\)|\[\^?\d+(?:[,–-]\s*\d+)*\]/g;
+  const STOPW = /^(?:the|a|an|of|and|to|in|is|that|it|for|as|with|was|on|be|by|this|are|or|not|from|at|which|have|has|but|their|they|his|her|its|were|been|also|we|our|can|more|one|all|would|there|what|so|if|about|into|than|other|some|such|these|may|who|will|no|only|them|do|when)$/;
+  const content = x => new Set((String(x).toLowerCase().match(/[a-z]{3,}/g) || []).filter(w => !STOPW.test(w)));
+  const sents = x => String(x).match(/[^.!?]+(?:[.!?]+["”’)]*)?\s*/g) || [];
+  function citeRepair(src, out) {
+    for (const c of String(src).match(CITE) || []) {
+      if (out.indexOf(c) >= 0) continue;
+      const home = sents(src).find(x => x.indexOf(c) >= 0) || '', W = content(home.replace(c, ''));
+      const ss = sents(out); if (!ss.length || !W.size) continue;
+      let best = -1, bs = 0;
+      ss.forEach((x, i) => { const X = content(x); let n = 0; X.forEach(w => { if (W.has(w)) n++; }); const j = n / ((W.size + X.size - n) || 1); if (j > bs) { bs = j; best = i; } });
+      if (best < 0 || bs < 0.15) continue;
+      const x = ss[best], m = x.match(/([.!?]+["”’)]*)(\s*)$/);
+      ss[best] = m ? x.slice(0, m.index).replace(/\s+$/, '') + ' ' + c + m[1] + m[2] : x.replace(/\s+$/, '') + ' ' + c + (x.match(/\s*$/) || [''])[0];
+      out = ss.join('');
+    }
+    return out;
+  }
+
+  /* what a careful reader would say of a model's version before using it:
+     it describes the passage instead of rewriting it (meta), it changes who
+     is speaking (voice), or it strays far from the writer's words (far).
+     Measured on LFM2.5 1.2B: "The passage discusses hermeneutic
+     perspectives...", "I find it hard to see how...", for a passage with no
+     "I" in it, and versions sharing a tenth of the passage's words. */
+  const FIRST = /\b(?:I|me|my|mine|we|us|our|ours)\b/g;
+  function judge(src, out, opts) {
+    const s = String(src || ''), o = String(out || ''), O = opts || {};
+    const meta = /^(?:the|this) (?:text|passage|original|precise wording|rewritten)\b|\b(?:the|this) (?:passage|text) (?:discusses|describes|examines|highlights|explores|argues|is about)\b/i.test(o)
+      && !/\b(?:the|this) (?:passage|text)\b/i.test(s);
+    const fs = (s.match(FIRST) || []).length, fo = (o.match(FIRST) || []).length;
+    let voice = '';
+    if (!fs && fo >= 1) voice = 'it speaks as “I” or “we”, where you did not';
+    else if (fs >= 2 && !fo) voice = 'it takes out your “I” and “we”';
+    else if (/\bthe (?:narrator|author|writer|speaker)\b/i.test(o) && !/\bthe (?:narrator|author|writer|speaker)\b/i.test(s)) voice = 'it turns your own voice into “the author’s”';
+    const A = content(s), B = content(o);
+    let n = 0; A.forEach(w => { if (B.has(w)) n++; });
+    const overlap = n / ((A.size + B.size - n) || 1);
+    return { meta, voice, overlap, far: !O.free && overlap < 0.12 };
+  }
+
+  const api = { analyse, compose, parts, locate, generic, clean, citeRepair, judge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.INKEXPLAIN = api;
 })(typeof self !== 'undefined' ? self : this);
