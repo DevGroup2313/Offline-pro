@@ -4579,7 +4579,7 @@ function inkTabIcon(dark){
    const named=lk.getAttribute(dark?'data-ink-night':'data-ink-day');
    const href=named||('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark)));
    if(lk.getAttribute('href')===href)continue;
-   const n=lk.cloneNode(false);n.setAttribute('href',href);lk.parentNode.replaceChild(n,lk);}
+   const n=lk.cloneNode(false);n.setAttribute('href',href);n.removeAttribute('media');lk.parentNode.replaceChild(n,lk);}
   const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content',dark?'#070b10':'#1F4F68');
  }catch(e){}}
 function setMode(m){S.mode=m;SV('mode',m);applyMode();}
@@ -9540,7 +9540,9 @@ self.onmessage=async e=>{const d=e.data;
    TF=await import(d.tf);
    const w=TF.env.backends.onnx.wasm;
    if(d.mjs&&d.wasm)w.wasmPaths={mjs:d.mjs,wasm:d.wasm};
-   w.numThreads=1;w.proxy=false;
+   /* 7.45: every core, where the page is cross-origin isolated (the web
+      app's site sends the headers for it); one thread elsewhere */
+   w.numThreads=d.threads||1;w.proxy=false;
    TF.env.allowLocalModels=false;
    post({id:d.id,ok:true,version:TF.env.version||''});}
   else if(d.op==='load'&&d.task==='gector'){
@@ -9669,7 +9671,7 @@ async function inkAiStart(slot,given){
   if(d.tok!==undefined){if(c.tok)c.tok(d.tok);return;}
   delete w.cb[d.id];if(d.ok)c.res(d);else c.rej(new Error(d.error));};
  worker.onerror=e=>{inkAiEnd(slot,'the model worker stopped: '+((e&&e.message)||'no reason given'));};
- await inkAiAsk(slot,Object.assign({op:'init'},files),null,null,60000);
+ await inkAiAsk(slot,Object.assign({op:'init',threads:slot==='pro'?inkCpuThreads():1},files),null,null,60000);
  return w;}
 function inkAiAsk(slot,msg,on,tok,ms){const w=INKAI.slots[slot];
  if(!w)return Promise.reject(new Error('the model is not loaded'));
@@ -10044,6 +10046,7 @@ function inkTabletPanel(){
  h+='<div style="margin-top:8px">Which model first: <button class="lkbtn'+(S.engineFirst!=='laptop'?' on':'')+'" onclick="setEngineFirst(\'device\')">'+(S.engineFirst!=='laptop'?'✓ ':'')+'this tablet’s</button> <button class="lkbtn'+(S.engineFirst==='laptop'?' on':'')+'" onclick="setEngineFirst(\'laptop\')">'+(S.engineFirst==='laptop'?'✓ ':'')+'my laptop’s, when it answers</button></div>';
  el.innerHTML=h;}
 const WRITER={id:'LiquidAI/LFM2.5-1.2B-Instruct-ONNX',name:'LFM2.5 1.2B Instruct',mb:850,licence:'LFM Open License v1.0'};
+function inkCpuThreads(){return window.crossOriginIsolated?Math.max(1,Math.min(8,(navigator.hardwareConcurrency||4)-1)):1;}
 async function inkGpuCheck(){
  if(!('gpu' in navigator))return {ok:false,why:'this browser has no WebGPU'};
  try{const a=await navigator.gpu.requestAdapter();if(!a)return {ok:false,why:'WebGPU found no graphics adapter'};
@@ -10069,21 +10072,28 @@ async function installWriter(auto){
  if(PRO&&PRO.apple)return toast('Apple\u2019s on-device model is already doing this work');
  if(PRO&&PRO.writer)return toast('The writing model is running: '+PRONAME);
  const g=await inkGpuCheck();
- if(!g.ok){S.writerAuto=false;SV('writerAuto',false);
-  instSay('Not installed: '+g.why+'. The writing model needs WebGPU: Chrome or Edge on a laptop or desktop, or a recent Safari on a Mac. The companion server\u2019s model (below) works without it.');
-  return toast('Needs WebGPU: '+g.why);}
+ /* 7.45: with no WebGPU (Safari on some Macs, and wherever it is switched
+    off) the same model runs on the processor, with WebAssembly: slower, but
+    it works. Until 7.44 it was not installed at all. */
+ const cpu=!g.ok;
+ if(cpu)instSay('No WebGPU here ('+g.why+'), so the writing model runs on the processor instead: it works, more slowly'+(window.crossOriginIsolated?', on '+inkCpuThreads()+' cores':'')+'. The companion server\u2019s model (below) is faster.');
  let files;try{files=await inkAiFiles4();}
  catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
- const pill=document.getElementById('enginePill'),dtype='q4';
+ /* on the processor the q8 files: the q4 files use an operator ONNX
+    Runtime has only for WebGPU (GatherBlockQuantized) */
+ const pill=document.getElementById('enginePill'),dtype=cpu?'q8':'q4',mb=cpu?1770:WRITER.mb;
  window.__inkInstalling=true;
  if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
- instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', WebGPU'+(g.gpu?', '+g.gpu:'')+'): '+(auto?'starting':'downloading once, about '+WRITER.mb+' MB, then kept for offline use')+'.');
+ instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', '+(cpu?'processor':'WebGPU'+(g.gpu?', '+g.gpu:''))+'): '+(auto?'starting':'downloading once, about '+mb+' MB, then kept for offline use')+'.');
  inkWriterDropF16().then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' (q4f16) left by an earlier attempt.');});
  inkAiMark('writer',true);const got={};
  try{
   await inkAiStart('pro',files);
-  await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:{dtype:dtype,device:'webgpu'}},d=>{const p=d.progress||{};
-   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+WRITER.mb+' MB';}},null,0);
+  /* the q8 files are named "model_q8" (Transformers.js would look for
+     "model_quantized", which holds the WebGPU-only operator too) */
+  const lo=cpu?{dtype:'fp32',model_file_name:'model_q8',use_external_data_format:1,device:'wasm'}:{dtype:dtype,device:'webgpu'};
+  await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:lo},d=>{const p=d.progress||{};
+   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+mb+' MB';}},null,0);
   /* 7.43: loaded is not working: the model must answer once before it is
      called ready (a model whose numbers overflow loads and then answers
      nothing) */
@@ -10095,9 +10105,9 @@ async function installWriter(auto){
   PRO=async function(msgs,gen,onTok){
    const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
    return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
-  PRO.writer=true;PRONAME=WRITER.name;PRODEVICE='WebGPU';
+  PRO.writer=true;PRONAME=WRITER.name;PRODEVICE=cpu?'the processor':'WebGPU';
   S.writerAuto=true;SV('writerAuto',true);setPill();
-  instSay(WRITER.name+' is running in this window, offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
+  instSay(WRITER.name+' is running in this window'+(cpu?' on the processor':'')+', offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
   if(!auto)toast('Writing model ready: '+WRITER.name);
  }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';window.__inkInstalling=false;setPill();
   const why=String((e&&e.message)||e);
@@ -13113,7 +13123,8 @@ function openModalDo(which){
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(inkNative()?'Writing model on this tablet':'Writing model inside this window')+'</h4>'+
  (PRO_ALLOWED
   ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'
-   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 Install the writing model</button>')+'</div>'
+   +(HAS_GPU?'':'<p style="font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 11px">This browser has no WebGPU, so here the model can run only on the processor: a larger download (about 1.8 GB) and slow. On Inkwell\u2019s test machine, with three cores, one sentence took about a minute and a half; a recent computer is faster, but expect tens of seconds a sentence. '+(/Mac/.test(deviceName())?'On a Mac, the Inkwell app for Mac runs the writing model much faster and needs no WebGPU.':'The companion server\u2019s model is much faster.')+'</p>')
+   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 '+(HAS_GPU?'Install the writing model':'Install it on the processor (slow)')+'</button>')+'</div>'
   :inkNative()?'<div id="tmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the tablet\u2026</div>'
   :'<p style="font-size:12.5px;color:var(--mut);line-height:1.6">No writing model runs inside the app on a phone or tablet: the useful ones need more memory than the system gives an app, and the system closes the app (which is what happened before 7.32). Here Apple\u2019s own model (iPhone and iPad with iOS 26) or your laptop\u2019s model over the Wi-Fi does this work.</p>')+
  (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
@@ -13821,8 +13832,14 @@ function renderPatterns(){
  step('fabdrag',function(){ wireScheFabDrag(); });
  step('outline',function(){ S.outlineFold=!!LS('outlineFold'); if(S.outlineFold){S.outlineFold=false;foldOutline();} });
  step('footfold',function(){ if(S.footFold)document.body.classList.add('ftrFolded'); setTimeout(inkFootTabPlace,300); });
- step('favicon',function(){ const lk=document.createElement('link');lk.rel='icon';lk.type='image/svg+xml';
-  lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64));document.head.appendChild(lk); });
+ /* 7.45: the seal is drawn for the tab only where the page names no icon of
+    its own (the web app's page names a day and a night one), and in the
+    mode in force. Until now it was always drawn by day and added last, after
+    the mode had chosen the night icon, so a dark page showed the day seal. */
+ step('favicon',function(){ const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  if(!document.querySelector('link[rel~="icon"]')){const lk=document.createElement('link');lk.rel='icon';lk.type='image/svg+xml';
+   lk.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(inkwellSeal(64,dark));document.head.appendChild(lk);}
+  inkTabIcon(dark); });
  step('pros',function(){
   S.miniAuto=false;SV('miniAuto',false);S.proAuto=false;SV('proAuto',false);
   try{inkAiMark('',false);}catch(e){}

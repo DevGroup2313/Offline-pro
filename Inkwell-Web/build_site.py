@@ -36,8 +36,13 @@ def share_tags(site):
     # with its theme (inkTabIcon), so the tab shows the night seal in dark mode.
     # No "shortcut icon" link: with one, Chrome and Safari may keep favicon.ico
     # (the cream seal) over the swapped link.
+    # 7.45: and a night icon for a device in dark mode, chosen by the browser
+    # itself (media), for a browser that reads the icon before the page's
+    # script runs or never reads it again
     tags = ['<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">',
             '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">',
+            '<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-night.png" media="(prefers-color-scheme: dark)" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-night.png" media="(prefers-color-scheme: dark)" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">',
             '<meta name="description" content="%s">' % SHARE_DESC,
             '<meta property="og:type" content="website">',
             '<meta property="og:site_name" content="Inkwell">',
