@@ -1112,31 +1112,168 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
   // pagination guides + counts
   var PAGE_H=996;
   function pageCount(){return Math.max(1,Math.ceil((editor.scrollHeight+120)/PAGE_H));}
+  /* 7.44: the pages are laid out as Word lays them out. A paragraph that
+     reaches the foot of a page continues on the next one (at least two lines
+     on each side, Word's widow and orphan control), where before the whole
+     paragraph moved down and left a blank gap. The break is a band opened
+     inside the paragraph by an invisible float (its ::before, shaped by
+     shape-outside so the lines above it keep the full width), and a block
+     that cannot break (a heading, a table, a picture, a short paragraph) is
+     moved down by a top margin. Both are rules in one style sheet of their
+     own (#cd-pgflow), named by each block's place, so the document itself is
+     never touched: what is saved, sent and exported has no breaks in it.
+     (Until 7.44 the margins were written into the blocks, and went into the
+     Word file.) The pass measures once, then works the breaks out by
+     arithmetic, and writes all the rules in one step. */
+  var PG_SPLIT=/^(P|DIV|BLOCKQUOTE|PRE|ADDRESS)$/;
+  function pgSheet(){var st=document.getElementById('cd-pgflow');if(!st){st=document.createElement('style');st.id='cd-pgflow';(document.head||document.documentElement).appendChild(st);}return st;}
+  /* the lines of a block, in the editor's coordinates: each text run's
+     boxes, merged where they share a line */
+  function pgLines(b,base){
+    var rs=[],w=document.createTreeWalker(b,NodeFilter.SHOW_TEXT,null),n,r=document.createRange();
+    while((n=w.nextNode())){if(!n.nodeValue||!/\S/.test(n.nodeValue))continue;r.selectNodeContents(n);var cr=r.getClientRects();for(var k=0;k<cr.length;k++){if(cr[k].height>0&&cr[k].width>0)rs.push({t:cr[k].top-base,b:cr[k].bottom-base});}}
+    rs.sort(function(a,c){return a.t-c.t;});
+    var L=[];
+    for(var q=0;q<rs.length;q++){var x=rs[q],l=L[L.length-1];
+      if(l&&x.t<l.b-0.5*Math.min(x.b-x.t,l.b-l.t)){if(x.t<l.t)l.t=x.t;if(x.b>l.b)l.b=x.b;}else L.push({t:x.t,b:x.b});}
+    /* line boxes, not letters: a line's box runs to half the space between
+       its letters and the next line's */
+    if(L.length>1){
+      var gaps=[];for(var g=1;g<L.length;g++)gaps.push(L[g].t-L[g-1].b);
+      gaps.sort(function(a,c){return a-c;});var half=Math.max(0,gaps[gaps.length>>1]/2);
+      var M=L.map(function(l){return {t:l.t,b:l.b,gt:l.t};});
+      for(var g2=0;g2<M.length;g2++){
+        M[g2].t=g2?(L[g2-1].b+L[g2].t)/2:L[g2].t-half;
+        M[g2].b=g2<M.length-1?(L[g2].b+L[g2+1].t)/2:L[g2].b+half;}
+      return M;
+    }
+    return L;
+  }
+  function pgCanSplit(b){
+    if(!PG_SPLIT.test(b.nodeName))return false;
+    if(b.querySelector('img,table,svg,canvas,video,iframe,hr,ul,ol,figure'))return false;
+    try{var bf=getComputedStyle(b,'::before');if(bf.content&&bf.content!=='none'&&bf.content!=='normal')return false;
+      if(getComputedStyle(b,'::first-letter').cssFloat!=='none')return false;
+      var cs=getComputedStyle(b);if(cs.display!=='block'||cs.position==='absolute'||cs.position==='fixed'||cs.cssFloat!=='none'||(cs.columnCount&&cs.columnCount!=='auto'))return false;}catch(e){return false;}
+    return true;
+  }
   function layout(){
   var g=$('pageguides'); if(!g||!editor) return; g.innerHTML='';
   var kids=editor.children,i,b;
+  /* documents saved before 7.44 carry the old margins in their blocks */
   for(i=0;i<kids.length;i++){ b=kids[i]; if(b.hasAttribute&&b.hasAttribute('data-pgpush')){ b.style.marginTop=b.getAttribute('data-pgpush'); b.removeAttribute('data-pgpush'); b.__pgPush=null; } else if(b.__pgPush!=null){ b.style.marginTop=b.__pgPush; b.__pgPush=null; } }
   var PAGE_GAP=100, PAGE_TOP=54, INNER=PAGE_H-PAGE_GAP;
-  var top=editor.offsetTop;
-  var pageStart=0, seps=[];
+  var T0=performance.now(),TT=[];
+  var st=pgSheet(); st.textContent='';
+  var top=editor.offsetTop, base=editor.getBoundingClientRect().top+editor.clientTop;
+  var pageStart=0, seps=[], shift=0;
+  /* the breaks: a paragraph's bands {i, pad, bands:[[y1,y2],...]}, a block
+     moved whole {i, mt}; and each break's target, in order. Places are
+     fractional: offsetTop rounds, and half a pixel puts a line on the wrong
+     page */
+  var paras=[], pushes=[], brk=[], forced=false;
+  var pos=[];for(i=0;i<kids.length;i++){var rc=kids[i].getBoundingClientRect();pos.push([rc.top-base,rc.height]);}
+  TT.push(performance.now()-T0);
   for(i=0;i<kids.length;i++){
     b=kids[i];
-    var bTop=b.offsetTop, hgt=b.offsetHeight, bBot=bTop+hgt, limit=pageStart+INNER;
+    /* Insert, Page Break (and a section break to a new page): what follows starts a page */
+    if(b.classList&&(b.classList.contains('pagebreak')||(b.classList.contains('cd-sect')&&/^(nextPage|evenPage|oddPage)$/.test(b.getAttribute('data-kind')||'')))){forced=true;continue;}
+    var hgt=pos[i][1];
     if(!hgt) continue;
-    if(bBot>limit){
-      if(hgt<=INNER && bTop>pageStart){
-        b.__pgPush=(b.style.marginTop||''); try{ b.setAttribute('data-pgpush', b.__pgPush); }catch(e){}
-        var cm=0; try{ cm=parseFloat(getComputedStyle(b).marginTop)||0; }catch(e){}
-        b.style.marginTop=(cm+(limit-bTop)+PAGE_GAP+PAGE_TOP)+'px';
-        bTop=b.offsetTop;
-        seps.push(bTop-PAGE_TOP-(PAGE_GAP/2));
-        pageStart=bTop;
-      } else {
-        var over=Math.max(1,Math.ceil((bBot-pageStart)/INNER));
-        pageStart=pageStart+over*INNER;
+    var bTop=pos[i][0]+shift, bBot=bTop+hgt, limit=pageStart+INNER;
+    if(forced){forced=false;
+      var nx=limit+PAGE_GAP+PAGE_TOP,pb=i>0?pos[i-1][0]+pos[i-1][1]+shift:0;
+      brk.push({u:pushes.length,next:nx});pushes.push({i:i,mt:Math.max(0,nx-pb)});
+      shift+=nx-bTop;seps.push(nx-PAGE_TOP-(PAGE_GAP/2));pageStart=nx;
+      bTop=nx;bBot=bTop+hgt;limit=pageStart+INNER;
+      if(bBot<=limit)continue;
+    }
+    if(bBot<=limit) continue;
+    var done=false;
+    /* a paragraph breaks across the page */
+    if(pgCanSplit(b)){
+      var L=pgLines(b,base);
+      if(L.length>=4){
+        var cs0=getComputedStyle(b),pad=(parseFloat(cs0.paddingTop)||0)+(parseFloat(cs0.borderTopWidth)||0);
+        var ctop=pos[i][0]+pad,bands=[],k0=0,ok=true,lsh=0,ps0=pageStart,ns0=seps.length,nb0=brk.length;
+        /* the space above a line's letters, measured on lines that have not
+           moved: line j's box starts at j line-heights below the top */
+        var lhp=parseFloat(cs0.lineHeight),hlv=L[0].gt!=null?L[0].gt-ctop:0;
+        if(lhp>0){var arr=[];for(var z=0;z<Math.min(L.length,6);z++)if(L[z].gt!=null)arr.push(L[z].gt-ctop-z*lhp);arr.sort(function(a,c){return a-c;});if(arr.length)hlv=arr[arr.length>>1];}
+        while(ok){
+          var k=k0;while(k<L.length&&L[k].b+shift+lsh<=limit)k++;
+          if(k>=L.length)break;
+          /* a last line alone at the top of a page takes one more with it */
+          if(L.length-k<2&&k-k0>=3)k=L.length-2;
+          if(k-k0<2||L.length-k<2){ok=false;break;}
+          var next=limit+PAGE_GAP+PAGE_TOP,lineTop=L[k].t+shift+lsh,delta=next-lineTop;
+          /* the band opens at the next line's letters, inside its box and clear of the line above */
+          var y1=(L[k].gt!=null?L[k].gt:L[k].t+1)-ctop+lsh,y2=next-shift-ctop;
+          bands.push([y1,y2,hlv]);lsh+=delta;
+          brk.push({p:paras.length,q:bands.length-1,next:next});
+          seps.push(next-PAGE_TOP-(PAGE_GAP/2));pageStart=next;limit=pageStart+INNER;k0=k;
+        }
+        if(bands.length&&ok){paras.push({i:i,pad:pad,bands:bands});shift+=lsh;done=true;}
+        else {
+          /* no break that keeps two lines on each side: the block moves whole */
+          seps.length=ns0;brk.length=nb0;pageStart=ps0;limit=pageStart+INNER;
+        }
       }
     }
+    if(done) continue;
+    /* a block that cannot break moves to the next page whole */
+    if(hgt<=INNER && bTop>pageStart){
+      var next2=limit+PAGE_GAP+PAGE_TOP;
+      var prevBot=i>0?pos[i-1][0]+pos[i-1][1]+shift:0;
+      brk.push({u:pushes.length,next:next2});
+      pushes.push({i:i,mt:Math.max(0,next2-prevBot)});
+      shift+=next2-bTop;
+      seps.push(next2-PAGE_TOP-(PAGE_GAP/2));
+      pageStart=next2;
+    } else {
+      var over=Math.max(1,Math.ceil((bBot-pageStart)/INNER));
+      pageStart=pageStart+over*INNER;
+    }
   }
+  function pgRules(){
+    var out=[];
+    paras.forEach(function(P){var B=P.bands,poly=['0 '+B[0][0].toFixed(2)+'px'];
+      for(var q=0;q<B.length;q++){poly.push('100% '+B[q][0].toFixed(2)+'px','100% '+B[q][1].toFixed(2)+'px','0 '+B[q][1].toFixed(2)+'px');if(q+1<B.length)poly.push('0 '+B[q+1][0].toFixed(2)+'px');}
+      out.push('#editor>:nth-child('+(P.i+1)+')::before{content:"";float:left;width:100%;height:'+B[B.length-1][1].toFixed(2)+'px;shape-outside:polygon('+poly.join(',')+');pointer-events:none;}');});
+    pushes.forEach(function(u){out.push('#editor>:nth-child('+(u.i+1)+'){margin-top:'+u.mt.toFixed(2)+'px !important;}');});
+    return out.join('\n');
+  }
+  TT.push(performance.now()-T0);
+  st.textContent=pgRules();
+  /* the arithmetic drifts by a fraction of a pixel at each break (a line's
+     box is estimated from its letters): each break is measured where it
+     landed and moved back by the error it added, so the last page is as
+     exact as the first */
+  /* where a break really put its first line: a moved block's top, or the
+     letters of the first line under a band less the space above them (the
+     browser rounds a line's place, so the band's own edge is not enough) */
+  function pgActual(r0,base2){
+    if(r0.u!=null)return kids[pushes[r0.u].i].getBoundingClientRect().top-base2;
+    var P0=paras[r0.p],el=kids[P0.i],B=P0.bands[r0.q],top=el.getBoundingClientRect().top-base2+P0.pad,edge=top+B[1]-3,best=null;
+    var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null),n,rg=document.createRange();
+    while((n=w.nextNode())){if(!/\S/.test(n.nodeValue))continue;rg.selectNodeContents(n);var cr=rg.getClientRects();
+      for(var x=0;x<cr.length;x++){var t=cr[x].top-base2;if(cr[x].width>0&&t>=edge&&(best===null||t<best))best=t;}
+      if(best!==null&&rg.getBoundingClientRect().top-base2>best+60)break;}
+    return best===null?top+B[1]:best-B[2];
+  }
+  for(var pass=0;pass<2&&brk.length;pass++){
+    var prevE=0,base2=editor.getBoundingClientRect().top+editor.clientTop,act=[],worst=0;
+    for(var bj=0;bj<brk.length;bj++)act.push(pgActual(brk[bj],base2));
+    for(var bj2=0;bj2<brk.length;bj2++){var r1=brk[bj2],e1=act[bj2]-r1.next,c=e1-prevE;prevE=e1;
+      if(Math.abs(e1)>worst)worst=Math.abs(e1);
+      if(Math.abs(c)<0.01)continue;
+      if(r1.u!=null)pushes[r1.u].mt=Math.max(0,pushes[r1.u].mt-c);
+      else{var B1=paras[r1.p].bands;B1[r1.q][1]-=c;for(var q2=r1.q+1;q2<B1.length;q2++){B1[q2][0]-=c;B1[q2][1]-=c;}}}
+    window.__tabPgErr=worst;TT.push(performance.now()-T0);
+    if(worst<0.6)break;
+    st.textContent=pgRules();
+  }
+  TT.push(performance.now()-T0);window.__tabPgTime=TT.map(function(x){return Math.round(x);});
   for(i=0;i<seps.length;i++){
     var y=top+seps[i];
     var sep=document.createElement('div');sep.className='pg-sep';sep.style.top=y+'px';g.appendChild(sep);
@@ -1151,7 +1288,7 @@ function curCell(){var n=window.getSelection().anchorNode;while(n&&n!==editor&&n
   $('wcChars').textContent=chars+' characters';
   $('wcPages').textContent=window.__tabPageNow?window.__tabPageNow(n):'Page 1 of '+n;}
   function syncState(){[['bold','b'],['italic','i'],['underline','u'],['strikeThrough','s']].forEach(function(p){var btn=document.querySelector('.tb.'+p[1]);if(!btn)return;try{btn.classList.toggle('on',document.queryCommandState(p[0]));}catch(e){}});}
-  editor.addEventListener('keyup',function(){syncState();layout();});
+  editor.addEventListener('keyup',function(){syncState();if(window.cdScheduleLayout)window.cdScheduleLayout();else layout();});
   editor.addEventListener('mouseup',syncState);
   (function(){
     /* Repagination measures every block, so running it on each keystroke costs
