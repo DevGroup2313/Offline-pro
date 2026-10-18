@@ -1,9 +1,9 @@
-INKWELL 7.42: THE WEB APP
+INKWELL 7.43: THE WEB APP
 =========================
 
 WHAT IS IN THIS PACKAGE
 -----------------------
-Unzipping this package gives one folder, "Inkwell_Web_App_v7p41". That
+Unzipping this package gives one folder, "Inkwell_Web_App_v7p43". That
 folder IS the finished web site: index.html is at its top, beside sw.js, the
 manifest, and the icons and vendor folders. There is nothing to build and no
 GitHub Actions is needed. No file in it is larger than 9 MB.
@@ -20,11 +20,11 @@ A. Netlify (free, and the simplest)
    1. On a computer, open  https://app.netlify.com/drop  in a browser and
       log in (free). A site dropped without an account is kept behind a
       temporary password until it is claimed.
-   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p41" onto the
+   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p43" onto the
       page. Drag the FOLDER, not the .zip file: Netlify asks for the
       unzipped folder.
    3. Netlify shows the address, ending in .netlify.app. Keep it. Open it:
-      Inkwell should appear, with "v7.42" beside the date at the top.
+      Inkwell should appear, with "v7.43" beside the date at the top.
    Netlify's guidance is that a drop works best under 50 MB; this site is
    about 66 MB, most of it the files for the optional models. If the drop
    stalls, try once more on a steady connection, or use B.
@@ -32,7 +32,7 @@ A. Netlify (free, and the simplest)
 B. GitHub Pages (free for a PUBLIC repository)
    1. github.com, "+", New repository, for example inkwell-site. Choose
       Public. Create repository.
-   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p41"
+   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p43"
       and drag in EVERYTHING INSIDE it (index.html, sw.js,
       manifest.webmanifest, and the icons and vendor folders). Commit.
    3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.42" beside the date at the top.
+Look for "v7.43" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,39 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.43
+-----------
+- Night mode is legible: the selected tab and the other light-gold
+  buttons now carry dark letters (white on them measured 1.9 to 1), and
+  the blue buttons are a shade deeper. Every button in the desk, the
+  dialogs and the three rooms measured 4.5 to 1 or better.
+- Tabula shows real pages for a document written line by line (before, it
+  showed one long sheet), and headings keep their level both ways.
+- Rewrite recasts whole sentences offline, with no model: "It is very
+  clear that this is a really important issue" becomes "This is an
+  important issue"; "There are many students who struggle" becomes "Many
+  students struggle"; "make use of" becomes "use"; "the ways in which"
+  becomes "how"; "a big role" becomes "a significant role".
+- Every change in a rewrite shows why it was made, offers other ways to
+  say it ("Clearly, this is an..."), and has a tick to keep it or keep
+  your own words instead. "Try first" lets you find the changes yourself
+  from hints, then compare with Inkwell's version.
+- A writing model now gives two versions, a fuller one and a lighter one
+  closer to your words. It keeps your citations; an answer that only
+  describes your passage is not shown; a version that changes who is
+  speaking, or strays far from your words, says so.
+- The writing mark is out of 100 on the UK scale and read onto UK and US
+  grades, undergraduate and postgraduate (the US letters follow the
+  AACRAO EDGE table). Choose Writing, or Writing and argument.
+- Scholarly writing is no longer marked down: four fifths of the style
+  notes on published scholarship were wrong and are gone, and the spelling
+  checker knows scholarly vocabulary, names, and the terms you use often.
+- The writing model in the browser window loads in Chrome, Edge and
+  Safari, not only Firefox, and must answer once before it is called
+  ready.
+- The side buttons in Tabula, Scriba and Fontes, and in their floating
+  windows, no longer have a heavy square shadow.
 
 NEW IN 7.42
 -----------
@@ -222,7 +255,7 @@ PROBLEMS
   the files. See YOUR OWN ADDRESS above,
   and open the .netlify.app address meanwhile.
 - "Page not found" on Netlify: the folder dropped was not the one with
-  index.html at its top. Drop "Inkwell_Web_App_v7p41" itself.
+  index.html at its top. Drop "Inkwell_Web_App_v7p43" itself.
 - The address shows "404" on GitHub: wait a few minutes; check that
   index.html is at the top of the repository, not inside a folder.
 - The old version still shows: close Inkwell fully and open it again while

@@ -1,0 +1,113 @@
+INKWELL v7.43: HANDOFF NOTES
+============================
+Date: 18 October 2026. Read INKWELL_HANDOFF_v7p42.txt and the earlier notes
+for everything before 7.43.
+
+Look for "v7.43" beside the date at the top. If it is not there, the device
+is not running 7.43.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample) is never in the
+repository and never trained on.
+
+WHAT CAME IN 7.43
+-----------------
+1. W5, the web app's writing model loads in every browser. A browser with
+   half precision (Chrome, Edge, Safari) was given the q4f16 files, which
+   overflow in ONNX Runtime's WebGPU path; only Firefox, given q4, loaded.
+   Every browser now loads q4; the model must answer once ("Reply with one
+   word: ready") before it is called ready; q4f16 files left in the
+   browser's storage are removed (inkWriterDropF16).
+2. SC1, the writing mark (src/lib/mark_core.js, INKMARK; mark_test.js,
+   26). A mark for the writing alone on the UK scale, read onto UK
+   undergraduate and postgraduate classes and US letters with grade
+   points from AACRAO EDGE's UK table (as reproduced by Arcadia
+   University; AACRAO's own pages are for subscribers). "Writing and
+   argument" halves it with the model's rubric marks. "How this mark is
+   made" explains the parts and the calibration.
+3. G3a, spelling to a scholarly standard (spell_core.js; spell_test.js,
+   94): SCOWL size 80 (main lists, no word one slip from a common one),
+   scholarly formations, names at a sentence's start, the writer's own
+   terms. On 40 published articles: 7.45 flags per 1000 words to 1.58;
+   gold spelling errors still found 93.0% (94.1%).
+4. G3b, notes that made scholarly writing worse removed: on the articles,
+   32.7 notes per 1000 words to 6.6, with learners' errors still found
+   (215 true fixes against 212 on the held-out W&I half).
+5. The side buttons in Tabula, Scriba, Fontes and their floating windows
+   draw no shadow on the glyphs (Safari drew a colour emoji's text shadow
+   as a dark square).
+6. T1, Tabula's pages. The desk's text reached Tabula with each single
+   line break as <br> inside one paragraph, so a document written line by
+   line was one block and the pager, which breaks between blocks, showed
+   one sheet. Each line is now a paragraph marked data-ink-l (a single
+   break on the way back), and headings keep their level both ways
+   (tabularHTMLFromText, tabularTextFromHTML). Measured: Page 1 of 1 (2
+   blocks) to Page 1 of 6 (31 blocks); the round trip is exact.
+7. RW1a, offline rewrites recast sentences (rewrite_core.js RECAST and
+   PRECISE; tools/rewrite/cases.js, 322 cases, 92 new with their traps):
+   empty openers, "there are ... who", "it is something that", "needs to
+   be looked at in more detail", "the ways in which", reduced clauses,
+   about thirty hidden verbs, the precise word by its noun ("a significant
+   role"; "a big fan" stays), and alternatives (INKRW.alternatives). An
+   audit on about 41,000 sentences fixed older faults: "a lot of different
+   music" had become "much different music", "a big fan" "a large fan",
+   "not totally conclusive" "not conclusive", and the reordered version
+   dropped a heading.
+8. RW1b, the Rewrite card change by change (src/lib/explain_core.js,
+   INKEXPLAIN; tools/rewrite/explain_test.js, 45). A version is read as
+   changes (GECFILTER's diff, grouped by the rule that made them, or for a
+   model by sentence, merged sentences together), each with its reason,
+   alternatives, and a tick to keep it or the writer's own words; "Use
+   this" uses the version as chosen. "Try first" gives hints (the kind of
+   change, the sentence, the first word) and checks the writer's version.
+9. RW1c, model rewrites (inkWrite, inkModelVersions, INKEXPLAIN.clean and
+   judge). Measured through Inkwell's own server here: LFM2.5 1.2B (the
+   web app's model) dropped a citation or number in 9 of 18 rewrites and
+   sometimes answered the passage; Qwen3 4B (the Mac mini's) lost none
+   but once wrote Chinese characters. Now: the passage is sent labelled,
+   with rules for citations, numbers and the point of view ("third
+   person" is gone from every scholarly instruction, here and in both
+   servers); the answer is cleaned and a dropped citation goes back into
+   the sentence that carries its claim; two versions (fuller, lighter);
+   an answer that describes the passage is not shown; a version that
+   changes who speaks or strays far is marked; a small model says so.
+   Prompt layouts tried on the small model (instruction in the system
+   message, with the passage, after the passage) all stayed rough: the
+   honest route to good model rewrites is the Mac mini's model.
+10. DK1, night mode legible. Controls filled with the champagne accent
+   kept white text (1.9 to 1); they carry dark ink now (10 to 1). The blue
+   faces are a shade deeper and the Draft text lighter. Measured in the
+   browser: every visible button in the desk, the rewrite card, nine
+   dialogs and the three rooms, at rest, under the pointer and with each
+   room tab on: none under 4.5 to 1. On a phone the round notes button
+   waits while the Rewrite card is open.
+
+WHERE THE BUILDS ARE
+--------------------
+The 7.43 builds were made in the session: the Mac apps from
+make_mac_prebuilt.py (from the 7.37 Actions build, build number 30), the
+Fire APK from gradle (signed with the real key, versionCode 74300), the
+Windows page folder, the iPhone/iPad kit and the web site from
+make_packages.py. The kits for GitHub are pushed to the DevGroup2313
+repositories (see the 7.42 notes: the public ones never get signing/).
+The source (this repository, branch claude/amazing-archimedes-lunzys)
+still waits for yabban-maker access.
+
+NOT DONE YET
+------------
+- AuDHD support at the core (task 41): needs the writer's choices; the
+  designs are to be shown first.
+- G3c, the checks a DPhil editor makes: consistency (spelling variants,
+  hyphenation, capitals of terms), citations against the references, and
+  quotations.
+- Model rewrites on the small model stay rough, as above.
+- The Carpe Diem session's request about Scriba and Fontes versions and the
+  desktop port (see the 7.42 notes): open.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 94, mark_test.js 26;
+the browser regression (101 desk controls, the rooms: Scriba 12, Fontes
+14, Tabula 407 pressed, no problems; the tour by day, night and phone).

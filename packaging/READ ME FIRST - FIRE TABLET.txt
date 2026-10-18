@@ -1,7 +1,7 @@
-INKWELL 7.42 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.43 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 
-THIS PACKAGE HOLDS: Inkwell-7.42-build1.apk, the app itself, built and
+THIS PACKAGE HOLDS: Inkwell-7.43-build1.apk, the app itself, built and
 signed with Inkwell's own key, so it installs over the Inkwell already on
 the tablet and keeps your documents.
 NOT FOR: iPhone or iPad (an iPhone or iPad cannot open an .apk file).
@@ -20,7 +20,7 @@ INSTALL ON THE FIRE TABLET BY USB
 4. Copy the .apk into the tablet's "Download" folder.
 5. On the tablet: open Files, then Downloads, tap the .apk, then Install
    (or Update).
-6. Open Inkwell. Look for "v7.42" beside the date at the top.
+6. Open Inkwell. Look for "v7.43" beside the date at the top.
 
 
 YOUR DOCUMENTS
@@ -33,6 +33,39 @@ YOUR DOCUMENTS
   To move documents to another device: File, Move the library to another
   device.
 
+
+NEW IN 7.43
+-----------
+- Night mode is legible: the selected tab and the other light-gold
+  buttons now carry dark letters (white on them measured 1.9 to 1), and
+  the blue buttons are a shade deeper. Every button in the desk, the
+  dialogs and the three rooms measured 4.5 to 1 or better.
+- Tabula shows real pages for a document written line by line (before, it
+  showed one long sheet), and headings keep their level both ways.
+- Rewrite recasts whole sentences offline, with no model: "It is very
+  clear that this is a really important issue" becomes "This is an
+  important issue"; "There are many students who struggle" becomes "Many
+  students struggle"; "make use of" becomes "use"; "the ways in which"
+  becomes "how"; "a big role" becomes "a significant role".
+- Every change in a rewrite shows why it was made, offers other ways to
+  say it ("Clearly, this is an..."), and has a tick to keep it or keep
+  your own words instead. "Try first" lets you find the changes yourself
+  from hints, then compare with Inkwell's version.
+- A writing model now gives two versions, a fuller one and a lighter one
+  closer to your words. It keeps your citations; an answer that only
+  describes your passage is not shown; a version that changes who is
+  speaking, or strays far from your words, says so.
+- The writing mark is out of 100 on the UK scale and read onto UK and US
+  grades, undergraduate and postgraduate (the US letters follow the
+  AACRAO EDGE table). Choose Writing, or Writing and argument.
+- Scholarly writing is no longer marked down: four fifths of the style
+  notes on published scholarship were wrong and are gone, and the spelling
+  checker knows scholarly vocabulary, names, and the terms you use often.
+- The writing model in the browser window loads in Chrome, Edge and
+  Safari, not only Firefox, and must answer once before it is called
+  ready.
+- The side buttons in Tabula, Scriba and Fontes, and in their floating
+  windows, no longer have a heavy square shadow.
 
 NEW IN 7.42
 -----------

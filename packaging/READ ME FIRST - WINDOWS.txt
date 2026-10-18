@@ -1,28 +1,28 @@
-INKWELL 7.42 FOR WINDOWS
+INKWELL 7.43 FOR WINDOWS
 ========================
 
-This zip brings Inkwell 7.42 to the Inkwell already installed on your
+This zip brings Inkwell 7.43 to the Inkwell already installed on your
 Windows computer (from Inkwell-7.37-Windows-Setup.exe). There is no new
 installer this time: GitHub Actions, which builds the Windows installer, has
 not started since 10 October. The installed program always opens the newest
-Inkwell page it finds in its own folder, so 7.42 is one folder dropped in.
+Inkwell page it finds in its own folder, so 7.43 is one folder dropped in.
 
 INSTALL (ABOUT A MINUTE)
 ------------------------
 1. Close Inkwell if it is open.
 2. Unzip: right-click the zip, Extract All, Extract. A window opens with the
-   folder "Inkwell 7.42 page" in it.
+   folder "Inkwell 7.43 page" in it.
 3. Open Inkwell's own folder: click the address bar at the top of a File
    Explorer window, type   %LOCALAPPDATA%\Programs\Inkwell   and press Enter.
    You should see Inkwell.exe there.
-4. Drag the folder "Inkwell 7.42 page" into that window.
+4. Drag the folder "Inkwell 7.43 page" into that window.
    If an older folder such as "Inkwell 7.40 page" is there, you can delete
    it: Inkwell always opens the newest page.
-5. Open Inkwell from the Start menu as usual. Look for "v7.42" beside the
+5. Open Inkwell from the Start menu as usual. Look for "v7.43" beside the
    date at the top.
 
 Your documents, the Start menu entry and the uninstaller stay as they are.
-To go back to 7.37, delete the folder "Inkwell 7.42 page" from Inkwell's
+To go back to 7.37, delete the folder "Inkwell 7.43 page" from Inkwell's
 folder.
 
 If Inkwell is not installed on this computer yet: install
@@ -36,6 +36,39 @@ On the Mac mini: Studio, Engine, "Share with my other devices on this
 Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
+
+NEW IN 7.43
+-----------
+- Night mode is legible: the selected tab and the other light-gold
+  buttons now carry dark letters (white on them measured 1.9 to 1), and
+  the blue buttons are a shade deeper. Every button in the desk, the
+  dialogs and the three rooms measured 4.5 to 1 or better.
+- Tabula shows real pages for a document written line by line (before, it
+  showed one long sheet), and headings keep their level both ways.
+- Rewrite recasts whole sentences offline, with no model: "It is very
+  clear that this is a really important issue" becomes "This is an
+  important issue"; "There are many students who struggle" becomes "Many
+  students struggle"; "make use of" becomes "use"; "the ways in which"
+  becomes "how"; "a big role" becomes "a significant role".
+- Every change in a rewrite shows why it was made, offers other ways to
+  say it ("Clearly, this is an..."), and has a tick to keep it or keep
+  your own words instead. "Try first" lets you find the changes yourself
+  from hints, then compare with Inkwell's version.
+- A writing model now gives two versions, a fuller one and a lighter one
+  closer to your words. It keeps your citations; an answer that only
+  describes your passage is not shown; a version that changes who is
+  speaking, or strays far from your words, says so.
+- The writing mark is out of 100 on the UK scale and read onto UK and US
+  grades, undergraduate and postgraduate (the US letters follow the
+  AACRAO EDGE table). Choose Writing, or Writing and argument.
+- Scholarly writing is no longer marked down: four fifths of the style
+  notes on published scholarship were wrong and are gone, and the spelling
+  checker knows scholarly vocabulary, names, and the terms you use often.
+- The writing model in the browser window loads in Chrome, Edge and
+  Safari, not only Firefox, and must answer once before it is called
+  ready.
+- The side buttons in Tabula, Scriba and Fontes, and in their floating
+  windows, no longer have a heavy square shadow.
 
 NEW IN 7.42
 -----------
