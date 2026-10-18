@@ -83,6 +83,13 @@ WHAT IS IN 7.45
    headers for that (Scriba loads its speech engine from jsDelivr, which
    the headers could stop), so there it runs on one thread.
 
+AFTER THE 7.45 RELEASE
+----------------------
+- The Mac Intel build stopped at "Make the disk image": hdiutil said
+  "Resource busy" (Inwell-Mac-Intel, run 4). The same workflow passed on
+  the other runners. The step now detaches anything left mounted, waits
+  and tries again, up to five times (.github/workflows/mac.yml).
+
 SHOWN, WAITING FOR THE WRITER'S APPROVAL (not in 7.45)
 --------------------------------------------------------
 - The note card: a footnote written beside its marker, numbered in its
