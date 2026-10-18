@@ -1751,6 +1751,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_MARK_CORE@@
 @@LIB_MYWAY_CORE@@
 @@LIB_ATKINSON_FONT@@
+@@LIB_DPHIL_CORE@@
 </script>
 <script>
 /* 7.30: on a phone both side panels start folded; the paper needs the width.
@@ -2464,52 +2465,76 @@ function _fProbeEnsure(){
    about two pages' text, and after an edit the layout starts on the page
    before the edit and stops at the first page break that lines up with an
    old one: the pages after it are the old pages, unchanged. */
-let _fPages=[],_fLaidText=null,_fLaidKey='';
-function _fMeasure(rest,cap,probe,guess){
- /* the longest start of rest that fits in cap, cut at a line or a space */
- let W=Math.min(rest.length,Math.max(1500,Math.round((guess||3000)*1.7)));
- for(;;){probe.textContent=rest.slice(0,W);
-  if(probe.offsetHeight<=cap){if(W>=rest.length)return rest.length;W=Math.min(rest.length,W*2);}
-  else break;}
- let lo=0,hi=W,best=0;
- while(lo<=hi){const mid=(lo+hi)>>1;probe.textContent=rest.slice(0,mid);
-  if(probe.offsetHeight<=cap){best=mid;lo=mid+1;}else{hi=mid-1;}}
+let _fPages=[],_fBest=[],_fLaidText=null,_fLaidKey='';
+function _fMeasure(rest,cap,probe,guess,hint){
+ /* the longest start of rest that fits in cap, cut at a line or a space;
+    returns the cut and the longest fit */
+ let best=-1;
+ /* 7.45: a page whose text changed only in its figures (the notes
+    renumbered) is tried at its old fit first: two measurements, not about
+    fourteen */
+ if(hint>0&&hint<rest.length){probe.textContent=rest.slice(0,hint);
+  if(probe.offsetHeight<=cap){probe.textContent=rest.slice(0,hint+1);if(probe.offsetHeight>cap)best=hint;}}
+ if(best<0){
+  let W=Math.min(rest.length,Math.max(1500,Math.round((guess||3000)*1.7)));
+  for(;;){probe.textContent=rest.slice(0,W);
+   if(probe.offsetHeight<=cap){if(W>=rest.length)return [rest.length,rest.length];W=Math.min(rest.length,W*2);}
+   else break;}
+  let lo=0,hi=W;best=0;
+  while(lo<=hi){const mid=(lo+hi)>>1;probe.textContent=rest.slice(0,mid);
+   if(probe.offsetHeight<=cap){best=mid;lo=mid+1;}else{hi=mid-1;}}}
  let cut=best;
  const nl=rest.lastIndexOf('\n',best);
  if(nl>best-340&&nl>0)cut=nl+1;
  else{const sp=Math.max(rest.lastIndexOf(' ',best),rest.lastIndexOf('\t',best));
   if(sp>best-80&&sp>0)cut=sp+1;}
  if(cut<=0)cut=Math.max(1,best);
- return cut;}
-function _fSplitFrom(t,probe,pages,pos,guess,stop){
+ return [cut,best];}
+function _fSplitFrom(t,probe,pages,bests,pos,guess,stop,reuse){
  for(;;){
+  let hint=0;
+  if(reuse&&pos<t.length){const r=reuse(pos,pages);
+   if(r&&r.page){pages.push(r.page);bests.push(r.best);pos+=r.page.length;if(pos>=t.length)return pages;continue;}
+   if(r&&r.hint)hint=r.hint;}
   const cap=(pages.length===0)?F_CAP1:F_CAPN,rest=t.slice(pos);
-  const n=rest===''?0:_fMeasure(rest,cap,probe,guess);
-  if(n>=rest.length){pages.push(rest);return pages;}
-  pages.push(rest.slice(0,n));pos+=n;guess=n;
+  const mr=rest===''?[0,0]:_fMeasure(rest,cap,probe,guess,hint),n=mr[0];
+  if(n>=rest.length){pages.push(rest);bests.push(rest.length);return pages;}
+  pages.push(rest.slice(0,n));bests.push(mr[1]);pos+=n;guess=n;
   if(stop&&stop(pos,pages))return pages;}}
 function _fSplitPages(t){
  /* the key is all a page's fit depends on: the width and the type (a change
     of either lays the whole document out again) */
  const probe=_fProbeEnsure(),cs=getComputedStyle(probe),key=probe.style.width+'|'+F_CAP1+'|'+F_CAPN+'|'+cs.fontFamily+'|'+cs.fontSize+'|'+cs.lineHeight+'|'+cs.letterSpacing+'|'+cs.wordSpacing;
- const old=_fLaidText,P=_fPages;
- let pages;
- if(old!==null&&key===_fLaidKey&&t===old&&P.length)pages=P.slice();
- else if(old===null||key!==_fLaidKey||!P.length||t.length<6000)pages=_fSplitFrom(t,probe,[],0,3000,null);
+ const old=_fLaidText,P=_fPages,B=_fBest;
+ let pages,bests=[];
+ if(old!==null&&key===_fLaidKey&&t===old&&P.length){pages=P.slice();bests=B.slice();}
+ else if(old===null||key!==_fLaidKey||!P.length||t.length<6000)pages=_fSplitFrom(t,probe,[],bests,0,3000,null);
  else{
   /* the stretch that changed: what the old and new text share at each end */
   const m=Math.min(old.length,t.length);let a=0;while(a<m&&old.charCodeAt(a)===t.charCodeAt(a))a++;
-  let b=0;while(b<m-a&&old.charCodeAt(old.length-1-b)===t.charCodeAt(t.length-1-b))b++;
-  const delta=t.length-old.length,oldEnd=old.length-b;
   const starts=[];let acc=0;for(const pg of P){starts.push(acc);acc+=pg.length;}
   let k=0;while(k+1<P.length&&starts[k+1]<=a)k++;
   /* an edit near the top of a page can move the break before it */
   k=Math.max(0,k-1);if(k>0&&P[k-1].length<400)k--;
-  const after=new Map();for(let i=k+1;i<P.length;i++)if(starts[i]>=oldEnd)after.set(starts[i]+delta,i);
-  pages=_fSplitFrom(t,probe,P.slice(0,k),starts[k],P[k].length||3000,function(pos,pg){
-   const j=after.get(pos);if(j===undefined)return false;
-   for(let i=j;i<P.length;i++)pg.push(P[i]);return true;});
+  /* 7.45: a page whose text is as it was is kept, wherever it now begins,
+     so an edit in two places (a note's marker in chapter two and the note
+     in the Notes at the end, or every marker renumbered) lays out only the
+     pages around each change. Until now every page between the first change
+     and the last was measured again: placing a footnote in a thesis took
+     2.9 s. A page is kept when its text and the 400 characters after it
+     (which decide where it breaks) are unchanged; one whose text changed
+     only in its figures is measured at its old fit. */
+  const dz=x=>x.replace(/\d/g,'0'),byHead=new Map();
+  for(let i=k;i<P.length;i++){const h=dz(old.substr(starts[i],48));let l=byHead.get(h);if(!l)byHead.set(h,l=[]);l.push(i);}
+  const reuse=function(pos,pg){const l=byHead.get(dz(t.substr(pos,48)));if(!l)return null;let hint=0;
+   for(const j of l){if((j===0)!==(pg.length===0)||!P[j])continue;const n=P[j].length+400,x=old.substr(starts[j],n),y=t.substr(pos,n);
+    if(x===y&&B[j]!=null)return {page:P[j],best:B[j]};
+    if(!hint&&x.length===y.length&&B[j]>0&&dz(x)===dz(y))hint=B[j];}
+   return hint?{hint:hint}:null;};
+  bests=B.slice(0,k);
+  pages=_fSplitFrom(t,probe,P.slice(0,k),bests,starts[k],P[k].length||3000,null,reuse);
  }
+ _fBest=bests;
  _fPages=pages;_fLaidText=t;_fLaidKey=key;
  return pages;
 }
@@ -6118,7 +6143,7 @@ const GRAM5=[
  {re:/([a-z]) ;/g,to:null,cat:'g',label:'Space before the semicolon'},
  {re:/([a-z]) :/g,to:null,cat:'g',label:'Space before the colon'},
  /* 7.43: an abbreviation's full stop ("qtd. in", "e.g. the", "P. vivax") does not end a sentence */
- {re:/([.!?]) ([a-z])/g,cs:true,npre:/(?:\b(?:e\.g|i\.e|eg|ie|etc|viz|cf|vs|al|qtd|p|pp|ed|eds|trans|fig|figs|no|nos|vol|vols|ch|chap|sec|sect|approx|ca|op|loc|ibid|esp|incl|n|nn|ll|vv|ser|pt|ref|refs|tab|app|para|paras)|(?:^|[\s(])[A-Z])$/,to:null,cat:'g',label:'Sentence begins lowercase'},
+ {re:/([.!?]) ([a-z])/g,cs:true,npre:/(?:\b(?:e\.g|i\.e|eg|ie|etc|viz|cf|vs|al|qtd|p|pp|ed|eds|trans|rev|repr|comp|bk|bks|col|cols|fol|fols|ff|mss|univ|dept|fl|fig|figs|no|nos|vol|vols|ch|chap|sec|sect|approx|ca|op|loc|ibid|esp|incl|n|nn|ll|vv|ser|pt|ref|refs|tab|app|para|paras)|(?:^|[\s(])[A-Z])$/,to:null,cat:'g',label:'Sentence begins lowercase'},
  {re:/\bnoone\b/gi,to:'no one',cat:'g',label:'No one'},
  {re:/\beachother\b/gi,to:'each other',cat:'g',label:'Each other'},
  {re:/\bincase\b/gi,to:'in case',cat:'g',label:'In case'},
@@ -6911,7 +6936,11 @@ function dialectPack(){
  const key=S.dialect;if(key===DIALKEY)return DIALCACHE[key]||[];
  if(S.dialect!=='us'&&S.dialect!=='uk')return [];
  DIALKEY=key;
- DIALCACHE[key]=DIALECT.map(pair=>{
+ /* 7.45: British English takes -ize as well as -ise ("organize" is Oxford
+    spelling, used by Oxford University Press), so the British pack no
+    longer marks it as American; a document that mixes the two is noted by
+    the doctoral checks. "Analyze" is American in every British style. */
+ DIALCACHE[key]=DIALECT.filter(pair=>!(S.dialect==='uk'&&/ize$/.test(pair[0])&&/ise$/.test(pair[1]))).map(pair=>{
   const other=S.dialect==='us'?pair[1]:pair[0], want=S.dialect==='us'?pair[0]:pair[1];
   return {re:new RegExp('\\b'+other+'(s|ed|ing|es)?\\b','gi'),to:want+'$1',cat:'g',
    label:(S.dialect==='us'?'British form; US English prefers':'US form; British English prefers')+' '+want};});
@@ -7010,7 +7039,8 @@ function rhythmCheck(t,ms,out){
   }
   pos=at+s.length;
  }
- var paras=t.split(/\n\s*\n/);
+ /* 7.45: each note of a Notes section ("[^12]: …") is a paragraph of its own */
+ var paras=t.split(/\n\s*\n|\n(?=\[\^[^\]\s]{1,12}\]:)/);
  var ppos=0;
  for(var pi=0;pi<paras.length;pi++){
   var p=paras[pi];
@@ -7363,6 +7393,9 @@ function consistencyChecks(t,ms,out){
  if(S.dialect!=='us'&&S.dialect!=='uk'){
   for(var pi=0;pi<DIALECT.length;pi++){
    var us=DIALECT[pi][0],uk=DIALECT[pi][1];
+   /* 7.45: -ize beside -ise is a matter for the doctoral checks below, which
+      know that both are British (-ize is Oxford spelling) */
+   if(typeof INKDPHIL!=='undefined'&&/ize$/.test(us)&&/ise$/.test(uk))continue;
    var reU=new RegExp('\\b'+us+'(s|ed|ing|es)?\\b','gi'),reK=new RegExp('\\b'+uk+'(s|ed|ing|es)?\\b','gi');
    var cU=(t.match(reU)||[]).length,cK=(t.match(reK)||[]).length;
    if(cU&&cK&&cU+cK>=3){
@@ -8974,10 +9007,27 @@ function inkSpellLoad(){
   const D=INKSPELL.load(t);if(D.size<50000||!['the','which','because'].every(w=>INKSPELL.known(D,w)))return;
   SPELLD=D;CARDSIG='';try{scan();}catch(e){}}).catch(()=>{});
  return SPELLLOAD;}
+/* 7.45: no correction takes a note's marker with it: a fix whose words
+   hold a marker it does not keep is left out (the note still shows) */
+const INK_MARK_RE=/\[\^[^\]\s]{1,12}\]/g;
+function inkKeepMarks(es){
+ return es.map(e=>{if(typeof e.fix!=='string'||String(e.orig||'').indexOf('[^')<0)return e;
+  const a=(String(e.orig).match(INK_MARK_RE)||[]).join(),b=(e.fix.match(INK_MARK_RE)||[]).join();
+  return a===b?e:Object.assign({},e,{fix:null,alts:null});});}
+let INKRN={t:null,n:null};
+function inkRefNames(t){
+ if(INKRN.t===t)return INKRN.n;
+ const n=new Set(),at=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
+ if(at>=0)for(const m of t.slice(at).matchAll(/(?:^|[^\p{L}])(\p{Lu}[\p{L}'’\-]+)/gmu)){const w=m[1].toLowerCase();n.add(w);
+  for(const p of w.split('-'))if(p.length>2)n.add(p);}
+ INKRN={t:t,n:n};return n;}
 function inkSpellEdits(t,taken){
  if(!SPELLD||S.spellOff)return [];
  const ms=masks(t),refAt=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
  const ignore=new Set((S.spellDict||[]).concat(S.muteWords||[]).map(w=>String(w).toLowerCase()));
+ /* 7.45: the names in the document's own References are its authors
+    ("Toombs (1992) agrees" is not "Tombs") */
+ inkRefNames(t).forEach(w=>ignore.add(w));
  return INKSPELL.check(SPELLD,t,{margin:0.2,maxScore:1.35,ignore:ignore,uses:INK_DOC_USES||undefined})
   .filter(e=>!inMask(e.start,ms)&&(refAt<0||e.start<refAt)&&!taken.some(o=>o.start<e.end&&e.start<o.end))
   .map(e=>{e.why=e.fix?'Spelling':'Spelling: not in the dictionary';return e;});}
@@ -9020,6 +9070,38 @@ async function inkModelPump(){
    alternative, a few to try, or a question whose answer builds the wording;
    two notes on one place become one. It is given the dictionary and the
    word bank. */
+/* 7.45: the checks a doctoral editor makes on the whole document
+   (src/lib/dphil_core.js, tools/dphil/dphil_test.js): -ise and -ize; an
+   abbreviation used before it is spelled out, spelled out and not used, or
+   spelled out twice; a citation with no entry in the References, an entry
+   cited nowhere, the list out of order; the citations' small marks kept one
+   way; a quotation with no page; quotation marks, apostrophes, per cent,
+   ellipses, dashes and "e.g.," each written one way; headings, figures,
+   tables and chapters numbered in order, and none pointed to that is not
+   there. They read the whole document once, never paragraph by paragraph,
+   and add their notes where no other note stands. Casual writing gets none;
+   creative writing only the marks. Measured on 40 published articles and a
+   100,000-word thesis: about 30 ms for the thesis. */
+let INKDP={t:null,sig:'',ans:[]};
+function inkDphilNotes(t,ms,out){
+ if(typeof INKDPHIL==='undefined'||S.reg==='casual')return;
+ const sig=S.reg+'|'+(S.dialect||'')+'|'+(SPELLD?1:0);
+ let ns=INKDP.ans;
+ if(INKDP.t!==t||INKDP.sig!==sig){
+  try{ns=INKDPHIL.all(t,{reg:S.reg,dialect:S.dialect,mask:ms,level:SPELLD?w=>INKSPELL.level(SPELLD,w):null,
+   onError:(f,e)=>console.warn('[inkwell] '+f,e)});}catch(e){console.warn('[inkwell] doctoral checks',e);ns=[];}
+  INKDP={t:t,sig:sig,ans:ns};}
+ if(!ns.length)return;
+ /* a place another note holds keeps that note: the notes sorted by start,
+    with the furthest end reached so far */
+ const hs=out.slice().sort((a,b)=>a.start-b.start),far=[];let mx=-1;
+ for(const h of hs){mx=Math.max(mx,h.end);far.push(mx);}
+ for(const n of ns){
+  let lo=0,hi=hs.length-1,k=-1;
+  while(lo<=hi){const m=(lo+hi)>>1;if(hs[m].start<n.end){k=m;lo=m+1;}else hi=m-1;}
+  if(k>=0&&far[k]>n.start)continue;
+  out.push({start:n.start,end:n.end,orig:n.orig,fix:n.fix,why:n.why,cat:n.cat||'c',fam:n.fam,dphil:true,tag:INKDP_TAG[n.fam]||'consistency'});}}
+const INKDP_TAG={cite:'citations',refs:'citations',citeform:'citations',quote:'citations',abbr:'abbreviations',number:'numbering',ize:'spelling'};
 const INKREF_H={plain:w=>!!SPELLD&&INKSPELL.level(SPELLD,String(w).toLowerCase())>=0,
  syn:w=>{const r=synFor(String(w));return r?r.syns.map(x=>inflectSyn(x,r.form)):[];}};
 function inkRules(t){
@@ -9027,6 +9109,8 @@ function inkRules(t){
  let all=inkRuleGate(t,ruleEdits(t));
  Array.prototype.push.apply(all,inkSpellEdits(t,all));
  if(typeof INKREF!=='undefined'){try{all=INKREF.refine(t,all,INKREF_H);}catch(e){console.warn('[inkwell] refine',e);}}
+ inkDphilNotes(t,masks(t),all);
+ all=inkKeepMarks(all);
  if(S.showStyle){INK_STYLE_HIDDEN=0;return all;}
  const keep=all.filter(e=>e.cat!=='c'&&e.cat!=='s');
  INK_STYLE_HIDDEN=all.length-keep.length;
@@ -9051,9 +9135,35 @@ let INK_CHUNK_MIN=40000;
 let INK_BLOCK_MODE=false,__ruleText=null,INK_DOC_USES=null,INKRC={sig:'',map:new Map()},INKSCAN=null;
 function inkRuleSettingsSig(){return [S.reg,S.docType||'',S.dialect||'',(S.rules||[]).map(r=>r.on?r.pat+'\u0002'+(r.rep||''):'').join('\u0001'),(S.muteWords||[]).join(','),(S.spellDict||[]).join(','),S.citeStyle||'',S.spellOff?1:0,SPELLD?1:0].join('|');}
 /* the paragraphs of a text, as [start, end) */
-function inkBlocks(t){const out=[],re=/\n{2,}/g;let last=0,m;
+function inkBlocks(t){const out=[],re=/\n{2,}|\n(?=\[\^[^\]\s]{1,12}\]:)/g;let last=0,m;
  while((m=re.exec(t))){if(m.index>last)out.push([last,m.index]);last=m.index+m[0].length;}
  if(t.length>last)out.push([last,t.length]);return out;}
+/* 7.45: a paragraph is read with its note markers taken out ("word[^12]."
+   is read as "word."), and a note without its "[^12]: ", so a new number
+   (a note placed, the notes renumbered) leaves the paragraph as it was read
+   and nothing is checked again. Measured on a thesis with 998 Chicago
+   notes: placing one took 3.1 s and renumbering 5.6 s, nearly all of it
+   checking again the paragraphs whose numbers had changed. The notes are
+   put back at their places in the text; one that would change words on
+   both sides of a marker is left out, so a correction never removes a
+   marker. */
+function inkStripMarks(b){
+ if(b.indexOf('[^')<0)return null;
+ const cuts=[];let s='',last=0;
+ for(const m of b.matchAll(/\[\^[^\]\s]{1,12}\]/g)){
+  let len=m[0].length;
+  if(m.index===0&&b[len]===':'){len++;while(b[len]===' '||b[len]==='\t')len++;}
+  s+=b.slice(last,m.index);cuts.push({at:s.length,len:len});last=m.index+len;}
+ if(!cuts.length)return null;
+ s+=b.slice(last);return {s:s,cuts:cuts};}
+function inkUnstrip(es,b,st){
+ const out=[];
+ const map=(p,end)=>{let d=0;for(const c of st.cuts){if(end?c.at<p:c.at<=p)d+=c.len;else break;}return p+d;};
+ for(const e of es){
+  if(typeof e.fix==='string'&&st.cuts.some(c=>c.at>e.start&&c.at<e.end))continue;
+  const a=map(e.start,false),z=Math.max(a,map(e.end,true));
+  out.push(Object.assign({},e,{start:a,end:z,orig:b.slice(a,z)}));}
+ return out;}
 /* how often each word is written in the whole document: the spelling
    checker's sign of the writer's own terms */
 function inkWordUses(t){const u=new Map(),re=/[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’]*(?:-[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’]*)*/g;let m;
@@ -9066,11 +9176,12 @@ function inkRulesBlock(b,refAfter){
   return all;}
  finally{INK_BLOCK_MODE=false;}}
 /* one paragraph's notes, from the store or checked now */
+function inkBlockKey(block,after){const st=inkStripMarks(block);return {st:st,key:(after?'\u0003':'')+(st?st.s:block)};}
 function inkBlockNotes(t,a,b,refAt){
- const block=t.slice(a,b),after=refAt>=0&&a>=refAt,key=(after?'\u0003':'')+block;
- let es=INKRC.map.get(key);
- if(!es){es=inkRulesBlock(block,after);INKRC.map.set(key,es);}
- return es;}
+ const block=t.slice(a,b),after=refAt>=0&&a>=refAt,k=inkBlockKey(block,after);
+ let es=INKRC.map.get(k.key);
+ if(!es){es=inkRulesBlock(k.st?k.st.s:block,after);INKRC.map.set(k.key,es);}
+ return k.st?inkUnstrip(es,block,k.st):es;}
 function inkRulesLong(t){
  const sig=inkRuleSettingsSig();
  if(INKRC.sig!==sig)INKRC={sig:sig,map:new Map()};
@@ -9078,14 +9189,20 @@ function inkRulesLong(t){
  const refAt=t.search(/^#{1,3}\s*(References|Bibliography|Works Cited|Sources|Literature)\b/im);
  let all=[];const live=new Set();
  for(const [a,b] of inkBlocks(t)){
-  const es=inkBlockNotes(t,a,b,refAt);live.add((refAt>=0&&a>=refAt?'\u0003':'')+t.slice(a,b));
+  const es=inkBlockNotes(t,a,b,refAt);live.add(inkBlockKey(t.slice(a,b),refAt>=0&&a>=refAt).key);
   for(const e of es){const c=Object.assign({},e);c.start+=a;c.end+=a;all.push(c);}}
  /* paragraphs no longer in the text are forgotten */
  if(INKRC.map.size>live.size*2+200)for(const k of Array.from(INKRC.map.keys()))if(!live.has(k))INKRC.map.delete(k);
  /* and the checks of the whole document */
  const ms=masks(t);all.sort((x,y)=>x.start-y.start);
  const doc=all.slice();consistencyChecks(t,ms,doc);headingChecks(t,ms,doc);
- all=doc.slice();
+ inkDphilNotes(t,ms,doc);
+ /* 7.45: the names in the References or Bibliography are the document's
+    authors, wherever they are written (a note read on its own does not see
+    the list); applied here, after the paragraphs' store, so writing in the
+    list never sends the whole document to be checked again */
+ const names=inkRefNames(t);
+ all=inkKeepMarks(names.size?doc.filter(e=>!(/^Spelling/.test(e.why||'')&&names.has(String(e.orig).toLowerCase()))):doc.slice());
  INK_DOC_USES=null;
  if(S.showStyle){INK_STYLE_HIDDEN=0;return all;}
  const keep=all.filter(e=>e.cat!=='c'&&e.cat!=='s');
@@ -9309,6 +9426,8 @@ Object.assign(LESSONS,{
  'Spelling':['A misspelling: the dictionary form is suggested.','recieve → receive'],
  'Word not needed here':['The word repeats or adds nothing the sentence needs; English often drops it.','"return back" → "return"'],
  'Missing word':['The sentence needs a word here to be grammatical, often a small one (to, the, is).','"She wants go" → "She wants to go"']});
+/* 7.45: the doctoral checks' lessons */
+if(typeof INKDPHIL!=='undefined')Object.assign(LESSONS,INKDPHIL.LESSONS);
 function lessonFor(why){
  /* exact prefix first; then the part after a model's name ("Laptop model:
     Verb form"); a contained key only when it is long enough not to catch an
@@ -10672,7 +10791,10 @@ function inkNotesAppend(t,lines){
    section put in the same order. Keys may be numbers or @-tokens. */
 function inkNotesRenumber(t){
  const map={};let n=0;
- t=t.replace(/\[\^(@?\d+)\](?!:)/g,function(m,old){if(!(old in map))map[old]=++n;return '[^'+map[old]+']';});
+ /* 7.45: only a marker at the start of a line with a colon is a note's
+    definition; "three reasons[^4]: first" is a marker in the text, and was
+    left with its old number */
+ t=t.replace(/\[\^(@?\d+)\](:?)/g,function(m,old,colon,off,s){if(colon&&(off===0||s[off-1]==='\n'))return m;if(!(old in map))map[old]=++n;return '[^'+map[old]+']'+colon;});
  t=t.replace(/^\[\^(@?\d+)\]:/gm,function(m,old){return (old in map)?'[^'+map[old]+']:':m;});
  const ix=t.search(/^#\s*Notes?\s*$/mi);
  if(ix>=0){const head=t.indexOf('\n',ix);
@@ -10697,7 +10819,8 @@ function inkCiteScan(t,doc){
  while((m=reDef.exec(t)))defs[m[1]]={text:m[2]};
  for(const r of recs.filter(r=>r.note)){
   const d=defs[r.k];if(!d)continue;
-  const mm=new RegExp('\\[\\^'+r.k+'\\](?!:)').exec(t);if(!mm)continue;
+  let mm=null;for(const x of t.matchAll(new RegExp('\\[\\^'+r.k+'\\](:?)','g')))if(!(x[1]&&(x.index===0||t[x.index-1]==='\n'))){mm=x;break;}
+  if(!mm)continue;
   if(d.text.trim()!==String(r.text).trim()){hand.push(r);continue;}
   inst.push({pos:mm.index,len:mm[0].length,rec:r,note:true});}
  const seen={};
