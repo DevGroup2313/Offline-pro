@@ -9357,8 +9357,22 @@ const WRITER={id:'LiquidAI/LFM2.5-1.2B-Instruct-ONNX',name:'LFM2.5 1.2B Instruct
 async function inkGpuCheck(){
  if(!('gpu' in navigator))return {ok:false,why:'this browser has no WebGPU'};
  try{const a=await navigator.gpu.requestAdapter();if(!a)return {ok:false,why:'WebGPU found no graphics adapter'};
-  return {ok:true,f16:!!(a.features&&a.features.has&&a.features.has('shader-f16'))};}
+  const i=a.info||{};
+  return {ok:true,f16:!!(a.features&&a.features.has&&a.features.has('shader-f16')),
+   gpu:[i.vendor,i.architecture,i.description].filter(Boolean).join(' ')};}
  catch(e){return {ok:false,why:'WebGPU failed: '+((e&&e.message)||e)};}}
+/* 7.43: the writing model loads as "q4" on every browser. Until 7.42 a
+   browser whose graphics have half precision (Chrome, Edge, Safari) was given
+   the "q4f16" files and only Firefox, which lacks it, the "q4" ones: and only
+   Firefox worked. Liquid AI's model card recommends Q4 for WebGPU and does not
+   list Q4F16, and half precision overflows in ONNX Runtime's WebGPU path. The
+   q4f16 files an earlier attempt left in the browser's storage (about 760 MB)
+   are removed. */
+async function inkWriterDropF16(){
+ try{if(typeof caches==='undefined')return 0;let n=0;
+  for(const name of await caches.keys()){const c=await caches.open(name);
+   for(const r of await c.keys()){if(/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_q4f16\.onnx/.test(r.url)){await c.delete(r);n++;}}}
+  return n;}catch(e){return 0;}}
 async function installWriter(auto){
  if(!PRO_ALLOWED){instSay('The writing model is not offered on phones and tablets: it needs more memory than the system gives an app. Use your laptop\u2019s model (below), or Apple\u2019s model on an iPhone or iPad with iOS 26.');
   return toast('Not on a phone or tablet; use your laptop\u2019s model');}
@@ -9370,15 +9384,24 @@ async function installWriter(auto){
   return toast('Needs WebGPU: '+g.why);}
  let files;try{files=await inkAiFiles4();}
  catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
- const pill=document.getElementById('enginePill'),dtype=g.f16?'q4f16':'q4';
+ const pill=document.getElementById('enginePill'),dtype='q4';
  window.__inkInstalling=true;
  if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
- instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', WebGPU): '+(auto?'starting':'downloading once, about '+WRITER.mb+' MB, then kept for offline use')+'.');
+ instSay('['+new Date().toLocaleTimeString()+'] '+WRITER.name+' ('+dtype+', WebGPU'+(g.gpu?', '+g.gpu:'')+'): '+(auto?'starting':'downloading once, about '+WRITER.mb+' MB, then kept for offline use')+'.');
+ inkWriterDropF16().then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' (q4f16) left by an earlier attempt.');});
  inkAiMark('writer',true);const got={};
  try{
   await inkAiStart('pro',files);
   await inkAiAsk('pro',{op:'loadLM',model:WRITER.id,opts:{dtype:dtype,device:'webgpu'}},d=>{const p=d.progress||{};
    if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+WRITER.mb+' MB';}},null,0);
+  /* 7.43: loaded is not working: the model must answer once before it is
+     called ready (a model whose numbers overflow loads and then answers
+     nothing) */
+  if(pill)pill.innerHTML='<i></i>Writing model: first answer\u2026';
+  const t0=Date.now();
+  const hi=await inkAiAsk('pro',{op:'chat',msgs:[{role:'user',content:'Reply with one word: ready'}],opts:{max_new_tokens:6,do_sample:false}},null,null,0);
+  if(!/[A-Za-z]/.test(String(hi&&hi.text||'')))throw new Error('the model loaded but its first answer was empty, so it is not used ('+JSON.stringify(String(hi&&hi.text||''))+')');
+  instSay('First answer in '+((Date.now()-t0)/1000).toFixed(1)+' s: '+JSON.stringify(String(hi.text).trim().slice(0,40))+'.');
   PRO=async function(msgs,gen,onTok){
    const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
    return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
