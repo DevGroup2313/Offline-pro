@@ -2,7 +2,7 @@
 <!-- INKWELL v6.52 · XXV·SEPTEMBRIS·MMXXVI — see INKWELL_HANDOFF_v6p52.txt. -->
 <html lang="en">
 <head>
-<!-- BUILD='7.46': read by the desktop launchers to choose the newest page -->
+<!-- BUILD='7.47': read by the desktop launchers to choose the newest page -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -450,6 +450,17 @@ body[data-motion=minimal] #tipCard.min{animation:none}
 #tipCard .row{margin-top:10px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;font-size:13px;max-width:min(620px,calc(100vw - 32px));box-sizing:border-box;text-align:center;line-height:1.45;display:none;z-index:80;box-shadow:var(--sh-lg);animation:rise .3s var(--pop)}
 #modal{position:fixed;inset:0;background:#0009;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:90}
+/* 7.47: the writing model's install, shown inside the Engine panel */
+.wmLive,.wmSteps,.wmFall{font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin:8px 0;box-shadow:inset 0 1px 2px #00000012}
+.wmLive ol,.wmSteps ol{margin:6px 0 4px 20px;padding:0}.wmSteps li{margin:3px 0}
+.wmLive li{color:var(--mut)}.wmLive li.now{color:var(--ink);font-weight:600}.wmLive li.done{color:var(--green)}
+.wmLive .wmT{color:var(--mut);font-size:11.5px;margin-left:6px;font-variant-numeric:tabular-nums}
+.wmBar{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:6px 0 4px;box-shadow:inset 0 1px 2px #00000030}
+.wmBar i{display:block;height:100%;background:linear-gradient(180deg,var(--gold),var(--acc));border-radius:5px;transition:width .4s ease}
+.wmNote,.wmSub{font-size:11.5px;color:var(--mut)}.wmSub{margin:2px 0 0 2px}
+.wmLive.good{border-color:var(--green)}.wmLive.bad{border-color:var(--red)}
+.wmSteps p,.wmFall p{margin:4px 0 0}
+.wmRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}.wmRow button{flex:none;padding:6px 14px;font-size:12px;white-space:normal;max-width:100%;text-align:left}
 /* every card arrives as Tabula's paper arrives: a sheet pressed, then released —
    the overshoot, the settle, the deep layered cast, in day and in night dress */
 #modal .box{background:linear-gradient(180deg,#fffdf6 0%,var(--card) 40%);border:1px solid var(--line);border-radius:22px;padding:22px;width:min(680px,92vw);max-height:86vh;overflow:auto;box-shadow:
@@ -2499,7 +2510,16 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   const ABC = 'abcdefghijklmnopqrstuvwxyz';
   const PREFIX = new Set('pre post non anti co re self semi multi inter intra sub super ultra mid ex pro counter neo quasi pseudo micro macro mini bi tri un well cross over under out e socio neuro psycho bio meta proto techno cyber geo eco auto hyper hypo trans infra extra retro tele mono poly para'.split(' '));
   /* 7.43: the Latin of scholarly prose and its apparatus, and Roman numerals */
-  const LATIN = new Set('se vitro vivo situ sensus communis ibid idem passim viz alia mutandis mutatis facie priori posteriori jure sui generis paribus ceteris qua quo versa fide bona ante sine ergo sic supra infra et al cf vs qtd foci syllabi lemmata schemata stigmata minutiae personae formulae vertebrae larvae algae alumnae'.split(' '));
+  const LATIN = new Set('se vitro vivo situ sensus communis ibid idem passim viz alia mutandis mutatis facie priori posteriori jure sui generis paribus ceteris qua quo versa fide bona ante sine ergo sic supra infra et al cf vs qtd foci syllabi lemmata schemata stigmata minutiae personae formulae vertebrae larvae algae alumnae'.split(' ')
+    /* 7.47: and the Latin and Greek terms of philosophy, law and the
+       humanities ("prima facie", "stricto sensu", "analogia entis") */
+    .concat('factical facticity thrownness ownmost worldhood enframing prima stricto lato sensu modus operandi vivendi analogia entis substantia individua rationalis ipso facto novo hominem infinitum nauseam fortiori contrario relata relatum explanandum explanans definiendum definiens desideratum desiderata apud seq sqq judice obiter dicta dictum decidendi stare decisis locus standi mens rea actus reus amicus curiae habeas lege lex scripta nullius imago dei telos eudaimonia phronesis poiesis techne episteme doxa praxis aporia arete hexis kairos qua sic'.split(' ')));
+  /* the particles of Arabic names ("Muhammad ibn Tarhan"); "al-" names are
+     names */
+  const NAME_PART = new Set('ibn bin bint abu abd abdul al el ul ud'.split(' '));
+  /* 7.47: bases whose plural or past is irregular: "childs" and "teached"
+     stay marked though "child" and "teach" are words */
+  const IRREG = new Set('child woman foot tooth mouse goose criterion phenomenon teach catch bring think write speak break choose drive begin build drink fight forget forgive freeze sleep steal sweep swing swear throw understand stand spend send lend shake shine shoot sling sting stink strike strive swim wake ride arise bleed breed cling creep dwell flee fling grind kneel leave light mislead seek sell shrink slide speed split spread spring stride swell tear thrust tread upset weep wind withdraw undertake overtake mistake forbid forsake'.split(' '));
   const ROMAN = /^(?=[ivxlc]{1,7}$)(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3})$/;
   const RUN_ON = new Set('a an in at as of on up so no to each even every any some all thank per out over be'.split(' '));
   const CALENDAR = /^(January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/;
@@ -2532,16 +2552,82 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   function known(D, w) {
     if (level(D, w) >= 0) return true;
     const m = /^(.+?)(?:'s|’s|s'|’)$/.exec(w); if (m && level(D, m[1]) >= 0) return true;
-    if (w.indexOf('-') > 0) return w.split('-').every(p => p && (level(D, p) >= 0 || /^\d+$/.test(p) || PREFIX.has(p.toLowerCase())));
     const lw = w.toLowerCase();
-    return formed(D, lw, 2) && !nearCommon(D, lw);
+    if (w.indexOf('-') > 0) {
+      if (w.split('-').every(p => p && (level(D, p) >= 0 || /^\d+$/.test(p) || PREFIX.has(p.toLowerCase()) || inflected(D, p.toLowerCase())))) return true;
+      /* 7.47: "pre-emptive", "co-operate", "re-examine": the British hyphen
+         after a prefix, where the word without it is known */
+      const j = lw.replace(/-/g, ''), pre = lw.slice(0, lw.indexOf('-'));
+      return PREFIX.has(pre) && (level(D, j) >= 0 || inflected(D, j));
+    }
+    if (variant(D, lw) || inflected(D, lw)) return true;
+    const f = formed(D, lw, 2);
+    return f === 'suf' || (f === 'pre' && !nearCommon(D, lw));
   }
   /* a formation one slip from a common word is that word misspelt:
-     "intergrated" (integrated), "transpotation" (transportation) */
+     "intergrated" (integrated), "transpotation" (transportation). 7.47: not
+     when the common word is the same formation with another prefix
+     ("devitalization", "revitalization"; "miscrediting", "discrediting") or
+     the word without its prefix ("atemporal", "temporal") */
   function nearCommon(D, w) {
     for (const [c] of edits1(w)) {
       if (c + 's' === w) continue; // its own singular: "declaratives"
-      const e = D.lower.get(c); if (e && e.plain && e.lv <= 70) return true;
+      const e = D.lower.get(c); if (!(e && e.plain && e.lv <= 70)) continue;
+      if ((w[0] === 'a' && c === w.slice(1)) || FORM_PRE.some(p => w.startsWith(p) && (c === w.slice(p.length) || FORM_PRE.some(q => q !== p && c.startsWith(q) && c.slice(q.length) === w.slice(p.length))))) continue;
+      return true;
+    }
+    return false;
+  }
+  /* 7.47: the British forms of known American ones: -ise for -ize
+     ("weaponised"), oe and ae ("foetal", "aetiological", "paediatric"), a
+     consonant doubled before -ed, -ing and -es ("focusses", "modelled") */
+  function variant(D, w) {
+    const ok = x => x !== w && (level(D, x) >= 0 || inflected(D, x));
+    if (/is(?:e|es|ed|ing|ation|ations|er|ers)$/.test(w) && ok(w.replace(/is(e|es|ed|ing|ation|ations|er|ers)$/, 'iz$1'))) return true;
+    if (/(?:^|[^a])(?:oe|ae)/.test(w) && ok(w.replace(/oe/, 'e').replace(/ae/, 'e'))) return true;
+    if (/(ll|ss)(?:ed|ing|es|er|ers)$/.test(w) && ok(w.replace(/(ll|ss)(ed|ing|es|er|ers)$/, (m0, d, suf) => d[0] + suf))) return true;
+    return false;
+  }
+  /* 7.47: a regular inflection or derivation of a known word is a word:
+     "attaches", "logics", "triaging", "cognitions", "interiority",
+     "personalist", "enaction", "intubation", "relatedly". Measured on 40
+     published articles (247,426 words): 85 of the 97 spelling fixes were
+     wrong, most of them such words "corrected" to a neighbour one letter
+     away ("attaches" to "attached", "interiority" to "inferiority",
+     "intubation" to "incubation"). Being one slip from a common word is no
+     reason against a word built by rule from a known one. A single
+     consonant where the known form doubles it is ("occured": "occurred"),
+     and so is a form made the wrong way ("studys", "attachs", "teached"). */
+  const SIB = /(?:s|x|z|ch|sh)$/, CY = /[^aeiou]y$/;
+  const STOPW = new Set('again until which there their where about above after along among around before behind below beside between beyond during except inside outside since through toward towards under unless while within without whose other these those'.split(' '));
+  const INFL = [['es', ''], ['s', ''], ['ies', 'y'], ['ied', 'y'], ['ed', ''], ['d', ''], ['ing', ''], ['ing', 'e'],
+    ['ion', ''], ['ion', 'e'], ['ions', ''], ['ions', 'e'], ['ity', ''], ['ities', ''], ['ist', ''], ['ist', 'e'], ['ists', ''], ['ists', 'e'],
+    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e']];
+  const plainBase = (D, b) => b.length >= 5 && !!D.lower.get(b) && D.lower.get(b).plain;
+  function inflected(D, w) {
+    if (!/^[a-z]{6,}$/.test(w)) return false;
+    for (const [suf, add] of INFL) {
+      if (!w.endsWith(suf) || w.length - suf.length < 4) continue;
+      const cut = w.slice(0, w.length - suf.length), b = cut + add;
+      /* the British doubled consonant: "focussed", "travelled" */
+      const dbl = /(ed|ing|es)$/.test(suf) && !add && /([lst])\1$/.test(cut) && plainBase(D, cut.slice(0, -1)) ? cut.slice(0, -1) : '';
+      const base = plainBase(D, b) ? b : dbl;
+      if (!base || IRREG.has(base) || STOPW.has(base)) continue;
+      /* -ion after a verb's own ending only ("enaction", "intubation"; not
+         "guestion"), and a dropped e only after a common or -ate base (not
+         "launcing" from "launce") */
+      if (/^ions?$/.test(suf) && !(add ? /(?:ate|ute)$/.test(base) : /(?:ct|pt|ss|rt)$/.test(base))) continue;
+      if (suf === 'ing' && add && !(D.lower.get(base).lv <= 60 || /(?:ate|ize|ise)$/.test(base))) continue;
+      if (suf === 'es' && !dbl && (!SIB.test(base) || /(?:sis|xis)$/.test(base))) continue;
+      if (suf === 's' && (SIB.test(base) || CY.test(base))) continue;
+      if (suf === 'd' && !/e$/.test(base)) continue;
+      if ((suf === 'ed' || (suf === 'ing' && !add)) && (/e$/.test(base) && suf === 'ed' || CY.test(base) && suf === 'ed')) continue;
+      if ((suf === 'ed' || suf === 'ing') && !add && !dbl) {
+        const last = base.slice(-1);
+        if (/[^aeiouwxy]/.test(last) && /[aeiou]/.test(base.slice(-2, -1)) && !/[aeiou]/.test(base.slice(-3, -2)) && D.lower.has(base + last + suf)) continue;
+      }
+      if (suf === 'ly' && !/(?:ive|al|ous|ar|ed)$/.test(base)) continue;
+      return true;
     }
     return false;
   }
@@ -2553,18 +2639,21 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   const FORM_PRE = ['neuro', 'socio', 'psycho', 'bio', 'meta', 'proto', 'pseudo', 'post', 'pre', 'non', 'anti', 'counter', 'inter', 'intra', 'multi', 'trans', 'hetero', 'homo', 'cyber', 'techno', 'geo', 'eco', 'auto', 'hyper', 'hypo', 'macro', 'micro', 'mis', 'dis', 'de', 're', 'un', 'over', 'under', 'co', 'sub', 'super', 'semi', 'mono', 'poly', 'para', 'infra', 'extra', 'ultra', 'quasi', 'neo', 'retro', 'tele', 'cross', 'self'];
   const FORM_SUF = [['ness', ''], ['hood', ''], ['ship', ''], ['ism', ''], ['isms', ''], ['ist', ''], ['ists', ''], ['ity', ''], ['ities', ''],
     ['ize', ''], ['ise', ''], ['izes', ''], ['ises', ''], ['ized', ''], ['ised', ''], ['izing', ''], ['ising', ''], ['ization', ''], ['isation', ''], ['izations', ''], ['isations', ''],
-    ['ability', 'able'], ['ibility', 'ible'], ['s', ''], ['ing', 'e'], ['ly', '']];
-  const knownBase = (D, w, depth) => w.length >= 5 && ((D.lower.has(w) && D.lower.get(w).plain) || (depth > 1 && formed(D, w, depth - 1)));
+    ['ability', 'able'], ['ibility', 'ible'], ['ly', '']];
+  const knownBase = (D, w, depth) => w.length >= 5 && ((D.lower.has(w) && D.lower.get(w).plain) || inflected(D, w) || (depth > 1 && !!formed(D, w, depth - 1)));
+  /* 'pre' for a formation by a prefix, 'suf' by a suffix (7.47) */
   function formed(D, w, depth) {
     if (!/^[a-z]{7,}$/.test(w) || !depth) return false;
-    for (const p of FORM_PRE) if (w.startsWith(p) && w.length - p.length >= (p.length <= 3 ? 5 : 4) && knownBase(D, w.slice(p.length), depth)) return true;
     for (const [suf, add] of FORM_SUF) {
       if (!w.endsWith(suf)) continue;
       const stem = w.slice(0, w.length - suf.length) + add;
       if (suf === 'ly' && !/(?:ive|al|ous|ar)$/.test(stem)) continue;
       if (suf === 'ing' && !add) continue;
-      if (knownBase(D, stem, depth)) return true;
+      if (knownBase(D, stem, depth)) return 'suf';
     }
+    for (const p of FORM_PRE) if (w.startsWith(p) && w.length - p.length >= (p.length <= 3 ? 5 : 4) && knownBase(D, w.slice(p.length), depth)) return 'pre';
+    /* "atemporal", "apolitical", "ahistorical" */
+    if (w[0] === 'a' && w.length >= 8 && D.lower.has(w.slice(1)) && D.lower.get(w.slice(1)).plain && /(?:al|ic|ical|ive|ous)$/.test(w)) return 'pre';
     return false;
   }
   /* the cost of one slip turning the intended word a into the written word w */
@@ -2631,9 +2720,29 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
     /* 7.44: a long document is checked a paragraph at a time; opt.uses then
        carries the counts of the whole document */
     const uses = opt.uses || new Map(); if (!opt.uses) for (const x of String(text).match(re) || []) { const k = x.toLowerCase(); uses.set(k, (uses.get(k) || 0) + 1); }
+    /* 7.47: a word next to a letter of another language's alphabet
+       ("al-madīna al-fāḍila"), or one of a run of unknown words, is
+       another language ("Il buio e il miele", "substantia individua") */
+    const FOREIGN = /[\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF]/;
+    const hold = [];
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
+      /* 7.47: speech written as spoken ("buildin’", "preparin’"), the
+         plural of capitals ("MRIs"), the parts of Arabic names */
+      if (m[0].length > w.length && /in$/.test(w)) continue;
+      if (/^[A-Z]{2,}s$/.test(w)) continue;
+      if (NAME_PART.has(w.toLowerCase()) || /^(?:al|el|ul|an|ad|as|at|ar)-/i.test(w)) continue;
+      /* 7.47: a capital changed in a quotation ("[c]riteria", "[b]lindness")
+         is read with its bracketed letter; a word the writer introduces
+         ("the local name berdi", "called asuras"), one alone in quotation
+         marks (a “unisono”), one after Latin "et" ("Luctor et emergo"), and
+         one beside the particles of an Arabic name, are not English */
+      const pre = text.slice(Math.max(0, s - 28), s);
+      if (/\[[A-Za-z]\]$/.test(pre) || /(?:called|named|name|term|termed|word|known as|so-called|meaning)\s+["“‘']?$/i.test(pre) || /\bet\s+$/.test(pre)) continue;
+      if (/[“"‘]$/.test(pre) && /^[.,;:!?]?[”"’]/.test(text.slice(e, e + 2))) continue;
+      if (/(?:^|[\s\[(])(?:al|el)-\w|\b(?:ibn|bint|abu|abd)\b/i.test(text.slice(Math.max(0, s - 24), Math.min(text.length, e + 24)))) continue;
+      if ((uses.get(w.toLowerCase()) || 0) >= 4) continue;
       if (/[^\x00-\x7F]/.test(w) || /['’][A-Z]/.test(w)) continue; // a word from another language; a joined "okay'I"
       const before = text.slice(Math.max(0, s - 40), s);
       /* the whole run of text without spaces around the word: a web or e-mail
@@ -2645,6 +2754,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       if (/[a-z][A-Z]/.test(w)) continue; // camelCase, iPhone
       if (known(D, w)) continue;
       if (LATIN.has(w.toLowerCase()) || ROMAN.test(w)) continue;
+      if (FOREIGN.test(text.slice(Math.max(0, s - 24), Math.min(text.length, e + 24)).replace(/[’‘“”–—…]/g, ''))) continue;
+      /* a word alone in brackets is a gloss: "filial piety (xiao)" */
+      if (/\(\s*$/.test(text.slice(Math.max(0, s - 2), s)) && /^\s*\)/.test(text.slice(e, e + 2))) continue;
       const sentenceStart = !before.trim() || /[.!?]["”’)]?\s+$|\n\s*$|^\s*["“(]\s*$/.test(before);
       if (/^[A-Z]/.test(w) && !sentenceStart) {
         /* a capital mid-sentence is a name the dictionary may lack; it is
@@ -2655,6 +2767,14 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
         continue;
       }
       if (/^[A-Z]/.test(w) && sentenceStart && D.lower.has(w.toLowerCase())) continue;
+      /* 7.47: a capital at a sentence's start is a name when another name,
+         "et al.", a citation or a possessive follows ("Scholl and Sabat
+         (2008)", "Toombs ([44]", "Alaa Fayez", "Dera's article") */
+      if (/^[A-Z]/.test(w) && sentenceStart) {
+        const after = text.slice(e, e + 48);
+        if (/['’]s$/.test(w) || (uses.get(w.toLowerCase()) || 0) >= 2) continue;
+        if (/^['’]s\b/.test(text.slice(e, e + 3)) || /^\s+[A-Z][a-z]/.test(after) || /^\s*(?:et al|and [A-Z][\w'’-]+\s*\(|\(\s*\[?\d|\[\d|,?\s*\(\d{4})/.test(after)) continue;
+      }
       const sug = suggest(D, w, 5);
       /* a capital at the start of a sentence may be a name the dictionary
          lacks ("Fincher"): a fix only for one cheap slip to a common word */
@@ -2665,13 +2785,31 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       const ok0 = sug.length && sug[0].score <= mx && (sug.length < 2 || sug[1].score - sug[0].score >= mg);
       const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35);
       if (ok0 && capOk) o.fix = matchCase(w, sug[0].word);
+      /* 7.47: a fix that only swaps a last letter of -s, -d, -r is a guess at
+         a form, not a spelling ("brainwasher" to "brainwashed"): marked,
+         with no fix */
+      if (o.fix && o.fix.length === w.length && o.fix.slice(0, -1).toLowerCase() === w.slice(0, -1).toLowerCase() && /[sdr]$/i.test(w) && /[sdr]$/i.test(o.fix)) o.fix = null;
       /* 7.43: a capital at a sentence's start with no clear fix is a name
          ("Kraemer discusses"); a term the writer uses three times or more
          with no clear fix is theirs ("gaslighting") */
       const nearPlain = sug.some(x => x.score < 1.2 && x.word === x.word.toLowerCase());
       if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 3)) continue;
-      out.push(o);
+      hold.push(o);
     }
+    /* 7.47: three unknown words or more with at most one short word between
+       each, or two inside brackets or quotation marks, are a phrase of
+       another language: none is marked. (Two side by side are left marked:
+       learners often slip twice running, "mor convient".) */
+    const run = new Set();
+    for (let i = 0; i < hold.length;) {
+      let j = i;
+      while (j + 1 < hold.length && /^\s+(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(hold[j].end, hold[j + 1].start))) j++;
+      const n = j - i + 1;
+      const quoted = n >= 2 && /[(\[“"«]\s*(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(Math.max(0, hold[i].start - 6), hold[i].start)) && /^\s*(?:\s[A-Za-z]{1,3})?[)\]”"»]/.test(text.slice(hold[j].end, hold[j].end + 6));
+      if (n >= 3 || quoted) for (let k = i; k <= j; k++) run.add(k);
+      i = j + 1;
+    }
+    hold.forEach((o, i) => { if (!run.has(i)) out.push(o); });
     return out;
   }
   const api = { load, known, suggest, check, level };
@@ -8545,7 +8683,12 @@ var INK_ATK=[
        "the World Health Organization", "the Royal Society for the
        Prevention of Accidents" */
     const named = x => /^[A-Z]/.test(t[x]) && !/(?:^|[.!?:]["”’)\]]*\s+|\n[#>*\-\s]*)$/.test(t.slice(Math.max(0, x - 6), x));
-    while ((m = IZE.exec(t))) if (C.prose(m.index) && !named(m.index) && alt(m[1])) hits.push({ start: m.index, end: m.index + m[0].length, word: m[0], z: m[2].toLowerCase() === 'iz', stem: m[1], tail: m[3] });
+    /* 7.47: the CRediT roles of an author-contributions line are fixed
+       terms ("Conceptualization, Visualization, Writing – review & editing"),
+       spelled so in every journal */
+    const credit = x => { const a = t.lastIndexOf('\n', x) + 1, b = t.indexOf('\n', x); const line = t.slice(a, b < 0 ? t.length : b);
+      return /review\s*&\s*editing|original draft|[Ff]unding acquisition|[Dd]ata curation|[Ff]ormal analysis/.test(line); };
+    while ((m = IZE.exec(t))) if (C.prose(m.index) && !named(m.index) && !credit(m.index) && alt(m[1])) hits.push({ start: m.index, end: m.index + m[0].length, word: m[0], z: m[2].toLowerCase() === 'iz', stem: m[1], tail: m[3] });
     const nz = hits.filter(h => h.z).length, ns = hits.length - nz;
     const out = [];
     if (o.dialect === 'us') {
@@ -9362,7 +9505,7 @@ function inkFoldDefault(v){return (v===null||v===undefined)?(window.innerWidth<7
 window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
-const BUILD='7.46 · XVIII · OCTOBRIS · MMXXVI';
+const BUILD='7.47 · XVIII · OCTOBRIS · MMXXVI';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -9799,7 +9942,7 @@ stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,writerKind:LS('writerKind')||'',tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -13066,7 +13209,7 @@ const IS_TABLETAPP=ON_ANDROID||/iPhone|iPad/.test(UA)||(/Macintosh/.test(UA)&&(n
    with one press, run by the companion server, shared with the tablets */
 let WM_POLL=null;
 async function inkWmRefresh(){
- const box=document.getElementById('wmBox');if(!box)return;
+ const box=document.getElementById('wmBox');if(!box||inkOnSite())return;
  let c;try{c=await inkLocalApi('model_catalog',{});}catch(e){box.innerHTML='<span style="color:var(--mut)">The companion server is not answering, or it is older than 7.34. Reinstall Inkwell 7.34 on this computer.</span>';return;}
  const I=c.install||{},busy=I.state==='downloading'||I.state==='loading';
  let h='';
@@ -13104,11 +13247,13 @@ async function inkLanSet(on,newCode){
  inkLanRefresh();
  if(on)toast('Sharing on this Wi-Fi. If the computer asks whether to accept incoming connections, choose Allow.');
 }
+/* 7.47: the web app's own site, where no companion server runs */
+function inkOnSite(){return !IS_TABLETAPP&&!window.pywebview&&!inkSrvLocal(location.href)&&location.protocol!=='file:';}
 function engineAdvice(){
  if(inkNative())return 'On the '+deviceName()+', the writing model runs on the tablet itself, offline, with no other device: install it once below. Corrections also come from the rules engine. Your computer\u2019s model over the Wi-Fi is an optional second engine.';
  if(IS_TABLETAPP)return 'On the '+deviceName()+', corrections come from the rules engine, offline. For rewriting and drafting, connect to your computer\u2019s model over the same Wi-Fi (below).';
  /* 7.46: the web app's site has no companion server */
- if(!window.pywebview&&!inkSrvLocal(location.href))return 'In this browser, corrections come from the rules engine, offline. The grammar model and the writing model below download once and then run in this window'+(ON_MAC||ON_WIN?'; the Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the writing model faster':'')+'.';
+ if(inkOnSite())return 'In this browser, corrections come from the rules engine, offline. The grammar model and the writing model below download once and then run in this window'+(ON_MAC||ON_WIN?'; the Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the writing model faster':'')+'.';
  return 'On this computer, the companion server runs the writing model; corrections come from the rules engine, offline.';}
 
 /* ================= HELPERS ================= */
@@ -14781,12 +14926,16 @@ function consistencyChecks(t,ms,out){
       know that both are British (-ize is Oxford spelling) */
    if(typeof INKDPHIL!=='undefined'&&/ize$/.test(us)&&/ise$/.test(uk))continue;
    var reU=new RegExp('\\b'+us+'(s|ed|ing|es)?\\b','gi'),reK=new RegExp('\\b'+uk+'(s|ed|ing|es)?\\b','gi');
-   var cU=(t.match(reU)||[]).length,cK=(t.match(reK)||[]).length;
+   /* 7.47: a capital inside a sentence is a name, with its own spelling
+      ("the Center for Substance Abuse Treatment"): not counted, not marked */
+   var isName=function(i){return /^[A-Z]/.test(t[i])&&!/(?:^|[.!?:]["”’)\]]*\s+|\n[#>*\-\s]*)$/.test(t.slice(Math.max(0,i-6),i));};
+   var cnt=function(re){var n=0,x;re.lastIndex=0;while((x=re.exec(t)))if(!isName(x.index))n++;re.lastIndex=0;return n;};
+   var cU=cnt(reU),cK=cnt(reK);
    if(cU&&cK&&cU+cK>=3){
     var minRe=cU<=cK?reU:reK,wantU=cU<=cK?us:uk,otherU=cU<=cK?uk:us;
     var mm,g=0;
     while((mm=minRe.exec(t))&&g++<60){
-     if(inMask(mm.index,ms))continue;
+     if(inMask(mm.index,ms)||isName(mm.index))continue;
      if(ovTaken(out,mm.index,mm.index+mm[0].length))continue;
      out.push({start:mm.index,end:mm.index+mm[0].length,orig:mm[0],fix:null,cat:'g',
       why:'Spelling consistency: this document uses both "'+wantU+'" and "'+otherU+'"'});
@@ -14919,8 +15068,11 @@ function scholarAppCheck(t,ms,out){
   var st=nm.index+nm[1].length;
   if(inMask(st,ms))continue;
   if(ovTaken(out,st,st+1))continue;
-  var win=t.slice(Math.max(0,nm.index-14),nm.index);
-  if(/(Fig|Figure|Table|Chapter|Section|Eq|page|pp|vol|no|Exp|Type|Group|Condition|Day|Year|Round|Grade|Phase|Wave|Model)\.?\s*$/i.test(win))continue;
+  /* 7.47: the words just before the figure (until now the window ended a
+     word early, so "Table 2" and "Step 2" were marked); a label takes its
+     figure */
+  var win=t.slice(Math.max(0,st-18),st);
+  if(/(Fig|Figure|Table|Chapter|Section|Eq|Equation|page|pp|vol|no|Exp|Experiment|Study|Type|Group|Condition|Day|Year|Round|Grade|Phase|Wave|Model|Step|Stage|Part|Appendix|Item|Question|Hypothesis|Level|Version|Line|Note|Box|Panel|Unit|Module|Week|Session|Trial|Sample|Case|Participant|Patient|Article|Clause|Paragraph|Verse|Stanza|Scenario|Category|Theme|Cluster|Factor|Domain|Dimension|Criterion|Principle)\.?\s*$/i.test(win))continue;
   var heavy2=false;
   for(var sj=0;sj<sentSafe.length;sj++){if(st>=sentSafe[sj][0]&&st<sentSafe[sj][1]){heavy2=sentSafe[sj][2];break;}}
   if(heavy2)continue;
@@ -15338,6 +15490,48 @@ const GRAM39=[
  {re:/\b(so|too|how|very)? ?much (people|students|children|things|problems|cars|books|friends|places|countries|questions|ideas|reasons|ways|times|jobs|hours|days|years)\b/gi,to:(m,a,n)=>(a?a+' ':'')+'many '+n,cat:'g',label:'Count nouns take "many", not "much"'}
 ];
 
+/* ----- GRAM47 — 7.47: the errors a doctoral examiner marks -------------
+   Measured first: of 70 such errors planted in scholarly sentences the
+   checks caught 30. Each rule here is written to fire only where the fix is
+   certain, and each was run on 40 published articles (247,426 words) and
+   kept only where it marked nothing correct there. "affect" stays a noun of
+   psychology and affect theory ("negative affect", "the affects of joy"),
+   "however it is defined" stays, and a king still reigns in the north. */
+const SING47={argues:'argue',suggests:'suggest',shows:'show',claims:'claim',notes:'note',finds:'find',seems:'seem',appears:'appear',remains:'remain',becomes:'become',needs:'need',wants:'want',tends:'tend',makes:'make',takes:'take',gives:'give',holds:'hold',leads:'lead',offers:'offer',provides:'provide',requires:'require',depends:'depend',believes:'believe',thinks:'think',knows:'know',risks:'risk',indicates:'indicate',demonstrates:'demonstrate',reveals:'reveal',points:'point',confirms:'confirm',supports:'support',is:'are',was:'were',has:'have'};
+const C47=(m,w)=>/^[A-Z]/.test(m)?w.charAt(0).toUpperCase()+w.slice(1):w;
+const GRAM47=[
+ {re:/\b(an?|the|any|no|some|its|their|his|her|our|this|that|significant|profound|lasting|major|minor|little|great|strong|large|small|adverse|direct|indirect|measurable|marked|real|net|overall|cumulative|chilling|knock-on|ripple|detrimental|devastating|considerable|substantial|limited|discernible|noticeable|immediate|dramatic)\s+affect\s+(on|upon)\b/gi,to:(m,a,p)=>a+' effect '+p,cat:'g',label:'“Effect” is the noun: “an effect on”; “affect” is the verb'},
+ {re:/\b(compliment|compliments|complimented|complimenting)\s+(each other|one another)\b/gi,to:(m,v,o)=>C47(v,'comple'+v.slice(6).toLowerCase())+' '+o,cat:'g',label:'“Complement” is to complete or go well with; a “compliment” is praise'},
+ {re:/\bcomplimentary\s+(approach(?:es)?|methods?|roles?|perspectives?|strengths?|data|sources?|relationship|functions?|skills?|analys[ie]s|readings?|accounts?|evidence)\b/gi,to:(m,n)=>C47(m,'complementary')+' '+n,cat:'g',label:'“Complementary” is completing; “complimentary” is praising or free'},
+ {re:/\bdiscreet\s+(groups?|categor(?:y|ies)|units?|variables?|steps?|stages?|elements?|entit(?:y|ies)|events?|phases?|parts?|sets?|values?|classes|components?|segments?|periods?|time points?|intervals?)\b/gi,to:(m,n)=>C47(m,'discrete')+' '+n,cat:'g',label:'“Discrete” is separate and distinct; “discreet” is careful and tactful'},
+ {re:/\b(comprise|comprises|comprising)\s+of\b/gi,to:(m,v)=>v,cat:'g',label:'“Comprise” takes no “of”: “the corpus comprises forty interviews”'},
+ {re:/\binsure(s|d)?\s+that\s+(?=(?:the|all|each|every|they|we|it|he|she|there|its|their|our|his|her|no|any|these|those)\b)/gi,to:(m,x)=>C47(m,'ensure')+(x||'')+' that ',cat:'g',label:'“Ensure” is to make certain; “insure” is to take out insurance'},
+ {re:/\billicit(ed|ing|s)\b/gi,to:(m,x)=>C47(m,'elicit')+x,cat:'g',label:'“Elicit” is to draw out; “illicit” is unlawful'},
+ {re:/\b(to|will|would|could|can|may|might|did|does|do|should|must)\s+illicit\b/gi,to:(m,a)=>a+' elicit',cat:'g',label:'“Elicit” is to draw out; “illicit” is unlawful'},
+ {re:/\b(allude|alludes|alluded|alluding)\s+(the|a|an|him|her|them|us|me|you|our|their|his|its|most|many|readers?|scholars?|critics?|historians?|researchers?|detection|capture|definition|explanation)\b/gi,to:(m,v,o)=>C47(v,'e'+v.slice(2).toLowerCase())+' '+o,cat:'g',label:'“Elude” is to escape; “allude” is to refer, and takes “to”'},
+ {re:/\b(precede|precedes|preceded|preceding)\s+to\s+(examine|discuss|consider|analyse|analyze|explore|show|outline|describe|argue|demonstrate|investigate|assess|evaluate|review|present|look|address|offer|provide|explain|trace|compare|summari[sz]e|conclude|test|identify|establish|situate)\b/gi,to:(m,v,n)=>C47(v,'pro'+v.slice(3).toLowerCase())+' to '+n,cat:'g',label:'“Proceed” is to go on; “precede” is to come before'},
+ {re:/\bweather\s+or\s+not\b/gi,to:m=>C47(m,'whether')+' or not',cat:'g',label:'“Whether” introduces the alternatives; “weather” is rain and sun'},
+ {re:/\b(asked|ask|asks|asking|wondered|wonder|wonders|know|knew|decide|decided|determine|determined|unclear|uncertain|doubt|doubted|questioned|examine|examined|examines|investigate|investigated|assess|assessed|consider|considered)\s+weather\b/gi,to:(m,a)=>a+' whether',cat:'g',label:'“Whether” introduces the alternatives; “weather” is rain and sun'},
+ {re:/\b(pour|pours|poured|pouring)\s+over\s+((?:the|his|her|their|these|those)\s+)?(manuscripts?|documents?|books?|records?|archives?|papers?|texts?|letters?|files?|maps?|details?|sources?|pages?|accounts?|ledgers?|transcripts?|diaries)\b/gi,to:(m,v,d,n)=>C47(v,'pore'+v.slice(4).toLowerCase().replace(/^ed/,'d'))+' over '+(d||'')+n,cat:'g',label:'To “pore over” is to study closely; to “pour” is to make flow'},
+ {re:/\b(was|were|is|are|be|been|being|remain|remains|remained|seem|seems|seemed|appear|appears|appeared|grew|become|became|felt)\s+loathe\s+to\b/gi,to:(m,a)=>a+' loath to',cat:'g',label:'“Loath” is unwilling; “loathe” is to hate'},
+ {re:/\b(reign|reigns|reigned|reigning)\s+in\s+((?:their|his|her|its|our|the)\s+)?(spending|costs|inflation|expenditure|speculation|excess(?:es)?|ambitions?|enthusiasm|rhetoric|budgets?|deficits?|borrowing|lending|prices|claims)\b/gi,to:(m,v,d,n)=>C47(v,'rein'+v.slice(5).toLowerCase())+' in '+(d||'')+n,cat:'g',label:'To “rein in” is to restrain, as with reins; to “reign” is to rule'},
+ {re:/\b(flaunt|flaunts|flaunted|flaunting)\s+((?:the|international|its|their|his|her|these|those|such)\s+)?(laws?|rules?|regulations?|conventions?|norms?|treat(?:y|ies)|orders?|guidelines?|bans?|sanctions?|authority|protocols?|requirements?|restrictions?|directives?)\b/gi,to:(m,v,d,n)=>C47(v,'flout'+v.slice(6).toLowerCase())+' '+(d||'')+n,cat:'g',label:'To “flout” a rule is to defy it; to “flaunt” is to show off'},
+ {re:/\b(presented|published|reported|shared|described|discussed|defended|revised|summari[sz]ed|submitted|completed|began|continued|based|focused|focussed|conducted|explained|justified|changed)\s+there\s+(results|findings|work|views|data|stud(?:y|ies)|research|analys[ie]s|arguments?|conclusions?|methods?|sources?|books?|papers?|thes[ie]s|claims?|cases?|ideas?|models?|theor(?:y|ies)|evidence)\b/gi,to:(m,v,n)=>v+' their '+n,cat:'g',label:'“Their” is theirs; “there” is a place'},
+ {re:/\bWhom\s+(is|was|are|were|has|had|have|will|would|can|could|did|does|do|should|may|might)\b/g,to:(m,v)=>'Who '+v,cs:true,cat:'g',label:'“Who” is the subject; “whom” is the object'},
+ {re:/\bwho['’]s\s+(work|works|book|books|research|name|views|arguments?|life|death|family|ideas|writings|theory|approach|thesis|method|methods|analysis|interpretation|contributions?|legacy|reputation|career|influence|own|scholarship|poetry|novels?|essays?|letters?|papers?|findings|children|parents)\b/gi,to:(m,n)=>C47(m,'whose')+' '+n,cat:'g',label:'“Whose” is the possessive; “who’s” is “who is”'},
+ {re:/\b(between|for|with|to|from|by|of|like|among|against|upon|without|except|about|beside|behind|towards?)\s+((?:the\s+|my\s+|our\s+|his\s+|her\s+)?[A-Za-z]+)\s+and\s+I\b(?=\s*[.,;:)!?]|\s+(?:alone|together|both)\b)/g,to:(m,p,n)=>p+' '+n+' and me',cat:'g',label:'After a preposition, “me”: “between the author and me”'},
+ {re:/\b([Oo]ne) of the\s+((?:[a-z]+\s+){0,3}[a-z]+s)\s+(are|were|have)\b(?!\s+(?:been\s+)?(?:that|which|who))/g,to:(m,o,n,v)=>o+' of the '+n+' '+({are:'is',were:'was',have:'has'})[v],cat:'g',label:'“One of the …” takes a singular verb: “one of the factors is”'},
+ {re:/\b(These|Those|Such|Many|Several|Both|All)\s+(findings|results|studies|authors|scholars|participants|respondents|students|researchers|analyses|sources|documents|records|letters|texts|accounts|interviews|observations|patterns|factors|differences|changes|trends|figures|numbers|examples|cases|arguments|claims|critics|historians|writers|readers|reforms|policies|methods|approaches)\s+(suggests|shows|indicates|demonstrates|reveals|argues|claims|is|was|has|remains|appears|seems|points|confirms|supports)\b/gi,to:(m,d,n,v)=>d+' '+n+' '+SING47[v.toLowerCase()],cat:'g',label:'A plural subject takes a plural verb: “these findings suggest”'},
+ {re:/\b(they|we|you)\s+(risks|argues|suggests|shows|claims|notes|finds|seems|appears|remains|becomes|needs|wants|tends|makes|takes|gives|holds|leads|offers|provides|requires|depends|believes|thinks|knows)\b/gi,to:(m,p,v)=>p+' '+SING47[v.toLowerCase()],cat:'g',label:'“They”, “we” and “you” take the verb without -s: “they risk”'},
+ {re:/\b(his|her|their|its|my|our|your)\s+(notes|letters|papers|records|findings|results|views|arguments|writings|works|ideas|interests|sources|methods|children|parents|colleagues|students|friends|members|essays|poems|books)\s+(was|is|has)\b/gi,to:(m,d,n,v)=>d+' '+n+' '+SING47[v.toLowerCase()],cat:'g',label:'A plural subject takes a plural verb: “his notes were”'},
+ {re:/,\s+however\s+(?=(?:it|they|we|he|she|this|these|those|the|there|I|such|its|their|his|her)\b[^,.;:!?]*[.!?])/g,to:'; however, ',cat:'g',label:'“However” between two sentences takes a semicolon before it and a comma after'},
+ {re:/\b(The|These|Those|This|That|Such)\s+(results|findings|data|evidence|analysis|study|studies|argument|arguments|thesis|chapter|chapters|book|paper|article|author|authors|participants|respondents)\s*,\s+(are|is|was|were|has|have|will|would|can|could|may|might|must|should|remains?|shows?|suggests?)\b/g,to:(m,d,n,v)=>d+' '+n+' '+v,cs:true,cat:'g',label:'No comma between a subject and its verb'},
+ {re:/\bbetween\s+([A-Za-z-]+),\s+and\s+([A-Za-z-]+)\b/g,to:(m,a,b)=>'between '+a+' and '+b,cat:'g',label:'“Between A and B” takes no comma'},
+ {re:/\b([Ii])ts['’](?=\s)/g,to:(m,i)=>i+'ts',cs:true,cat:'g',label:'“Its” is the possessive, with no apostrophe; there is no “its’”'},
+ {re:/\b(Having|After having|Upon having|On having)\s+(analysed|analyzed|examined|reviewed|considered|collected|surveyed|studied|read|interviewed|compared|tested|observed|assessed|evaluated|investigated|discussed|established|demonstrated|shown|completed|conducted|coded|transcribed)\b[^.;!?]{0,80}?,\s+(?:the|this|these|our|my|its|their)\s+(?:conclusion|conclusions|results|findings|data|analysis|evidence|study|paper|thesis|chapter|argument|picture|outcomes?|answer|implications?)\b/g,to:null,cat:'g',label:'Dangling opener: what follows the comma did not do the analysing; name who did (“we conclude”)'},
+ {re:/\b(Using|Drawing on|Applying|Employing|Adopting)\s+[^.;!?]{2,60}?,\s+(?:the|these|our|my)\s+(?:results|findings|data|conclusions?|evidence)\s+(?:show|shows|suggest|suggests|indicate|indicates|reveal|reveals|demonstrate|demonstrates)\b/g,to:null,cat:'g',label:'Dangling opener: the results did not do the using; name who did (“using X, we found”)'}
+];
+
 /* ----- SCHOLAR18 — the doctoral register, next set ---------------------- */
 const SCHOLAR18=[
  {re:/\bin this (?:essay|chapter|paper|article|thesis|dissertation),? (?:I|we) (?:will |shall |seek to |aim to |attempt to |would like to )?(?:argue|examine|explore|discuss|show|demonstrate|consider|propose|attempt)\b/gi,to:null,cat:'s',label:'Announcement spends a sentence on the intention; the argument argues'},
@@ -15370,7 +15564,8 @@ const SCHOLAR18=[
 /* 1. "the quality of the results were" — the verb answers the head noun, not
       the phrase between. Where style guides split, the desk advises; where
       they do not, it offers the pen. */
-var SVC_FIX={number:1,percentage:1,proportion:1,rate:1,level:1,degree:1,extent:1,analysis:1,quality:1,effect:1,impact:1,influence:1,role:1,aim:1,purpose:1,use:1,absence:1,presence:1};
+var SVC_FIX={number:1,percentage:1,proportion:1,rate:1,level:1,degree:1,extent:1,analysis:1,quality:1,effect:1,impact:1,influence:1,role:1,aim:1,purpose:1,use:1,absence:1,presence:1,
+ /* 7.47 */history:1,nature:1,development:1,structure:1,origin:1,importance:1,availability:1,existence:1,lack:1,cost:1,value:1,size:1,frequency:1,distribution:1,function:1,evolution:1,emergence:1};
 var SVC_ADV={group:1,set:1,series:1,cluster:1,type:1,kind:1,variety:1,list:1,range:1,class:1,category:1,collection:1};
 var SVC_SING={were:'was',are:'is',have:'has',show:'shows',suggest:'suggests',indicate:'indicates',demonstrate:'demonstrates',reveal:'reveals',remain:'remains',seem:'seems',appear:'appears',vary:'varies',differ:'differs',exist:'exists',arise:'arises',fall:'falls',increase:'increases',decrease:'decreases',decline:'declines',rise:'rises',contribute:'contributes',play:'plays',affect:'affects',reflect:'reflects',drive:'drives'};
 function svInterveningCheck(t,ms,out){
@@ -15378,6 +15573,15 @@ function svInterveningCheck(t,ms,out){
  while((m=re.exec(t))&&guard++<200){
   var head=m[2].toLowerCase();
   if(!SVC_FIX[head]&&!SVC_ADV[head])continue;
+  /* 7.47: only a plain phrase between the head and the verb. Measured on 40
+     published articles, the rule read across clauses: "the use of
+     convenience sampling, which may have resulted", "the quality of life
+     and human dignity remain", "it is possible to increase". */
+  if(/[,()\[\]"“”]|\b(?:which|that|who|whom|whose|where|when|while|and|or|but|nor|to|may|might|can|could|will|would|should|must|shall|is|are|was|were|has|have|had|be|been|it|they|we|he|she|there|not|also|thus|then|if|because|since|although|though|as|than)\b/i.test(m[3]))continue;
+  /* "Studies on the role of religion vary": the head after a preposition
+     is not the subject; "the effect of age-related decline in": a noun */
+  if(/\b(?:on|of|in|for|about|to|with|by|from|regarding|concerning|into|over|under|between|among)\s+$/i.test(t.slice(Math.max(0,m.index-14),m.index)))continue;
+  if(/^\s+(?:in|of)\b/i.test(t.slice(m.index+m[0].length,m.index+m[0].length+4)))continue;
   if(inMask(m.start,ms))continue;
   var verb=m[4],sing=SVC_SING[verb.toLowerCase()];
   if(!sing)continue;
@@ -15834,7 +16038,7 @@ function ruleEdits(t){
  var _pkey=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+((S.muteWords||[]).length)+'|'+(S.citeStyle||'');
  if(__packSig!==_pkey||!__packArr){
   __packSig=_pkey;
-  __packArr=BASE.concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39);
+  __packArr=GRAM47.concat(BASE).concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39);
   if(S.reg==='scholarly')__packArr=__packArr.concat(SCHOLAR).concat(SCHOLAR_XTRA).concat(SCHOLAR3).concat(SCHOLAR4).concat(SCHOLAR5).concat(SCHOLAR6).concat(SCHOLAR7).concat(SCHOLAR8).concat(SCHOLAR9).concat(SCHOLAR10).concat(SCHOLAR11).concat(SCHOLAR12).concat(SCHOLAR13).concat(SCHOLAR13B).concat(SCHOLAR14).concat(SCHOLAR15).concat(SCHOLAR16).concat(SCHOLAR17).concat(SCHOLAR18);
   if(S.reg==='creative')__packArr=__packArr.concat(CREATIVE);
   var _knob=(typeof docKnob==='function')?docKnob():null;
@@ -16345,7 +16549,11 @@ function inkRuleGate(t,out){
   for(const k in INK_DEMOTE)if(why.indexOf(k)===0)e.cat=INK_DEMOTE[k];
   if(why.indexOf('Sentence begins lowercase')===0){
    const pre=t.slice(Math.max(0,e.start-12),e.start);
-   if(INK_ABBR.test(pre)||/\d$/.test(pre)||/\.\.$/.test(pre)||/^\.\s+[a-z]\.[a-z]\./i.test(t.slice(e.start,e.start+8)))continue;}  /* i.e. not, A.E.C.C. in, 17. b3 */
+   if(INK_ABBR.test(pre)||/\d$/.test(pre)||/\.\.$/.test(pre)||/^\.\s+[a-z]\.[a-z]\./i.test(t.slice(e.start,e.start+8)))continue;  /* i.e. not, A.E.C.C. in, 17. b3 */
+   /* 7.47: a genus shortened to its capital ("species-P. vivax", "E. coli"),
+      and a name that begins in lower case ("al-Kīt Kāt", "de Beauvoir",
+      "bell hooks") */
+   if(/(?:^|[^A-Za-z])[A-Z]$/.test(pre)||/^[.!?]\s+(?:al-|el-|ad-|ibn |de |du |da |di |van |von |le |la |bell hooks)/.test(t.slice(e.start,e.start+14)))continue;}
   if(/^Capital(ise the pronoun)? I/.test(why)){
    const i=t.indexOf('i',e.start);if(i<0)continue;
    if(L(t[i-1])||L(t[i+1])||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
@@ -16366,6 +16574,20 @@ function inkRuleGate(t,out){
    if(!/^\.[A-Z][a-z]/.test(o)||t[e.start-1]==='.'||/(?:^|[\s(])[A-Z]$/.test(t.slice(Math.max(0,e.start-2),e.start))||/(www|https?:|\/)\S*$/.test(before))continue;}
   if(why.indexOf('Hyphenate a compound modifier')===0&&(!INK_DET.test(before)||INK_FUNC_NEXT.test(after)))continue;
   if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&/^[A-Z]/.test(o))continue;
+  /* 7.47: a clause that says what the noun is ("the NHS’s ethos, that each
+     life is of equal value") takes its comma; "that’s" is the pronoun */
+  if(why.indexOf('“Which” carries the comma')===0&&(/^[’']s\b/.test(after)||/\b(?:ethos|idea|ideas|view|views|belief|beliefs|notion|claim|fact|principle|principles|assumption|hypothesis|argument|conviction|premise|thesis|proposition|assertion|doctrine|axiom|maxim|motto|sense|hope|fear|concern|possibility|insight|conclusion|suggestion|rule|condition|requirement|expectation|proviso|caveat|reminder|lesson|message|point|observation|thought|feeling|impression|understanding|recognition|realisation|realization|intuition|awareness|evidence|news|report|theory|position|stance|commitment|promise|warning|question|problem|paradox|dilemma|implication|presumption|presupposition|tenet|creed|dictum|view)\s*,\s*that$/i.test(o)))continue;
+  /* 7.47: "awareness of these differences has increased": the phrase
+     after a preposition is not the subject */
+  if((why.indexOf('A plural subject takes a plural verb')===0||why.indexOf('“They”, “we” and “you”')===0)&&/\b(?:of|in|on|for|with|to|from|by|about|among|between|against|through|than|like|regarding|concerning|that|which|whom)\s+$/i.test(before))continue;
+  /* 7.47: "that that" and "had had" are grammar, not a slip */
+  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&/^(that|had)\s+\1$/i.test(o.trim()))continue;
+  /* 7.47: "eg" and "ie" written so throughout are the house style; Oxford
+     style sets "e.g." and "i.e." with their points and no comma after */
+  if(why.indexOf('“e.g.,” takes its dots')===0||why.indexOf('“i.e.,” takes its dots')===0){
+   const ab=why.indexOf('“e.g.')===0?'eg':'ie',dotted=ab==='eg'?/\be\.g\./i:/\bi\.e\./i;
+   if(!dotted.test(t)&&(t.match(new RegExp('\\b'+ab+'\\b(?![\\w.])','g'))||[]).length>=3)continue;
+   if(S.dialect==='uk')e.fix=ab==='eg'?'e.g.':'i.e.';}
   if(why.indexOf('Agreement — “there have / there are / there were”')===0&&/\b(?:1|one)$/i.test(o))continue;
   if(why.indexOf('Possible comma splice')===0&&/;\s*\w+\s*$/.test(before))continue;
   res.push(e);}
@@ -17464,27 +17686,100 @@ async function inkGpuCheck(){
    q4f16 files an earlier attempt left in the browser's storage (about 760 MB)
    are removed. 7.46: so are the 1.2B model's q8 files (1.77 GB), which 7.45
    downloaded for the processor. */
-async function inkWriterDropF16(){
+async function inkWriterDropF16(keepQ8){
  try{if(typeof caches==='undefined')return 0;let n=0;
+  const re=keepQ8?/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_q4f16\.onnx/:/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_(q4f16|q8)\.onnx/;
   for(const name of await caches.keys()){const c=await caches.open(name);
-   for(const r of await c.keys()){if(/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_(q4f16|q8)\.onnx/.test(r.url)){await c.delete(r);n++;}}}
+   for(const r of await c.keys()){if(re.test(r.url)){await c.delete(r);n++;}}}
   return n;}catch(e){return 0;}}
-async function installWriter(auto){
+/* 7.47: the full model on the processor, as 7.45 ran it (its q8 files), for
+   a writer whose browser has no WebGPU and who asks for it knowing the
+   memory it takes. The writer's own Safari ran it this way. */
+const WRITER_FULLCPU={id:WRITER.id,name:WRITER.name,mb:1770,file:'model_q8',licence:WRITER.licence};
+const IS_SAFARI=/Safari\//.test(UA)&&!/Chrome|Chromium|CriOS|Edg\/|FxiOS|Firefox/.test(UA);
+/* which kind of model the browser's storage already holds (for a writer
+   who installed one before 7.47 kept the kind) */
+async function inkWriterCachedKind(){
+ try{if(typeof caches==='undefined')return '';
+  for(const name of await caches.keys()){const c=await caches.open(name);
+   for(const r of await c.keys()){
+    if(/LFM2\.5-1\.2B-Instruct-ONNX\/.*model_q8\.onnx_data/.test(r.url))return 'full';
+    if(/LFM2\.5-350M-ONNX\/.*model_q4f32\.onnx_data/.test(r.url))return 'small';}}
+  return '';}catch(e){return '';}}
+/* 7.47: the install is shown inside the Engine panel, step by step. The
+   panel's veil blurs the page, and the pill at the top, which alone showed
+   the download until now, cannot be read behind it: a new writer saw
+   nothing happen and had no way on. */
+const WLIVE={on:false,kind:'',name:'',step:'',got:0,mb:0,t0:0,err:'',ok:''};
+let WLIVE_TICK=null;
+function inkWriterLive(o){Object.assign(WLIVE,o||{});
+ clearInterval(WLIVE_TICK);if(WLIVE.on)WLIVE_TICK=setInterval(inkWriterLiveDraw,1000);
+ inkWriterLiveDraw();}
+function inkWriterLiveHTML(){
+ if(!WLIVE.on&&!WLIVE.err&&!WLIVE.ok)return '';
+ if(WLIVE.err)return '<div class="wmLive bad"><b>The writing model did not start.</b><div>'+esc(WLIVE.err)+'</div><div class="wmRow"><button class="lkbtn" onclick="inkWriterLive({err:\'\'});inkWriterSecDraw()">Close this note</button></div></div>';
+ if(WLIVE.ok)return '<div class="wmLive good">\u2713 '+esc(WLIVE.ok)+'</div>';
+ const sec=Math.max(0,Math.round((Date.now()-WLIVE.t0)/1000)),el=sec>=60?Math.floor(sec/60)+' min '+(sec%60)+' s':sec+' s';
+ const pc=WLIVE.mb?Math.min(100,Math.round(100*WLIVE.got/(WLIVE.mb*1048576))):0;
+ const steps=[['download','Download, once: '+(WLIVE.got?fmtMB(WLIVE.got)+' of about '+WLIVE.mb+' MB ('+pc+'%)':'about '+WLIVE.mb+' MB')],
+  ['start','Start the model in this window'],['answer','Ask it for a first answer']];
+ const at=steps.findIndex(x=>x[0]===WLIVE.step);
+ let h='<div class="wmLive"><b>Installing '+esc(WLIVE.name)+'</b> <span class="wmT">'+el+' so far</span><ol>';
+ steps.forEach((x,i)=>{h+='<li class="'+(i<at?'done':i===at?'now':'')+'">'+(i<at?'\u2713 ':'')+esc(x[1])+(i===at&&i>0?'\u2026':'')+'</li>';});
+ h+='</ol>';
+ if(WLIVE.step==='download')h+='<div class="wmBar"><i style="width:'+pc+'%"></i></div>';
+ h+='<div class="wmNote">You can close this panel and go on writing. The pill at the top shows the progress too, and a note says when the model is ready.'+(WLIVE.kind!=='gpu'?' On the processor, starting can take a minute or two.':'')+'</div></div>';
+ return h;}
+function inkWriterLiveDraw(){const el=document.getElementById('wmLive');if(el)el.innerHTML=inkWriterLiveHTML();}
+function inkWriterSecDraw(){const el=document.getElementById('wmSec');if(el)el.innerHTML=inkWriterSection();}
+let INKGPU=null;
+/* the writing model's part of the Engine panel: what it is, the install as
+   it happens, and, with no WebGPU, the way to turn it on */
+function inkWriterSection(){
+ const run=PRO&&PRO.writer,gpu=INKGPU?INKGPU.ok:HAS_GPU;
+ let h='<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU. Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>';
+ h+='<div id="wmLive">'+inkWriterLiveHTML()+'</div>';
+ if(run)return h+'<div class="wmRow"><span style="font-size:12.5px">In use: <b>'+esc(PRONAME)+'</b> ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="testEngine(\'pro\')">\u25B6 Test it</button> <button class="lkbtn" onclick="ejectPro();inkWriterSecDraw()">Stop it</button></div>';
+ if(WLIVE.on)return h;
+ if(gpu)return h+'<div class="row"><button class="primary" onclick="installWriter(false,\'gpu\')">\u2B07 Install the writing model (about '+WRITER.mb+' MB, once)</button></div>';
+ const off=INKGPU&&INKGPU.why&&!/has no WebGPU/.test(INKGPU.why);
+ h+='<div class="wmSteps"><b>'+(off?'WebGPU is on, but it is not working here ('+esc(INKGPU.why)+').':'First, turn on WebGPU. This browser has it switched off, and the writing model needs it.')+'</b>';
+ if(!off&&IS_SAFARI)h+='<ol><li>Open the <b>Safari</b> menu, then <b>Settings</b>, then <b>Advanced</b>. Tick <b>Show features for web developers</b>.</li><li>Still in Settings, open <b>Feature Flags</b>. Find <b>WebGPU</b> and tick it.</li><li>Close Settings and <b>reload this page</b>. The Install button then appears here.</li></ol>';
+ else if(!off)h+='<p>Open Inkwell in Chrome or Edge on a laptop or desktop, where WebGPU is usually on already, or update this browser.</p>';
+ h+=(IS_SAFARI&&!off?'<p>Or open Inkwell in Chrome or Edge, where WebGPU is usually on already.</p>':'')+'</div>';
+ h+='<div class="wmFall"><b>Cannot turn WebGPU on?</b> The model can run on the processor instead. It is slower, and the page needs more memory.'
+  +'<div class="wmRow"><button class="lkbtn" onclick="installWriter(false,\'small\')">\u2B07 The smaller model ('+esc(WRITER_CPU.name)+', about '+WRITER_CPU.mb+' MB)</button></div>'
+  +'<div class="wmSub">About 20 seconds a sentence on Inkwell\u2019s test machine, at most about 2 GB of memory. Less able than the full model.</div>'
+  +'<div class="wmRow"><button class="lkbtn" onclick="installWriter(false,\'full\')">\u2B07 The full model on the processor (about 1.8 GB)</button></div>'
+  +'<div class="wmSub">About two minutes a sentence on Inkwell\u2019s test machine, and about 5 GB of memory. On a computer with 8 GB the browser may close the page.</div>'
+  +(ON_MAC||ON_WIN?'<div class="wmSub">The Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the full model much faster, with no WebGPU.</div>':'')+'</div>';
+ return h;}
+async function installWriter(auto,which){
  if(!PRO_ALLOWED){instSay('The writing model is not offered on phones and tablets: it needs more memory than the system gives an app. Use your laptop\u2019s model (below), or Apple\u2019s model on an iPhone or iPad with iOS 26.');
   return toast('Not on a phone or tablet; use your laptop\u2019s model');}
  if(PRO&&PRO.apple)return toast('Apple\u2019s on-device model is already doing this work');
  if(PRO&&PRO.writer)return toast('The writing model is running: '+PRONAME);
- const g=await inkGpuCheck();
- /* 7.45: with no WebGPU (Safari on some Macs, and wherever it is switched
-    off) the model runs on the processor, with WebAssembly: slower, but it
-    works. Until 7.44 it was not installed at all. 7.46: there it is the
-    smaller model, and the writer is asked before it downloads */
- const cpu=!g.ok,W=cpu?WRITER_CPU:WRITER,noGpu=/has no WebGPU/.test(g.why||'')?'This browser has no WebGPU':'WebGPU is not working here ('+g.why+')';
+ if(WLIVE.on)return toast('The writing model is already being installed; the Engine panel shows how far');
+ const g=await inkGpuCheck();INKGPU=g;
+ /* 7.47: three kinds. "gpu": the 1.2B model on WebGPU. With no WebGPU the
+    Engine panel first shows how to turn it on (the writer's own way into
+    Safari's Feature Flags); only then, if asked, "small" (the 350M model,
+    7.46) or "full" (the 1.2B q8 files on the processor, as 7.45). At the
+    start by itself, the kind installed last time. */
+ let kind=which||'';
+ if(!kind&&auto)kind=S.writerKind||(g.ok?'gpu':await inkWriterCachedKind());
+ if(!kind)kind=g.ok?'gpu':'';
+ if(kind==='gpu'&&!g.ok){if(auto){instSay('The writing model did not start by itself: WebGPU is not on in this browser now ('+g.why+'). The Engine panel shows how to turn it on.');return;}kind='';}
+ if(!kind){if(auto)return;
+  instSay('No WebGPU here ('+g.why+'). The Engine panel shows how to turn it on, and two slower ways without it.');
+  openModal('server');setTimeout(function(){const el=document.getElementById('wmSec');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center'});},120);
+  return toast('Turn on WebGPU first: the Engine panel shows how');}
+ const cpu=kind!=='gpu',W=kind==='small'?WRITER_CPU:kind==='full'?WRITER_FULLCPU:WRITER;
  let crashed=null;try{crashed=localStorage.getItem('ink_ai_crashed');}catch(e){}
- if(cpu&&!auto&&!confirm(noGpu+', so the writing model would run on the processor.\n\nHere Inkwell uses its smaller model, '+W.name+' (about '+W.mb+' MB, downloaded once). It is slow, about 20 seconds for a sentence on Inkwell\u2019s test machine, and less able than the full model.'
-  +(crashed?'\n\nLast time, Inkwell closed while a model was loading. Most often the browser had run out of memory.':'')
-  +(ON_MAC||ON_WIN?'\n\nThe Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the full model much faster.':'')+'\n\nInstall it?'))return;
- if(cpu)instSay(noGpu+', so the smaller writing model, '+W.name+', runs on the processor instead: it works, more slowly'+(window.crossOriginIsolated?', on '+inkCpuThreads()+' cores':'')+'.');
+ if(kind==='full'&&!auto&&!confirm('The full writing model on the processor: a download of about 1.8 GB, about two minutes a sentence on Inkwell\u2019s test machine, and about 5 GB of memory while it works. On a computer with 8 GB, the browser may close the page.'
+  +(crashed?'\n\nLast time, Inkwell closed while a model was loading. Most often the browser had run out of memory.':'')+'\n\nInstall it?'))return;
+ if(kind==='small'&&!auto&&crashed&&!confirm('Last time, Inkwell closed while a model was loading. Most often the browser had run out of memory. The smaller model needs about 2 GB.\n\nInstall it?'))return;
+ if(cpu)instSay((g.ok?'':'No WebGPU here ('+g.why+'), so ')+W.name+' runs on the processor'+(window.crossOriginIsolated?', on '+inkCpuThreads()+' cores':'')+': it works, more slowly.');
  let files;try{files=await inkAiFiles4();}
  catch(e){instSay('This build does not carry the in-window engine ('+e.message+'). The web app carries it; on this computer the companion server\u2019s model is the stronger path.');return toast('No in-window engine in this build');}
  /* on the processor not the q4 files: they use an operator ONNX Runtime
@@ -17492,8 +17787,9 @@ async function installWriter(auto){
  const pill=document.getElementById('enginePill'),dtype=cpu?W.file.replace(/^model_/,''):'q4',mb=W.mb;
  window.__inkInstalling=true;
  if(pill){pill.className='pill load';pill.innerHTML='<i></i>Writing model\u2026';}
+ inkWriterLive({on:true,kind:kind,name:W.name+(cpu?' on the processor':''),step:'download',got:0,mb:mb,t0:Date.now(),err:'',ok:''});inkWriterSecDraw();
  instSay('['+new Date().toLocaleTimeString()+'] '+W.name+' ('+dtype+', '+(cpu?'processor':'WebGPU'+(g.gpu?', '+g.gpu:''))+'): '+(auto?'starting':'downloading once, about '+mb+' MB, then kept for offline use')+'.');
- inkWriterDropF16().then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' left by an earlier attempt.');});
+ inkWriterDropF16(kind==='full').then(n=>{if(n)instSay('Removed '+n+' unusable file'+(n===1?'':'s')+' left by an earlier attempt.');});
  inkAiMark('writer',true);const got={};
  try{
   await inkAiStart('pro',files);
@@ -17501,11 +17797,13 @@ async function installWriter(auto){
      "model_quantized", which holds the WebGPU-only operator too) */
   const lo=cpu?{dtype:'fp32',model_file_name:W.file,use_external_data_format:1,device:'wasm'}:{dtype:dtype,device:'webgpu'};
   await inkAiAsk('pro',{op:'loadLM',model:W.id,opts:lo},d=>{const p=d.progress||{};
-   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+mb+' MB';}},null,0);
+   if(p.file&&p.loaded!=null){got[p.file]=p.loaded;const tot=Object.values(got).reduce((a,b)=>a+b,0);if(pill)pill.innerHTML='<i></i>Writing model \u2193 '+fmtMB(tot)+' of about '+mb+' MB';
+    WLIVE.got=tot;if(WLIVE.step==='download'&&tot>=0.98*mb*1048576)WLIVE.step='start';inkWriterLiveDraw();}},null,0);
   /* 7.43: loaded is not working: the model must answer once before it is
      called ready (a model whose numbers overflow loads and then answers
      nothing) */
   if(pill)pill.innerHTML='<i></i>Writing model: first answer\u2026';
+  inkWriterLive({step:'answer'});
   const t0=Date.now();
   const hi=await inkAiAsk('pro',{op:'chat',msgs:[{role:'user',content:'Reply with one word: ready'}],opts:{max_new_tokens:6,do_sample:false}},null,null,0);
   if(!/[A-Za-z]/.test(String(hi&&hi.text||'')))throw new Error('the model loaded but its first answer was empty, so it is not used ('+JSON.stringify(String(hi&&hi.text||''))+')');
@@ -17514,17 +17812,19 @@ async function installWriter(auto){
    const r=await inkAiAsk('pro',{op:'chat',msgs:msgs,opts:{max_new_tokens:(gen&&gen.max_new_tokens)||420,do_sample:false},stream:!!onTok},null,onTok||null,0);
    return [{generated_text:[{role:'assistant',content:String(r.text||'')}]}];};
   PRO.writer=true;PRONAME=W.name;PRODEVICE=cpu?'the processor':'WebGPU';
-  S.writerAuto=true;SV('writerAuto',true);setPill();
+  S.writerAuto=true;SV('writerAuto',true);S.writerKind=kind;SV('writerKind',kind);setPill();
   try{localStorage.removeItem('ink_ai_crashed');}catch(e){}
   instSay(W.name+' is running in this window'+(cpu?' on the processor':'')+', offline from now on. Every correction passes the safety filter; every rewrite passes the fact guard.');
+  inkWriterLive({on:false,ok:W.name+' is ready, in this window'+(cpu?' on the processor':'')+'. Correct, Rewrite and Draft use it.'});
   if(!auto)toast('Writing model ready: '+W.name);
  }catch(e){inkAiEnd('pro','failed');PRO=null;PRONAME='';window.__inkInstalling=false;setPill();
   const why=String((e&&e.message)||e);
   /* 7.42: "Failed to fetch" names the cause in plain words */
   const plain=/Failed to fetch|NetworkError|Load failed|ERR_|network|TOO_MANY|timed? ?out/i.test(why)?'its files could not be downloaded from huggingface.co (the connection dropped, or this network blocks that site). What was downloaded is kept, so trying again continues from there. ('+why+')':why;
-  instSay('The writing model did not start: '+plain);toast('The writing model did not start; the Engine log says why');}
- finally{inkAiMark('',false);window.__inkInstalling=false;setPill();}}
-function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);S.writerAuto=false;SV('writerAuto',false);
+  instSay('The writing model did not start: '+plain);toast('The writing model did not start; the Engine panel says why');
+  inkWriterLive({on:false,err:plain});}
+ finally{inkAiMark('',false);window.__inkInstalling=false;setPill();inkWriterSecDraw();}}
+function ejectPro(){inkAiEnd('pro','unloaded');PRO=null;PRONAME='';PRODEVICE='';S.proAuto=false;SV('proAuto',false);S.writerAuto=false;SV('writerAuto',false);inkWriterLive({on:false,ok:'',err:''});
  const pb=document.getElementById('proBtn');if(pb)pb.textContent='⬇ Install Pro model';setPill();toast('Pro model unloaded (cached files remain)');}
 async function proChat(system,user,maxTok,onTok){return aiRun(()=>proChatDo(system,user,maxTok,onTok));}
 async function proChatDo(system,user,maxTok,onTok){
@@ -20524,32 +20824,30 @@ function openModalDo(which){
  '<div style="margin-top:14px;text-align:center"><button class="primary" onclick="closeModal()">Back to the page</button></div>';}
  if(which==='server'){b.innerHTML='<h3>⚙ Engine &amp; models</h3>'+
  '<p style="font-size:13px;color:var(--mut);line-height:1.65"><b>The rules engine is always on and needs nothing else.</b> It corrects spelling, grammar, punctuation, agreement, redundancy and register entirely offline, and it reads as you type. The AI below is an optional extra layer — drafting, rewording and a second grammar opinion — for writers who want it. Everything on this page lives on this device once installed; nothing is sent anywhere.</p>'+
- (IS_TABLETAPP?'':'<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">On this computer the companion server, which starts with Inkwell, runs the writing model below (llama.cpp, offline). A GGUF model you import also lands on its shelf and stays until you remove it.</p>')+
+ (IS_TABLETAPP||inkOnSite()?'':'<p style="font-size:12px;color:var(--mut);line-height:1.6;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px 11px;margin:10px 0">On this computer the companion server, which starts with Inkwell, runs the writing model below (llama.cpp, offline). A GGUF model you import also lands on its shelf and stays until you remove it.</p>')+
  '<div style="font-size:12.5px;background:var(--accSoft);border-radius:10px;padding:9px 12px;margin:10px 0;line-height:1.6"><b>Curated for '+esc(deviceName())+':</b> '+esc(engineAdvice())+'</div>'+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Careful grammar model (optional)</h4>'+
  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6">GECToR base, about 124 MB, downloaded once, then offline on this device. It reads each paragraph as you pause and adds suggestions to the list; nothing changes unless you accept. Only its reliable kinds are shown: agreement, articles, prepositions, spelling and verb forms. Measured on held-out learner essays, 80% to 86% of its suggestions match a human corrector\u2019s; on your thesis it suggested nothing, and it put back 64 of 163 errors planted in it without ever changing your wording into something else.</p>'+
  '<div class="row">'+(MINI?'<span style="font-size:12.5px">\u2713 On ('+esc(MININAME)+')</span> <button class="lkbtn" onclick="testEngine(\'mini\')">\u25B6 Test it</button> <button class="lkbtn" onclick="ejectMini();closeModal()">Turn it off</button>':'<button id="miniBtn" class="primary" onclick="installMini()">\u2B07 Turn on the grammar model</button>')+'</div>'+
  '<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(inkNative()?'Writing model on this tablet':'Writing model inside this window')+'</h4>'+
  (PRO_ALLOWED
-  ?'<p style="font-size:12.5px;color:var(--mut);line-height:1.6"><b>'+esc(WRITER.name)+'</b> (Liquid AI, '+esc(WRITER.licence)+'), inside this window, offline after one download of about '+WRITER.mb+' MB. It needs WebGPU (Chrome or Edge on a laptop or desktop; a recent Safari on a Mac). Measured behind Inkwell\u2019s safety filter: 37% of learner sentences improved, 3% made worse, 2% of correct sentences changed. It proofreads well; its rewrites are weaker than the companion server\u2019s model, and every rewrite that drops a citation or number is marked.</p>'
-   +(HAS_GPU?'':'<p style="font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 11px">This browser has no WebGPU, so here a smaller model runs on the processor instead: <b>'+esc(WRITER_CPU.name)+'</b> (Liquid AI, the same licence), one download of about '+WRITER_CPU.mb+' MB. It is slow, about 20 seconds for a sentence on Inkwell\u2019s test machine, and less able than the full model. '+(ON_MAC||ON_WIN?'The Inkwell app for '+(ON_MAC?'Mac':'Windows')+' runs the full model much faster and needs no WebGPU.':'')+'</p>')
-   +'<div class="row">'+(PRO&&PRO.writer?'<span style="font-size:12.5px">\u2713 Running ('+esc(PRODEVICE)+')</span> <button class="lkbtn" onclick="ejectPro();closeModal()">Stop it</button>':'<button class="primary" onclick="installWriter()">\u2B07 '+(HAS_GPU?'Install the writing model':'Install the smaller model (slow)')+'</button>')+'</div>'
+  ?'<div id="wmSec">'+inkWriterSection()+'</div>'
   :inkNative()?'<div id="tmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the tablet\u2026</div>'
   :'<p style="font-size:12.5px;color:var(--mut);line-height:1.6">No writing model runs inside the app on a phone or tablet: the useful ones need more memory than the system gives an app, and the system closes the app (which is what happened before 7.32). Here Apple\u2019s own model (iPhone and iPad with iOS 26) or your laptop\u2019s model over the Wi-Fi does this work.</p>')+
  (APPLEAI.checked?'<div class="rl" style="margin-top:6px"><b>Apple\u2019s on-device model</b>: '+(APPLEAI.ok?'available on this '+esc(deviceName())+'; proofreading, rewriting and drafting use it, offline. <button class="lkbtn" onclick="testEngine(\'pro\')">▶ Test it</button>':'not available ('+esc(inkAppleWhy(APPLEAI.reason))+')')+'</div>':'')+
- '<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>'+
+ (inkOnSite()?'':'<div class="rl" style="margin-top:8px">Prove it works: <button class="lkbtn" onclick="testEngine(\'server\')">▶ The laptop\u2019s model</button></div>')+
  '<div id="instLog" style="white-space:pre-wrap;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-height:34px;max-height:150px;overflow:auto;margin-top:4px">'+(INSTLOG.join('\n')||'Install news lands here. So do errors, word for word.')+'</div>'+
  '<div class="rl" style="margin-top:8px">A model will not install? <button class="lkbtn" onclick="inkDiagnose()">🩺 Diagnose this device</button> <span id="diagBtns" style="display:none"><button class="lkbtn" onclick="inkDiagCopy()">Copy the report</button> <button class="lkbtn" onclick="inkDiagSave()">Save the report</button></span></div>'+
  '<textarea id="diagOut" readonly style="display:none;width:100%;height:190px;font:11px/1.45 ui-monospace,monospace;margin-top:4px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px"></textarea>'+
  (IS_TABLETAPP?'':'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Writing model on this computer</h4>'
-  +'<div id="wmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the companion server\u2026</div>')+
-'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(IS_TABLETAPP?'Your computer\u2019s model':'Sharing this computer\u2019s model')+'</h4>'+
+  +'<div id="wmBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">'+(inkOnSite()?'The Inkwell app for Mac or Windows runs a writing model on the computer itself, faster than a browser can, with no WebGPU. This website does not need it.':'Asking the companion server\u2026')+'</div>')+
+(inkOnSite()?'':'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">'+(IS_TABLETAPP?'Your computer\u2019s model':'Sharing this computer\u2019s model')+'</h4>')+
  (IS_TABLETAPP
   ?'<p style="font-size:13px;color:var(--mut);line-height:1.6">A computer\u2019s model (the Mac mini, or a laptop) is stronger than anything a tablet can hold. On that computer: Engine \u25B8 <i>Share with my other devices on this Wi-Fi</i>. It shows an address and a 6-digit code; enter them here, on the same Wi-Fi.</p>'
    +inkPeerForm('Connect to my computer','Forget the computer')
    +'<div style="font-size:12px;margin-top:4px;color:var(--mut)">'+(S.connected?'\u2713 Connected to '+esc(S.server)+(S.serverModel?' \u00b7 '+esc(S.serverModel):'')+(S.serverAI===false?' \u00b7 no writing model is loaded there yet, so the rules engine writes here':''):(S.serverNeedsCode?'The computer answered but the code is wrong: check the 6 digits it shows.':(inkSrvLocal(S.server)?'Not connected to a computer.':'Not answering at '+esc(S.server)+': is the computer awake, on the same Wi-Fi, with sharing on?')))+'</div>'
-  :'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your other devices on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
-   +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>'
+  :(inkOnSite()?'':'<p style="font-size:13px;color:var(--mut);line-height:1.6">Run on this computer, the companion server is the strongest path. It can also serve your other devices on the same Wi-Fi, with a pairing code; nothing is reachable from the network until you switch it on.</p>'
+   +'<div id="lanBox" style="font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.7">Asking the server\u2026</div>')
    +'<h4 style="font-family:Georgia,serif;margin:14px 0 6px">Another computer\u2019s model</h4>'
    +'<p style="font-size:13px;color:var(--mut);line-height:1.6">A stronger computer at home, such as the Mac mini, can do the writing for this one. On that computer: Engine \u25B8 <i>Share with my other devices on this Wi-Fi</i>, then enter the address and code it shows. Inkwell must be open there. Whenever it is not answering, this computer\u2019s own model stands in.</p>'
    +inkPeerForm('Use that computer\u2019s model','Back to this computer\u2019s model')
@@ -21260,6 +21558,7 @@ function renderPatterns(){
   if(wcrash){try{localStorage.setItem('ink_ai_crashed',wcrash);}catch(e){}}
   inkPurgeOldModels();
   inkAppleInit();
+  try{if(PRO_ALLOWED)inkGpuCheck().then(function(g){INKGPU=g;inkWriterSecDraw();});}catch(e){}
   if(wcrash){S.writerAuto=false;SV('writerAuto',false);
    instSay('Inkwell closed while a model was loading last time (most often the browser ran out of memory), so no model loads at start. Start it again from the Engine panel if you wish.');
    setTimeout(function(){toast('No model loaded at start: Inkwell closed while one was loading last time');},2500);}

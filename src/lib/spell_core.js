@@ -22,7 +22,16 @@
   const ABC = 'abcdefghijklmnopqrstuvwxyz';
   const PREFIX = new Set('pre post non anti co re self semi multi inter intra sub super ultra mid ex pro counter neo quasi pseudo micro macro mini bi tri un well cross over under out e socio neuro psycho bio meta proto techno cyber geo eco auto hyper hypo trans infra extra retro tele mono poly para'.split(' '));
   /* 7.43: the Latin of scholarly prose and its apparatus, and Roman numerals */
-  const LATIN = new Set('se vitro vivo situ sensus communis ibid idem passim viz alia mutandis mutatis facie priori posteriori jure sui generis paribus ceteris qua quo versa fide bona ante sine ergo sic supra infra et al cf vs qtd foci syllabi lemmata schemata stigmata minutiae personae formulae vertebrae larvae algae alumnae'.split(' '));
+  const LATIN = new Set('se vitro vivo situ sensus communis ibid idem passim viz alia mutandis mutatis facie priori posteriori jure sui generis paribus ceteris qua quo versa fide bona ante sine ergo sic supra infra et al cf vs qtd foci syllabi lemmata schemata stigmata minutiae personae formulae vertebrae larvae algae alumnae'.split(' ')
+    /* 7.47: and the Latin and Greek terms of philosophy, law and the
+       humanities ("prima facie", "stricto sensu", "analogia entis") */
+    .concat('factical facticity thrownness ownmost worldhood enframing prima stricto lato sensu modus operandi vivendi analogia entis substantia individua rationalis ipso facto novo hominem infinitum nauseam fortiori contrario relata relatum explanandum explanans definiendum definiens desideratum desiderata apud seq sqq judice obiter dicta dictum decidendi stare decisis locus standi mens rea actus reus amicus curiae habeas lege lex scripta nullius imago dei telos eudaimonia phronesis poiesis techne episteme doxa praxis aporia arete hexis kairos qua sic'.split(' ')));
+  /* the particles of Arabic names ("Muhammad ibn Tarhan"); "al-" names are
+     names */
+  const NAME_PART = new Set('ibn bin bint abu abd abdul al el ul ud'.split(' '));
+  /* 7.47: bases whose plural or past is irregular: "childs" and "teached"
+     stay marked though "child" and "teach" are words */
+  const IRREG = new Set('child woman foot tooth mouse goose criterion phenomenon teach catch bring think write speak break choose drive begin build drink fight forget forgive freeze sleep steal sweep swing swear throw understand stand spend send lend shake shine shoot sling sting stink strike strive swim wake ride arise bleed breed cling creep dwell flee fling grind kneel leave light mislead seek sell shrink slide speed split spread spring stride swell tear thrust tread upset weep wind withdraw undertake overtake mistake forbid forsake'.split(' '));
   const ROMAN = /^(?=[ivxlc]{1,7}$)(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3})$/;
   const RUN_ON = new Set('a an in at as of on up so no to each even every any some all thank per out over be'.split(' '));
   const CALENDAR = /^(January|February|March|April|May|June|July|August|September|October|November|December|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/;
@@ -55,16 +64,82 @@
   function known(D, w) {
     if (level(D, w) >= 0) return true;
     const m = /^(.+?)(?:'s|’s|s'|’)$/.exec(w); if (m && level(D, m[1]) >= 0) return true;
-    if (w.indexOf('-') > 0) return w.split('-').every(p => p && (level(D, p) >= 0 || /^\d+$/.test(p) || PREFIX.has(p.toLowerCase())));
     const lw = w.toLowerCase();
-    return formed(D, lw, 2) && !nearCommon(D, lw);
+    if (w.indexOf('-') > 0) {
+      if (w.split('-').every(p => p && (level(D, p) >= 0 || /^\d+$/.test(p) || PREFIX.has(p.toLowerCase()) || inflected(D, p.toLowerCase())))) return true;
+      /* 7.47: "pre-emptive", "co-operate", "re-examine": the British hyphen
+         after a prefix, where the word without it is known */
+      const j = lw.replace(/-/g, ''), pre = lw.slice(0, lw.indexOf('-'));
+      return PREFIX.has(pre) && (level(D, j) >= 0 || inflected(D, j));
+    }
+    if (variant(D, lw) || inflected(D, lw)) return true;
+    const f = formed(D, lw, 2);
+    return f === 'suf' || (f === 'pre' && !nearCommon(D, lw));
   }
   /* a formation one slip from a common word is that word misspelt:
-     "intergrated" (integrated), "transpotation" (transportation) */
+     "intergrated" (integrated), "transpotation" (transportation). 7.47: not
+     when the common word is the same formation with another prefix
+     ("devitalization", "revitalization"; "miscrediting", "discrediting") or
+     the word without its prefix ("atemporal", "temporal") */
   function nearCommon(D, w) {
     for (const [c] of edits1(w)) {
       if (c + 's' === w) continue; // its own singular: "declaratives"
-      const e = D.lower.get(c); if (e && e.plain && e.lv <= 70) return true;
+      const e = D.lower.get(c); if (!(e && e.plain && e.lv <= 70)) continue;
+      if ((w[0] === 'a' && c === w.slice(1)) || FORM_PRE.some(p => w.startsWith(p) && (c === w.slice(p.length) || FORM_PRE.some(q => q !== p && c.startsWith(q) && c.slice(q.length) === w.slice(p.length))))) continue;
+      return true;
+    }
+    return false;
+  }
+  /* 7.47: the British forms of known American ones: -ise for -ize
+     ("weaponised"), oe and ae ("foetal", "aetiological", "paediatric"), a
+     consonant doubled before -ed, -ing and -es ("focusses", "modelled") */
+  function variant(D, w) {
+    const ok = x => x !== w && (level(D, x) >= 0 || inflected(D, x));
+    if (/is(?:e|es|ed|ing|ation|ations|er|ers)$/.test(w) && ok(w.replace(/is(e|es|ed|ing|ation|ations|er|ers)$/, 'iz$1'))) return true;
+    if (/(?:^|[^a])(?:oe|ae)/.test(w) && ok(w.replace(/oe/, 'e').replace(/ae/, 'e'))) return true;
+    if (/(ll|ss)(?:ed|ing|es|er|ers)$/.test(w) && ok(w.replace(/(ll|ss)(ed|ing|es|er|ers)$/, (m0, d, suf) => d[0] + suf))) return true;
+    return false;
+  }
+  /* 7.47: a regular inflection or derivation of a known word is a word:
+     "attaches", "logics", "triaging", "cognitions", "interiority",
+     "personalist", "enaction", "intubation", "relatedly". Measured on 40
+     published articles (247,426 words): 85 of the 97 spelling fixes were
+     wrong, most of them such words "corrected" to a neighbour one letter
+     away ("attaches" to "attached", "interiority" to "inferiority",
+     "intubation" to "incubation"). Being one slip from a common word is no
+     reason against a word built by rule from a known one. A single
+     consonant where the known form doubles it is ("occured": "occurred"),
+     and so is a form made the wrong way ("studys", "attachs", "teached"). */
+  const SIB = /(?:s|x|z|ch|sh)$/, CY = /[^aeiou]y$/;
+  const STOPW = new Set('again until which there their where about above after along among around before behind below beside between beyond during except inside outside since through toward towards under unless while within without whose other these those'.split(' '));
+  const INFL = [['es', ''], ['s', ''], ['ies', 'y'], ['ied', 'y'], ['ed', ''], ['d', ''], ['ing', ''], ['ing', 'e'],
+    ['ion', ''], ['ion', 'e'], ['ions', ''], ['ions', 'e'], ['ity', ''], ['ities', ''], ['ist', ''], ['ist', 'e'], ['ists', ''], ['ists', 'e'],
+    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e']];
+  const plainBase = (D, b) => b.length >= 5 && !!D.lower.get(b) && D.lower.get(b).plain;
+  function inflected(D, w) {
+    if (!/^[a-z]{6,}$/.test(w)) return false;
+    for (const [suf, add] of INFL) {
+      if (!w.endsWith(suf) || w.length - suf.length < 4) continue;
+      const cut = w.slice(0, w.length - suf.length), b = cut + add;
+      /* the British doubled consonant: "focussed", "travelled" */
+      const dbl = /(ed|ing|es)$/.test(suf) && !add && /([lst])\1$/.test(cut) && plainBase(D, cut.slice(0, -1)) ? cut.slice(0, -1) : '';
+      const base = plainBase(D, b) ? b : dbl;
+      if (!base || IRREG.has(base) || STOPW.has(base)) continue;
+      /* -ion after a verb's own ending only ("enaction", "intubation"; not
+         "guestion"), and a dropped e only after a common or -ate base (not
+         "launcing" from "launce") */
+      if (/^ions?$/.test(suf) && !(add ? /(?:ate|ute)$/.test(base) : /(?:ct|pt|ss|rt)$/.test(base))) continue;
+      if (suf === 'ing' && add && !(D.lower.get(base).lv <= 60 || /(?:ate|ize|ise)$/.test(base))) continue;
+      if (suf === 'es' && !dbl && (!SIB.test(base) || /(?:sis|xis)$/.test(base))) continue;
+      if (suf === 's' && (SIB.test(base) || CY.test(base))) continue;
+      if (suf === 'd' && !/e$/.test(base)) continue;
+      if ((suf === 'ed' || (suf === 'ing' && !add)) && (/e$/.test(base) && suf === 'ed' || CY.test(base) && suf === 'ed')) continue;
+      if ((suf === 'ed' || suf === 'ing') && !add && !dbl) {
+        const last = base.slice(-1);
+        if (/[^aeiouwxy]/.test(last) && /[aeiou]/.test(base.slice(-2, -1)) && !/[aeiou]/.test(base.slice(-3, -2)) && D.lower.has(base + last + suf)) continue;
+      }
+      if (suf === 'ly' && !/(?:ive|al|ous|ar|ed)$/.test(base)) continue;
+      return true;
     }
     return false;
   }
@@ -76,18 +151,21 @@
   const FORM_PRE = ['neuro', 'socio', 'psycho', 'bio', 'meta', 'proto', 'pseudo', 'post', 'pre', 'non', 'anti', 'counter', 'inter', 'intra', 'multi', 'trans', 'hetero', 'homo', 'cyber', 'techno', 'geo', 'eco', 'auto', 'hyper', 'hypo', 'macro', 'micro', 'mis', 'dis', 'de', 're', 'un', 'over', 'under', 'co', 'sub', 'super', 'semi', 'mono', 'poly', 'para', 'infra', 'extra', 'ultra', 'quasi', 'neo', 'retro', 'tele', 'cross', 'self'];
   const FORM_SUF = [['ness', ''], ['hood', ''], ['ship', ''], ['ism', ''], ['isms', ''], ['ist', ''], ['ists', ''], ['ity', ''], ['ities', ''],
     ['ize', ''], ['ise', ''], ['izes', ''], ['ises', ''], ['ized', ''], ['ised', ''], ['izing', ''], ['ising', ''], ['ization', ''], ['isation', ''], ['izations', ''], ['isations', ''],
-    ['ability', 'able'], ['ibility', 'ible'], ['s', ''], ['ing', 'e'], ['ly', '']];
-  const knownBase = (D, w, depth) => w.length >= 5 && ((D.lower.has(w) && D.lower.get(w).plain) || (depth > 1 && formed(D, w, depth - 1)));
+    ['ability', 'able'], ['ibility', 'ible'], ['ly', '']];
+  const knownBase = (D, w, depth) => w.length >= 5 && ((D.lower.has(w) && D.lower.get(w).plain) || inflected(D, w) || (depth > 1 && !!formed(D, w, depth - 1)));
+  /* 'pre' for a formation by a prefix, 'suf' by a suffix (7.47) */
   function formed(D, w, depth) {
     if (!/^[a-z]{7,}$/.test(w) || !depth) return false;
-    for (const p of FORM_PRE) if (w.startsWith(p) && w.length - p.length >= (p.length <= 3 ? 5 : 4) && knownBase(D, w.slice(p.length), depth)) return true;
     for (const [suf, add] of FORM_SUF) {
       if (!w.endsWith(suf)) continue;
       const stem = w.slice(0, w.length - suf.length) + add;
       if (suf === 'ly' && !/(?:ive|al|ous|ar)$/.test(stem)) continue;
       if (suf === 'ing' && !add) continue;
-      if (knownBase(D, stem, depth)) return true;
+      if (knownBase(D, stem, depth)) return 'suf';
     }
+    for (const p of FORM_PRE) if (w.startsWith(p) && w.length - p.length >= (p.length <= 3 ? 5 : 4) && knownBase(D, w.slice(p.length), depth)) return 'pre';
+    /* "atemporal", "apolitical", "ahistorical" */
+    if (w[0] === 'a' && w.length >= 8 && D.lower.has(w.slice(1)) && D.lower.get(w.slice(1)).plain && /(?:al|ic|ical|ive|ous)$/.test(w)) return 'pre';
     return false;
   }
   /* the cost of one slip turning the intended word a into the written word w */
@@ -154,9 +232,29 @@
     /* 7.44: a long document is checked a paragraph at a time; opt.uses then
        carries the counts of the whole document */
     const uses = opt.uses || new Map(); if (!opt.uses) for (const x of String(text).match(re) || []) { const k = x.toLowerCase(); uses.set(k, (uses.get(k) || 0) + 1); }
+    /* 7.47: a word next to a letter of another language's alphabet
+       ("al-madīna al-fāḍila"), or one of a run of unknown words, is
+       another language ("Il buio e il miele", "substantia individua") */
+    const FOREIGN = /[\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF]/;
+    const hold = [];
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
+      /* 7.47: speech written as spoken ("buildin’", "preparin’"), the
+         plural of capitals ("MRIs"), the parts of Arabic names */
+      if (m[0].length > w.length && /in$/.test(w)) continue;
+      if (/^[A-Z]{2,}s$/.test(w)) continue;
+      if (NAME_PART.has(w.toLowerCase()) || /^(?:al|el|ul|an|ad|as|at|ar)-/i.test(w)) continue;
+      /* 7.47: a capital changed in a quotation ("[c]riteria", "[b]lindness")
+         is read with its bracketed letter; a word the writer introduces
+         ("the local name berdi", "called asuras"), one alone in quotation
+         marks (a “unisono”), one after Latin "et" ("Luctor et emergo"), and
+         one beside the particles of an Arabic name, are not English */
+      const pre = text.slice(Math.max(0, s - 28), s);
+      if (/\[[A-Za-z]\]$/.test(pre) || /(?:called|named|name|term|termed|word|known as|so-called|meaning)\s+["“‘']?$/i.test(pre) || /\bet\s+$/.test(pre)) continue;
+      if (/[“"‘]$/.test(pre) && /^[.,;:!?]?[”"’]/.test(text.slice(e, e + 2))) continue;
+      if (/(?:^|[\s\[(])(?:al|el)-\w|\b(?:ibn|bint|abu|abd)\b/i.test(text.slice(Math.max(0, s - 24), Math.min(text.length, e + 24)))) continue;
+      if ((uses.get(w.toLowerCase()) || 0) >= 4) continue;
       if (/[^\x00-\x7F]/.test(w) || /['’][A-Z]/.test(w)) continue; // a word from another language; a joined "okay'I"
       const before = text.slice(Math.max(0, s - 40), s);
       /* the whole run of text without spaces around the word: a web or e-mail
@@ -168,6 +266,9 @@
       if (/[a-z][A-Z]/.test(w)) continue; // camelCase, iPhone
       if (known(D, w)) continue;
       if (LATIN.has(w.toLowerCase()) || ROMAN.test(w)) continue;
+      if (FOREIGN.test(text.slice(Math.max(0, s - 24), Math.min(text.length, e + 24)).replace(/[’‘“”–—…]/g, ''))) continue;
+      /* a word alone in brackets is a gloss: "filial piety (xiao)" */
+      if (/\(\s*$/.test(text.slice(Math.max(0, s - 2), s)) && /^\s*\)/.test(text.slice(e, e + 2))) continue;
       const sentenceStart = !before.trim() || /[.!?]["”’)]?\s+$|\n\s*$|^\s*["“(]\s*$/.test(before);
       if (/^[A-Z]/.test(w) && !sentenceStart) {
         /* a capital mid-sentence is a name the dictionary may lack; it is
@@ -178,6 +279,14 @@
         continue;
       }
       if (/^[A-Z]/.test(w) && sentenceStart && D.lower.has(w.toLowerCase())) continue;
+      /* 7.47: a capital at a sentence's start is a name when another name,
+         "et al.", a citation or a possessive follows ("Scholl and Sabat
+         (2008)", "Toombs ([44]", "Alaa Fayez", "Dera's article") */
+      if (/^[A-Z]/.test(w) && sentenceStart) {
+        const after = text.slice(e, e + 48);
+        if (/['’]s$/.test(w) || (uses.get(w.toLowerCase()) || 0) >= 2) continue;
+        if (/^['’]s\b/.test(text.slice(e, e + 3)) || /^\s+[A-Z][a-z]/.test(after) || /^\s*(?:et al|and [A-Z][\w'’-]+\s*\(|\(\s*\[?\d|\[\d|,?\s*\(\d{4})/.test(after)) continue;
+      }
       const sug = suggest(D, w, 5);
       /* a capital at the start of a sentence may be a name the dictionary
          lacks ("Fincher"): a fix only for one cheap slip to a common word */
@@ -188,13 +297,31 @@
       const ok0 = sug.length && sug[0].score <= mx && (sug.length < 2 || sug[1].score - sug[0].score >= mg);
       const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35);
       if (ok0 && capOk) o.fix = matchCase(w, sug[0].word);
+      /* 7.47: a fix that only swaps a last letter of -s, -d, -r is a guess at
+         a form, not a spelling ("brainwasher" to "brainwashed"): marked,
+         with no fix */
+      if (o.fix && o.fix.length === w.length && o.fix.slice(0, -1).toLowerCase() === w.slice(0, -1).toLowerCase() && /[sdr]$/i.test(w) && /[sdr]$/i.test(o.fix)) o.fix = null;
       /* 7.43: a capital at a sentence's start with no clear fix is a name
          ("Kraemer discusses"); a term the writer uses three times or more
          with no clear fix is theirs ("gaslighting") */
       const nearPlain = sug.some(x => x.score < 1.2 && x.word === x.word.toLowerCase());
       if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 3)) continue;
-      out.push(o);
+      hold.push(o);
     }
+    /* 7.47: three unknown words or more with at most one short word between
+       each, or two inside brackets or quotation marks, are a phrase of
+       another language: none is marked. (Two side by side are left marked:
+       learners often slip twice running, "mor convient".) */
+    const run = new Set();
+    for (let i = 0; i < hold.length;) {
+      let j = i;
+      while (j + 1 < hold.length && /^\s+(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(hold[j].end, hold[j + 1].start))) j++;
+      const n = j - i + 1;
+      const quoted = n >= 2 && /[(\[“"«]\s*(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(Math.max(0, hold[i].start - 6), hold[i].start)) && /^\s*(?:\s[A-Za-z]{1,3})?[)\]”"»]/.test(text.slice(hold[j].end, hold[j].end + 6));
+      if (n >= 3 || quoted) for (let k = i; k <= j; k++) run.add(k);
+      i = j + 1;
+    }
+    hold.forEach((o, i) => { if (!run.has(i)) out.push(o); });
     return out;
   }
   const api = { load, known, suggest, check, level };

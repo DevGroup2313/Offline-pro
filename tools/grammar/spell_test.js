@@ -15,10 +15,21 @@ for (const w of ('deontological personhood generalizability electroconvulsive co
   'narratively disempowering microclimatic epistemic hermeneutic phenomenological intersubjectivity ontological teleological ' +
   'neuroethics operationalize transcranial metafunction declaratives infrastructurally neurotechnology heteronormative decolonial positionality').split(' '))
   ok('known: ' + w, SP.known(D, w));
-/* by design, a formation one slip from a common word stays marked, so the
-   slip is caught: "focalization" (localization), "intergrated" (integrated) */
-for (const w of ['focalization', 'intergrated', 'transpotation', 'underound'])
+/* by design, a formation by a prefix one slip from a common word stays
+   marked, so the slip is caught: "intergrated" (integrated). 7.47: a word
+   built by a suffix from a known one is a word, though one slip from
+   another ("focalization", the term of narrative theory, is not
+   "localization"; "interiority" is not "inferiority") */
+for (const w of ['intergrated', 'transpotation', 'underound'])
   ok('marked, one slip from a common word: ' + w, !SP.known(D, w));
+/* 7.47: words of published articles the checker "corrected" before */
+for (const w of ('focalization attaches logics triaging cognitions interiority personalist enaction intubation relatedly schemas determinisms ' +
+  'principlism tokenist lowercased interweaved devitalization miscrediting predesigned atemporal reposited travelled').split(' '))
+  ok('7.47 known: ' + w, SP.known(D, w));
+/* 7.47: British forms of known words */
+for (const w of 'foetal aetiological paediatric weaponised pre-emptive focusses co-operate'.split(' ')) ok('7.47 British: ' + w, SP.known(D, w));
+/* 7.47: and the forms made the wrong way stay marked */
+for (const w of 'attachs studys teached childs catched thinked analysises'.split(' ')) ok('7.47 still marked: ' + w, !SP.known(D, w));
 
 /* the common misspellings are not */
 const MISS = { recieve: 'receive', seperate: 'separate', definately: 'definitely', occured: 'occurred', untill: 'until', thier: 'their', goverment: 'government',

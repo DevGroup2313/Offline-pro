@@ -1,0 +1,95 @@
+INKWELL v7.47: HANDOFF NOTES
+============================
+Date: 18 October 2026. Read INKWELL_HANDOFF_v7p46.txt and the earlier notes
+for everything before 7.47.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on.
+
+WHY 7.47
+--------
+The writer: with WebGPU off, a new writer saw nothing happen when the
+writing model installed (the Engine panel's veil hid the pill, the only
+place the download showed) and had no way on; Safari kept the day seal in
+night mode; and the writing model and the offline corrector should hold
+under a doctoral examiner's scrutiny, with AI and without. The writer
+approved the screenshots of the new panel before this was committed.
+
+WHAT CHANGED
+------------
+1. The writing model's install, in the Engine panel (inkWriterSection,
+   inkWriterLive, WLIVE): its steps (download, start, first answer), a bar,
+   the megabytes and the time so far, a ready note and an error note; Test
+   and Stop when it runs. Three kinds (S.writerKind, kept for the start by
+   itself; for an install from before 7.47 the kind is read from the
+   browser's storage): "gpu", the 1.2B q4 files on WebGPU; with no WebGPU,
+   first the way to turn it on (in Safari, the writer's own steps:
+   Settings, Advanced, "Show features for web developers"; Settings,
+   Feature Flags, WebGPU; reload; or Chrome or Edge), and only then "small"
+   (LFM2.5 350M, 7.46) or "full" (the 1.2B q8 files on the processor, as
+   7.45, which the writer's own Safari ran; asked first, with its memory).
+   The 1.2B q8 files are no longer deleted when the full kind is in use.
+   On the website the companion-server sections are left out (inkOnSite).
+2. The tab's seal: the web app's first lines write the icon links for the
+   mode Inkwell opens in (ink_mode; "auto" follows the device), before the
+   browser reads any icon; without scripts the 7.45 links stand
+   (build_site.py). Tested in Chromium; not in Safari.
+3. The corrector under scrutiny (G3d). The harness first: tools that set a
+   long text and read EDITS at once got the previous text's notes (a text
+   over 40,000 characters is checked in slices, after the call returns);
+   they must set INK_CHUNK_MIN high first. Earlier note counts on the
+   published articles were partly that.
+   - Spelling (spell_core.js): regular inflections and derivations of a
+     known word are words (inflected: "attaches", "logics", "triaging",
+     "interiority", "intubation", "personalist"), with the guards the
+     misspellings need ("occured", "begining", "studys", "attachs",
+     "teached", "childs", "guestion", "agains" stay marked); suffix
+     formations are no longer refused for being one slip from a common
+     word ("focalization" is the narratologists' term); prefix formations
+     still are, unless the neighbour is the same formation with another
+     prefix ("devitalization") or the bare word ("atemporal"). British
+     forms (variant): -ise for -ize, oe and ae, a doubled l or s,
+     "pre-emptive". Left alone: Latin and Greek terms of the humanities,
+     three unknown words running or two in brackets or quotes (another
+     language), a word next to letters of another alphabet, a gloss alone
+     in brackets, a word introduced as a term, a word alone in quotation
+     marks, a word after Latin "et", the particles and "al-" of Arabic
+     names, "[c]riteria", speech written as spoken ("buildin’"), "MRIs", a
+     word used four times or more, and a name at a sentence's start before
+     a citation, another name, "et al." or a possessive. A fix that only
+     swaps a last -s, -d or -r is not offered.
+     Measured on 40 published articles (247,426 words): spelling marks 387
+     to 182; fixes offered 111 (nearly all wrong) to 13 (about 9 right).
+     On W&I+LOCNESS dev (387 gold spelling errors): found 93.0% to 92.2%,
+     with the right fix 55.0% to 54.8%; marks on words the gold leaves
+     alone 462 to 442.
+   - Grammar on correct prose: a genus shortened to its capital ("P.
+     vivax") and names beginning in lower case; "that that", "had had";
+     "eg" used throughout (house style) and, in British English, "e.g."
+     with no comma (Oxford); the CRediT roles; names in the US/UK spelling
+     check; "Table 2", "Step 2"; the appositive "that" clause and "that’s";
+     the head-noun agreement rule only across a plain phrase (it read
+     across clauses: "the use of convenience sampling, which may have").
+     Grammar notes on the articles: 2.4 to 1.7 per 1,000 words.
+   - GRAM47: the errors a doctoral examiner marks. Of 70 planted in
+     scholarly sentences (written for the test), the page caught 30, now
+     57. The new rules mark one thing in the 40 articles, a real error
+     ("its’ role"). Missed: comma splices and run-ons, "neither ... nor
+     ... was", "the results of the analysis shows", "lead" for "led",
+     "the affects of" (left alone: affect theory), and choices of style or
+     sense ("historic", "i.e." for "e.g.", "the committee have").
+4. The stronger writing model (W8) is being measured: LFM2.5 2.6B (its
+   browser files are 1.85 GB) and Phi-4 mini against Qwen3 4B Instruct
+   2507 (the apps' model: 40% of learner sentences improved, 9% made worse,
+   6% of correct ones changed, all citations kept). Earlier, bigger models
+   changed correct sentences (Qwen3.5 9B 24%, Ministral 3 14B 52%). Not in
+   7.47.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 129, mark_test.js 26,
+find_test.js 23, myway_test.js 21, dphil_test.js 94; the browser regression;
+the install with and without WebGPU, in the panel, by day and by night.

@@ -37,6 +37,17 @@ Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
 
+NEW IN 7.47
+-----------
+- The corrector, measured under a doctoral examiner's eye: on 40 published
+  articles, wrong spelling fixes fell from about a hundred to four; of 70
+  errors an examiner marks, planted in scholarly sentences, 57 are caught
+  (before 30); fewer wrong notes on correct prose. See the web app's
+  READ ME or INKWELL_HANDOFF_v7p47.txt.
+- In the web app, the Engine panel shows the model's install as it happens,
+  and a browser without WebGPU gets the way to turn it on.
+
+
 NEW IN 7.46
 -----------
 - If Inkwell closes while a model is loading, that model no longer loads

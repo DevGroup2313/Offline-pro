@@ -144,7 +144,12 @@
        "the World Health Organization", "the Royal Society for the
        Prevention of Accidents" */
     const named = x => /^[A-Z]/.test(t[x]) && !/(?:^|[.!?:]["”’)\]]*\s+|\n[#>*\-\s]*)$/.test(t.slice(Math.max(0, x - 6), x));
-    while ((m = IZE.exec(t))) if (C.prose(m.index) && !named(m.index) && alt(m[1])) hits.push({ start: m.index, end: m.index + m[0].length, word: m[0], z: m[2].toLowerCase() === 'iz', stem: m[1], tail: m[3] });
+    /* 7.47: the CRediT roles of an author-contributions line are fixed
+       terms ("Conceptualization, Visualization, Writing – review & editing"),
+       spelled so in every journal */
+    const credit = x => { const a = t.lastIndexOf('\n', x) + 1, b = t.indexOf('\n', x); const line = t.slice(a, b < 0 ? t.length : b);
+      return /review\s*&\s*editing|original draft|[Ff]unding acquisition|[Dd]ata curation|[Ff]ormal analysis/.test(line); };
+    while ((m = IZE.exec(t))) if (C.prose(m.index) && !named(m.index) && !credit(m.index) && alt(m[1])) hits.push({ start: m.index, end: m.index + m[0].length, word: m[0], z: m[2].toLowerCase() === 'iz', stem: m[1], tail: m[3] });
     const nz = hits.filter(h => h.z).length, ns = hits.length - nz;
     const out = [];
     if (o.dialect === 'us') {

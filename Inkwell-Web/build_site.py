@@ -39,10 +39,24 @@ def share_tags(site):
     # 7.45: and a night icon for a device in dark mode, chosen by the browser
     # itself (media), for a browser that reads the icon before the page's
     # script runs or never reads it again
-    tags = ['<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">',
-            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">',
-            '<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-night.png" media="(prefers-color-scheme: dark)" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">',
-            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-night.png" media="(prefers-color-scheme: dark)" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">',
+    # 7.47: Safari keeps the first icon it reads and showed the day seal in
+    # night mode. So the first lines of the page write the icon links for the
+    # mode Inkwell opens in (the writer's own choice, kept as ink_mode; with
+    # "auto", the device's), before the browser reads any icon. Without
+    # scripts, the links of 7.45 stand in (noscript).
+    links = ('<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32%s.png" data-ink-day="icons/favicon-32.png" data-ink-night="icons/favicon-32-night.png">'
+             '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192%s.png" data-ink-day="icons/icon-192.png" data-ink-night="icons/icon-192-night.png">')
+    early = ("<script>(function(){var m='light';try{m=JSON.parse(localStorage.getItem('ink_mode'))||'light';}catch(e){}"
+             "var n=(m==='dark'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'-night':'';"
+             "document.write(%s.split('%%s').join(n));})();</script>")
+    early = early % json.dumps(links)
+    tags = [early,
+            '<noscript>',
+            '<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">',
+            '<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-night.png" media="(prefers-color-scheme: dark)">',
+            '<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-night.png" media="(prefers-color-scheme: dark)">',
+            '</noscript>',
             '<meta name="description" content="%s">' % SHARE_DESC,
             '<meta property="og:type" content="website">',
             '<meta property="og:site_name" content="Inkwell">',

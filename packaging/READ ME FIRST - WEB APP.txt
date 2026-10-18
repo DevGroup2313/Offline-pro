@@ -118,6 +118,39 @@ YOUR DOCUMENTS
   space. For long work, keep a copy on another device the same way.
 
 
+NEW IN 7.47
+-----------
+- The Engine panel shows the writing model's install as it happens: each
+  step, a bar, the megabytes so far and the time so far. Until now only the
+  pill at the top showed the download, and the panel's veil hid it.
+- A browser without WebGPU gets the way to turn it on, step by step (in
+  Safari: Settings, Advanced, "Show features for web developers"; then
+  Settings, Feature Flags, WebGPU; then reload), or Chrome or Edge. Only
+  then, for a browser that cannot have WebGPU, two slower ways on the
+  processor: the smaller model (about 480 MB, about 2 GB of memory) or the
+  full model (about 1.8 GB, about 5 GB of memory).
+- The tab's seal is chosen for night mode before the browser reads any
+  icon (Safari keeps the first icon it reads).
+- The corrector, measured under a doctoral examiner's eye:
+  - On 40 published articles, spelling "fixes" fell from 111, nearly all
+    wrong ("intubation" to "incubation"), to 13. Words built by rule from
+    known ones, British spellings, Latin and other languages, names and
+    speech written as spoken are left alone. Real misspellings in learner
+    essays are still found (92.2%, before 93.0%).
+  - Of 70 errors an examiner marks, planted in scholarly sentences, 57 are
+    caught (before 30): affect and effect, complement, discrete,
+    "comprises of", ensure, elicit, elude, proceed, whether, pore, loath,
+    rein in, flout, their, who and whose, "between the author and I",
+    "one of the factors is", "these findings suggest", "they risk",
+    "however" between sentences, a comma between subject and verb, and the
+    dangling opener ("Having analysed the data, the conclusion is").
+  - Fewer wrong notes on correct prose: "Table 2" keeps its figure, "eg"
+    used throughout is the house style (Oxford's "e.g." takes no comma),
+    "the principle, that each life is equal" keeps its comma, names keep
+    their spelling, and the verb is no longer matched to a noun across a
+    clause.
+
+
 NEW IN 7.46
 -----------
 - In a browser without WebGPU (Safari on some Macs), installing the

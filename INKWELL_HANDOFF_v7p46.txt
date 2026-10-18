@@ -62,6 +62,10 @@ NOT DONE YET
 - The designs shown for approval (note card, note tags, Revise) are still
   kept outside the repository.
 
+AFTER 7.46
+----------
+See INKWELL_HANDOFF_v7p47.txt.
+
 TESTS
 -----
 run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
