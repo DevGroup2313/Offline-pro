@@ -2650,22 +2650,33 @@ function toggleSolo(){S.solo=!S.solo;SV('solo',S.solo);document.getElementById('
    each one to the desk's own native save dialog. */
 function b64utf8(b){try{var bin=atob(b);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(u);}catch(e){return null;}}
 function tabulaEsc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+/* 7.43: every line of the desk's text is a paragraph of Tabula's. Until
+   7.42 only a blank line began a paragraph and a single line break became a
+   <br>, so a document written with one Enter between paragraphs (or pasted
+   from a word processor) arrived as one paragraph many pages long, which the
+   pager cannot break: one continuous sheet, "Page 1 of 1". A line followed by
+   a single line break carries data-ink-l, so the text comes back exactly. */
 function tabularHTMLFromText(t){
  t=String(t||'').replace(/\r\n?/g,'\n');
  return t.split(/\n{2,}/).map(function(p){
-  var lines=p.split('\n');
+  var lines=p.split('\n'),out='';
   if(lines.length&&/^#{1,3}\s/.test(lines[0])){
-   var head=lines[0].replace(/^#+\s*/,'');lines=lines.slice(1);
-   return '<h2>'+tabulaEsc(head)+'</h2>'+(lines.length?'<p>'+lines.map(tabulaEsc).join('<br>')+'</p>':'');
+   /* "#" is a heading 2 in Tabula ("Title" is its heading 1), "##" a 3, "###" a 4 */
+   var lv=Math.min(3,(lines[0].match(/^#+/)||['#'])[0].length)+1;
+   out='<h'+lv+(lines.length>1?' data-ink-l="1"':'')+'>'+tabulaEsc(lines[0].replace(/^#+\s*/,''))+'</h'+lv+'>';lines=lines.slice(1);
   }
-  return '<p>'+lines.map(tabulaEsc).join('<br>')+'</p>';
+  lines=lines.filter(function(l,i){return l.trim()||i<lines.length-1;});
+  return out+lines.map(function(l,i){return '<p'+(i<lines.length-1?' data-ink-l="1"':'')+'>'+(tabulaEsc(l)||'<br>')+'</p>';}).join('');
  }).join('\n');
 }
 function tabularTextFromHTML(markup){
  var d=document.createElement('div');d.innerHTML=markup||'';
- d.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(function(x){x.replaceWith('\n\n'+x.textContent+'\n\n');});
+ /* 7.43: headings come home as the desk writes them ("# ", "## "), so the
+    Outline keeps them; until 7.42 they came back as plain lines */
+ d.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(function(x){var n=+x.tagName[1];var marks='#'.repeat(Math.max(1,Math.min(3,n-1)));
+  x.replaceWith('\n\n'+marks+' '+x.textContent+(x.hasAttribute('data-ink-l')?'\n':'\n\n'));});
  d.querySelectorAll('li').forEach(function(x){x.replaceWith('• '+x.textContent+'\n');});
- d.querySelectorAll('p,div,tr,table,blockquote,section').forEach(function(x){x.append('\n\n');});
+ d.querySelectorAll('p,div,tr,table,blockquote,section').forEach(function(x){x.append(x.matches('p[data-ink-l]')?'\n':'\n\n');});
  d.querySelectorAll('br').forEach(function(x){x.replaceWith('\n');});
  return (d.textContent||'').replace(/\n{3,}/g,'\n\n').replace(/[ \t]+\n/g,'\n').trim();
 }
