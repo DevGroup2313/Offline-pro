@@ -553,6 +553,7 @@ body[data-motion=minimal] button{box-shadow:none !important}
 .drz.sw{left:-6px;bottom:-6px;width:16px;height:16px;cursor:nesw-resize}
 [data-theme=dark] #door{background:#080b10b8}
 body.doorOn #scheFab{display:none !important}
+body.altSheetOn #scheFab{display:none !important}
 body.doorOn #footTab{display:none !important}
 body.doorOn #sticky-pins{display:none !important}
 body.modalOn #footTab,body.modalOn #scheFab,body.modalOn #sticky-pins{display:none !important}
@@ -764,6 +765,38 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 .altOpt .awhyl del,.coachOpt .cEx del{color:#b03a2e;text-decoration:line-through;opacity:.85}
 .altOpt .awhyl ins,.coachOpt .cEx ins{color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px;padding:0 2px}
 .altOpt .wq{font-style:italic}
+/* 7.43: the changes of a version, one row each */
+.altOpt .chgL{margin:0 0 9px;padding:6px 8px 4px;border-radius:10px;background:var(--card);border:1px dashed var(--line)}
+.altOpt .chgH{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0 0 4px}
+.altOpt .chgH .awhyh{margin:0;flex:1 1 auto;white-space:nowrap}
+.altOpt .chgN{font-size:10.5px;color:var(--mut)}
+.altOpt .chgH .lkbtn{padding:1px 7px;font-size:10.5px}
+.altOpt .chg{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.altOpt .chg:first-of-type{border-top:0}
+.altOpt .chgT{flex:0 0 auto;width:26px;height:26px;padding:0;border-radius:50%;font-size:13px;line-height:24px;text-align:center;background:var(--acc);border-color:var(--acc);color:#fff;transition:transform .15s var(--pop),background .15s}
+.altOpt .chgT:active{transform:scale(.9)}
+.altOpt .chg.off .chgT{background:var(--face);color:var(--mut);border-color:var(--line)}
+.altOpt .chgB{flex:1;min-width:0;font-size:11.5px;line-height:1.5}
+.altOpt .chgW{font:12.5px/1.5 Georgia,serif;word-wrap:break-word}
+.altOpt .chgW del{color:#b03a2e;text-decoration:line-through;opacity:.85}
+.altOpt .chgW ins{color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px;padding:0 2px}
+.altOpt .chg.off .chgW del{text-decoration:none;opacity:1;color:var(--ink);font-weight:600}
+.altOpt .chg.off .chgW ins{text-decoration:line-through;opacity:.5;background:none}
+.altOpt .chgR{color:var(--mut);margin-top:1px}
+.altOpt .chgA{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}
+.altOpt .chgA span{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-right:2px}
+.altOpt .chgA button{padding:2px 9px;font:12px Georgia,serif;border-radius:999px}
+.altOpt .chgA button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.altOpt .at del{color:#b03a2e;text-decoration:line-through;opacity:.75}
+.altOpt .at ins{color:#1f7a4d;text-decoration:none;background:rgba(31,122,77,.10);border-radius:3px}
+.altOpt .at .atMine{text-decoration:underline dotted color-mix(in srgb,var(--acc) 70%,transparent);text-underline-offset:3px}
+.coachOpt .qzH{margin:6px 0 8px 18px;padding:0;font-size:12px;line-height:1.5}
+.coachOpt .qzH li{margin:3px 0}
+.coachOpt .qzH li.ok{color:var(--mut)}
+.coachOpt .qzH li.ok b{color:#1f7a4d}
+.coachOpt .qzW{font:italic 12px Georgia,serif;color:var(--mut)}
+.coachOpt .qzS{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.altOpt .chgTip{font-size:10.5px;color:var(--mut);padding:5px 0 2px;border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
 .coachOpt .cSay{font-size:12.5px;line-height:1.55;margin:6px 0 4px}
 .coachOpt.quiet .cSay{color:var(--mut);font-style:italic;margin-bottom:2px}
 .coachOpt .cHow,.coachOpt .cEx{font-size:12px;line-height:1.55;margin:5px 0}
@@ -773,14 +806,17 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 .coachOpt .row{gap:6px}
 .coachOpt .cFb{font-size:12px;line-height:1.5;margin-top:7px;color:var(--acc)}
 .coachOpt .cFb:empty{display:none}
-[data-theme=dark] .altOpt .awhyl del,[data-theme=dark] .coachOpt .cEx del,[data-theme=dark] .altOpt .at del{color:#f2a49b !important}
-[data-theme=dark] .altOpt .awhyl ins,[data-theme=dark] .coachOpt .cEx ins,[data-theme=dark] .altOpt .at ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
+[data-theme=dark] .altOpt .awhyl del,[data-theme=dark] .coachOpt .cEx del,[data-theme=dark] .altOpt .at del,[data-theme=dark] .altOpt .chgW del{color:#f2a49b !important}
+[data-theme=dark] .altOpt .chg.off .chgW del{color:var(--ink) !important}
+[data-theme=dark] .altOpt .chgW ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
 /* 7.43: by night the accent is champagne, a light colour: whatever is
    filled with it carries dark ink, never white (white on it measured 1.9
    to 1; dark ink measures 10 to 1) */
-[data-theme=dark] #altCard .acTabs button.on{color:#0b1218 !important;text-shadow:none;font-weight:600}
+[data-theme=dark] #altCard .acTabs button.on,[data-theme=dark] .altOpt .chgT,[data-theme=dark] .altOpt .chgA button.on{color:#0b1218 !important;text-shadow:none;font-weight:600}
+[data-theme=dark] .altOpt .chg.off .chgT{color:var(--mut) !important;font-weight:400}
 [data-theme=dark] .steps .n{background:var(--acc);color:#0b1218}
 [data-theme=dark] #scheFab .fbadge{color:#0b1218}
+[data-theme=dark] .altOpt .awhyl ins,[data-theme=dark] .coachOpt .cEx ins,[data-theme=dark] .altOpt .at ins{color:#a6e3c0 !important;background:rgba(166,227,192,.12) !important}
 /* (the bubble's names now come from the shared tooltip, inkTips) */
 #bubble .btones button{border-radius:999px}
 /* suggestion legend: the category dots with counts, quiet */
@@ -1642,6 +1678,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_FONTES_CORE@@
 @@LIB_SPELL_CORE@@
 @@LIB_REWRITE_CORE@@
+@@LIB_EXPLAIN_CORE@@
 @@LIB_COACH_CORE@@
 @@LIB_LEXICON_CORE@@
 @@LIB_SYNONYMS_CORE@@
@@ -10779,7 +10816,7 @@ let ALTSEL=null,ALTS=[],ALTMODE=false;
    word groups for a single word; the "change a word" chips for a passage. */
 let ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
 function closeAlts(){ALTMODE=false;ALTSEL=null;ALTS=[];COACH=[];ACST={mode:'alts',style:'',words:null,chips:null,busy:''};
- const c=document.getElementById('altCard');if(c){c.style.display='none';c.innerHTML='';}}
+ const c=document.getElementById('altCard');if(c){c.style.display='none';c.innerHTML='';}document.body.classList.remove('altSheetOn');}
 /* the offline lexicon (WordNet, about 5 MB, 35 MB in memory once read): read
    the first time Alternatives or Rewrite is used, never before */
 let LEXLOAD=null;
@@ -10814,6 +10851,9 @@ function inkCardAnchor(){
 function inkCardPlace(){
  const c=document.getElementById('altCard');if(!c||c.style.display==='none')return;
  const narrow=innerWidth<700;c.classList.toggle('sheet',narrow);
+ /* 7.43: on a phone the card is a sheet at the foot of the screen; the round
+    notes button would sit on its text, so it waits until the card closes */
+ document.body.classList.toggle('altSheetOn',narrow);
  if(narrow){c.style.left='';c.style.top='';c.style.maxHeight='';return;}
  const w=Math.min(480,innerWidth-24),hd=document.querySelector('header');
  const floor=hd?Math.max(0,hd.getBoundingClientRect().bottom)+8:8,a=inkCardAnchor();
@@ -11128,10 +11168,12 @@ function renderAlts(status){
  const cards=ALTS.filter(a=>a.kind!=='Word').length+COACH.length;
  if(cards){
   if(ACST.words&&ACST.words.length)html+='<div class="acLab">The whole selection</div>';
-  html+=ALTS.map((a,i)=>a.kind==='Word'?'':'<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
-  '<div class="at">'+(ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,a.text):esc(a.text))+'</div>'+(a.why?'<div class="awhy">'+esc(a.why)+'</div>':'')+
-  inkWhyList(a)+inkFactNote(a)+
-  '<div class="row"><button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button></div></div>').join('')
+  html+=ALTS.map((a,i)=>{if(a.kind==='Word')return '';const cur=inkAltText(a),same=!!(ALTSEL&&ALTSEL.t)&&cur===ALTSEL.t&&!!a.G;
+  if(a.quiz&&a.G&&a.G.length)return inkQuizCard(a,i);
+  return '<div class="altOpt"><span class="ak">'+esc(a.kind)+'</span>'+
+  '<div class="at">'+(a.G&&a.G.length?inkPartsHTML(a):ALTSEL&&ALTSEL.t&&a.diff!==false?inkDiffHTML(ALTSEL.t,cur):esc(cur))+'</div>'+(a.why?'<div class="awhy">'+esc(a.why)+'</div>':'')+
+  inkChangeList(a,i)+inkFactNote(a)+
+  '<div class="row">'+(same?'<button disabled title="Every change is set to your own words">Your words throughout</button>':'<button class="'+(inkFactOf(a).ok?'primary':'')+'" onclick="useAlt('+i+')">'+(inkFactOf(a).ok?'Use this ▸':'Use anyway ▸')+'</button>')+'</div></div>';}).join('')
   +COACH.map(inkCoachCard).join('');}
  /* a passage: a word in it changed alone */
  if(ACST.chips&&ACST.chips.length)html+='<div class="acLab">Or change one word</div>'+ACST.chips.map((k,ci)=>'<div class="wg"><div class="wgl"><b>'+esc(k.text)+'</b></div>'+k.words.map((w,i)=>'<button onclick="inkUseChip('+ci+','+i+')" title="Use this word in the passage">'+esc(w)+'</button>').join('')+'</div>').join('');
@@ -11148,14 +11190,81 @@ function inkCardEmpty(mode){
   if(/^(summarize|expand|humanize)$/.test(st))return (RW_LABEL[st]||st)+' needs a writing model (⚙ Engine): it writes new sentences, which rules cannot do. The other styles work offline.';
   return 'No change found that keeps the meaning in this style: the passage may already read this way. Try another style above, or ✍ Prompt.';}
  return 'No alternative found that keeps the meaning. Select a single word to see words to use instead, or a sentence to see it said another way.';}
-function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,a.text):{ok:true,lost:[],added:[]};return a.fc;}
+function inkFactOf(a){if(!a.fc)a.fc=(ALTSEL&&ALTSEL.t)?inkFactCheck(ALTSEL.t,inkAltText(a)):{ok:true,lost:[],added:[]};return a.fc;}
+/* 7.43: each change in a version, with its reason and other ways to say it,
+   and the writer's choice for each: keep the change (✓), keep their own
+   words (↺), or take another way. "Use this" uses the version as chosen. */
+function inkChanges(a){
+ if(!ALTSEL||!ALTSEL.t||!a||a.kind==='Word'||a.diff===false||a.mine||typeof INKEXPLAIN==='undefined')return null;
+ if(a.G===undefined){
+  const st=ACST&&ACST.style,mode=st==='plain'?'simplify':(DEMORW[st]?st:(S.reg==='scholarly'?'scholarly':'concise'));
+  try{a.G=INKEXPLAIN.analyse(ALTSEL.t,a.text,a.changes,{model:!a.off,mode:mode});}catch(e){a.G=null;}
+  a.ch={};}
+ return a.G&&a.G.length?a.G:null;}
+function inkAltText(a){const G=inkChanges(a);if(!G)return a.text;try{return INKEXPLAIN.compose(ALTSEL.t,a.text,G,a.ch);}catch(e){return a.text;}}
+function inkChangeList(a,i){
+ const G=inkChanges(a);if(!G)return inkWhyList(a);
+ const kept=G.filter((g,k)=>a.ch[k]!=='o').length;
+ const short=x=>{x=String(x||'').trim();const w=x.split(/\s+/);return w.length>10?w.slice(0,5).join(' ')+' … '+w.slice(-3).join(' '):x;};
+ return '<div class="chgL"><div class="chgH"><span class="awhyh">What changed, and why</span><span class="chgN">'+kept+' of '+G.length+' kept</span>'
+  +(G.length>1?'<button class="lkbtn" onclick="inkChgAll('+i+',\'v\')" title="Take every change">All</button><button class="lkbtn" onclick="inkChgAll('+i+',\'o\')" title="Keep your own words everywhere, then take the changes you want">None</button>':'')
+  +(G.length>1&&!G.some(g=>g.model)?'<button class="lkbtn" onclick="inkQuiz('+i+',true)" title="Find the changes yourself first, from the hints">🎯 Try first</button>':'')+'</div>'
+  +G.map((g,k)=>{const c=a.ch[k],off=c==='o',shown=typeof c==='number'?g.alts[c]:g.to;
+   return '<div class="chg'+(off?' off':'')+'">'
+    +'<button class="chgT" aria-pressed="'+(!off)+'" aria-label="'+(off?'Your words are kept. Take the change':'Keep your own words here')+'" title="'+(off?'Your words are kept here. Tap to take the change.':'Tap to keep your own words here.')+'" onclick="inkChgToggle('+i+','+k+')">'+(off?'↺':'✓')+'</button>'
+    +'<div class="chgB"><div class="chgW">'+(g.from?'<del>'+esc(short(g.from))+'</del>':'')+(g.from&&shown?' → ':'')+(shown?'<ins>'+esc(short(shown))+'</ins>':(g.from?' <i>taken out</i>':''))+'</div>'
+    +'<div class="chgR">'+g.reasons.map(r=>esc(r.text)).join(' ')+'</div>'
+    +(g.alts.length?'<div class="chgA"><span>Or</span>'+g.alts.map((x,j)=>'<button class="'+(c===j?'on':'')+'" aria-pressed="'+(c===j)+'" onclick="inkChgAlt('+i+','+k+','+j+')">'+esc(short(x))+'</button>').join('')+'</div>':'')
+    +'</div></div>';}).join('')
+  +'<div class="chgTip">'+(G.some(g=>g.model)?'The model rewrote these. Where Inkwell has a rule for the change, it says why; check the rest against your own words.':'Tap ✓ to keep your own words for any change. Nothing changes on the page until “Use this”.')+'</div></div>';}
+/* the version with each change shown whole: struck-through words, then the
+   new ones; where the writer kept their own words, those words, underlined */
+function inkPartsHTML(a){
+ let html='';
+ INKEXPLAIN.parts(ALTSEL.t,a.text,a.G,a.ch).forEach(p=>{
+  if('same' in p){html+=esc(p.same);return;}
+  if(p.mine){html+='<span class="atMine" title="Your words">'+esc(p.from)+'</span>';return;}
+  if(p.from)html+='<del>'+esc(p.from)+'</del>'+(p.to?' ':'');
+  if(p.to)html+='<ins>'+esc(p.to)+'</ins>';});
+ /* a word taken out keeps one space after it: "research [that has been] into" */
+ return html.replace(/<\/del>(?=[A-Za-z])/g,'</del> ');}
+/* 7.43: "Involve me and I learn". The writer finds the changes first: each
+   hint names the kind of change and the sentence, never the fix; the
+   writer edits the passage and checks; then sees Inkwell's version. */
+function inkSentNo(t,pos){return ((t.slice(0,pos)+'x').match(/[.!?]["”’)]*\s+(?=\S)/g)||[]).length+1;}
+function inkQuiz(i,on){const a=ALTS[i];if(!a)return;a.quiz=on;if(on&&a.quizText==null)a.quizText=ALTSEL.t;renderAlts('');
+ if(on)setTimeout(()=>{const t=document.getElementById('qzIn'+i);if(t)t.focus();},60);}
+function inkQuizFound(a){const mine=inkNorm(a.quizText||'').toLowerCase();
+ return a.G.map(g=>{const f=inkNorm(g.from).toLowerCase(),to=inkNorm(g.to).toLowerCase();
+  if(mine===inkNorm(ALTSEL.t).toLowerCase())return false;
+  return f?mine.indexOf(f)<0:(!!to&&mine.indexOf(to)>=0);});}
+function inkQuizCard(a,i){
+ const found=a.quizChecked?inkQuizFound(a):null,n=found?found.filter(Boolean).length:0;
+ /* (no lookbehind: Safari before 16.4 cannot parse one) */
+ const first=x=>String(x).replace(/([.!?])\s[\s\S]*$/,'$1');
+ return '<div class="altOpt coachOpt"><span class="ak">🎯 Your turn · '+esc(a.kind.replace(/ · offline$/,''))+'</span>'
+  +'<div class="cSay">Inkwell found '+a.G.length+' things to change. Each hint says what kind of change, and where. Edit the passage, then check.</div>'
+  +'<ol class="qzH">'+a.G.map((g,k)=>'<li class="'+(found?(found[k]?'ok':'todo'):'')+'"><span class="qzS">Sentence '+inkSentNo(ALTSEL.t,g.as)+'</span>'+(g.from?' <span class="qzW">near “'+esc(g.from.trim().split(/\s+/)[0])+' …”</span>':'')+' '+esc(first(g.reasons[0]?g.reasons[0].text:''))+(found&&found[k]?' <b>✓</b>':'')+'</li>').join('')+'</ol>'
+  +'<div class="cTry"><span class="cLab">Your version</span><textarea id="qzIn'+i+'" rows="5" aria-label="Your version" oninput="if(ALTS['+i+'])ALTS['+i+'].quizText=this.value">'+esc(a.quizText||'')+'</textarea>'
+  +'<div class="row"><button onclick="inkQuizCheck('+i+')">Check mine</button><button onclick="inkQuiz('+i+',false)">Show Inkwell’s version</button><button class="primary" onclick="inkQuizUse('+i+')">Use mine ▸</button></div>'
+  +'<div class="cFb" aria-live="polite">'+(found?(n===a.G.length?'All '+n+' found. Compare with Inkwell’s version to see the wording.':n+' of '+a.G.length+' found. The hints without a tick are still to look at; or see Inkwell’s version.'):'')+'</div></div></div>';}
+function inkQuizCheck(i){const a=ALTS[i];if(!a)return;const t=document.getElementById('qzIn'+i);if(t)a.quizText=t.value;
+ if(inkNorm(a.quizText)===inkNorm(ALTSEL.t)){toast('This is still the passage as it was. Change it, then check.');return;}
+ a.quizChecked=true;renderAlts('');}
+function inkQuizUse(i){const a=ALTS[i];if(!a||!ALTSEL)return;const t=document.getElementById('qzIn'+i),v=String(t?t.value:a.quizText||'').trim();
+ if(!v||inkNorm(v)===inkNorm(ALTSEL.t))return toast('Write your version first.');
+ ALTS.push({kind:'Your version',text:v,why:'Your own words.',diff:true,mine:true});useAlt(ALTS.length-1);}
+function inkChgToggle(i,k){const a=ALTS[i];if(!a||!a.G)return;a.ch[k]=a.ch[k]==='o'?'v':'o';a.fc=null;renderAlts('');}
+function inkChgAlt(i,k,j){const a=ALTS[i];if(!a||!a.G)return;a.ch[k]=a.ch[k]===j?'v':j;a.fc=null;renderAlts('');}
+function inkChgAll(i,v){const a=ALTS[i];if(!a||!a.G)return;a.G.forEach((g,k)=>{a.ch[k]=v;});a.fc=null;renderAlts('');}
 function inkFactNote(a){const f=inkFactOf(a);if(f.ok)return '';
  return '<div class="awhy" style="color:#b03a2e;font-style:normal">⚠ Check before using: '
   +(f.lost.length?'it drops '+f.lost.map(x=>'“'+esc(x)+'”').join(', '):'')+(f.lost.length&&f.added.length?'; ':'')
   +(f.added.length?'it adds '+f.added.map(x=>'“'+esc(x)+'”').join(', ')+', which your text does not contain':'')+'.</div>';}
 function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  pushUndo();inkAuthMark(a.mine?'t':(/^(Written|Preset rewrite) by/.test(String(a.why||''))?'a':'f'));
- let text=a.text;
+ /* 7.43: the version as the writer chose it, change by change */
+ let text=inkAltText(a);
  if(ALTSEL.s===ALTSEL.e2){
   /* 7.30: an insertion (a draft) keeps a proper gap from its neighbours: a new
      paragraph at the end of a line or of the text, a space mid-sentence */
