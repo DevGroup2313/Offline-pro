@@ -322,3 +322,53 @@ The 7.38 rule fixes, measured on the held-out sets (rules and spelling):
 | Correct Wikipedia changed | 3.5% | 3.5% |
 
 The fixes were to style and clarity notes; correctness is unchanged.
+
+## 7.43: a scholarly standard (stage G3)
+
+The question for this stage: what does Inkwell say about writing that is
+already good? Measured on 40 open-access philosophy and ethics articles
+(Philosophy, Ethics, and Humanities in Medicine, through Europe PMC;
+247,426 words; never kept in this repository) and on a thesis
+introduction, every note was read by kind; then on the learner sets of
+7.42, so that nothing gained there was lost.
+
+Notes per 1000 words on the published articles:
+
+| | 7.42 | 7.43 |
+|---|---|---|
+| scholarly register | 32.7 | 6.6 |
+| professional register | 23.2 | 6.4 |
+| of which grammar and spelling (scholarly) | 3.0 | 2.1 |
+
+What went, and why:
+
+- "Weak word" (43% of all notes): every "also", "but", "use", "people",
+  "mean", with "utilise", "commence" and "evince" offered. Now only the
+  informal and the vague ("a lot of", "kind of", "stuff"), and an
+  overused connector or intensifier (three times in 120 words).
+- Spelling: SCOWL size 80 (filtered: never one slip from a common word),
+  word formation, names at a sentence start, the writer's repeated terms,
+  Latin and Roman numerals. 7.45 to 1.58 flags per 1000 words; the gold
+  spelling errors of W&I+LOCNESS dev found 94.1% to 93.0%.
+- The passive noted where it crowds a paragraph (3 of 5 sentences in the
+  scholarly register), not wherever it stands; "the X-tion of" dropped.
+- Restricting "which" (correct British and general usage) noted only
+  under the US flag; never after a preposition ("under which").
+- The Oxford comma rule (it misread "For example, Roberts and Sarangi").
+- Hedges ("perhaps"), research questions, "I argue", "show", "points
+  out", "the thing itself", "the common good", "NICE", "the very old":
+  scholarly usage, no longer marked.
+- Quotations: no note inside one, outside creative writing.
+- A key term (four uses or more) is not a repetition to vary.
+- Abbreviations ("p. 20", "qtd. in", "P. vivax") do not end sentences;
+  a comma after an opening phrase is not a comma splice.
+
+The learner checks (learner_core.js) on the articles: 168 notes to 18,
+13 of them real errors in the articles ("a numbers of", "can not",
+"ofthe", "However this"). 69 sentences from the articles are now tests
+(learner_test.js, 160).
+
+Nothing lost on learners. The whole page on the held-out W&I half
+(ERRANT, cat "g" fixes): 212 true and 119 false fixes (P 64.1%) to 215
+and 115 (P 65.2%, R 6.7%, F0.5 0.237). Correct Wikipedia sentences
+touched: 77 to 67 of 1500.

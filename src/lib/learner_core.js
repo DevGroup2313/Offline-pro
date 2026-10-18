@@ -100,9 +100,15 @@
       const subjOK = !before || !(OBJ_TAKER.test(bw) || PREPS.test(bw) || bw === 'to' || V.has(bw) || FORM.has(bw) && FORM.get(bw)[1] !== 'base' && !CLAUSE_START.test(bw));
       /* "suggested that he go": the subjunctive keeps the bare verb */
       const back = ws.slice(Math.max(0, i - 7), i).map(x => lc(x.w)).join(' ');
-      const subjunctive = /\b(suggest|suggests|suggested|recommend|recommends|recommended|demand|demands|demanded|insist|insists|insisted|propose|proposes|proposed|require|requires|required|request|requests|requested|ask|asks|asked|essential|important|necessary|vital|crucial|imperative|advise|advised|order|ordered|urge|urged) that\b/.test(back);
+      const subjunctive = /\b(lest|if|unless)\s*$/.test(back) || /\b(suggest|suggests|suggested|recommend|recommends|recommended|demand|demands|demanded|insist|insists|insisted|propose|proposes|proposed|require|requires|required|request|requests|requested|ask|asks|asked|essential|important|necessary|vital|crucial|imperative|advise|advised|order|ordered|urge|urged) that\b/.test(back);
+      /* 7.43: a question ("could she consider", "would it take") inverts
+         subject and auxiliary; an adverb that can be a verb ("it further
+         contributes") is followed by the real verb */
+      const inverted = before && (MODAL.test(bw) || /^(have|has|had|am|is|are|was|were)$/.test(bw));
+      const r1 = next(ws, t, i + 1), r1f = r1 ? formOf(lc(r1.w)) : null;
+      const advBeforeVerb = /^(further|still|only|even|just|also|well|then|now|thus|therefore|never|always|often|rarely|seldom|alone)$/.test(qw) || (r1f && /^(s|ed)$/.test(r1f[1]) && !NOUN.has(lc(r1.w)) && !PLURAL.has(lc(r1.w)));
       /* he/she/it + base verb → -s ("he go" → "he goes") */
-      if (/^(he|she|it)$/.test(pw) && subjOK) {
+      if (/^(he|she|it)$/.test(pw) && subjOK && !inverted && !advBeforeVerb) {
         if (qw === 'have') { out.push(note(ws, i + 1, i + 1, 'has', 'Subject-verb agreement: he, she and it take "has"', 'sva')); continue; }
         if (qw === 'are') { out.push(note(ws, i + 1, i + 1, 'is', 'Subject-verb agreement: he, she and it take "is"', 'sva')); continue; }
         if (qw === 'were' && !/^(if|wish|though|as if|as though)$/.test(bw)) { out.push(note(ws, i + 1, i + 1, 'was', 'Subject-verb agreement: he, she and it take "was"', 'sva')); continue; }
@@ -119,7 +125,7 @@
         continue;
       }
       /* I/you/we/they + verb-s → base ("they wants" → "they want") */
-      if (/^(i|you|we|they)$/.test(pw) && subjOK && !(before && bw === 'and')) {
+      if (/^(i|you|we|they)$/.test(pw) && subjOK && !(before && bw === 'and') && !inverted) {
         if (qw === 'has') { out.push(note(ws, i + 1, i + 1, 'have', 'Subject-verb agreement: I, you, we and they take "have"', 'sva')); continue; }
         if (qw === 'is' && pw !== 'i') { out.push(note(ws, i + 1, i + 1, 'are', 'Subject-verb agreement: you, we and they take "are"', 'sva')); continue; }
         if (qw === 'is' && pw === 'i') { out.push(note(ws, i + 1, i + 1, 'am', 'Subject-verb agreement: "I am"', 'sva')); continue; }
@@ -131,7 +137,7 @@
         continue;
       }
       /* everyone/everybody/nobody/someone + plural verb → singular */
-      if (/^(everyone|everybody|nobody|somebody|someone|anybody|anyone|no one)$/.test(pw)) {
+      if (/^(everyone|everybody|nobody|somebody|someone|anybody|anyone|no one)$/.test(pw) && !(before && PREPS.test(bw)) && !/^(like|unlike|else)$/.test(qw)) {
         const map = { have: 'has', are: 'is', were: 'was', "don't": "doesn't", "don’t": "doesn’t", do: 'does' };
         if (map[qw]) { out.push(note(ws, i + 1, i + 1, map[qw], 'Subject-verb agreement: "everyone", "nobody" and "someone" are singular', 'sva')); continue; }
         const b = baseVerb(qw); if (b && !NOUNISH.has(b) && !NOUN.has(b) && !AMBIG.has(qw) && !subjunctive) out.push(note(ws, i + 1, i + 1, verbForm(b, 's'), 'Subject-verb agreement: "everyone", "nobody" and "someone" are singular', 'sva'));
@@ -142,8 +148,13 @@
         const r = next(ws, t, i + 1); if (!r) continue;
         const rw = lc(r.w);
         const map = { is: 'are', was: 'were', has: 'have', does: 'do', "doesn't": "don't", "doesn’t": "don’t" };
-        const gerundSubj = before && FORM.has(bw) && FORM.get(bw)[1] === 'ing';
-        const inPhrase = before && (PREPS.test(bw) || /^(one|each|every|either|neither|none|of)$/.test(bw) || gerundSubj);
+        const gerundSubj = before && ((FORM.has(bw) && FORM.get(bw)[1] === 'ing') || /ing$/.test(bw));
+        /* 7.43: the noun phrase is the object of a verb ("to express her
+           feelings does"), or inside "of the" ("the effect of the three
+           sources is"): its noun is not the subject */
+        const b2 = before ? prev(ws, t, i - 1) : null, b2w = b2 ? lc(b2.w) : '';
+        const objectOf = before && (V.has(bw) || (FORM.has(bw) && !NOUN.has(bw)) || OBJ_TAKER.test(bw));
+        const inPhrase = before && (PREPS.test(bw) || /^(one|each|every|either|neither|none|of|and|or)$/.test(bw) || gerundSubj || objectOf || (/^(the|these|those|my|our|their|his|her|its|your|two|three|four|five|six|seven|eight|nine|ten|several|many|some|most|all)$/.test(bw) && b2 && PREPS.test(b2w))) || (!before && /^(and|or)$/.test(lc((ws[i - 1] || {}).w || '')));
         if (map[rw] && !inPhrase) out.push(note(ws, i + 2, i + 2, map[rw], 'Subject-verb agreement: a plural subject takes the plural verb', 'sva'));
         continue;
       }
@@ -151,11 +162,22 @@
         const r = next(ws, t, i + 1); if (!r) continue;
         const rw = lc(r.w);
         const map = { are: 'is', were: 'was', have: 'has', do: 'does', "don't": "doesn't", "don’t": "doesn’t" };
-        if (map[rw] && !(before && (PREPS.test(bw) || bw === 'of'))) out.push(note(ws, i + 2, i + 2, map[rw], 'Subject-verb agreement: a singular subject takes the singular verb', 'sva'));
+        /* 7.43: "what might this moment have felt like": a question;
+           "scholars researching this topic have": the object of a verb;
+           "if every victim were to": the subjunctive */
+        const r2 = next(ws, t, i + 2);
+        const subjv = rw === 'were' && ((r2 && lc(r2.w) === 'to') || ws.slice(Math.max(0, i - 4), i).some(x => /^(if|as|though|wish)$/i.test(x.w)));
+        if (map[rw] && !subjv && !(before && (PREPS.test(bw) || bw === 'of' || MODAL.test(bw) || /ing$/.test(bw) || V.has(bw)))) out.push(note(ws, i + 2, i + 2, map[rw], 'Subject-verb agreement: a singular subject takes the singular verb', 'sva'));
         continue;
       }
       /* a plural noun opening the clause, then a verb with -s: "Books develops" → "develop" */
-      const open = !before || CLAUSE_START.test(bw) || sentenceStart(t, p.s);
+      /* 7.43: after "and" or "or" the noun closes a list ("literature,
+         colleagues, and patients was"), after "what" it is a verb ("what
+         matters is"), and a preposition earlier in the clause ("the trust
+         between participants and scientists is") makes it its object */
+      const clauseBack = (() => { const xs = []; for (let k = i - 1, n = 0; k >= 0 && n < 8; k--, n++) { if (!/^[-‑–]?$/.test(gap(t, ws[k], ws[k + 1]))) break; xs.push(lc(ws[k].w)); } return xs; })();
+      const listEnd = /^(and|or|nor)$/.test(bw) || /^(what|whatever|which|who|whoever)$/.test(bw) || clauseBack.some(x => PREPS.test(x) && x !== 'to');
+      const open = !listEnd && (!before || CLAUSE_START.test(bw) || sentenceStart(t, p.s));
       if (open && PLURAL.has(pw) && !NOUNV.has(pw) && !NOUN.has(pw) && !MODAL.test(qw) && !/\d\s*$/.test(t.slice(Math.max(0, p.s - 8), p.s)) && !(before && /^(one|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty|hundred|thousand|several|few|many|some)$/.test(bw))) {
         const f = formOf(qw);
         if (f && f[1] === 's' && !AMBIG.has(qw) && !NOUN.has(qw) && !PLURAL.has(qw) && !/^(be|do|have)$/.test(f[0]) && !subjunctive) { out.push(note(ws, i + 1, i + 1, caseLike(q.w, f[0]), 'Subject-verb agreement: a plural subject takes the verb without -s', 'sva')); continue; }
@@ -186,8 +208,13 @@
     for (let i = 0; i < ws.length - 1; i++) {
       const p = ws[i], q = next(ws, t, i); if (!q) continue;
       const pw = lc(p.w), qw = lc(q.w), f = formOf(qw);
+      /* 7.43: a capital mid-sentence is a name ("according to Said") */
+      if (/^[A-Z]/.test(q.w) && !sentenceStart(t, q.s)) continue;
+      /* 7.43: the noun "will" ("the will is", "a living will refers") */
+      const bp = prev(ws, t, i), bpw = bp ? lc(bp.w) : '';
+      const nounWill = /^(will|need)$/.test(pw) && bp && (/^(the|a|an|his|her|their|its|our|my|your|this|that|own|free|good|ill|living|political|general|divine|human|popular|strong|weak|and|or|of)$/.test(bpw) || isAdj(bpw));
       /* modal + verb-s / -ed / -ing → base ("can went" → "can go"; "did not went") */
-      if (MODAL.test(pw) && f && f[1] !== 'base') {
+      if (MODAL.test(pw) && !nounWill && f && f[1] !== 'base') {
         if (/^(ing|en)$/.test(f[1]) && /^(will|would|can|could|shall|should|may|might|must)$/.test(pw) === false && f[1] === 'en') continue;
         if (f[0] === 'be' && f[1] === 'ing') continue;                     /* "be being": left alone */
         if (f[1] === 'en' && /^(have|be)$/.test(f[0]) === false && /^(will|would|can|could|shall|should|may|might|must)$/.test(pw)) continue; /* "should taken": may be "should have taken"; left alone */
@@ -216,6 +243,11 @@
       if (GERUND_VERB.test(pw) && qw === 'to') {
         const r = next(ws, t, i + 1); if (!r) continue;
         const b0 = prev(ws, t, i); if (b0 && AUX_BE.test(b0.w)) continue;            /* "is considered to be": passive */
+        /* 7.43: "are sometimes recommended to preserve", "factors suggested
+           to contribute": a past form not right after its subject is a
+           passive; "in practice to recognize": the noun */
+        if (/ed$/.test(pw) && !(b0 && SUBJ_PRON.test(b0.w))) continue;
+        if (b0 && (PREPS.test(b0.w) || /^(the|a|an|this|that|his|her|their|its|our|my|your|clinical|professional|common|good|best|standard|medical)$/i.test(b0.w))) continue;
         if (/^(be|have|do)$/i.test(r.w)) continue;
         const fr = formOf(lc(r.w));
         if (fr && fr[1] === 'base' && verbOnly(fr[0])) out.push({ start: q.s, end: r.e, fix: verbForm(fr[0], 'ing'), why: '"' + cap(pw.replace(/(e?s|ed)$/, '')) + '" takes the -ing form', cat: 'g', fam: 'form' });
@@ -297,13 +329,25 @@
       if (!/^(i|we|they|you)$/i.test(p.w)) continue;
       const f = formOf(lc(q.w)); if (!f || f[1] !== 'base' || AMBIG.has(lc(q.w)) || NOUNISH.has(f[0]) || NOUN.has(lc(q.w)) || /^(be|do|have)$/.test(f[0])) continue;
       if (/^(think|know|believe|mean|hope|guess|suppose|remember|wish|want|need|like|love|hate|agree|understand|feel|seem|look|say|see)$/.test(f[0])) continue;
+      /* 7.43: the present of argument ("I argue", "we offer", "they differ") */
+      if (/^(argue|suggest|propose|offer|contend|claim|show|demonstrate|examine|explore|discuss|consider|focus|conclude|find|note|observe|maintain|hold|differ|overlook|attain|survive|expect|carry|culminate|begin|recall|talk|refer|use|follow|turn|return|read|write|define|treat|analyse|analyze|identify|describe|outline|distinguish|emphasise|emphasize)$/.test(f[0])) continue;
       const before = prev(ws, t, i), bw = before ? lc(before.w) : '';
-      if (before && (OBJ_TAKER.test(bw) || PREPS.test(bw) || bw === 'to' || MODAL.test(bw) || AUX_BE.test(bw) || V.has(bw))) continue;
+      if (before && (OBJ_TAKER.test(bw) || PREPS.test(bw) || bw === 'to' || MODAL.test(bw) || AUX_BE.test(bw) || V.has(bw) || /^(lest|if|unless)$/.test(bw))) continue;
       const sb = Math.max(t.lastIndexOf('.', p.s), t.lastIndexOf('?', p.s), t.lastIndexOf('!', p.s), t.lastIndexOf('\n', p.s));
       const sent = ws.filter(w => w.s > sb && w.e <= p.s).map(w => lc(w.w));
       if (sent.length < 3) continue;
-      const pastBefore = sent.some(w => /^(was|were|had|did)$/.test(w) || (FORM.has(w) && FORM.get(w)[1] === 'ed' && !AMBIG.has(w) && !isAdj(w)));
-      const presentBefore = sent.some(w => /^(is|are|am|has|does|do|today|now|nowadays|always|usually|often|sometimes|every|will|can|if|would|could|should)$/.test(w) || (FORM.has(w) && FORM.get(w)[1] === 's' && !NOUN.has(w) && !PLURAL.has(w)));
+      /* 7.43: a past verb is a finite one: "was", "had", "did", or an -ed
+         form right after its subject ("Penny discovered"); a participle
+         ("as discussed above", "have entered", "played by") is not the past */
+      const sw = ws.filter(w => w.s > sb && w.e <= p.s);
+      const pastBefore = sw.some((w, k) => { const lw = lc(w.w); if (/^(was|were|had|did)$/.test(lw)) return true;
+        if (!(FORM.has(lw) && FORM.get(lw)[1] === 'ed' && !AMBIG.has(lw) && !isAdj(lw))) return false;
+        const pw0 = k > 0 ? sw[k - 1] : null; if (!pw0 || gap(t, pw0, w)) return false;
+        const pl = lc(pw0.w), nx = sw[k + 1] ? lc(sw[k + 1].w) : '';
+        return (SUBJ_PRON.test(pw0.w) || /^[A-Z]/.test(pw0.w) && !sentenceStart(t, pw0.s)) && !AUX_BE.test(pl) && !/^(have|has|had)$/.test(pl) && nx !== 'by'; });
+      /* "have entered": the present perfect is the present */
+      const perfect = sw.some((w, k) => /^(have|has)$/i.test(w.w) && sw[k + 1] && FORM.has(lc(sw[k + 1].w)) && /^(ed|en)$/.test(FORM.get(lc(sw[k + 1].w))[1]) || /^(have|has)$/i.test(w.w) && sw[k + 1] && lc(sw[k + 1].w) === 'been');
+      const presentBefore = perfect || sent.some(w => /^(is|are|am|has|does|do|today|now|nowadays|always|usually|often|sometimes|every|will|can|if|would|could|should)$/.test(w) || (FORM.has(w) && FORM.get(w)[1] === 's' && !NOUN.has(w) && !PLURAL.has(w)));
       if (!pastBefore || presentBefore) continue;
       if ((t.slice(sb + 1, p.s).match(/["“]/g) || []).length % 2 === 1) continue;        /* inside speech */
       out.push({ start: q.s, end: q.e, fix: caseLike(q.w, verbForm(f[0], 'ed')), why: 'The sentence is set in the past, so the verb takes its past form', cat: 'g', fam: 'tense' });
@@ -312,20 +356,22 @@
     for (let i = 0; i <= t.length; i++) if (i === t.length || /[.!?\n]/.test(t[i])) { if (i > s0) sentences.push([s0, i]); s0 = i + 1; }
     for (const [a, b] of sentences) {
       const sent = t.slice(a, b);
-      if (!PAST_MARK.test(sent)) continue;
+      /* 7.43: a past marker inside a quotation does not set the sentence */
+      if (!PAST_MARK.test(sent.replace(/["“][^"”]*["”]?/g, ' '))) continue;
       if (/\b(every|each|usually|always|often|sometimes|nowadays|today|now|still|these days)\b/i.test(sent)) continue;
       const sw = ws.filter(w => w.s >= a && w.e <= b);
       for (let i = 0; i < sw.length - 1; i++) {
         const p = sw[i], q = sw[i + 1]; if (gap(t, p, q)) continue;
         if (!SUBJ_PRON.test(p.w)) continue;
         const bw = i > 0 && !gap(t, sw[i - 1], p) ? lc(sw[i - 1].w) : '';
-        if (bw && (OBJ_TAKER.test(bw) || PREPS.test(bw) || bw === 'to' || MODAL.test(bw) || AUX_BE.test(bw))) continue;
+        if (bw && (OBJ_TAKER.test(bw) || PREPS.test(bw) || bw === 'to' || MODAL.test(bw) || AUX_BE.test(bw) || /^(lest|if|unless)$/.test(bw))) continue;
         const qw = lc(q.w), f = formOf(qw);
         if (!f || f[0] === 'be' || /^(have|do)$/.test(f[0])) continue;
         const pron = lc(p.w);
         const present = (f[1] === 'base' && /^(i|you|we|they)$/.test(pron)) || (f[1] === 's' && /^(he|she|it)$/.test(pron));
         if (!present || NOUNISH.has(f[0]) || NOUN.has(qw)) continue;
         if (/^(think|know|believe|mean|hope|guess|suppose|remember|wish|want|need|like|love|hate|agree|understand|feel|seem|look)$/.test(f[0])) continue; /* "I think it was" stays present */
+        if ((t.slice(a, q.s).match(/["“”]/g) || []).length % 2 === 1) continue;  /* 7.43: inside a quotation */
         out.push({ start: q.s, end: q.e, fix: caseLike(q.w, verbForm(f[0], 'ed')), why: 'The sentence is set in the past ("' + (sent.match(PAST_MARK) || [''])[0] + '"), so the verb takes its past form', cat: 'g', fam: 'tense' });
       }
     }
@@ -336,7 +382,10 @@
   const KINDS = /\b(different|various|all|many|several|other|these|those|two|three|four|five|both|numerous|multiple) (kind|type|sort) of\b/gi;
   function num(t, ws, out) {
     KINDS.lastIndex = 0; let km;
-    while ((km = KINDS.exec(t))) { if (km.index > 0 && /[A-Za-z]/.test(t[km.index - 1])) continue; const at = km.index + km[1].length + 1; out.push({ start: at, end: at + km[2].length, fix: km[2] + 's', why: 'After "' + km[1] + '", the plural noun', cat: 'g', fam: 'num' }); }
+    while ((km = KINDS.exec(t))) { if (km.index > 0 && /[A-Za-z]/.test(t[km.index - 1])) continue;
+      /* 7.43: "an altogether different kind of": one kind */
+      if (/\b(a|an|one|this|that|each|every)\s+(?:[a-z]+\s+)?$/i.test(t.slice(Math.max(0, km.index - 24), km.index))) continue;
+      const at = km.index + km[1].length + 1; out.push({ start: at, end: at + km[2].length, fix: km[2] + 's', why: 'After "' + km[1] + '", the plural noun', cat: 'g', fam: 'num' }); }
     for (let i = 0; i < ws.length - 1; i++) {
       const p = ws[i], pw = lc(p.w);
       const q = next(ws, t, i); if (!q) continue;
@@ -346,10 +395,25 @@
       const nw = lc(n.w);
       const after = next(ws, t, j), aw = after ? lc(after.w) : '';
       const twoWord = (x, y) => i > 0 && !gap(t, ws[i - 1], p) && lc(ws[i - 1].w) === x && pw === y;
-      const manyLike = MANY.test(pw) || twoWord('a', 'few') || twoWord('of', 'the') && i > 1 && /^(one)$/i.test(ws[i - 2].w) || twoWord('lot', 'of') || twoWord('lots', 'of') || twoWord('plenty', 'of') || twoWord('number', 'of') || twoWord('kinds', 'of') || twoWord('types', 'of') || twoWord('sorts', 'of') || twoWord('one', 'of');
+      /* 7.43: "types of agency", "kinds of evidence" take uncountable nouns
+         as often as plurals; only "different kind of" (KINDS) is marked */
+      const oneOfDet = i > 1 && !gap(t, ws[i - 1], p) && lc(ws[i - 1].w) === 'of' && /^(one)$/i.test(ws[i - 2].w) && /^(the|my|our|their|his|her|its|your)$/.test(pw);
+      const manyLike = MANY.test(pw) || twoWord('a', 'few') || oneOfDet || twoWord('lot', 'of') || twoWord('lots', 'of') || twoWord('plenty', 'of') || twoWord('number', 'of') || twoWord('one', 'of');
       /* a noun before another noun describes it ("team championships", "summer homes"): not the head */
-      const compound = after && (PLURAL.has(aw) || NOUN.has(aw) || /^[A-Z]/.test(after.w) || (/[a-z]s$/.test(aw) && !/(ss|us|is|ous)$/.test(aw) && !FORM.has(aw)));
-      if (manyLike && NOUN.has(nw) && !UNCOUNTABLE_AFTER_MANY.test(nw) && !compound && /^[a-z]/.test(n.w) && !MODAL.test(nw) && !(FORM.has(nw) && FORM.get(nw)[1] === 'ing') && !(pw === 'multiple' && i > 0 && /^(a|an)$/i.test(ws[i - 1].w))) {
+      const after2 = after ? next(ws, t, j + 1) : null;
+      const compound = (after && (PLURAL.has(aw) || NOUN.has(aw) || /^[A-Z]/.test(after.w) || /['’]s$/.test(aw) || (/[a-z]s$/.test(aw) && !/(ss|us|is|ous)$/.test(aw) && !FORM.has(aw)) || (/ing$/.test(aw) && after2 && (PLURAL.has(lc(after2.w)) || NOUN.has(lc(after2.w)))))) || /[-‑–]/.test(t[n.e] || '');
+      /* "both patient and clinician": "both ... and" coordinates singulars */
+      const bothAnd = pw === 'both' && (ws.slice(j + 1, j + 11).some(x => lc(x.w) === 'and') || /^(down|up|out|off|away|back|over|together|apart)$/.test(aw));
+      /* "one of justification", "one of harmony": "one of" without a
+         determiner names a kind; "one of the gang": a collective */
+      const oneOf = twoWord('one', 'of') || oneOfDet;
+      const oneOfIdiom = (twoWord('one', 'of') && !/^(the|my|our|their|his|her|its|your|these|those|them|us)$/.test(pw)) || (oneOf && /^(gang|family|team|group|crowd|class|staff|crew|lot|kind|sort|best|worst|few|many|most)$/.test(nw));
+      /* "a lot of moral satisfaction": "a lot of" takes abstract nouns */
+      const lotAbstract = (twoWord('lot', 'of') || twoWord('lots', 'of') || twoWord('plenty', 'of')) && /(tion|sion|ness|ery|ism|ity|ance|ence|ment|ure|dom|hood|ship|ice|ty)$/.test(nw);
+      const IRR_PL = /^(criteria|phenomena|data|media|analyses|hypotheses|theses|bases|crises|curricula|strata|alumni|fungi|nuclei|stimuli|indices|matrices|appendices|people|children|men|women|feet|teeth|mice|geese)$/;
+      const adjUse = (isAdj(nw) || /(ive|al|ic|ous|ary|ory|ent|ant|ible|able)$/.test(nw)) && after && (isAdj(aw) || NOUN.has(aw) || PLURAL.has(aw) || IRR_PL.test(aw));
+      const verbUse0 = /^(these|those)$/.test(pw) && /^(the|a|an|with|to|from|for|on|in|at|by|that|this|these|those|its|their|our|his|her|my|your|us|them|him|me|it|some|many|much|more|less|no|not|also|only|both|each|every|all|any|fundamental|important|significant|several|new)$/.test(aw);
+      if (manyLike && !bothAnd && !verbUse0 && !oneOfIdiom && !lotAbstract && !adjUse && !IRR_PL.test(aw) && NOUN.has(nw) && !UNCOUNTABLE_AFTER_MANY.test(nw) && !compound && /^[a-z]/.test(n.w) && !MODAL.test(nw) && !(FORM.has(nw) && FORM.get(nw)[1] === 'ing') && !(pw === 'multiple' && i > 0 && /^(a|an)$/i.test(ws[i - 1].w))) {
         if (/^(hundred|thousand|percent|dozen|million|billion|half|quarter|point|degree)$/.test(nw) && /^(two|three|four|five|six|seven|eight|nine|ten|twenty|several|few|many)$/.test(pw)) continue;
         if (aw === 'of' && /^(kind|type|sort|number|amount|piece|bit|lot|pair|group|set|series|range|variety|couple|percent|part|member|majority|minority|rest|sum|total|half|quarter)$/.test(nw)) continue;
         if (/^(one|each|every)$/i.test(pw)) continue;
@@ -357,18 +421,20 @@
         continue;
       }
       /* every students → every student; a cars → a car; this things → these things */
-      if (/^(every|each|another|a|an|per)$/.test(pw) && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !(/^(a|an)$/.test(pw) && j !== i + 1) && !(pw === 'each' && lc(q.w) === 'other')) {
+      if (/^(every|each|another|a|an)$/.test(pw) && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !(/^(a|an)$/.test(pw) && j !== i + 1) && !(pw === 'each' && lc(q.w) === 'other')) {
         if (/^(few|lot|lots|couple|dozen|hundred|thousand|million|series|species|means|headquarters|news|percent)$/.test(nw)) continue;
         out.push({ start: n.s, end: n.e, fix: caseLike(n.w, singularOf(nw)), why: 'After "' + p.w + '", the singular noun', cat: 'g', fam: 'num' });
         continue;
       }
       const pv = prevAny(ws, i), pvw = pv ? lc(pv.w) : '';
       const conj = pw === 'that' && !sentenceStart(t, p.s) && !(prev(ws, t, i) && PREPS.test(prev(ws, t, i).w)) && (!/[,;:(]\s*$/.test(t.slice(Math.max(0, p.s - 3), p.s)) || OBJ_TAKER.test(pvw) || /^(remember|think|say|said|know|believe|hope|mean|means|meant|feel|felt|found|think|thought|sure|clear|true|fact|idea|so|note|noted|means)$/.test(pvw));
-      if (/^(this|that)$/.test(pw) && !conj && j === i + 1 && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !/^(means|series|species|news|headquarters)$/.test(nw)) {
+      /* 7.43: "This contrasts with", "This leaves a gap": a verb, not a noun */
+      const verbUse = /^(the|a|an|with|to|from|for|on|in|at|by|that|this|these|those|its|their|our|his|her|my|your|us|them|him|me|it|some|many|much|more|less|no|not|also|only|both|each|every|all|any|fundamental|important|significant|several|new)$/.test(aw);
+      if (/^(this|that)$/.test(pw) && !conj && j === i + 1 && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !verbUse && !/^(means|series|species|news|headquarters)$/.test(nw)) {
         out.push({ start: p.s, end: p.e, fix: caseLike(p.w, pw === 'this' ? 'these' : 'those'), why: '"' + cap(pw) + '" is singular; a plural noun takes "' + (pw === 'this' ? 'these' : 'those') + '"', cat: 'g', fam: 'num' });
         continue;
       }
-      if (/^(these|those)$/.test(pw) && j === i + 1 && NOUN.has(nw) && /^[a-z]/.test(n.w) && !compound && !MODAL.test(nw) && !/^(kind|type|sort|day)$/.test(nw) && !(aw === 'of')) {
+      if (/^(these|those)$/.test(pw) && j === i + 1 && NOUN.has(nw) && /^[a-z]/.test(n.w) && !compound && !verbUse && !adjUse && !MODAL.test(nw) && !/^(kind|type|sort|day)$/.test(nw) && !(aw === 'of')) {
         out.push({ start: n.s, end: n.e, fix: caseLike(n.w, pluralOf(nw)), why: 'After "' + p.w + '", the plural noun', cat: 'g', fam: 'num' });
       }
     }
@@ -376,7 +442,8 @@
 
   /* articles in fixed phrases */
   const ART = [
-    [/\bin future\b(?! (generations?|years?|plans?|research|work|studies|development|projects?|editions?|versions?|use|reference|events?|weeks?|months?|decades?|times?|periods?|elections?|needs?|growth|policy|policies|prospects?|trends?|changes?|technology|technologies|efforts?|discussions?|meetings?|visits?|releases?|updates?|models?|designs?|seasons?|games?|matches?|films?|books?|chapters?|sections?|papers?|articles?|studies|programs?|programmes?))/gi, 'in the future', 'The phrase is "in the future"'],
+    /* 7.43: "in future encounters", "in future studies": "in future" before a noun is right */
+    [/\bin future\b(?!-| (?!(?:i|we|you|they|he|she|it|the|this|that|there|and|but|or|so|if|when|as|to|be|is|are|will|would|can|could|should|may|might|must|my|our|your|his|her|their)\b)[a-z]+)/gi, 'in the future', 'The phrase is "in the future"'],
     [/\ball over world\b/gi, 'all over the world', 'The phrase is "all over the world"'],
     [/\b(in|around|across) world\b(?! [A-Z])/g, '$1 the world', 'The phrase is "in the world"'],
     [/\bon (?:the )?other hands?\b/gi, 'on the other hand', 'The phrase is "on the other hand"'],
@@ -410,6 +477,11 @@
         re.lastIndex = li;
         if (!fix || fix === m[0]) continue;
         if (m.index > 0 && /[A-Za-z'’-]/.test(t[m.index - 1])) continue;
+        /* 7.43: "end-of-life care"; "the vast majority of" */
+        if (t[m.index + m[0].length] === '-') continue;
+        if (/majority of/.test(why) && /\b(the|a|an|our|their|its|this|that|his|her|my|your)\s+(?:[a-z]+\s+)?$/i.test(t.slice(Math.max(0, m.index - 30), m.index))) continue;
+        /* "have real world value": the noun names the kind of another noun */
+        if (/singular countable/.test(why)) { const nx = (t.slice(m.index + m[0].length).match(/^\s+([a-z]+)/) || [])[1]; if (nx && (NOUN.has(nx) || PLURAL.has(nx))) continue; }
         out.push({ start: m.index, end: m.index + m[0].length, fix: caseLike(m[0], fix), why: why, cat: 'g', fam: 'art' });
       }
     }
@@ -445,16 +517,23 @@
     [/\banswer(s|ed|ing)? to (the|a|an|my|his|her|their|your|this|that|these|those|all|every|each) (question|questions|letter|letters|email|emails|phone|call|calls|message|messages)\b/gi, 'answer$1 $2 $3', '"Answer the question": no "to"'],
     [/\benter(s|ed|ing)? (in|into) (the|a|an|my|his|her|their|our|your|this|that) (room|house|building|school|university|college|class|classroom|shop|store|office|city|country|car|hall|kitchen|market|competition|contest)\b/gi, 'enter$1 $3 $4', '"Enter the room": no "into"'],
     [/\breach(es|ed|ing)? (to|at) (the|a|an|my|his|her|their|our|your|this|that|its)\b/gi, 'reach$1 $3', '"Reach" a place: no "to"'],
-    [/\bin the (end|beginning|age|top|bottom|corner|side) of\b/gi, 'at the $1 of', '"At the end of", "at the age of"'],
-    [/\bby (my|your|his|her|their|our|its) own\b/gi, 'on $1 own', '"On my own"'],
+    /* 7.43: "in the beginning of", "in the age of digital education" are English */
+    [/\bin the end of\b/gi, 'at the end of', '"At the end of"'],
+    [/\bin the age of (\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, 'at the age of $1', '"At the age of"'],
+    [/\bby (my|your|his|her|their|our|its) own\b(?=\s*[.,;:!?)]|\s*$)/gi, 'on $1 own', '"On my own"'],
     [/\bwith (the )?(car|bus|train|plane|bike|bicycle|taxi|boat|ship|foot)\b(?! (that|which|of|is|was|we|i|you|they|he|she))/gi, (m, a, v) => (lc(v) === 'foot' ? 'on foot' : 'by ' + v), '"By car", "by bus", "on foot"'],
     [/\bby foot\b/gi, 'on foot', '"On foot"'],
-    [/\b(responsible|famous|known|suitable|ready|sorry|thankful|grateful) (of|about|by)\b/gi, '$1 for', '"Responsible for", "famous for"'],
+    [/\b(responsible|famous|suitable|ready|thankful|grateful) (of|about|by)\b/gi, '$1 for', '"Responsible for", "famous for"'],
     [/\bcapable to\b/gi, 'capable of', '"Capable of"'],
-    [/\b(afraid|scared|proud|tired|aware|ashamed|fond|full|made) (from|for|with)\b/gi, '$1 of', '"Afraid of", "proud of", "tired of"'],
+    [/\b(afraid|scared|aware|ashamed|fond|full) (from|for|with)\b/gi, '$1 of', '"Afraid of", "aware of", "full of"'],
     [/\b(similar|related|married|accustomed|opposed|belong|belongs|belonged|belonging) with\b/gi, '$1 to', '"Similar to", "related to", "belong to"'],
-    [/\bsuffer(s|ed|ing)? (of|with|by)\b/gi, 'suffer$1 from', '"Suffer from"'],
-    [/\b(think|thinks|thought|thinking|worry|worries|worried|worrying|care|cares|cared|complain|complains|complained|complaining) (on|for|with) (the|this|that|these|those|my|our|his|her|their|your|it|them|him|her|me|us|you|how|what|whether|about)\b/gi, (m, v, p, x) => lc(x) === 'about' ? m : v + ' about ' + x, '"Think about", "worry about"'],
+    /* 7.43: "the suffering of patients", "losses suffered by" are right */
+    [/\bsuffer(s|ed)? of\b/gi, 'suffer$1 from', '"Suffer from"'],
+    [/\b(am|is|are|was|were|be|been|'s|'re) suffering (of|by)\b/gi, '$1 suffering from', '"Suffer from"'],
+    /* 7.43: "care for" (look after), "think for yourself", "worry for him"
+       and the noun "thought on" are English; only the clear slips stay */
+    [/\b(worry|worries|worried|worrying) (on|with) (the|this|that|these|those|my|our|his|her|their|your|it|them|him|me|us|you|how|what|whether)\b/gi, '$1 about $3', '"Worry about"'],
+    [/\b(complain|complains|complained|complaining) (on|for|with) (the|this|that|these|those|my|our|his|her|their|your|it|them|him|me|us|you|how|what|whether)\b/gi, '$1 about $3', '"Complain about"'],
     [/\bdiscuss(es|ed|ing)? about\b/gi, 'discuss$1', '"Discuss" takes no "about"'],
     [/\bmention(s|ed|ing)? about\b/gi, 'mention$1', '"Mention" takes no "about"'],
     [/\b(emphasise|emphasize|emphasises|emphasizes|emphasised|emphasized|stress|stresses|stressed) on\b/gi, '$1', '"Emphasise" takes no "on"'],
@@ -462,13 +541,14 @@
     [/\b(lack|lacks|lacked|lacking) of\b/gi, (m, v) => lc(v) === 'lack' ? m : v, '"Lacks" takes no "of" (but "a lack of")'],
     [/\b(attend|attends|attended|attending) (to|at|in) (the|a|an|my|our|his|her|their|your|this|that) (school|university|college|class|classes|course|courses|meeting|meetings|lecture|lectures|conference|lesson|lessons|event|events|party|wedding|funeral|church)\b/gi, '$1 $3 $4', '"Attend school": no "to"'],
     [/\b(go|goes|went|gone|going|come|comes|came|coming|get|gets|got|getting|return|returns|returned|returning|back|way|welcome) to (home|abroad|overseas|downtown|downstairs|upstairs|outside|inside|here|there)\b/gi, '$1 $2', '"Go home", "go abroad": no "to"'],
-    [/\b(at|to|in) (here|there)\b(?=[,.!?;:]|$| and| but| because| for| with| so| when| where| which| that| yet| since| while| as| or| too| also| now| then| again| every| all| until| till| on| in| at| by| last| next| this| after| before| during)/gi, '$2', '"Here" and "there" take no preposition'],
+    [/\b(at|to) (here|there)\b(?=[,.!?;:]|$| and| but| because| for| with| so| when| where| which| that| yet| since| while| as| or| too| also| now| then| again| every| all| until| till| on| in| at| by| last| next| this| after| before| during)/gi, '$2', '"Here" and "there" take no preposition'],
     [/\bnear to (the|a|an|my|our|his|her|their|your|this|that|it|them|me|us|him|her|you)\b/gi, 'near $1', '"Near", not "near to"'],
     [/\bin nowadays\b/gi, 'nowadays', '"Nowadays" takes no "in"'],
     [/\b(on|in|at) (last|next|every|each) (weekend|morning|evening|afternoon|night|week|month|year|summer|winter|day|time)\b/gi, '$2 $3', '"Last weekend", "every morning": no preposition'],
     [/\b(on|in|at) (this) (weekend|morning|evening|afternoon|week|month|year|summer|winter)\b/gi, '$2 $3', '"This weekend", "this morning": no preposition'],
     [/\b(spend|spends|spent|spending|waste|wastes|wasted|wasting) (time|money|hours|days|years|a lot of time|too much time|much time|the whole day|all day|my time|their time|his time|her time|our time) (to|for) ([a-z]+ing)\b/gi, '$1 $2 $4', '"Spend time doing": no "to"'],
-    [/\b(consist|consists|consisted|consisting) (in|from|on)\b/gi, '$1 of', '"Consist of"'],
+    /* 7.43: "consist in" is a formal English idiom ("consist in the application of") */
+    [/\b(consist|consists|consisted|consisting) (from|on)\b/gi, '$1 of', '"Consist of"'],
     [/\b(prefer|prefers|preferred) (\w+) (than|over|to) (\w+)/gi, (m, v, a, p, b) => lc(p) === 'to' ? m : v + ' ' + a + ' to ' + b, '"Prefer X to Y"'],
     [/\b(graduat(?:e|es|ed|ing)) (the|a|an|my|our|his|her|their|your|this|that) (school|university|college|high school)\b/gi, '$1 from $2 $3', '"Graduate from"'],
     [/\bcongratulat(e|es|ed|ing) (you|him|her|them|me|us) for\b/gi, 'congratulat$1 $2 on', '"Congratulate someone on"'],
@@ -487,6 +567,10 @@
         re.lastIndex = li;
         if (!fix || fix === m[0]) continue;
         if (m.index > 0 && /[A-Za-z'’-]/.test(t[m.index - 1])) continue;
+        /* 7.43: "range from 18 weeks"; "the answer to this question" is the noun */
+        const before = t.slice(Math.max(0, m.index - 30), m.index);
+        if (/length of time/.test(why) && /^from/i.test(m[0]) && /\b(rang(e|es|ed|ing)|var(y|ies|ied|ying)|anywhere)\s+$/i.test(before)) continue;
+        if (/Answer the question/.test(why) && !/\b(i|you|we|they|he|she|it|to|can|could|will|would|should|must|did|didn't|don't|doesn't|not|please)\s+$/i.test(before)) continue;
         out.push({ start: m.index, end: m.index + m[0].length, fix: caseLike(m[0], fix), why: why, cat: 'g', fam: 'prep' });
       }
     }
@@ -501,7 +585,7 @@
     ['themself', 'themselves'], ['theirself', 'themselves'], ['theirselves', 'themselves'], ['hisself', 'himself'], ['ourself', 'ourselves'], ['yourselfs', 'yourselves'], ['alsways', 'always'],
     ['everytime', 'every time'], ['sometime', null], ['maybe', null], ['cannot', null], ['whereever', 'wherever'], ['whatever', null]
   ];
-  const ORTH_SPLIT = [[/\ba (lot|bit|few|little) (?=[a-z])/gi, null], [/\bevery (one|body|thing|where)\b/gi, (m, x) => x === 'one' ? null : 'every' + x], [/\bsome (thing|one|where|times|body)\b/gi, (m, x) => 'some' + x], [/\bany (thing|one|where|body|more)\b/gi, (m, x) => 'any' + x], [/\bno (body|where)\b/gi, (m, x) => 'no' + x], [/\bnow a days\b/gi, 'nowadays'], [/\bnow days\b/gi, 'nowadays'], [/\bwhere as\b/gi, 'whereas'], [/\bmean while\b/gi, 'meanwhile'], [/\bfurther more\b/gi, 'furthermore'], [/\bmore over\b/gi, 'moreover'], [/\bhow ever\b/gi, 'however'], [/\bthem selves\b/gi, 'themselves'], [/\bour selves\b/gi, 'ourselves'], [/\bmy self\b/gi, 'myself'], [/\byour self\b/gi, 'yourself'], [/\bhim self\b/gi, 'himself'], [/\bher self\b/gi, 'herself'], [/\bit self\b/gi, 'itself'], [/\bwith out\b/gi, 'without'], [/\bwith in\b(?= (the|a|an|this|that|these|those|my|our|their|his|her|its|your|\d))/gi, 'within'], [/\bin to\b(?= (the|a|an|this|that|these|those|my|our|their|his|her|its|your|account|consideration|effect|practice))/gi, 'into'], [/\bon to\b(?= (the|a|an|this|that|my|our|their|his|her|its|your))/gi, 'onto'], [/\bcan not\b(?! only| just| but| even)/gi, 'cannot'], [/\bweek end\b/gi, 'weekend'], [/\bweek ends\b/gi, 'weekends'], [/\bbirth day\b/gi, 'birthday'], [/\bback ground\b/gi, 'background'], [/\bfeed back\b/gi, 'feedback'], [/\bhome work\b/gi, 'homework'], [/\bevery where\b/gi, 'everywhere'], [/\bany where\b/gi, 'anywhere'], [/\bno where\b/gi, 'nowhere'], [/\bsome where\b/gi, 'somewhere'], [/\blife style\b/gi, 'lifestyle'], [/\bgirl friend\b/gi, 'girlfriend'], [/\bboy friend\b/gi, 'boyfriend'], [/\bteen ager(s?)\b/gi, 'teenager$1'], [/\bair port\b/gi, 'airport'], [/\bweb site(s?)\b/g, 'website$1'], [/\bon line\b(?= (shopping|course|courses|games|game|shop|store|learning|banking|business|services|service|classes|class|education|platform|platforms|community|communities))/gi, 'online'], [/\bsmart phone(s?)\b/gi, 'smartphone$1'], [/\bgrand (mother|father|parents|children|son|daughter)\b/gi, 'grand$1'], [/\bstep (mother|father)\b/gi, 'step$1'], [/\bmother in law\b/gi, 'mother-in-law'], [/\bfather in law\b/gi, 'father-in-law'], [/\bwell known\b(?= [a-z])/gi, null], [/\bfull time (job|jobs|work|worker|workers|student|students|employee|employees|position|positions)\b/gi, 'full-time $1'], [/\bpart time (job|jobs|work|worker|workers|student|students|employee|employees|position|positions)\b/gi, 'part-time $1'], [/\bself (esteem|confidence|control|discipline|respect|employed|employment|service|study|awareness|development|improvement)\b/gi, 'self-$1'], [/\bco (workers?|operation|operate)\b/gi, 'co-$1'], [/\bnon (smoker|smokers|smoking|profit|stop|existent|sense)\b/gi, 'non-$1'], [/\bwell being\b/gi, 'well-being'], [/\bup to date\b(?= (information|technology|news|data|knowledge|equipment|version|software))/gi, 'up-to-date'], [/\bday to day\b(?= (life|basis|activities|work|tasks|operations|routine))/gi, 'day-to-day'], [/\blong term\b(?= (effects?|goals?|plans?|benefits?|consequences?|solutions?|investments?|relationships?|memory|impact|success|health|care|strategy|growth|damage|problems?|project|contract|basis))/gi, 'long-term'], [/\bshort term\b(?= (effects?|goals?|plans?|benefits?|consequences?|solutions?|memory|impact|contract|basis|loans?|gains?|profits?|measures?))/gi, 'short-term'], [/\bold fashioned\b/gi, 'old-fashioned'], [/\bwell paid\b(?= (job|jobs|work|position|positions|employees|workers))/gi, 'well-paid'], [/\bso called\b/gi, 'so-called'], [/\bmiddle aged\b/gi, 'middle-aged'], [/\bopen minded\b/gi, 'open-minded'], [/\bhard working\b/gi, 'hard-working'], [/\btime consuming\b/gi, 'time-consuming'], [/\bhigh tech\b/gi, 'high-tech'], [/\bface to face\b(?= (communication|contact|conversation|conversations|meeting|meetings|interaction|interactions|lessons|classes|teaching|learning|interview|interviews))/gi, 'face-to-face'], [/\bone way\b(?= (ticket|street|trip|road))/gi, 'one-way'], [/\b(a|an|the|my|our|his|her|their|this|that) (\d+) (year|month|week|day|hour|minute) old\b/gi, '$1 $2-$3-old'], [/\b(\d+|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty) (year|month|week|day|hour|minute|mile|kilometre|kilometer|metre|meter|inch|foot|pound|dollar|star|bedroom|storey|story|page|seat|person|man|piece|point|word|item|wheel) (old|long|high|wide|deep|tall|thick|heavy)\b(?= (boy|girl|man|woman|child|son|daughter|student|car|house|building|wall|road|river|bridge|hotel|flight|journey|trip|walk|course|programme|program|project|plan|contract|period|wait|delay|drive|ride))/gi, '$1-$2-$3']];
+  const ORTH_SPLIT = [[/\ba (lot|bit|few|little) (?=[a-z])/gi, null], [/\bevery (one|body|thing|where)\b/gi, (m, x) => x === 'one' ? null : 'every' + x], [/\bsome (thing|one|where|times|body)\b/gi, (m, x) => 'some' + x], [/\bany (thing|one|where|body|more)\b/gi, (m, x) => x === 'one' ? null : 'any' + x], [/\bno (body|where)\b/gi, (m, x) => 'no' + x], [/\bnow a days\b/gi, 'nowadays'], [/\bnow days\b/gi, 'nowadays'], [/\bwhere as\b/gi, 'whereas'], [/\bmean while\b/gi, 'meanwhile'], [/\bfurther more\b/gi, 'furthermore'], [/\bmore over\b/gi, 'moreover'], [/\bhow ever\b/gi, 'however'], [/\bthem selves\b/gi, 'themselves'], [/\bour selves\b/gi, 'ourselves'], [/\bmy self\b/gi, 'myself'], [/\byour self\b/gi, 'yourself'], [/\bhim self\b/gi, 'himself'], [/\bher self\b/gi, 'herself'], [/\bit self\b/gi, 'itself'], [/\bwith out\b/gi, 'without'], [/\bwith in\b(?= (the|a|an|this|that|these|those|my|our|their|his|her|its|your|\d))/gi, 'within'], [/\bin to\b(?= (the|a|an|this|that|these|those|my|our|their|his|her|its|your|account|consideration|effect|practice))/gi, 'into'], [/\bon to\b(?= (the|a|an|this|that|my|our|their|his|her|its|your))/gi, 'onto'], [/\bcan not\b(?! only| just| but| even)/gi, 'cannot'], [/\bweek end\b/gi, 'weekend'], [/\bweek ends\b/gi, 'weekends'], [/\bbirth day\b/gi, 'birthday'], [/\bback ground\b/gi, 'background'], [/\bfeed back\b/gi, 'feedback'], [/\bhome work\b/gi, 'homework'], [/\bevery where\b/gi, 'everywhere'], [/\bany where\b/gi, 'anywhere'], [/\bno where\b/gi, 'nowhere'], [/\bsome where\b/gi, 'somewhere'], [/\blife style\b/gi, 'lifestyle'], [/\bgirl friend\b/gi, 'girlfriend'], [/\bboy friend\b/gi, 'boyfriend'], [/\bteen ager(s?)\b/gi, 'teenager$1'], [/\bair port\b/gi, 'airport'], [/\bweb site(s?)\b/g, 'website$1'], [/\bon line\b(?= (shopping|course|courses|games|game|shop|store|learning|banking|business|services|service|classes|class|education|platform|platforms|community|communities))/gi, 'online'], [/\bsmart phone(s?)\b/gi, 'smartphone$1'], [/\bgrand (mother|father|parents|children|son|daughter)\b/gi, 'grand$1'], [/\bstep (mother|father)\b/gi, 'step$1'], [/\bmother in law\b/gi, 'mother-in-law'], [/\bfather in law\b/gi, 'father-in-law'], [/\bwell known\b(?= [a-z])/gi, null], [/\bfull time (job|jobs|work|worker|workers|student|students|employee|employees|position|positions)\b/gi, 'full-time $1'], [/\bpart time (job|jobs|work|worker|workers|student|students|employee|employees|position|positions)\b/gi, 'part-time $1'], [/\bself (esteem|confidence|control|discipline|respect|employed|employment|service|study|awareness|development|improvement)\b/gi, 'self-$1'], [/\bco (workers?|operation|operate)\b/gi, 'co-$1'], [/\bnon (smoker|smokers|smoking|profit|stop|existent|sense)\b/gi, 'non-$1'], [/\bwell being\b/gi, 'well-being'], [/\bup to date\b(?= (information|technology|news|data|knowledge|equipment|version|software))/gi, 'up-to-date'], [/\bday to day\b(?= (life|basis|activities|work|tasks|operations|routine))/gi, 'day-to-day'], [/\blong term\b(?= (effects?|goals?|plans?|benefits?|consequences?|solutions?|investments?|relationships?|memory|impact|success|health|care|strategy|growth|damage|problems?|project|contract|basis))/gi, 'long-term'], [/\bshort term\b(?= (effects?|goals?|plans?|benefits?|consequences?|solutions?|memory|impact|contract|basis|loans?|gains?|profits?|measures?))/gi, 'short-term'], [/\bold fashioned\b/gi, 'old-fashioned'], [/\bwell paid\b(?= (job|jobs|work|position|positions|employees|workers))/gi, 'well-paid'], [/\bso called\b/gi, 'so-called'], [/\bmiddle aged\b/gi, 'middle-aged'], [/\bopen minded\b/gi, 'open-minded'], [/\bhard working\b/gi, 'hard-working'], [/\btime consuming\b/gi, 'time-consuming'], [/\bhigh tech\b/gi, 'high-tech'], [/\bface to face\b(?= (communication|contact|conversation|conversations|meeting|meetings|interaction|interactions|lessons|classes|teaching|learning|interview|interviews))/gi, 'face-to-face'], [/\bone way\b(?= (ticket|street|trip|road))/gi, 'one-way'], [/\b(a|an|the|my|our|his|her|their|this|that) (\d+) (year|month|week|day|hour|minute) old\b/gi, '$1 $2-$3-old'], [/\b(\d+|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|forty|fifty) (year|month|week|day|hour|minute|mile|kilometre|kilometer|metre|meter|inch|foot|pound|dollar|star|bedroom|storey|story|page|seat|person|man|piece|point|word|item|wheel) (old|long|high|wide|deep|tall|thick|heavy)\b(?= (boy|girl|man|woman|child|son|daughter|student|car|house|building|wall|road|river|bridge|hotel|flight|journey|trip|walk|course|programme|program|project|plan|contract|period|wait|delay|drive|ride))/gi, '$1-$2-$3']];
   function orth(t, ws, out) {
     for (const w of ws) {
       const l = lc(w.w);
@@ -516,6 +600,7 @@
         re.lastIndex = li;
         if (!fix || fix === m[0]) continue;
         if (m.index > 0 && /[A-Za-z'’-]/.test(t[m.index - 1])) continue;
+        if (t[m.index + m[0].length] === '-') continue;              /* 7.43: "her self-perception" */
         out.push({ start: m.index, end: m.index + m[0].length, fix: caseLike(m[0], fix), why: '"' + fix + '" is one word', cat: 'g', fam: 'orth' });
       }
     }
