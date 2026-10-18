@@ -1,28 +1,28 @@
-INKWELL 7.44 FOR WINDOWS
+INKWELL 7.45 FOR WINDOWS
 ========================
 
-This zip brings Inkwell 7.44 to the Inkwell already installed on your
+This zip brings Inkwell 7.45 to the Inkwell already installed on your
 Windows computer (from Inkwell-7.37-Windows-Setup.exe). There is no new
 installer this time: GitHub Actions, which builds the Windows installer, has
 not started since 10 October. The installed program always opens the newest
-Inkwell page it finds in its own folder, so 7.44 is one folder dropped in.
+Inkwell page it finds in its own folder, so 7.45 is one folder dropped in.
 
 INSTALL (ABOUT A MINUTE)
 ------------------------
 1. Close Inkwell if it is open.
 2. Unzip: right-click the zip, Extract All, Extract. A window opens with the
-   folder "Inkwell 7.44 page" in it.
+   folder "Inkwell 7.45 page" in it.
 3. Open Inkwell's own folder: click the address bar at the top of a File
    Explorer window, type   %LOCALAPPDATA%\Programs\Inkwell   and press Enter.
    You should see Inkwell.exe there.
-4. Drag the folder "Inkwell 7.44 page" into that window.
+4. Drag the folder "Inkwell 7.45 page" into that window.
    If an older folder such as "Inkwell 7.40 page" is there, you can delete
    it: Inkwell always opens the newest page.
-5. Open Inkwell from the Start menu as usual. Look for "v7.44" beside the
+5. Open Inkwell from the Start menu as usual. Look for "v7.45" beside the
    date at the top.
 
 Your documents, the Start menu entry and the uninstaller stay as they are.
-To go back to 7.37, delete the folder "Inkwell 7.44 page" from Inkwell's
+To go back to 7.37, delete the folder "Inkwell 7.45 page" from Inkwell's
 folder.
 
 If Inkwell is not installed on this computer yet: install
@@ -36,6 +36,30 @@ On the Mac mini: Studio, Engine, "Share with my other devices on this
 Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
+
+NEW IN 7.45
+-----------
+- The checks a doctoral editor makes, on the whole document, short or
+  long: -ise beside -ize (both are British; -ize is Oxford spelling); an
+  abbreviation used before it is spelled out, spelled out and never used
+  again, or spelled out twice; a citation with no entry in the References,
+  a year that disagrees, an entry nobody cites, and the list out of
+  alphabetical order; the small marks of citations kept one way; a
+  quotation with no page; quotation marks, apostrophes, per cent,
+  ellipses, dashes and "e.g.," each written one way; headings, figures,
+  tables and chapters numbered in order, and no "see Figure 5" when there
+  is no Figure 5.
+- Chicago notes at thesis length: placing a footnote takes about a third
+  of a second (it took three and a half), and renumbering under a second.
+  A note marker followed by a colon now renumbers too. No correction ever
+  takes a note marker with it.
+- Tabula: a long paragraph runs on to the next page, as in Word, so no
+  blank gap is left at the foot of a page.
+- British English no longer marks Oxford spelling ("organize") as
+  American. The names in your References are known to the spelling check.
+- In Safari: the tab's seal follows dark mode, and where the browser has no
+  WebGPU the writing model can now run on the processor (slowly; the
+  Engine panel says how slowly before you choose it).
 
 NEW IN 7.44
 -----------

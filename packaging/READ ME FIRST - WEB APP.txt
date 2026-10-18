@@ -1,9 +1,9 @@
-INKWELL 7.44: THE WEB APP
+INKWELL 7.45: THE WEB APP
 =========================
 
 WHAT IS IN THIS PACKAGE
 -----------------------
-Unzipping this package gives one folder, "Inkwell_Web_App_v7p44". That
+Unzipping this package gives one folder, "Inkwell_Web_App_v7p45". That
 folder IS the finished web site: index.html is at its top, beside sw.js, the
 manifest, and the icons and vendor folders. There is nothing to build and no
 GitHub Actions is needed. No file in it is larger than 9 MB.
@@ -20,11 +20,11 @@ A. Netlify (free, and the simplest)
    1. On a computer, open  https://app.netlify.com/drop  in a browser and
       log in (free). A site dropped without an account is kept behind a
       temporary password until it is claimed.
-   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p44" onto the
+   2. Unzip this package. Drag the folder "Inkwell_Web_App_v7p45" onto the
       page. Drag the FOLDER, not the .zip file: Netlify asks for the
       unzipped folder.
    3. Netlify shows the address, ending in .netlify.app. Keep it. Open it:
-      Inkwell should appear, with "v7.44" beside the date at the top.
+      Inkwell should appear, with "v7.45" beside the date at the top.
    Netlify's guidance is that a drop works best under 50 MB; this site is
    about 66 MB, most of it the files for the optional models. If the drop
    stalls, try once more on a steady connection, or use B.
@@ -32,7 +32,7 @@ A. Netlify (free, and the simplest)
 B. GitHub Pages (free for a PUBLIC repository)
    1. github.com, "+", New repository, for example inkwell-site. Choose
       Public. Create repository.
-   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p44"
+   2. "uploading an existing file": open the folder "Inkwell_Web_App_v7p45"
       and drag in EVERYTHING INSIDE it (index.html, sw.js,
       manifest.webmanifest, and the icons and vendor folders). Commit.
    3. Settings, Pages. Source: "Deploy from a branch". Branch: main, folder
@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.44" beside the date at the top.
+Look for "v7.45" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,30 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.45
+-----------
+- The checks a doctoral editor makes, on the whole document, short or
+  long: -ise beside -ize (both are British; -ize is Oxford spelling); an
+  abbreviation used before it is spelled out, spelled out and never used
+  again, or spelled out twice; a citation with no entry in the References,
+  a year that disagrees, an entry nobody cites, and the list out of
+  alphabetical order; the small marks of citations kept one way; a
+  quotation with no page; quotation marks, apostrophes, per cent,
+  ellipses, dashes and "e.g.," each written one way; headings, figures,
+  tables and chapters numbered in order, and no "see Figure 5" when there
+  is no Figure 5.
+- Chicago notes at thesis length: placing a footnote takes about a third
+  of a second (it took three and a half), and renumbering under a second.
+  A note marker followed by a colon now renumbers too. No correction ever
+  takes a note marker with it.
+- Tabula: a long paragraph runs on to the next page, as in Word, so no
+  blank gap is left at the foot of a page.
+- British English no longer marks Oxford spelling ("organize") as
+  American. The names in your References are known to the spelling check.
+- In Safari: the tab's seal follows dark mode, and where the browser has no
+  WebGPU the writing model can now run on the processor (slowly; the
+  Engine panel says how slowly before you choose it).
 
 NEW IN 7.44
 -----------

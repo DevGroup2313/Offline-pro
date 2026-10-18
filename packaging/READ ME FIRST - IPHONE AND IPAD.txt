@@ -1,11 +1,11 @@
-INKWELL 7.44 FOR IPHONE AND IPAD
+INKWELL 7.45 FOR IPHONE AND IPAD
 ================================
 
 TWO WAYS TO HAVE INKWELL ON AN IPHONE OR IPAD
 - TODAY: the web app, added to the Home Screen. Nothing to install; it opens
   like an app and works offline after the first visit.
 - LATER: the iPhone and iPad app (.ipa). GitHub builds it on one of its
-  Macs, and GitHub Actions has not started since 10 October, so no 7.44 .ipa
+  Macs, and GitHub Actions has not started since 10 October, so no 7.45 .ipa
   can be made yet. Its steps follow below, for when it works again. The app
   can use the Mac mini's model; the web app cannot (Safari does not let a
   secure web page call a computer on the home network).
@@ -19,7 +19,7 @@ TODAY: THE WEB APP ON THE HOME SCREEN
 2. On the iPhone or iPad, open that address in Safari.
 3. Share, "Add to Home Screen", Add.
 4. Open Inkwell from the Home Screen once while online, so it keeps its
-   files for offline use. Look for "v7.44" beside the date.
+   files for offline use. Look for "v7.45" beside the date.
 - Updating later: when the site is updated on Netlify, open Inkwell from the
   Home Screen while online; the new version shows at the first or second
   opening.
@@ -29,6 +29,30 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   copy on another device is wise for long work: File, Move the library to
   another device.
 
+
+NEW IN 7.45
+-----------
+- The checks a doctoral editor makes, on the whole document, short or
+  long: -ise beside -ize (both are British; -ize is Oxford spelling); an
+  abbreviation used before it is spelled out, spelled out and never used
+  again, or spelled out twice; a citation with no entry in the References,
+  a year that disagrees, an entry nobody cites, and the list out of
+  alphabetical order; the small marks of citations kept one way; a
+  quotation with no page; quotation marks, apostrophes, per cent,
+  ellipses, dashes and "e.g.," each written one way; headings, figures,
+  tables and chapters numbered in order, and no "see Figure 5" when there
+  is no Figure 5.
+- Chicago notes at thesis length: placing a footnote takes about a third
+  of a second (it took three and a half), and renumbering under a second.
+  A note marker followed by a colon now renumbers too. No correction ever
+  takes a note marker with it.
+- Tabula: a long paragraph runs on to the next page, as in Word, so no
+  blank gap is left at the foot of a page.
+- British English no longer marks Oxford spelling ("organize") as
+  American. The names in your References are known to the spelling check.
+- In Safari: the tab's seal follows dark mode, and where the browser has no
+  WebGPU the writing model can now run on the processor (slowly; the
+  Engine panel says how slowly before you choose it).
 
 NEW IN 7.44
 -----------

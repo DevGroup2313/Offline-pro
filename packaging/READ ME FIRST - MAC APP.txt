@@ -1,4 +1,4 @@
-INKWELL 7.44 FOR MAC: THE READY-MADE APP
+INKWELL 7.45 FOR MAC: THE READY-MADE APP
 ========================================
 
 This zip holds Inkwell.app, ready to use. There is nothing to build, no
@@ -6,8 +6,8 @@ Terminal, and no disk image, so no disk icon stays on your Desktop.
 
 WHICH ZIP
 ---------
-  Inkwell-7.44-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
-  Inkwell-7.44-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
+  Inkwell-7.45-Mac-Intel.zip          Intel Macs (the 2019 MacBook Pro)
+  Inkwell-7.45-Mac-AppleSilicon.zip   M1, M2, M3, M4 and later (the Mac mini)
 To check: Apple menu, About This Mac. "Chip: Apple M..." is Apple Silicon.
 "Processor: ... Intel" is Intel.
 
@@ -20,7 +20,7 @@ INSTALL OR UPDATE
    documents are not inside the app, so they stay where they are
    (~/Library/Application Support/Inkwell).
 4. Open Inkwell from Applications, not from the Downloads folder.
-5. Look for "v7.44" beside the date at the top.
+5. Look for "v7.45" beside the date at the top.
 
 THE FIRST OPENING
 -----------------
@@ -52,6 +52,30 @@ On the Fire tablet: Engine, "Your computer's model".
 Enter the address and the code. The pill at the top then names the Mac
 mini's model. If it says "computer linked, no model loaded", load a model on
 the Mac mini first (Engine there).
+
+NEW IN 7.45
+-----------
+- The checks a doctoral editor makes, on the whole document, short or
+  long: -ise beside -ize (both are British; -ize is Oxford spelling); an
+  abbreviation used before it is spelled out, spelled out and never used
+  again, or spelled out twice; a citation with no entry in the References,
+  a year that disagrees, an entry nobody cites, and the list out of
+  alphabetical order; the small marks of citations kept one way; a
+  quotation with no page; quotation marks, apostrophes, per cent,
+  ellipses, dashes and "e.g.," each written one way; headings, figures,
+  tables and chapters numbered in order, and no "see Figure 5" when there
+  is no Figure 5.
+- Chicago notes at thesis length: placing a footnote takes about a third
+  of a second (it took three and a half), and renumbering under a second.
+  A note marker followed by a colon now renumbers too. No correction ever
+  takes a note marker with it.
+- Tabula: a long paragraph runs on to the next page, as in Word, so no
+  blank gap is left at the foot of a page.
+- British English no longer marks Oxford spelling ("organize") as
+  American. The names in your References are known to the spelling check.
+- In Safari: the tab's seal follows dark mode, and where the browser has no
+  WebGPU the writing model can now run on the processor (slowly; the
+  Engine panel says how slowly before you choose it).
 
 NEW IN 7.44
 -----------

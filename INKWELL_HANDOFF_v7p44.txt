@@ -51,79 +51,17 @@ WHAT IS IN 7.44 SO FAR
 4. The build lets a room take shared scripts (@@LIB_NAME@@ in a room).
    Clepsydra gains inkClep.state for Gentle time (marked in its header).
 
-AFTER THE 7.44 RELEASE (for 7.45)
----------------------------------
-5. GAP1, Tabula's pages (committed f92c416): a paragraph runs on to the
-   next page as in Word, so a long paragraph no longer leaves a blank gap at
-   the foot of a page. A style rule shapes each paragraph's lines around the
-   page break; the document is never touched. 100,000 words: 272 pages (306
-   before), laid out in about 0.3 s; page breaks and section breaks kept.
-6. G3c, the checks a doctoral editor makes (src/lib/dphil_core.js,
-   INKDPHIL; tools/dphil/dphil_test.js, 94). They read the whole document
-   once, short or long, and add notes where no other note stands:
-   - -ise beside -ize (both British; -ize is Oxford spelling), names spared;
-   - an abbreviation used before it is spelled out, spelled out and never
-     used again, or spelled out twice in one chapter;
-   - a citation with no entry in the References, a year that disagrees, an
-     entry of a References list cited nowhere (not a Bibliography), the
-     list out of alphabetical order;
-   - the citations' small marks one way: "(Smith, 2019)" or "(Smith 2019)",
-     "p. 4", ": 4" or ", 4", "&" or "and";
-   - a quotation of a sentence or more with no page;
-   - quotation marks and apostrophes, per cent, ellipses, dashes, "e.g.,":
-     each written one way;
-   - headings, figures and tables numbered in order; "see Figure 5" past
-     the last figure; "see Chapter 7" in a thesis of six chapters;
-     "Figure 2" beside "figure 2".
-   Casual writing gets none; creative writing only the marks. Measured on
-   the 40 published articles, the thesis sample and the 100,000-word thesis
-   (read note by note; false alarms found and removed: "expertise",
-   official names such as the World Health Organization, quoted titles
-   before a year, the chapters of a book under discussion, titles and TV
-   series before a year). About 30 ms for the 100,000 words.
-   Also: the British pack no longer marks Oxford -ize as American ("analyze"
-   still is); names in the document's own References are known to the
-   spelling check ("Toombs" was offered "Tombs"). Shown, not yet committed:
-   a note that changes nothing no longer strikes its words out, and these
-   notes carry their own tag (citations, abbreviations, numbering,
-   spelling, consistency).
-7. CITE1, first part: Chicago notes at thesis length. Measured on the
-   100,000-word thesis with 998 notes (Chicago full notes, short notes,
-   Ibid., a Bibliography):
-   - placing a footnote took 3.5 s, now 0.3 s; renumbering 3.2 s, now
-     0.7 s. The page layout keeps every page whose text is unchanged,
-     wherever it now begins (until now every page between the marker and
-     its note was measured again), and a page whose text changed only in
-     its figures is measured at its old fit; the pages are the same as a
-     fresh layout after each kind of edit (368 pages compared).
-   - a long document is checked a paragraph at a time with its markers
-     taken out, and each note is a paragraph of its own, so a new number
-     sends nothing to be checked again; a correction never takes a marker
-     with it.
-   - a marker followed by a colon in the text ("three reasons[^4]: first")
-     was read as a note's definition and kept its old number on renumbering;
-     fixed.
-   - no false notes left in the Notes and the Bibliography (there were
-     three: "2nd rev. ed." read as a sentence end, the Notes counted as one
-     paragraph of 7,004 words, and 118 author names in notes marked as
-     misspelt once each note was read alone).
-   - the offline rewrites keep every marker (64 versions of four passages
-     with markers); the model's rewrites already pass the fact guard, which
-     counts markers.
-   Not yet: writing a note beside its marker (now the cursor goes to the
-   Notes at the end), which is a design to show first. The first check of
-   a whole thesis, in the background, takes about 40 s here.
+AFTER THE 7.44 RELEASE
+----------------------
+See INKWELL_HANDOFF_v7p45.txt.
 
 NOT DONE YET
 ------------
-- BIG3 (a paragraph, a section or the whole document corrected and
-  rewritten, change by change), CITE1 (citations and Chicago notes at
-  thesis scale).
-- Version numbers are still 7.43 until the release.
+- See INKWELL_HANDOFF_v7p45.txt.
 - Tested in Chromium only here; Safari and Firefox not run.
 
 TESTS
 -----
 run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
 refine_test.js 83, learner_test.js 160, spell_test.js 94, mark_test.js 26,
-find_test.js 23, myway_test.js 21, dphil_test.js 94; the browser regression.
+find_test.js 23, myway_test.js 21; the browser regression.
