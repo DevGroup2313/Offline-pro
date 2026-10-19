@@ -30,6 +30,30 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   another device.
 
 
+NEW IN 7.49
+-----------
+- Your own dictionary. A word Inkwell does not know (a rare word, a less
+  common spelling, a name) offers "+ Add" instead of being marked again
+  and again. Added words are known in every document. Studio, Rules, Your
+  dictionary lists them and removes one. A note you set aside stays set
+  aside; "Show them again" brings the notes back.
+- One way throughout the document: when a word is capitalised, hyphenated
+  or spelled two ways (or quotation marks, apostrophes, dashes, ellipses,
+  number ranges, thousands or units are written two ways), Inkwell offers
+  the form you use most.
+- Sentence checks with a fix: comma splices; a capital at the head of a
+  sentence; days, months, peoples, languages and places.
+- Without a model: Coach, Grade against a rubric marks the page, and you
+  can mark yourself beside it. Draft with me asks a few questions and joins
+  your answers into prose. Instruments, Your patterns shows the slips you
+  make most, with practice from your own sentences.
+- Performance (click the word count in the footer): counts, reading and
+  speaking times, readability. The legend above the suggestions filters
+  them by kind. Inclusive language notes offer alternatives.
+- Every button, card and tab lifts when you point at it and sinks when you
+  press it. The saved time and the fold button sit in the footer's right
+  corner. See INKWELL_HANDOFF_v7p49.txt.
+
 NEW IN 7.48
 -----------
 - Footnotes as Word shows them, on the desk and in Tabula: a small raised

@@ -1,0 +1,153 @@
+INKWELL v7.49: HANDOFF NOTES
+============================
+Date: 19 October 2026. Read INKWELL_HANDOFF_v7p48.txt and the earlier notes
+for everything before 7.49.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on. The word counts
+from published English used in the research below are not in it either.
+
+WHY 7.49
+--------
+The writer asked for Grammarly's offline features, with no model, and more:
+a personal dictionary that takes rare words, less common spellings and
+names instead of marking them again and again; capitals and symbols kept
+one way through a document; and the other features seen in Grammarly's
+screens (goals, performance, a filter by kind, drafting and grading). Then,
+after seeing 7.49 on the screen: the saved time and the footer's fold
+button in the footer's right corner; the chosen filter chip legible by
+night, with the same face as its neighbours; and every button and card
+lifting and sinking like the rest. The writer approved the designs shown.
+
+WHAT CHANGED
+------------
+1. Sentence checks (src/inkwell.html, the rules engine).
+   - A comma splice offers its fix (a full stop and a capital) and names
+     the semicolon and a joining word. An opening clause ("Even when you
+     can, it"), a relative aside, "that is" and a conditional inside the
+     clause are not taken for splices. On 40 published articles: 26 marks
+     before, 6 after, all six true splices.
+   - A capital at the head of a sentence, after ! and ?, and at a
+     paragraph's start; a line that carries on the one before (verse, a
+     list after a colon), titles, a word with an inner capital and an
+     abbreviation are left alone.
+   - Days and months carry their capital as the fix; "march", "may" and
+     "august" only where they stand as a date. Peoples, languages, places
+     and feasts in lowercase are capitalised ("arabic numerals" and "french
+     fries" left alone). "tv" becomes "TV".
+   - tools/grammar/sentence_test.mjs: 24 cases in the built page (copy it
+     to a folder where the playwright package resolves; INKWELL_ROOT names
+     the repository).
+2. Grade and draft without a model.
+   - Grade (src/lib/grade_core.js, INKGRADE; Coach, Grade against a
+     rubric): each rubric line is read for what it asks and marked 1 to 5
+     from what can be counted on the page (paragraphs and their openings,
+     signposts, a stated position, reasons, objections weighed, citations,
+     quotations, figures, examples, the introduction and the conclusion;
+     clarity, vocabulary and register from INKMARK), with what was counted,
+     "Show me" and one way to raise it. A line that cannot be counted
+     becomes a question the writer answers with a mark of their own. The
+     writing model is a choice, not the default. The rubric persists.
+   - Draft with me (src/lib/draft_core.js, INKDRAFT; the Draft button): an
+     argument paragraph, an introduction, a conclusion, an email or a
+     summary of a source, built from the writer's answers to a few
+     questions; Inkwell adds only the joining words, by register. With a
+     writing model loaded, "Ask the writing model instead" opens the old
+     drafting (composeModel).
+   - Your patterns (Instruments): the list showed a pattern's first letter
+     as its name; it shows the name and the number. Accepted fixes keep
+     the writer's own sentence (six to a pattern), and "Practise with your
+     own sentences" asks for the mend.
+3. Your own dictionary and notes that stay dismissed.
+   - "+ Add" on a row for a word the checker does not know (shown when the
+     row has no fix), and "Add to dictionary" on every mark about a word.
+     Studio, Rules, Your dictionary takes typed words and removes one. The
+     writer's words join the checker (INKSPELL.addWords, dropWord) and are
+     offered as the correction of their slips ("Gadamar" to "Gadamer").
+   - The rule cache keys on the dictionary (an added word was still marked
+     by the cached consistency check).
+   - A dismissed note stays dismissed in its document (kept by its kind,
+     its words and the words round it, in S.dismissed); Studio, Rules can
+     show them again.
+4. One way throughout (src/lib/consist_core.js, INKCONSIST): a term's
+   capitals and hyphen, quotation marks, apostrophes, dashes, ellipses,
+   number ranges, large numbers and a unit's space, each marked where the
+   document departs from the way it uses most (two thirds of the uses at
+   least), with that way as the fix. Names, titles, headings and references
+   are not counted; a common word is never raised to a capital. A document
+   that mixes US and British spellings is fixed to the one it uses most.
+   On 40 published articles: about 90 marks. 100,000 words in about
+   0.25 s. No lookbehind in the patterns, so older Safari loads the page.
+   The serial comma was tried and left out (most of its marks on published
+   articles were not lists).
+5. Performance, a filter by kind, inclusive language.
+   - Performance (click the word count in the footer, or Studio):
+     characters, words, sentences, paragraphs, reading and speaking time
+     (250 and 130 words a minute), word and sentence length beside the
+     medians of 40 open-access articles and 50 native student essays,
+     Flesch reading ease and the Flesch-Kincaid grade in plain words, the
+     share of different and rare words, the writing mark; saved as a text
+     file.
+   - The legend above the suggestions filters the list a kind at a time,
+     with All to go back (INK_CATF).
+   - Inclusive language (the INCL pack, style notes, never in a quotation,
+     not in creative writing), each with a fix or alternatives, its reason
+     and a lesson.
+6. The look.
+   - The saved time and the fold button sit in the footer's right corner
+     at every width (the saved time carries the push; the spacer that did
+     it, #stModel, is hidden).
+   - By night the chosen filter chip has the same face and colours as its
+     neighbours (white on light brass was hard to read); the chips keep to
+     one line each.
+   - Every control lifts with a deeper shadow on hover and sinks when
+     pressed. The bevel rule (button:not(.sn-iconbtn):not(.sn-tool))
+     outweighed the hover shadows and the pressed state of most buttons,
+     so they slid 2px and did not press. One rule of the same weight now
+     follows it (--popHov, --popPress); the physical primary buttons, the
+     seals, the tour, the menus and the door keep their own. The engine
+     pill, the Suggestions and Instruments tabs, document cards, outline
+     rows and suggestion rows lift and sink too; Correct and Draft rise
+     3px, brighten and press deeper. A touch listener lets Safari on
+     iPhone and iPad show the pressed state (WebKit shows :active only
+     when the page listens for touches). Checked with a forced-state probe
+     on every control of the desk, in day and night: all lift and press
+     but the two seals, which move by their own script.
+
+MEASURED (no model, against 7.48)
+---------------------------------
+Write & Improve tune F0.5 0.2415 to 0.262; report 0.238 to 0.2505;
+CoNLL-2014 0.2625, unchanged. Correct Wikipedia sentences changed: 64 to
+72 of 1,500 (report set). After the sentence rules alone it was 73, and
+eight of those nine new ones were rows that begin mid-sentence.
+
+TRIED AND LEFT OUT
+------------------
+- Prepositions, articles and commas chosen by word counts from published
+  English (trigrams, after Bryant and Briscoe 2018): precision 0.2 to 0.5
+  on the tuning set, too low to show a writer. Pruning the counts to a
+  size a page could carry lost what precision there was. The full counts
+  would be about 180 MB; a pack served by the laptop link is possible
+  later.
+- The serial comma (see 4).
+
+NOT DONE YET
+------------
+- Language variants beyond US and British (Canadian, Australian, Indian).
+- Goals asked for when a new document is opened (the register and Form
+  serve for now).
+- A plagiarism check needs the web; detecting text written by a model has
+  no honest offline method. Neither is offered.
+- From 7.48: corrections inside a note are not underlined at the page
+  foot; a long note is not continued on the next page; Tabula's find does
+  not look inside the notes at the page foot.
+
+TESTS
+-----
+run.js 322, explain_test.js 45, coach_test.js 38, para_test.js 44,
+refine_test.js 83, learner_test.js 160, spell_test.js 136, mark_test.js 26,
+find_test.js 23, myway_test.js 21, dphil_test.js 94, revise_test.js 20,
+grade_test.js 28, consist_test.js 24, sentence_test.mjs 24; the browser
+regression (every control on the desk pressed: 111, no problems).
