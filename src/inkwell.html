@@ -652,6 +652,7 @@ body[data-motion=minimal] button{box-shadow:none !important}
 .crow .cwhy{margin-left:auto;color:var(--mut);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%}
 .crow .cexp{color:var(--acc);font-size:13px;flex-shrink:0}
 .crow .cremove{flex-shrink:0;width:24px;height:24px;padding:0;font-size:11px;border-radius:50%;color:var(--mut);box-shadow:var(--sh-sm);margin-left:2px}
+.crow .cadd{flex-shrink:0;height:24px;padding:0 8px;font-size:11px;border-radius:12px;color:var(--gold);box-shadow:var(--sh-sm);margin-left:4px;white-space:nowrap}
 .crow .cremove:hover{color:var(--red);transform:none}
 /* the door: a real window. Dragged by its head, resized from every edge and corner */
 #door{position:fixed;inset:0;z-index:95;align-items:center;justify-content:center;background:#efe9dbb3;backdrop-filter:blur(12px) saturate(1.05);-webkit-backdrop-filter:blur(12px) saturate(1.05);transition:opacity .45s ease}
@@ -1806,6 +1807,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_MARK_CORE@@
 @@LIB_GRADE_CORE@@
 @@LIB_DRAFT_CORE@@
+@@LIB_CONSIST_CORE@@
 @@LIB_MYWAY_CORE@@
 @@LIB_ATKINSON_FONT@@
 @@LIB_DPHIL_CORE@@
@@ -2476,7 +2478,7 @@ stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,draftKind:LS('draftKind')||'paragraph',draftAns:LS('draftAns')||{},statEx:LS('statEx')||{},rubric:LS('rubric')||'',gradeBy:LS('gradeBy')||'inkwell',selfMarks:LS('selfMarks')||{},citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,writerKind:LS('writerKind')||'',tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,draftKind:LS('draftKind')||'paragraph',dismissed:LS('dismissed')||{},draftAns:LS('draftAns')||{},statEx:LS('statEx')||{},rubric:LS('rubric')||'',gradeBy:LS('gradeBy')||'inkwell',selfMarks:LS('selfMarks')||{},citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,writerKind:LS('writerKind')||'',tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -7406,7 +7408,7 @@ function dialectPack(){
     the doctoral checks. "Analyze" is American in every British style. */
  DIALCACHE[key]=DIALECT.filter(pair=>!(S.dialect==='uk'&&/ize$/.test(pair[0])&&/ise$/.test(pair[1]))).map(pair=>{
   const other=S.dialect==='us'?pair[1]:pair[0], want=S.dialect==='us'?pair[0]:pair[1];
-  return {re:new RegExp('\\b'+other+'(s|ed|ing|es)?\\b','gi'),to:want+'$1',cat:'g',
+  return {re:new RegExp('\\b'+other+'(s|ed|ing|es)?\\b','gi'),to:want+'$1',cat:'g',dict:true,
    label:(S.dialect==='us'?'British form; US English prefers':'US form; British English prefers')+' '+want};});
  if(S.dialect==='us')DIALCACHE[key]=DIALCACHE[key].concat([
   {re:/\bwhilst\b/gi,to:'while',cat:'g',label:'US English prefers "while"'},
@@ -7897,11 +7899,13 @@ function consistencyChecks(t,ms,out){
    if(cU&&cK&&cU+cK>=3){
     var minRe=cU<=cK?reU:reK,wantU=cU<=cK?us:uk,otherU=cU<=cK?uk:us;
     var mm,g=0;
+    if(inkDictHas(wantU))continue;
     while((mm=minRe.exec(t))&&g++<60){
      if(inMask(mm.index,ms)||isName(mm.index))continue;
      if(ovTaken(out,mm.index,mm.index+mm[0].length))continue;
-     out.push({start:mm.index,end:mm.index+mm[0].length,orig:mm[0],fix:null,cat:'g',
-      why:'Spelling consistency: this document uses both "'+wantU+'" and "'+otherU+'"'});
+     /* 7.49: the fix is the spelling the document uses most */
+     out.push({start:mm.index,end:mm.index+mm[0].length,orig:mm[0],fix:matchCase(mm[0],otherU+(mm[1]||'')),cat:'g',dict:true,
+      why:'Spelling consistency: this document uses both "'+wantU+'" and "'+otherU+'"; it mostly writes "'+otherU+'"'});
     }
    }
   }
@@ -9011,7 +9015,7 @@ function ruleEdits(t){
  /* 7.44: the whole text is the key. The old key (its length and its two
     ends) returned stale notes after a same-length change in the middle,
     such as "teh" corrected to "the" */
- var sig=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+(S.rules?S.rules.length:0)+'|'+(S.muteWords||[]).length+'|'+(S.citeStyle||'')+'|'+(INK_BLOCK_MODE?1:0);
+ var sig=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+(S.rules?S.rules.length:0)+'|'+(S.muteWords||[]).length+'|'+(S.citeStyle||'')+'|'+(INK_BLOCK_MODE?1:0)+'|'+(S.spellDict||[]).join(',');
  if(__ruleSig===sig&&__ruleText===t&&__ruleAns)return __ruleAns;
  __ruleSig=sig;__ruleText=t;WB=null;
  const ms=masks(t);
@@ -9039,11 +9043,13 @@ function ruleEdits(t){
   if(r.npre&&r.npre.test(t.slice(Math.max(0,m.start-24),m.start)))continue;
   if(S.reg==='casual'&&r.cat==='s')continue;
   if(r.nsch&&S.reg==='scholarly')continue;
+  if(r.dict&&inkDictHas(m.raw))continue;
   if(r.noparen){const pb=t.slice(Math.max(0,m.start-160),m.start);if(pb.lastIndexOf('(')>pb.lastIndexOf(')'))continue;}
   /* 7.37: fx gives the fix from the matched words directly, for a pattern that looks ahead past them */
   let fix=r.fx?r.fx(m.raw):r.to===null?null:m.raw.replace(rxOne(r.re,r.cs),r.to);
   if(fix)fix=matchCase(m.raw,fix);
   const o={start:m.start,end:m.start+m.raw.length,orig:m.raw,fix:(fix!==m.raw)?fix:null,why:r.label,cat:r.cat};
+  if(r.dict)o.dict=true;
   if(r.alts){const as=Array.isArray(r.alts)?r.alts:r.alts[m.raw.toLowerCase()];
    if(as&&as.length){o.alts=as;o.wb=m.raw.toLowerCase();}}
   out.push(o);}}
@@ -9078,7 +9084,7 @@ function ruleEdits(t){
  doubleHedgeCheck(t,ms,out);
  if(S.reg!=='casual'&&S.reg!=='creative')overuseCheck(t,ms,out);
  /* checks of the whole document run once on it, never paragraph by paragraph */
- if(!INK_BLOCK_MODE){consistencyChecks(t,ms,out);headingChecks(t,ms,out);}
+ if(!INK_BLOCK_MODE){consistencyChecks(t,ms,out);headingChecks(t,ms,out);inkConsistNotes(t,ms,out);}
  if(S.reg!=='casual')transitionCommaCheck(t,ms,out);
  if(typeof articleANCheck==='function')articleANCheck(t,ms,out);
  if(echoOpenCheck)echoOpenCheck(t,ms,out);
@@ -9385,6 +9391,7 @@ function inkRowHTML(e,i){return '<div class="crow" onclick="expandRow('+i+')"><s
     (e.fix===''?'<span class="cfx" style="color:var(--gold)">remove ▸</span>':
     (e.alts&&e.alts.length?'<span class="cfx" style="color:var(--gold)">'+e.alts.length+(e.spell?(e.alts.length===1?' suggestion':' suggestions'):e.tryAlts?' to try':' stronger')+' ▸</span>':(e.ask?'<span class="cfx" style="color:var(--gold)">'+esc(e.ask.q)+' ▸</span>':''))))+
    '<span class="cwhy">'+esc(inkCap1(e.why||''))+'</span><span class="cexp">▾</span>'+
+   ((e.spell||e.dict)&&typeof e.fix!=='string'?'<button class="cadd" title="Add \u201c'+esc(e.orig)+'\u201d to your dictionary: it is never marked again" onclick="event.stopPropagation();spellAdd('+i+')">+ Add</button>':'')+
    '<button class="cremove" title="Dismiss this suggestion" onclick="event.stopPropagation();dismissOne('+i+')">✕</button></div>';}
 function soloMove(d){SOLOI=Math.max(0,Math.min(EDITS.length-1,SOLOI+d));renderCards();
  if(EDITS[SOLOI])locate(SOLOI);}
@@ -9431,7 +9438,18 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  bumpStat(e.why||'',ex);
  ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
  if(wasFirst)showTip('learn');toast('Accepted ✔');clearSel();}
-function dismissOne(i){SND.dismiss();EDITS.splice(i,1);if(S.solo&&SOLOI>0)SOLOI--;EXPID=-1;renderCards();renderHL();clearSel();}
+function inkDictHas(w){const l=String(w||'').toLowerCase();return (S.spellDict||[]).some(x=>{x=String(x).toLowerCase();return x===l||l.indexOf(x)===0&&/^(?:s|ed|ing|es)$/.test(l.slice(x.length));});}
+/* 7.49: a dismissed note stays dismissed in its document: it is known by
+   its kind, its words and the words around it, so it returns only if that
+   place is rewritten */
+function inkDismKey(t,e){const a=Math.max(0,e.start-24);
+ return statKey(e.why||'')+'\u0001'+(t.slice(a,e.start)+'\u2016'+t.slice(e.start,e.end)+'\u2016'+t.slice(e.end,e.end+24)).replace(/\s+/g,' ');}
+function inkUndismissed(list,t){const D=(S.dismissed||{})[S.active];if(!D||!D.length)return list;const set=new Set(D);
+ return list.filter(e=>!set.has(inkDismKey(t,e)));}
+function dismissOne(i){SND.dismiss();const e=EDITS[i];
+ if(e){const all=S.dismissed||{},L=all[S.active]||[];L.push(inkDismKey(ed.value,e));all[S.active]=L.slice(-2000);S.dismissed=all;SV('dismissed',all);}
+ EDITS.splice(i,1);if(S.solo&&SOLOI>0)SOLOI--;EXPID=-1;renderCards();renderHL();clearSel();}
+function inkUndismissAll(){const all=S.dismissed||{};delete all[S.active];S.dismissed=all;SV('dismissed',all);openModal('rules');scan();toast('The notes you dismissed in this document are back');}
 function wbAccept(i,a){const e=EDITS[i];if(!e)return;
  /* 7.42: the chip names its place in the list, so no wording is lost in the
     page's markup; a wording the refiner built has its case and its span */
@@ -9503,7 +9521,7 @@ function cardHTML(e,i,solo){
  ((typeof e.fix==='string')?'<button class="primary" onclick="acceptOne('+i+')">'+(e.fix===''?'Remove':'Accept')+'</button>':'')+
  '<button onclick="dismissOne('+i+')">Dismiss</button>'+
  (e.wb?'<button class="lkbtn" onclick="wbMute('+i+')" title="Never flag this word again">Mute word</button>':'')+
- (e.spell?'<button class="lkbtn" onclick="spellAdd('+i+')" title="This word is right: never mark it again">Add to dictionary</button>':'')+
+ ((e.spell||e.dict)?'<button class="lkbtn" onclick="spellAdd('+i+')" title="This word is right: never mark it again">Add to dictionary</button>':'')+
  '<button class="lkbtn" onclick="toggleLesson('+i+')">Learn ▸</button></div></div>';}
 function toggleLesson(i){const el=document.getElementById('lrn'+i);if(!el)return;
  el.style.display=el.style.display==='block'?'none':'block';}
@@ -9607,6 +9625,7 @@ function inkSpellLoad(){
   /* a server that answers a missing file with a web page must never leave a
      word list that knows nothing: then every word would be marked */
   const D=INKSPELL.load(t);if(D.size<50000||!['the','which','because'].every(w=>INKSPELL.known(D,w)))return;
+  try{INKSPELL.addWords(D,S.spellDict||[]);}catch(e){}
   SPELLD=D;CARDSIG='';try{scan();}catch(e){}}).catch(()=>{});
  return SPELLLOAD;}
 /* 7.45: no correction takes a note's marker with it: a fix whose words
@@ -9633,13 +9652,26 @@ function inkSpellEdits(t,taken){
  return INKSPELL.check(SPELLD,t,{margin:0.2,maxScore:1.35,ignore:ignore,uses:INK_DOC_USES||undefined})
   .filter(e=>!inMask(e.start,ms)&&(refAt<0||e.start<refAt)&&!taken.some(o=>o.start<e.end&&e.start<o.end))
   .map(e=>{e.why=e.fix?'Spelling':'Spelling: not in the dictionary';return e;});}
-function spellAdd(i){const e=EDITS[i];if(!e||!e.spell)return;const w=String(e.orig).toLowerCase();
- S.spellDict=S.spellDict||[];if(S.spellDict.indexOf(w)<0){S.spellDict.push(w);SV('spellDict',S.spellDict);}
- EDITS=EDITS.filter(x=>!(x.spell&&String(x.orig).toLowerCase()===w));SOLOI=0;EXPID=-1;renderCards();updateStats();renderHL();
- toast('"'+e.orig+'" is in your dictionary now; remove it in Studio ▸ ⚖ Rules');}
+/* 7.49: a word the checker does not know, a less common spelling or a name
+   joins the writer's dictionary from any mark on it (spelling, US or UK
+   form, a spelling mixed in the document); a name keeps its capital, so it
+   is offered as the correction of its misspellings */
+function spellAddWord(raw,quiet){const w0=String(raw||'').trim().replace(/^['’"“”(]+|['’"“”).,;:!?]+$/g,'');if(!w0||/\s/.test(w0))return false;
+ const at0=ed.value.indexOf(w0),start=at0>=0&&/(?:^|[.!?]["”’)]?\s+|\n\s*)$/.test(ed.value.slice(Math.max(0,at0-4),at0));
+ const w=/^[A-Z][a-z]/.test(w0)&&start&&SPELLD&&INKSPELL.known(SPELLD,w0.toLowerCase())?w0.toLowerCase():w0;
+ S.spellDict=S.spellDict||[];const lw=w.toLowerCase();
+ if(!S.spellDict.some(x=>String(x).toLowerCase()===lw)){S.spellDict.push(w);SV('spellDict',S.spellDict);}
+ try{if(SPELLD)INKSPELL.addWords(SPELLD,[w]);}catch(e){}
+ EDITS=EDITS.filter(x=>!((x.spell||x.dict)&&String(x.orig).toLowerCase().replace(/(?:s|ed|ing|es)$/,'')===lw.replace(/(?:s|ed|ing|es)$/,'')&&String(x.orig).toLowerCase().indexOf(lw)===0));
+ SOLOI=0;EXPID=-1;CARDSIG='';renderCards();updateStats();renderHL();
+ if(!quiet)toast('\u201c'+w+'\u201d is in your dictionary now; it is never marked again. Studio \u25b8 \u2696 Rules lists your words.');
+ return true;}
+function spellAdd(i){const e=EDITS[i];if(!e||!(e.spell||e.dict))return;spellAddWord(e.orig);}
 window.addEventListener('load',()=>setTimeout(inkSpellLoad,300));
 function spellToggle(){S.spellOff=!S.spellOff;SV('spellOff',S.spellOff);openModal('rules');scan();toast(S.spellOff?'The spelling checker is off':'The spelling checker is on');}
-function spellRemove(i){S.spellDict.splice(i,1);SV('spellDict',S.spellDict);openModal('rules');scan();}
+function spellRemove(i){const w=S.spellDict[i];S.spellDict.splice(i,1);SV('spellDict',S.spellDict);try{if(SPELLD)INKSPELL.dropWord(SPELLD,w);}catch(e){}openModal('rules');scan();}
+function spellAddTyped(){const el=document.getElementById('dictIn');if(!el)return;const ws=el.value.split(/[\s,;]+/).filter(Boolean);let n=0;
+ ws.forEach(w=>{if(spellAddWord(w,true))n++;});el.value='';openModal('rules');scan();if(n)toast(n===1?'One word added to your dictionary':n+' words added to your dictionary');}
 /* 7.36: the grammar model, live. Until now it read only a selection ("Fix
    selection"), so the list never showed its suggestions. Now each paragraph
    is read once, in the background when the writer pauses, and its
@@ -9685,6 +9717,30 @@ async function inkModelPump(){
    creative writing only the marks. Measured on 40 published articles and a
    100,000-word thesis: about 30 ms for the thesis. */
 let INKDP={t:null,sig:'',ans:[]};
+/* 7.49: one way throughout (INKCONSIST, src/lib/consist_core.js): a term's
+   capitals and hyphen, the quotation marks, apostrophes, dashes, ellipses,
+   ranges, large numbers and units, each marked where the document departs
+   from the way it uses most. Placed like the doctoral notes: a place another
+   note holds keeps that note. */
+let INKCS={t:null,sig:'',ans:[]};
+function inkConsistNotes(t,ms,out){
+ if(typeof INKCONSIST==='undefined'||S.reg==='casual')return;
+ const sig=S.reg+'|'+(SPELLD?1:0)+'|'+(S.spellDict||[]).length;
+ if(INKCS.t!==t||INKCS.sig!==sig){
+  const weak=[],wre=/https?:\/\/\S+|⟦[^⟧]*⟧|`[^`\n]*`/g;let m;while((m=wre.exec(t)))weak.push([m.index,m.index+m[0].length]);
+  let ns=[];
+  try{ns=INKCONSIST.check(t,{ranges:ms,markRanges:weak,
+   common:w=>{if(!SPELLD)return true;const e=SPELLD.lower.get(w);return !!(e&&e.plain);}});}catch(e){console.warn('[inkwell] consistency',e);}
+  ns=ns.filter(n=>!(n.fam==='caps'||n.fam==='hyph')||!inkDictHas(n.orig));
+  INKCS={t:t,sig:sig,ans:ns};}
+ const ns=INKCS.ans;if(!ns.length)return;
+ const hs=out.slice().sort((a,b)=>a.start-b.start),far=[];let mx=-1;
+ for(const h of hs){mx=Math.max(mx,h.end);far.push(mx);}
+ for(const n of ns){
+  let lo=0,hi=hs.length-1,k=-1;
+  while(lo<=hi){const md=(lo+hi)>>1;if(hs[md].start<n.end){k=md;lo=md+1;}else hi=md-1;}
+  if(k>=0&&far[k]>n.start)continue;
+  out.push({start:n.start,end:n.end,orig:n.orig,fix:n.fix,why:n.why,cat:'c',fam:n.fam,tag:'consistency',dict:n.fam==='caps'||n.fam==='hyph'});}}
 function inkDphilNotes(t,ms,out){
  if(typeof INKDPHIL==='undefined'||S.reg==='casual')return;
  const sig=S.reg+'|'+(S.dialect||'')+'|'+(SPELLD?1:0);
@@ -9721,7 +9777,7 @@ function inkToggleStyle(){S.showStyle=!S.showStyle;SV('showStyle',S.showStyle);C
  toast(S.showStyle?'Clarity and style notes shown':'Only correctness: clarity and style notes hidden');}
 function scan(){
  if(ed.value.length>INK_CHUNK_MIN)return inkScanLong();
- EDITS=inkModelEdits(ed.value,inkRules(ed.value)).sort((a,b)=>a.start-b.start);EXPID=-1;
+ EDITS=inkUndismissed(inkModelEdits(ed.value,inkRules(ed.value)),ed.value).sort((a,b)=>a.start-b.start);EXPID=-1;
  renderCards();updateStats();renderHL();renderOutline();}
 /* ===== 7.44: a thesis-length document =====
    Measured with a 100,000-word thesis: the whole-document check took about
@@ -9797,7 +9853,7 @@ function inkRulesLong(t){
  if(INKRC.map.size>live.size*2+200)for(const k of Array.from(INKRC.map.keys()))if(!live.has(k))INKRC.map.delete(k);
  /* and the checks of the whole document */
  const ms=masks(t);all.sort((x,y)=>x.start-y.start);
- const doc=all.slice();consistencyChecks(t,ms,doc);headingChecks(t,ms,doc);
+ const doc=all.slice();consistencyChecks(t,ms,doc);headingChecks(t,ms,doc);inkConsistNotes(t,ms,doc);
  inkDphilNotes(t,ms,doc);
  /* 7.45: the names in the References or Bibliography are the document's
     authors, wherever they are written (a note read on its own does not see
@@ -9825,7 +9881,7 @@ function inkScanLong(){
   INK_DOC_USES=null;
   if(i<blocks.length){inkScanSay(Math.round(100*i/blocks.length));return setTimeout(step,0);}
   INKSCAN=null;inkScanSay(-1);
-  EDITS=inkModelEdits(t,inkRulesLong(t)).sort((a,b)=>a.start-b.start);EXPID=-1;
+  EDITS=inkUndismissed(inkModelEdits(t,inkRulesLong(t)),t).sort((a,b)=>a.start-b.start);EXPID=-1;
   renderCards();updateStats();renderHL();renderOutline();};
  step();}
 function inkScanSay(pc){const el=document.getElementById('stCerr');if(!el)return;
@@ -10030,6 +10086,7 @@ Object.assign(LESSONS,{
  'Missing word':['The sentence needs a word here to be grammatical, often a small one (to, the, is).','"She wants go" → "She wants to go"']});
 /* 7.45: the doctoral checks' lessons */
 if(typeof INKDPHIL!=='undefined')Object.assign(LESSONS,INKDPHIL.LESSONS);
+if(typeof INKCONSIST!=='undefined')Object.assign(LESSONS,INKCONSIST.LESSONS);
 function lessonFor(why){
  /* exact prefix first; then the part after a model's name ("Laptop model:
     Verb form"); a contained key only when it is long enough not to catch an
@@ -11876,7 +11933,7 @@ function chunkText(t,limit){
 async function correct(){
  if(!ed.value.trim())return toast('Write something first 🙂');
  const rules=inkRules(ed.value);
- EDITS=rules.slice().sort((a,b)=>a.start-b.start);SOLOI=0;renderCards();updateStats();renderHL();
+ EDITS=inkUndismissed(rules.slice(),ed.value).sort((a,b)=>a.start-b.start);SOLOI=0;renderCards();updateStats();renderHL();
  const PROOF_SYS='You are a careful copy editor. Correct only errors of grammar, spelling and punctuation in the user\'s text. Change as little as possible: keep every word that is already correct, keep the writer\'s meaning, register and voice, keep names, numbers, quotations and citations exactly. If the text is already correct, return it unchanged. Output only the corrected text, with no explanation.';
  let engine=null,label='';
  if(inkSrv()){
@@ -12037,7 +12094,7 @@ function showHoverFix(edit,i,rect){
  '<div class="why" style="margin:5px 0 8px;font-size:11px">'+esc(edit.why||'')+'</div>'+
  /* 7.36: a misspelt word offers its other suggestions, and the dictionary */
  ((edit.spell&&edit.alts&&edit.alts.length)?'<div style="display:flex;flex-wrap:wrap;gap:5px;margin:0 0 8px">'+edit.alts.filter(a=>a!==edit.fix).slice(0,4).map(a=>'<button style="padding:4px 10px;font-size:11.5px" onclick="wbAccept('+i+',\''+String(a).replace(/'/g,"\\'")+'\');hideHoverFix()">'+esc(a)+'</button>').join('')+'</div>':'')+
- '<div style="display:flex;gap:6px;flex-wrap:wrap">'+((typeof edit.fix==='string')?'<button class="primary" style="padding:5px 13px;font-size:11.5px" onclick="hoverAccept()">'+(edit.fix===''?'Remove':'Fix it ▸')+'</button>':'')+'<button style="padding:5px 12px;font-size:11.5px" onclick="hoverDismiss()">Not now</button>'+(edit.spell?'<button style="padding:5px 12px;font-size:11.5px" onclick="spellAdd('+i+');hideHoverFix()">Add to dictionary</button>':'')+'</div>';
+ '<div style="display:flex;gap:6px;flex-wrap:wrap">'+((typeof edit.fix==='string')?'<button class="primary" style="padding:5px 13px;font-size:11.5px" onclick="hoverAccept()">'+(edit.fix===''?'Remove':'Fix it ▸')+'</button>':'')+'<button style="padding:5px 12px;font-size:11.5px" onclick="hoverDismiss()">Not now</button>'+((edit.spell||edit.dict)?'<button style="padding:5px 12px;font-size:11.5px" onclick="spellAdd('+i+');hideHoverFix()">Add to dictionary</button>':'')+'</div>';
  c.style.display='block';
  c.style.left=Math.min(innerWidth-340,Math.max(8,rect.left-6))+'px';
  c.style.top=Math.min(innerHeight-200,rect.bottom+6)+'px';
@@ -14232,7 +14289,11 @@ function openModalDo(which){
  '<input id="arI" placeholder="A rule the AI must always follow…">'+
  '<button class="primary" onclick="addAiRule()">Add rule</button>'+
  '<h4 style="font-family:Georgia,serif;margin:16px 0 6px">Spelling</h4><p style="font-size:12.5px;margin:0 0 6px">The dictionary checker (British, American and Canadian spellings) is <b>'+(S.spellOff?'off':'on')+'</b>. <button class="lkbtn" onclick="spellToggle()">'+(S.spellOff?'Turn it on':'Turn it off')+'</button></p>'+
- ((S.spellDict||[]).length?'<h4 style="font-family:Georgia,serif;margin:16px 0 6px">Your dictionary</h4><div>'+S.spellDict.map((w,i)=>'<button class="tipchip" style="margin:0 6px 6px 0" title="Remove from your dictionary" onclick="spellRemove('+i+')">'+esc(w)+' ✕</button>').join('')+'</div><p style="font-size:11.5px;color:var(--mut)">Words you added with “Add to dictionary” are never marked as misspelt.</p>':'')+
+ '<h4 style="font-family:Georgia,serif;margin:16px 0 6px">Your dictionary'+((S.spellDict||[]).length?' ('+S.spellDict.length+')':'')+'</h4>'+
+ '<p style="font-size:11.5px;color:var(--mut);margin:0 0 6px;line-height:1.55">Names, rare words and spellings of your own. They are never marked, and a slip in one is corrected to it. Add them here, or with \u201c+ Add\u201d on a spelling note.</p>'+
+ '<div class="row" style="gap:6px;margin:0 0 8px"><input id="dictIn" style="flex:1" placeholder="Words or names, separated by spaces (Gadamer, biopower, judgement)" onkeydown="if(event.key===\'Enter\')spellAddTyped()"><button class="primary" onclick="spellAddTyped()">Add</button></div>'+
+ ((S.spellDict||[]).length?'<div>'+S.spellDict.map((w,i)=>'<button class="tipchip" style="margin:0 6px 6px 0" title="Remove from your dictionary" onclick="spellRemove('+i+')">'+esc(w)+' ✕</button>').join('')+'</div>':'')+
+ (((S.dismissed||{})[S.active]||[]).length?'<p style="font-size:12px;margin:8px 0 0">'+((S.dismissed||{})[S.active]).length+' note'+(((S.dismissed||{})[S.active]).length===1?'':'s')+' dismissed in this document stay dismissed. <button class="lkbtn" onclick="inkUndismissAll()">Show them again</button></p>':'')+
  (S.muteWords.length?'<h4 style="font-family:Georgia,serif;margin:16px 0 6px">Muted word-bank words</h4><div>'+S.muteWords.map((w,i)=>'<button class="tipchip" style="margin:0 6px 6px 0" title="Wake this word" onclick="wbUnmute('+i+')">'+esc(w)+' ✕</button>').join('')+'</div><p style="font-size:11.5px;color:var(--mut)">Muted words rest everywhere until woken here.</p>':'');}
  if(which==='display'){b.innerHTML='<h3>☀ Display &amp; Sound</h3>'+
   '<p style="font-size:12.5px;color:var(--mut);margin:0 0 12px;line-height:1.6;font-family:Georgia,serif">Everything here is a preference, never a penalty: the desk keeps every one of them off until you ask for it. Some people want the paper to breathe and chime; some want it silent and still. Both are welcome.</p>'+

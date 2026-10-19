@@ -56,5 +56,22 @@ for (const t of ['The socio-economic and neuro-ethical stakes.', 'It holds per s
   ok('left alone: ' + t, flags(t).length === 0, flags(t));
 ok('"vix" is not a numeral to the checker', flags('The vix result.').length === 1);
 
+/* 7.49: the writer's own dictionary */
+{
+  const D2 = SP.load(fs.readFileSync(path.join(ROOT, 'Inkwell-Android', 'app', 'src', 'main', 'assets', 'vendor', 'scowl-words.txt'), 'utf8'));
+  const fl = t => SP.check(D2, t, { margin: 0.2, maxScore: 1.35 });
+  ok('an unknown term is marked first', fl('Foucault names it biopowr here.').length === 1);
+  SP.addWords(D2, ['biopowr', 'Gadamer', 'Nkrumah']);
+  ok('a word added is known', fl('Foucault names it biopowr here.').length === 0, fl('Foucault names it biopowr here.'));
+  ok('a slip in an added name is corrected to it', (fl('As Gadamar argues, health hides.')[0] || {}).fix === 'Gadamer', fl('As Gadamar argues, health hides.'));
+  ok('a rare name the list knows becomes one to correct to', (fl('Writers such as Kwame Nkrumahh wrote on it.')[0] || {}).fix === 'Nkrumah', fl('Writers such as Kwame Nkrumahh wrote on it.'));
+  SP.dropWord(D2, 'biopowr');
+  ok('a word removed is marked again', fl('Foucault names it biopowr here.').length === 1);
+  SP.dropWord(D2, 'Nkrumah');
+  ok('a name removed goes back to rare', !(fl('Writers such as Kwame Nkrumahh wrote on it.')[0] || {}).fix);
+  SP.addWords(D2, ['the', 'The']);
+  ok('a word the list knows is left as it was', SP.level(D2, 'the') !== 15);
+}
+
 console.log(pass + ' of ' + (pass + fails.length) + ' pass');
 if (fails.length) { console.log(fails.join('\n')); process.exit(1); }

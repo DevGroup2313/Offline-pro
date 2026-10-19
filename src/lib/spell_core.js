@@ -324,6 +324,33 @@
     hold.forEach((o, i) => { if (!run.has(i)) out.push(o); });
     return out;
   }
-  const api = { load, known, suggest, check, level };
+  /* 7.49: the writer's own words join the dictionary: known, and offered
+     as corrections ("Gadamar" to "Gadamer"). A capitalised word is kept as
+     a name; a word the list already knows is left as it is. */
+  function addWords(D, words) {
+    D.user = D.user || new Set();
+    for (const raw of words || []) {
+      const w = String(raw || '').trim(); if (!w || /\s/.test(w)) continue;
+      const l = w.toLowerCase(), had = D.lower.get(l);
+      if (had && had.plain) continue;
+      /* a rare name the list knows becomes common once the writer adds it,
+         so its slips are corrected to it */
+      D.userWas = D.userWas || new Map();
+      if (had && had.form === w) { if (had.lv > 15) { D.userWas.set(w, had.lv); had.lv = 15; D.exact.set(w, 15); D.user.add(w); } continue; }
+      if (had && w !== l) continue;
+      D.exact.set(w, 15); D.lower.set(l, { lv: 15, plain: w === l, form: w }); D.user.add(w);
+    }
+    if (D.memo) D.memo.clear();
+  }
+  function dropWord(D, w) {
+    if (!D.user) return; w = String(w || '').trim();
+    for (const u of [...D.user]) if (u.toLowerCase() === w.toLowerCase()) {
+      D.user.delete(u); const e = D.lower.get(u.toLowerCase());
+      if (D.userWas && D.userWas.has(u)) { const lv = D.userWas.get(u); D.userWas.delete(u); D.exact.set(u, lv); if (e) e.lv = lv; continue; }
+      D.exact.delete(u); if (e && e.form === u) D.lower.delete(u.toLowerCase());
+    }
+    if (D.memo) D.memo.clear();
+  }
+  const api = { load, known, suggest, check, level, addWords, dropWord };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKSPELL = api;
 })(typeof self !== 'undefined' ? self : this);
