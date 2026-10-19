@@ -154,7 +154,7 @@ body.sprinting header{opacity:.55}
 #side .foot .wide{grid-column:1/3}
 #outlineSec{border-top:1px solid var(--line);margin-top:8px;padding-top:8px;max-height:36%;display:flex;flex-direction:column}
 #outline{overflow:auto;min-height:0}
-.oitem{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12.5px;border-radius:11px;background:var(--face);border:1px solid var(--line);box-shadow:var(--sh-sm);margin-bottom:6px;cursor:grab;transition:transform .14s var(--pop),opacity .14s}
+.oitem{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12.5px;border-radius:11px;background:var(--face);border:1px solid var(--line);box-shadow:var(--sh-sm);margin-bottom:6px;cursor:grab;transition:transform .14s var(--pop),box-shadow .14s,opacity .14s}
 .oitem:hover{transform:translateY(-1px)}
 .oitem.drag{opacity:.35;transform:scale(.98)}
 .oitem .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:Georgia,serif}
@@ -355,6 +355,8 @@ body.readable #editor,body.readable #hli{font:19px/2.05 Tahoma,Verdana,Georgia,s
 .hdr{gap:7px;align-items:center}
 #status{display:flex;gap:10px;align-items:center;padding:2px 12px;font-size:9.2px;letter-spacing:.1em;min-height:0;text-transform:uppercase;color:var(--mut);background:var(--card);border-top:1px solid var(--line);box-shadow:0 -8px 20px #24201a08;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}#status #stWps,#status #stLex,#status #stFlesch,#status #stGain,#status #stModel{display:none !important}
 #status::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
+/* 7.49: the saved time and the fold button keep the footer's right corner at
+   every width; the saved time carries the push, since #stModel is hidden. */
 /* 7.38: the footer's fold button is a physical one like the rest: a vellum
    face on a brass edge (midnight at night) that lifts and sinks. The soft
    card-coloured fade on its left still hides text passing under it. */
@@ -608,8 +610,11 @@ body[data-motion=minimal] #ctxpanel{animation:none}
 .menuBtn.open{background:var(--faceD);border-color:var(--acc);font-weight:600}
 /* right panel: two tabs instead of one long strip */
 .rtabs{display:flex;background:var(--tray);padding:3px;border-radius:999px;box-shadow:inset 0 2px 5px #0001;gap:2px;margin-bottom:12px}
-.rtabs button{flex:1;padding:6px 10px;border:none;background:transparent;box-shadow:none;font-size:12px;border-radius:999px;color:var(--mut)}
-.rtabs button:hover{transform:none;box-shadow:none}
+.rtabs button{flex:1;padding:6px 10px;border:none;background:transparent;box-shadow:none;font-size:12px;border-radius:999px;color:var(--mut);
+ transition:transform .14s var(--pop),box-shadow .14s,background-color .15s,color .15s}
+.rtabs button:hover{transform:translateY(-1px);background:var(--face);color:var(--ink)}
+.rtabs button.active{animation:tabSettle .3s var(--pop)}
+@keyframes tabSettle{0%{transform:translateY(-2px) scale(.96)}100%{transform:none}}
 .rtabs button.active{background:var(--face);box-shadow:var(--sh-sm);font-weight:600;color:var(--ink)}
 #instrPanel{display:none}
 #instrPanel.on{display:block}
@@ -638,6 +643,40 @@ body[data-motion=minimal] *,body[data-motion=minimal] *:before,body[data-motion=
 button:not(.sn-iconbtn):not(.sn-tool){box-shadow:var(--sh-sm),inset 0 -2px 4px #14100a12}
 [data-theme=dark] button:not(.sn-iconbtn):not(.sn-tool){box-shadow:var(--sh-sm),inset 0 -2px 4px #00000066}
 body[data-motion=minimal] button{box-shadow:none !important}
+/* 7.49: every control lifts on hover with a deeper shadow and sinks when
+   pressed. The bevel rule above outweighed most hover shadows, so buttons only
+   slid 2px; these carry the same weight and come after it. Buttons with a
+   designed press of their own (the physical primaries, the seals, the tour,
+   the menus, the door) keep theirs. */
+:root{--popHov:0 2px 0 rgba(20,16,10,.10),0 6px 14px rgba(20,16,10,.17),inset 0 -2px 4px #14100a12;
+ --popPress:inset 0 2px 5px rgba(20,16,10,.22),0 1px 1px rgba(20,16,10,.06)}
+[data-theme=dark]{--popHov:0 2px 0 rgba(0,0,0,.55),0 6px 16px rgba(0,0,0,.5),inset 0 -2px 4px #00000066,inset 0 1px 0 rgba(255,255,255,.06);
+ --popPress:inset 0 2px 6px rgba(0,0,0,.6)}
+button:not(.sn-iconbtn):not(.sn-tool):where(:not(.primary,.tour3d,.tabula-btn,.heroKey,.b3seal,.menuBtn,.doorRow button,.itCard button)):hover{box-shadow:var(--popHov)}
+button:not(.sn-iconbtn):not(.sn-tool):where(:not(.primary,.tour3d,.tabula-btn,.heroKey,.b3seal,.menuBtn,.doorRow button,.itCard button)):active{transform:translateY(1px) scale(.97);box-shadow:var(--popPress);transition-duration:.05s}
+/* the engine pill opens the Engine panel, so it is a key like the rest */
+.pill[onclick]{cursor:pointer;transition:transform .14s var(--pop),box-shadow .14s,background-color .15s}
+.pill[onclick]:hover{transform:translateY(-2px);box-shadow:var(--popHov);background:var(--faceD)}
+.pill[onclick]:active{transform:translateY(1px) scale(.97);box-shadow:var(--popPress);transition-duration:.05s}
+/* documents, outline rows and suggestion rows lift and sink as cards */
+#docs .doc:hover{box-shadow:var(--popHov)}
+#docs .doc:active,#outline .oitem:active,#cards .crow:active{transform:translateY(1px) scale(.985);box-shadow:var(--popPress);transition-duration:.05s}
+#outline .oitem:hover{transform:translateY(-2px);box-shadow:var(--popHov)}
+/* the word count in the footer opens Performance */
+#stWords{display:inline-block;transition:transform .14s var(--pop),color .14s}
+#stWords:hover{transform:translateY(-1px);color:var(--acc)}
+#stWords:active{transform:translateY(1px)}
+/* Correct and Draft: a clear rise, a brighter face and a deep press */
+.hdr button.primary.hero,.hdr .draftBtn.heroKey{transition:transform .16s var(--pop),box-shadow .16s ease,filter .16s ease !important}
+.hdr button.primary.hero:hover,.hdr .draftBtn.heroKey:hover{transform:translateY(-3px) !important;filter:brightness(1.08)}
+.hdr button.primary.hero:active,.hdr .draftBtn.heroKey:active{transform:translateY(2px) scale(.96) !important;filter:brightness(.96);transition-duration:.05s !important}
+.hdr .draftBtn.heroKey:hover{box-shadow:0 1px 0 rgba(20,16,10,.2),0 4px 8px #14100a26,0 12px 22px #14100a1c,inset 0 1px 0 #ffffff88,inset 0 -3px 5px #14100a12}
+.hdr .draftBtn.heroKey:active{box-shadow:0 1px 2px #14100a1c,inset 0 2px 6px #14100a26}
+[data-theme=dark] .hdr button.primary.hero:hover{box-shadow:0 1px 0 #071e29,0 6px 12px #000000a0,0 14px 26px #00000066,inset 0 1px 0 #ffffff3a !important}
+[data-theme=dark] .hdr button.primary.hero:active{box-shadow:0 0 0 #071e29,0 1px 2px #00000088,inset 0 2px 6px #00000077 !important}
+[data-theme=dark] .hdr .draftBtn.heroKey:hover{box-shadow:0 1px 0 #04080c,0 6px 12px #000000a0,0 14px 26px #00000066,inset 0 1px 0 #ffffff22;filter:brightness(1.15)}
+[data-theme=dark] .hdr .draftBtn.heroKey:active{box-shadow:inset 0 2px 6px #00000088}
+body[data-motion=minimal] .hdr button.primary.hero,body[data-motion=minimal] .hdr .draftBtn.heroKey{transform:none !important;filter:none}
 /* glass cards */
 .card,.inst{background:var(--glass);backdrop-filter:blur(10px) saturate(1.05);-webkit-backdrop-filter:blur(10px) saturate(1.05)}
 /* the page itself: laid paper with the faintest chain lines */
@@ -654,11 +693,18 @@ body[data-motion=minimal] button{box-shadow:none !important}
 .crow .cremove{flex-shrink:0;width:24px;height:24px;padding:0;font-size:11px;border-radius:50%;color:var(--mut);box-shadow:var(--sh-sm);margin-left:2px}
 .catLeg .catF{background:none;border:0;box-shadow:none;padding:2px 7px;margin:0 2px 0 0;border-radius:10px;font:inherit;color:inherit;cursor:pointer}
 .catLeg button.catF.on{background:var(--acc);color:#fff;font-weight:600}
+/* 7.49: by night the chosen kind wears the same face and colours as its
+   neighbours (white on light brass was hard to read). The chips keep to one
+   line each and wrap whole. */
+[data-theme=dark] .catLeg button.catF.on{background:none;color:inherit;font-weight:inherit}
+[data-theme=dark] .catLeg button.catF.on:hover{background:var(--card-hi)}
+.catLeg.catLegF{flex-wrap:wrap;gap:4px 5px}
+.catLeg .catF{white-space:nowrap;flex-shrink:0}
 .catLeg button.catF .cdot{margin-right:4px}
 .catLeg .catF:hover{background:var(--card-hi)}
 #stWords{cursor:pointer}
 .crow .cadd{flex-shrink:0;height:24px;padding:0 8px;font-size:11px;border-radius:12px;color:var(--gold);box-shadow:var(--sh-sm);margin-left:4px;white-space:nowrap}
-.crow .cremove:hover{color:var(--red);transform:none}
+.crow .cremove:hover{color:var(--red);transform:translateY(-1px)}
 /* the door: a real window. Dragged by its head, resized from every edge and corner */
 #door{position:fixed;inset:0;z-index:95;align-items:center;justify-content:center;background:#efe9dbb3;backdrop-filter:blur(12px) saturate(1.05);-webkit-backdrop-filter:blur(12px) saturate(1.05);transition:opacity .45s ease}
 .doorGrab{cursor:grab;user-select:none}
@@ -1732,7 +1778,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   <div id="status">
    <span id="stWords" onclick="openPerformance()" title="Performance: counts, reading and speaking time, readability">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
    <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="The writing mark: accuracy, clarity, vocabulary, sentences and register, on the scale you chose">· mark</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
-   <span id="stSel"></span><button type="button" id="inkNoteNext" class="inkNoteBtn" onclick="inkNoteNext()" title="Leave yourself a note: it is shown with your place next time" hidden>✎ Note for next time</button><button type="button" id="iwToday" class="inkNoteBtn" onclick="inkTodayCard()" title="Today's words and time, by document" hidden></button><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
+   <span id="stSel"></span><button type="button" id="inkNoteNext" class="inkNoteBtn" onclick="inkNoteNext()" title="Leave yourself a note: it is shown with your place next time" hidden>✎ Note for next time</button><button type="button" id="iwToday" class="inkNoteBtn" onclick="inkTodayCard()" title="Today's words and time, by document" hidden></button><span id="stSave" style="font-size:11px;margin-left:auto;flex-shrink:0" title="Everything on the page is written to this device."></span><span id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
   </div>
  </section>
  <aside id="right">
@@ -9219,7 +9265,7 @@ function renderCards(){
     document, and Locate/Accept indexes stay true because the array is whole. */
  const view=EDITS.map((e,i)=>[e,i]).filter(x=>!INK_CATF||x[0].cat===INK_CATF);
  const CARCAP=400,shown=view.slice(0,CARCAP),restN=view.length-shown.length;
- c.innerHTML=(leg?'<div class="catLeg">'+leg+'</div>':'')+
+ c.innerHTML=(leg?'<div class="catLeg catLegF">'+leg+'</div>':'')+
   '<div style="font-size:11px;color:var(--mut);margin:0 2px 9px">A quiet list. Tap a row to open it, or press <b>1×</b> above to go one at a time.</div>'+inkStyleSwitch()+
   shown.map(([e,i])=>EXPID===i?cardHTML(e,i,false):inkRowHTML(e,i)).join('')+
   (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
@@ -14516,6 +14562,9 @@ function ac(){try{
  document.addEventListener('touchstart',_unlock,true);
  document.addEventListener('keydown',_unlock,true);
 })();
+/* 7.49: Safari on iPhone and iPad shows a button's pressed state only when the
+   page listens for touches, so the press reads under a finger as under a mouse */
+try{document.addEventListener('touchstart',function(){},{passive:true});}catch(e){}
 /* a fresh context starts suspended and its resume is async; a tone scheduled
    into that gap plays into silence. That was the door's mute Open button: the
    first gesture created the context, and the chime expired before resume.
