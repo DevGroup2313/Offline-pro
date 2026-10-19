@@ -14390,9 +14390,13 @@ const GRAM5=[
 const GRAM6=[
  /* the bare lowercase pronoun and the calendar */
  {re:/\bi\b(?=[\s'’.,!?;:\)]|$)/g,cs:true,to:'I',cat:'g',label:'Capital I'},
- {re:/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/g,cs:true,to:null,cat:'g',label:'Days of the week carry a capital'},
- {re:/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/g,cs:true,to:null,cat:'g',label:'Months carry a capital'},
- {re:/\bthe english language\b/g,to:null,cs:true,cat:'g',label:'Proper adjectives carry a capital'},
+ /* 7.49: each with its capital as the fix; "march", "may" and "august"
+    are ordinary words too, so only where they stand as a date */
+ {re:/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\b/g,cs:true,to:m=>m[0].toUpperCase()+m.slice(1),cat:'g',label:'Days of the week carry a capital'},
+ {re:/\b(january|february|april|june|july|september|october|november|december)\b/g,cs:true,to:m=>m[0].toUpperCase()+m.slice(1),cat:'g',label:'Months carry a capital'},
+ {re:/\b(?:(?:in|of|early|late|mid|since|until|till|by|during|from) (march|may|august)(?=[,.;:!?)]|\s+(?:\d|of\b|and\b|or\b|to\b|when\b)|$)|(march|may|august)(?= \d{1,2}(?:st|nd|rd|th)?\b| \d{4}\b)|\d{1,2}(?:st|nd|rd|th)? (march|may|august)\b)/g,cs:true,fx:r=>r.replace(/\b(march|may|august)\b/,x=>x[0].toUpperCase()+x.slice(1)),cat:'g',label:'Months carry a capital'},
+ {re:/\b(english|french|spanish|german|italian|chinese|japanese|korean|russian|portuguese|dutch|greek|hindi|urdu|bengali|punjabi|tamil|latin|hebrew|swedish|norwegian|danish|finnish|icelandic|irish|scottish|welsh|british|american|african|asian|european|canadian|australian|mexican|brazilian|argentinian|argentine|chilean|colombian|peruvian|venezuelan|cuban|jamaican|indian|pakistani|bangladeshi|nepali|sri lankan|egyptian|nigerian|kenyan|ghanaian|ethiopian|moroccan|algerian|tunisian|turkish|iranian|iraqi|israeli|palestinian|syrian|lebanese|saudi|vietnamese|thai|indonesian|malaysian|filipino|swiss|belgian|austrian|hungarian|czech|slovak|ukrainian|romanian|bulgarian|serbian|croatian|bosnian|albanian|lithuanian|latvian|estonian|muslim|christian|jewish|buddhist|hindu|sikh|protestant|islamic|christmas|easter|ramadan|england|scotland|wales|britain|france|spain|germany|italy|japan|korea|russia|portugal|netherlands|greece|ireland|sweden|norway|denmark|finland|america|europe|africa|asia|australia|canada|mexico|brazil|argentina|colombia|peru|india|pakistan|bangladesh|egypt|nigeria|kenya|ethiopia|morocco|iran|iraq|israel|vietnam|thailand|indonesia|malaysia|singapore|philippines|switzerland|belgium|austria|hungary|ukraine|romania|bulgaria|london|paris|berlin|madrid|rome|tokyo|moscow|beijing|edinburgh|dublin|sydney|toronto|chicago|boston)\b(?! (?:numerals?|fries|windows?|doors?|toast|press|horns?|polish|type)\b)/g,cs:true,to:m=>m.replace(/\b[a-z]/g,x=>x.toUpperCase()),cat:'g',label:'Names of peoples, languages, places and feasts carry a capital'},
+ {re:/\btv\b/g,cs:true,to:'TV',cat:'g',label:'"TV" is written in capitals'},
  /* tense slips */
  {re:/\b(?:I|you|we|they|he|she) have went\b/gi,to:null,cat:'g',label:'“Have gone” — went takes no auxiliary'},
  {re:/\b(?:I|you|we|they|he|she) have did\b/gi,to:null,cat:'g',label:'“Have done” — did takes no auxiliary'},
@@ -15286,17 +15290,28 @@ function commaSpliceCheck(t,ms,out){
       there needs" close a phrase; "Applied to the human being, it",
       "Considering these forms, we", "Should this prove productive, it"
       open with a participle or an inversion */
-   var seg=before.slice(Math.max(before.lastIndexOf(','),before.lastIndexOf(';'),before.lastIndexOf(':'),before.lastIndexOf('—'),before.lastIndexOf('('))+1).trim();
+   var seg=before.slice(Math.max(before.lastIndexOf(','),before.lastIndexOf(';'),before.lastIndexOf(':'),before.lastIndexOf('—'),before.lastIndexOf(' – '),before.lastIndexOf('('))+1).trim();
    if(!CS_VERB.test(seg))continue;
    var sw0=(seg.split(/\s+/)[0]||'').replace(/[^A-Za-z]/g,'');
    if(CS_INTRO.test(sw0)||/^(?:[A-Za-z]+(?:ed|ing|en)|Should|Had|Were|To|Unlike|Like|As|Applied|Given|Compared)$/.test(sw0))continue;
+   /* 7.49: an opening clause ("And even when you can, it is") is no splice */
+   var segL=seg.replace(/^[^A-Za-z]+/,'');
+   if(/^(?:(?:and|but|so|or|yet)\s+)?(?:(?:even|only|just|especially|particularly|mainly|also)\s+)?(?:when|whenever|if|although|though|because|since|as|while|whereas|unless|until|after|before|once|wherever)\b/i.test(segL))continue;
+   /* an aside closes before the comma: a relative clause ("where the
+      protests were taking place, she"), or "that is", "in other words" */
+   if(/^(?:especially|particularly|even|only|also|mainly|largely|partly|chiefly)\s+(?:in|on|at|for|with|by|from|during|under|within|through|after|before|despite|among|between|against|over|beyond|upon|like|unlike|to|as)\b/i.test(segL))continue;
+   if(/^(?:where|which|who|whom|whose|whereby)\b/i.test(segL)||/(?:^|\s)(?:that is|in other words|namely|i\.e\.|e\.g\.|for example|for instance|however|therefore|thus|indeed|moreover|in fact|of course|in turn|in short)$/i.test(segL))continue;
+   /* a conditional or a reason inside the clause ("says even if ..., it") */
+   if(/\b(?:if|when|whenever|although|though|because|since|while|whereas|unless|until|once|provided|given that|now that|in case|in the case that|as long as|so long as|insofar as|that as|and as)\b/i.test(segL))continue;
    var lastSub=seg.search(/\b(that|which|who|whom|whose|because|although|though|if|when|while|whereas|since|unless|until|after|before|once|where)\b(?![\s\S]*\b(that|which|who|whom|whose|because|although|though|if|when|while|whereas|since|unless|until|after|before|once|where)\b)/i);
    if(lastSub>=0&&!CS_VERB.test(seg.slice(lastSub).replace(/^\w+/,'')))continue;
    var abs=sbase+commaPos;
    if(inMask(abs,ms))continue;
    if(out.some(function(o){return abs<o.end&&abs+1>o.start;}))continue;
-   out.push({start:abs,end:abs+1,orig:',',fix:null,cat:'g',
-    why:'Possible comma splice: use a full stop, a semicolon, or a joining word'});
+   /* 7.49: the fix ends the first sentence; the card names the other ways */
+   var pro=cm[1],pEnd=abs+cm[0].indexOf(pro)+pro.length;
+   out.push({start:abs,end:pEnd,orig:t.slice(abs,pEnd),fix:'. '+pro[0].toUpperCase()+pro.slice(1),cat:'g',
+    why:'Comma splice: two sentences joined by a comma. End the first with a full stop, or use a semicolon if they belong together, or join them with a word such as "and" or "because"'});
   }
  }
 }
@@ -15433,6 +15448,23 @@ function capitalCheck(t,ms,out){
   if(ovTaken(out,start,start+1))continue;
   out.push({start:start,end:start+1,orig:m[3],fix:m[3].toUpperCase(),cat:'g',
    why:'New sentence begins in lowercase'});
+ }
+ /* 7.49: after a question or an exclamation, and at the head of a
+    paragraph; not a list item, a note, a word written with an inner
+    capital ("iPhone", "eBay") or an abbreviation ("e.g.") */
+ var re2=/([!?]\s+|(?:^|\n)[ \t]*)(["“‘(]?)([a-z][a-zA-Z'’\-]*)(\.?)/g;guard=0;
+ while((m=re2.exec(t))&&guard++<4000){
+  var w=m[3],st=m.index+m[1].length+m[2].length;
+  if(/[A-Z]/.test(w)||(m[4]&&w.length<=4)||SENT_ABBR.test(w+m[4]))continue;
+  /* a line that carries on the one before (verse, a list after a colon) */
+  if(!/^[!?]/.test(m[1])&&m.index>0){var pv=t.slice(Math.max(0,m.index-400),m.index+1).replace(/\s+$/,'');
+   if(!/(?:[.!?]["”’)]?)$/.test(pv)&&!(/\n\s*\n\s*$/.test(t.slice(Math.max(0,m.index-6),m.index+1))&&!/:$/.test(pv)))continue;}
+  /* a title or a cry inside the sentence: "Jeopardy! and", "Why? asked she" */
+  if(/^[!?]/.test(m[1])&&(/[A-Z][\w'’]*[!?]$/.test(t.slice(Math.max(0,m.index-24),m.index+1))||/^(?:and|or|but|nor|as|said|asked|cried|replied|he|she|they|we|you|i)$/.test(w)))continue;
+  if(inMask(st,ms))continue;
+  if(ovTaken(out,st,st+1))continue;
+  out.push({start:st,end:st+1,orig:w[0],fix:w[0].toUpperCase(),cat:'g',
+   why:'A sentence begins with a capital letter'});
  }
 }
 /* Missing space after a full stop: "end.Another". The two-lowercase-letter run
