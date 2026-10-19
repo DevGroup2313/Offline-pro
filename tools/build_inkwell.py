@@ -49,7 +49,7 @@ def build():
         page = page.replace(marker, base64.b64encode(raw).decode("ascii"))
     # 7.32: shared scripts (the grammar model's decoder and the safety filter)
     # are written once in src/lib and placed in the page where it names them
-    for name in ("gector_core", "gec_filter", "fontes_core", "clepsydra", "spell_core", "rewrite_core", "explain_core", "coach_core", "lexicon_core", "synonyms_core", "paraphrase_core", "refine_core", "learner_data", "learner_core", "mark_core", "myway_core", "atkinson_font", "dphil_core", "revise_core", "fnclip_core"):
+    for name in ("gector_core", "gec_filter", "fontes_core", "clepsydra", "spell_core", "rewrite_core", "explain_core", "coach_core", "lexicon_core", "synonyms_core", "paraphrase_core", "refine_core", "learner_data", "learner_core", "mark_core", "myway_core", "atkinson_font", "dphil_core", "revise_core", "fnclip_core", "grade_core", "draft_core"):
         marker = "@@LIB_%s@@" % name.upper()
         if page.count(marker) != 1:
             sys.exit("src/inkwell.html must hold %s exactly once" % marker)

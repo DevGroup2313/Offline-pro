@@ -1651,7 +1651,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
  <div class="hdr">
   <span class="actpair" role="group" aria-label="Primary work">
    <button class="primary hero" onclick="correct()" title="Deep pass; ⌘/Ctrl+Enter">✔ Correct</button>
-   <button class="draftBtn heroKey" onclick="compose()" title="AI drafts to order">✨ Draft</button>
+   <button class="draftBtn heroKey" onclick="compose()" title="Draft with me: answer a few questions and Inkwell joins your answers into prose (no model needed)">✨ Draft</button>
   </span>
   <span class="menuset" role="group" aria-label="Desk menus">
    <button class="menuBtn" onclick="showMenu(event,'coach')">Coach ▾</button>
@@ -1804,6 +1804,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_LEARNER_DATA@@
 @@LIB_LEARNER_CORE@@
 @@LIB_MARK_CORE@@
+@@LIB_GRADE_CORE@@
+@@LIB_DRAFT_CORE@@
 @@LIB_MYWAY_CORE@@
 @@LIB_ATKINSON_FONT@@
 @@LIB_DPHIL_CORE@@
@@ -2474,7 +2476,7 @@ stats:LS('stats')||{},showStyle:inkStyleDefault(),modelRepo:LS('modelRepo')||'',
 solo:LS('solo')||false,readable:LS('readable')||false,noTips:LS('noTips')||false,tipSeen:LS('tipSeen')||{},
 motion:LS('motion')||'full',rtab:LS('rtab')||'sugg',door:LS('door')!==false,
 sideFold:inkFoldDefault(LS('sideFold')),panelFold:inkFoldDefault(LS('panelFold')),notes:LS('notes')||[],
-tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,writerKind:LS('writerKind')||'',tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
+tipPos:LS('tipPos')||null,tipMin:LS('tipMin')||false,footFold:LS('footFold')||false,showThink:LS('showThink')||false,sound:LS('sound')!==false,voice:LS('voice')||'',aiRules:LS('aiRules')||[],muteWords:LS('muteWords')||[],spellDict:LS('spellDict')||[],spellOff:LS('spellOff')||false,dialect:LS('dialect')||'off',markLevel:LS('markLevel')||'ug',markMode:LS('markMode')||'w',argMarks:LS('argMarks')||null,draftKind:LS('draftKind')||'paragraph',draftAns:LS('draftAns')||{},statEx:LS('statEx')||{},rubric:LS('rubric')||'',gradeBy:LS('gradeBy')||'inkwell',selfMarks:LS('selfMarks')||{},citeStyle:LS('citeStyle')||'harvard',cslStyle:LS('cslStyle')||'',writerAuto:LS('writerAuto')||false,writerKind:LS('writerKind')||'',tabletAuto:LS('tabletAuto')||false,tabletFile:LS('tabletFile')||'',engineFirst:LS('engineFirst')||'device',tmThreads:LS('tmThreads')||0,goals:LS('goals')||{aud:'Academic readers',dom:'General document',intent:'Argue'}};
 let SNAPS=LS('snaps')||{};
 inkMark('storage');
 var state = {}; Object.defineProperty(state, 'stickyNotes', { get() { return S.notes; }, set(v) { S.notes = v; } });
@@ -9399,7 +9401,20 @@ function undo(){if(!UNDO.length)return toast('Nothing to undo');ed.value=UNDO.po
 const CITE_UNDO=new Map();
 function citeUndoPoint(){pushUndo();const d=inkDoc();if(!d)return;
  CITE_UNDO.set(ed.value,JSON.stringify(d.citeRec||[]));if(CITE_UNDO.size>60)CITE_UNDO.delete(CITE_UNDO.keys().next().value);}
-function bumpStat(why){S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);renderPatterns();}
+/* a pattern's name: a long explanation is named by its head ("Comma splice") */
+function statKey(why){why=String(why||'');return why.length>48?why.split(/[:.]/)[0].trim():why;}
+function bumpStat(why,ex){why=statKey(why);S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);
+ /* 7.49: the writer's own slip is kept (six to a pattern) for practice */
+ if(ex&&ex.ctx){const all=S.statEx||{},L=(all[why]||[]).filter(x=>x.ctx!==ex.ctx);L.unshift(ex);all[why]=L.slice(0,6);S.statEx=all;SV('statEx',all);}
+ renderPatterns();}
+/* the sentence round a slip, with the slip's place in it, before the fix */
+function statExample(t,e){if(typeof e.fix!=='string'||e.end<=e.start)return null;
+ let a=e.start,b=e.end;while(a>0&&!/[.!?\n]/.test(t[a-1])&&e.start-a<220)a--;while(b<t.length&&!/[.!?\n]/.test(t[b])&&b-e.end<220)b++;if(b<t.length&&/[.!?]/.test(t[b]))b++;
+ const lead=t.slice(a,e.start).match(/^\s*/)[0].length;a+=lead;
+ const x={ctx:t.slice(a,b),at:e.start-a,len:e.end-e.start,fix:e.fix};
+ /* a splice may as well be mended with a semicolon */
+ if(/splice/i.test(e.why||'')){const o=t.slice(e.start,e.end).replace(/^,\s*/,'');x.alt=['; '+o,';'+o];}
+ return x;}
 function studyTop(){const top=Object.entries(S.stats).sort((a,b)=>b[1]-a[1]);
  if(!top.length)return;const L=lessonFor(top[0][0]);
  document.getElementById('modalBody').innerHTML='<h3>Study: '+esc(top[0][0])+'</h3><div style="font-family:Georgia,serif;font-size:15px;line-height:1.7">'+esc(L[0])+
@@ -9410,9 +9425,10 @@ function studyTop(){const top=Object.entries(S.stats).sort((a,b)=>b[1]-a[1]);
 function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pushUndo();inkAuthMark('f');
  const wasFirst=(Object.values(S.stats).reduce((a,b)=>a+b,0)===0);
  const orig=(typeof e.orig==='string'&&e.end>e.start)?e.orig:ed.value.slice(e.start,e.end);
+ const ex=statExample(ed.value,e);
  const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
  if(!r){scan();return;}
- bumpStat(e.why||'');
+ bumpStat(e.why||'',ex);
  ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
  if(wasFirst)showTip('learn');toast('Accepted ✔');clearSel();}
 function dismissOne(i){SND.dismiss();EDITS.splice(i,1);if(S.solo&&SOLOI>0)SOLOI--;EXPID=-1;renderCards();renderHL();clearSel();}
@@ -9442,7 +9458,7 @@ function wbMute(i){const e=EDITS[i];if(!e||!e.wb)return;const w=e.wb;
 function wbUnmute(i){S.muteWords.splice(i,1);SV('muteWords',S.muteWords);WB=null;openModal('rules');scan();}
 function acceptAll(){const es=EDITS.filter(e=>typeof e.fix==='string');if(!es.length)return toast('Nothing to fix');inkAuthMark('f');
  if(es.length>=4)snap('Before Fix all');
- pushUndo();es.forEach(e=>bumpStat(e.why||''));let t=ed.value;
+ pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.why||'',statExample(t0,e)));}let t=ed.value;
  es.slice().sort((a,b)=>b.start-a.start).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
  ed.value=t;afterChange();SND.fixall();showUndoChip();clearSel();
  const r=+document.getElementById('rhCount').textContent;
@@ -11268,10 +11284,12 @@ const RUBRICS={
 let GRADE=null;
 function openGrader(){
  const keys=Object.keys(RUBRICS),cur=S.rubric||RUBRICS[keys[0]];
+ const ai=window.inkScribaAI,st=ai&&ai.status();
  document.getElementById('modalBody').innerHTML='<h3>🏛 Grade against a rubric</h3>'+
-  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6;margin:0 0 8px">One criterion per line, as <b>Name: what it asks</b>. Start from a template or paste your own marking criteria. Each is marked 1 to 5 by your writing model, with feedback that quotes your page; Mechanics is counted by Inkwell itself.</p>'+
+  '<p style="font-size:12.5px;color:var(--mut);line-height:1.6;margin:0 0 8px">One criterion per line, as <b>Name: what it asks</b>. Start from a template or paste your own marking criteria. Inkwell marks each one from what it can count on your page (paragraphs and their openings, signposts, claims, reasons, sources), shows what it counted and the place to look first, and one way to raise it. A line it cannot count becomes a question for you to answer and mark. No model is needed.</p>'+
   '<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 6px">'+keys.map(k=>'<button class="lkbtn" onclick="document.getElementById(\'rubricIn\').value=RUBRICS[\''+k+'\']">'+esc(k)+'</button>').join('')+'</div>'+
   '<textarea id="rubricIn" rows="8" style="width:100%;box-sizing:border-box;font:13px/1.5 Georgia,serif;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)">'+esc(cur)+'</textarea>'+
+  (st&&st.ok?'<label style="display:flex;gap:6px;align-items:center;font-size:12.5px;margin-top:6px;color:var(--mut)"><input type="checkbox" id="gradeModel"'+(S.gradeBy==='model'?' checked':'')+'> Ask the writing model ('+esc(st.by||'on')+') instead, for the lines it can read</label>':'')+
   '<div class="row" style="margin-top:8px"><button class="primary" onclick="gradeRun()">Grade this page</button></div><div id="gradeOut" style="margin-top:12px"></div>';
  document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}
 function gradeMechanics(t){
@@ -11279,23 +11297,47 @@ function gradeMechanics(t){
  const mark=per<=0.5?5:per<=1.5?4:per<=3?3:per<=5?2:1,by={};E.forEach(e=>{const k=String(e.why||'').split(':')[0].slice(0,40);by[k]=(by[k]||0)+1;});
  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,n])=>k+' ('+n+')').join(', ');
  return {mark:mark,fb:E.length+' correctness issue'+(E.length===1?'':'s')+' in '+words+' words ('+per.toFixed(1)+' per 100 words)'+(top?'; most often: '+top:'')+'. Counted by Inkwell\u2019s checks, not by the model.',by:'Inkwell'};}
+/* 7.49: a page marked by Inkwell's own counts (INKGRADE), offline; the
+   writing model only when the writer asks for it */
+function gradeShow(i){const r=GRADE&&GRADE.rows[i];if(!r||!r.at)return;closeModal();locatePos(r.at.start,r.at.end);}
+function gradeSelf(i,m){const r=GRADE&&GRADE.rows[i];if(!r)return;r.mark=m;
+ const all=S.selfMarks||{},k=S.active+'|'+r.name;all[k]=m;S.selfMarks=all;SV('selfMarks',all);if(GRADE.draw)GRADE.draw();}
 async function gradeRun(){
  const t=ed.value.trim(),out=document.getElementById('gradeOut');if(!t)return toast('Write something first 🙂');
  const rub=(document.getElementById('rubricIn').value||'').trim();S.rubric=rub;SV('rubric',rub);
  const crit=rub.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf(':');return i>0?{name:l.slice(0,i).trim(),desc:l.slice(i+1).trim()}:{name:l,desc:l};}).slice(0,10);
  if(!crit.length)return toast('Write at least one criterion');
- const ai=window.inkScribaAI,st=ai&&ai.status();
- const words=t.split(/\s+/),essay=words.length>2400?words.slice(0,2400).join(' '):t,cut=words.length>2400;
- GRADE={rows:[],cut:cut,by:st&&st.ok?st.by:''};
+ const ai=window.inkScribaAI,st=ai&&ai.status(),gm=document.getElementById('gradeModel');
+ S.gradeBy=gm&&gm.checked?'model':'inkwell';SV('gradeBy',S.gradeBy);
+ const useModel=S.gradeBy==='model'&&st&&st.ok;
+ const words=t.split(/\s+/),essay=words.length>2400?words.slice(0,2400).join(' '):t,cut=useModel&&words.length>2400;
+ const sch=S.reg==='scholarly',GM=window.INKGRADE?INKGRADE.measure(ed.value):null;
+ let lang=null;try{lang=window.INKMARK?INKMARK.mark(t,inkRules(t),{scholarly:sch}):null;}catch(e){}
+ GRADE={rows:[],cut:cut,by:useModel?st.by:''};
  const draw=()=>{const done=GRADE.rows.filter(r=>r.mark);const avg=done.length?(done.reduce((a,r)=>a+r.mark,0)/done.length):0;
+  const byInk=done.length&&done.every(r=>r.by==='Inkwell'||r.self);
   out.innerHTML=(cut?'<p style="font-size:12px;color:var(--gold)">The model read the first 2,400 words; the page is longer.</p>':'')+
-   GRADE.rows.map(r=>'<div class="para" style="align-items:flex-start"><div class="pn" style="min-width:42px">'+(r.mark?r.mark+'/5':'…')+'</div><div class="pt"><b>'+esc(r.name)+'</b><div style="font-size:13px;line-height:1.55;margin-top:3px">'+r.html+'</div>'+(r.warn?'<div style="font-size:11.5px;color:#b03a2e;margin-top:3px">'+esc(r.warn)+'</div>':'')+'</div></div>').join('')+
-   (done.length?'<p style="font-size:13px;margin-top:10px">Average: <b>'+avg.toFixed(1)+' / 5</b>'+(GRADE.by?' · marked by '+esc(GRADE.by):'')+'. Rough feedback from a model on your own device, not a predicted grade.'+
-    (done.filter(r=>r.mark===5).length>=Math.max(3,done.length-1)?' Small models tend to give top marks to most writing (in testing, the tablet\u2019s model gave 5 out of 5 to every criterion); read the feedback, not the numbers.':'')+'</p>':'');};
+   GRADE.rows.map((r,i)=>'<div class="para" style="align-items:flex-start"><div class="pn" style="min-width:42px">'+(r.mark?r.mark+'/5':(r.self?'?':'…'))+'</div><div class="pt"><b>'+esc(r.name)+'</b>'+
+    (r.by==='Inkwell'?' <span style="font-size:11px;color:var(--mut)">counted by Inkwell</span>':r.self?' <span style="font-size:11px;color:var(--mut)">your own mark</span>':'')+
+    (r.said?'<ul style="margin:4px 0 0 18px;padding:0;font-size:12.5px;line-height:1.55">'+r.said.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+
+    (r.at?'<div style="font-size:12.5px;margin-top:5px;font-style:italic">“'+esc(r.at.text)+'” <button class="lkbtn" style="font-style:normal" onclick="gradeShow('+i+')">Show me</button></div>':'')+
+    (r.tip?'<div style="font-size:12.5px;margin-top:5px"><b>To raise it:</b> '+esc(r.tip)+'</div>':'')+
+    (r.self?'<div style="font-size:13px;line-height:1.55;margin-top:3px">'+esc(r.q)+'</div><div class="row" style="gap:4px;margin-top:5px">'+[1,2,3,4,5].map(m=>'<button class="lkbtn'+(r.mark===m?' on':'')+'" style="min-width:30px'+(r.mark===m?';font-weight:700':'')+'" onclick="gradeSelf('+i+','+m+')">'+m+'</button>').join('')+'</div>':'')+
+    (r.html?'<div style="font-size:13px;line-height:1.55;margin-top:3px">'+r.html+'</div>':'')+(r.warn?'<div style="font-size:11.5px;color:#b03a2e;margin-top:3px">'+esc(r.warn)+'</div>':'')+'</div></div>').join('')+
+   (done.length?'<p style="font-size:13px;margin-top:10px">Average: <b>'+avg.toFixed(1)+' / 5</b>'+(byInk?'. Counted by Inkwell from your page, with no model: these are counts, not an examiner\u2019s judgement, so read what was counted.':(GRADE.by?' · marked by '+esc(GRADE.by)+'. Rough feedback from a model on your own device, not a predicted grade.':''))+
+    (!byInk&&done.filter(r=>r.mark===5&&!r.self&&r.by!=='Inkwell').length>=Math.max(3,done.length-1)?' Small models tend to give top marks to most writing (in testing, the tablet\u2019s model gave 5 out of 5 to every criterion); read the feedback, not the numbers.':'')+'</p>':'');};
+ GRADE.draw=draw;
  for(const c of crit){
   const row={name:c.name,mark:0,html:'Marking…'};GRADE.rows.push(row);draw();
-  if(/mechanic|grammar|spelling|punctuation|accuracy/i.test(c.name+' '+c.desc)&&c.desc.length<80){const m=gradeMechanics(t);row.mark=m.mark;row.html=esc(m.fb);draw();continue;}
-  if(!st||!st.ok){row.html='Needs a writing model: start one in ⚙ Engine (the tablet\u2019s own, Apple\u2019s, or your laptop\u2019s).';draw();continue;}
+  if(/mechanic|grammar|spelling|punctuation|accuracy/i.test(c.name+' '+c.desc)&&c.desc.length<80){const m=gradeMechanics(t);row.mark=m.mark;row.html=esc(m.fb);row.by='Inkwell';draw();continue;}
+  const k=window.INKGRADE?INKGRADE.kind(c.name,c.desc):'';
+  if(!useModel&&k&&GM){const r=INKGRADE.criterion(k,GM,{lang:lang,scholarly:sch});
+   if(r){row.mark=r.mark;row.said=r.said;row.at=r.at;row.tip=r.tip;row.by='Inkwell';row.html='';draw();continue;}}
+  if(!useModel){
+   /* a line Inkwell cannot count: the writer reads for it and marks it */
+   const d=c.desc&&c.desc!==c.name?c.desc:c.name;
+   row.self=true;row.html='';row.q='Inkwell cannot count this one. Read your page for it: \u201c'+d.replace(/[.\s]+$/,'')+'.\u201d How fully does the page do it? Mark it yourself, 1 (not yet) to 5 (fully).';
+   row.mark=(S.selfMarks||{})[S.active+'|'+c.name]||0;draw();continue;}
   try{
    const sys='You are an experienced, fair examiner. Mark the essay on ONE criterion only. Criterion: '+c.name+': '+c.desc+'. Reply in exactly this form:\nMARK: a whole number from 1 (poor) to 5 (excellent)\nFEEDBACK: two or three sentences that say what works and what to improve, quoting the essay\u2019s own words in double quotation marks.\nJudge only what the essay contains; invent nothing.';
    const r=await ai.ask(sys,essay,340);
@@ -11315,9 +11357,9 @@ async function gradeRun(){
    if(!row.mark)row.warn=(row.warn?row.warn+' ':'')+'The model gave no mark.';
   }catch(e){row.html='The model did not answer: '+esc(String(e&&e.message||e));}
   draw();}
- /* 7.43: the model's marks (not Inkwell's own Mechanics count) feed the
+ /* 7.43: the model's marks (not Inkwell's own counts) feed the
     "Writing and argument" mark, kept with this page and its length */
- const am=GRADE.rows.filter(r=>r.mark&&!/mechanic|grammar|spelling|punctuation|accuracy/i.test(r.name)).map(r=>r.mark);
+ const am=GRADE.rows.filter(r=>r.mark&&!r.self&&r.by!=='Inkwell'&&!/mechanic|grammar|spelling|punctuation|accuracy/i.test(r.name)).map(r=>r.mark);
  if(am.length&&GRADE.by){S.argMarks={doc:S.active,marks:am,words:wordCt(t),by:GRADE.by};SV('argMarks',S.argMarks);MARKC.sig='';updateStats();}}
 
 /* ================= CITATION HELP (the queue's last item) ================= */
@@ -12472,7 +12514,8 @@ function renderAlts(status){
  if(!ALTMODE)return;
  const c=document.getElementById('altCard');if(!c)return;
  const prompt=ALTSEL&&ALTSEL.prompt,mode=prompt?'prompt':ACST.mode;
- const title=mode==='prompt'?'✍ Rewrite with a prompt':mode==='rewrite'?'↻ Rewrite':'✨ Alternatives';
+ const drafting=ALTS.length>0&&ALTS.every(a=>a.kind==='Draft');
+ const title=mode==='prompt'?'✍ Rewrite with a prompt':mode==='rewrite'?'↻ Rewrite':drafting?'✨ Draft':'✨ Alternatives';
  let html='<div class="acGrab" aria-hidden="true"></div><div class="altHead">'+title+'<button class="lkbtn" onclick="closeAlts()" title="Close (Esc)" aria-label="Close">✕</button></div>';
  if(ALTSEL&&ALTSEL.t)html+='<div class="acSel">'+esc(ALTSEL.t.trim().length>160?ALTSEL.t.trim().slice(0,157)+'…':ALTSEL.t.trim())+'</div>';
  if(mode==='rewrite'||mode==='prompt')html+='<div class="acTabs" role="tablist">'+AC_TABS.map(x=>'<button role="tab" aria-selected="'+(mode==='rewrite'&&ACST.style===x[0])+'" class="'+(mode==='rewrite'&&ACST.style===x[0]?'on':'')+'" onclick="inkRewriteTab(\''+x[0]+'\')">'+x[1]+'</button>').join('')
@@ -12501,7 +12544,7 @@ function renderAlts(status){
  if(ACST.busy)html+='<div class="acNote"><span class="acBusy" aria-hidden="true"></span>'+esc(ACST.busy)+'</div>';
  if(!any&&!ACST.busy&&!(mode==='prompt'&&!status))html+='<div class="aempty">'+esc(status||inkCardEmpty(mode))+'</div>';
  else if(status)html+='<div class="acNote">'+esc(status)+'</div>';
- if(any)html+='<div class="acNote">'+(cards?'Nothing changes until you choose “Use this”. ':'')+'Offline versions come from Inkwell’s own rules and word lists; '+(inkSrv()||PRO?'the writing model adds its own.':'a writing model (⚙ Engine) would add more.')+'</div>';
+ if(any)html+='<div class="acNote">'+(cards?'Nothing changes until you choose “Use this”. ':'')+(drafting?'Inkwell\u2019s checks read the draft once it is on the page.':'Offline versions come from Inkwell’s own rules and word lists; '+(inkSrv()||PRO?'the writing model adds its own.':'a writing model (⚙ Engine) would add more.'))+'</div>';
  const keep=c.scrollTop;c.innerHTML=html;c.style.display='block';c.scrollTop=keep;
  inkCardPlace();}
 /* why there is nothing to show, said plainly */
@@ -12819,14 +12862,53 @@ function inkRewriteAI(mode,t,sel){
  inkModelVersions(instr+' Register: '+(mode==='plain'?'plain':S.reg)+'.'+voiceNotes(),t,guard,label,()=>ALTMODE&&ALTSEL&&ALTSEL.t===guard&&ACST.style===mode);}
 function inkPromptTab(){if(!ALTSEL)return;ALTSEL.prompt=true;ACST.mode='prompt';ACST.style='';ACST.words=null;ACST.chips=null;renderAlts('');
  setTimeout(function(){const i=document.getElementById('pmIn');if(i)i.focus();},60);}
+/* 7.49: Draft opens on "Draft with me" (INKDRAFT): Inkwell asks, the writer
+   answers, and the answers are joined into prose that shows each move.
+   A writing model, where one is on, is a second way in. */
+function draftHasModel(){return !!(inkSrv()||PRO);}
 function compose(){
+ const mb=document.getElementById('modalBody');if(!mb||!window.INKDRAFT)return composeModel();
+ const K=INKDRAFT.KINDS,kind=K[S.draftKind]?S.draftKind:'paragraph',st=K[kind].steps;
+ const ans=(S.draftAns&&S.draftAns[kind])||[];
+ const sel=(ed.selectionEnd>ed.selectionStart)?ed.value.slice(ed.selectionStart,ed.selectionEnd).trim():'';
+ if(sel&&sel.length<400&&!ans.some(Boolean))ans[0]=sel;
+ mb.innerHTML='<h3>✨ Draft with me</h3>'
+  +'<p style="color:var(--mut);font-size:13px;line-height:1.6;margin:0 0 10px">Answer a few questions in your own words, as short as you like. Inkwell joins your answers into prose and shows the move each sentence makes. The ideas and sources stay yours; Inkwell adds only the joining words. No model is needed.</p>'
+  +'<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 10px">'+Object.keys(K).map(k=>'<button class="lkbtn'+(k===kind?' on':'')+'" style="'+(k===kind?'font-weight:700':'')+'" onclick="draftKind(\''+k+'\')">'+esc(K[k].label)+'</button>').join('')+'</div>'
+  +'<div style="font-size:12.5px;color:var(--mut);font-style:italic;margin:0 0 8px">'+esc(K[kind].about)+'</div>'
+  +st.map((x,i)=>'<label style="display:block;margin:0 0 8px"><span style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)">'+esc(x.role)+'</span> <span style="font-size:13px">'+esc(x.q)+'</span>'
+   +'<textarea id="drA'+i+'" rows="2" oninput="draftPreview()" style="display:block;width:100%;box-sizing:border-box;margin-top:3px;font:14px/1.45 Georgia,serif;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="'+esc('e.g. '+x.ph)+'">'+esc(ans[i]||'')+'</textarea></label>').join('')
+  +'<div id="drPrev" style="margin-top:6px"></div>'
+  +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="primary" onclick="draftUse()">Put it beside the page ▸</button><button class="lkbtn" onclick="draftClear()">Clear</button>'
+  +(draftHasModel()?'<button class="lkbtn" onclick="composeModel()">Ask the writing model instead</button>':'')+'<button class="lkbtn" onclick="closeModal()">Cancel</button></div>';
+ try{document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}catch(e){}
+ draftPreview();
+ setTimeout(()=>{try{const f=st.findIndex((x,i)=>!ans[i]);document.getElementById('drA'+(f<0?0:f)).focus();}catch(e){}},60);
+}
+function draftAnswers(){const K=INKDRAFT.KINDS,kind=K[S.draftKind]?S.draftKind:'paragraph';
+ return {kind:kind,ans:K[kind].steps.map((x,i)=>{const el=document.getElementById('drA'+i);return el?el.value:'';})};}
+function draftKeep(){const d=draftAnswers();const all=S.draftAns||{};all[d.kind]=d.ans;S.draftAns=all;SV('draftAns',all);return d;}
+function draftKind(k){draftKeep();S.draftKind=k;SV('draftKind',k);compose();}
+function draftClear(){const d=draftAnswers();d.ans.forEach((x,i)=>{const el=document.getElementById('drA'+i);if(el)el.value='';});draftKeep();draftPreview();}
+function draftPreview(){const box=document.getElementById('drPrev');if(!box)return;const d=draftKeep(),r=INKDRAFT.build(d.kind,d.ans,S.reg);
+ if(!r.parts.length){box.innerHTML='';return;}
+ box.innerHTML='<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--card);font:14.5px/1.7 Georgia,serif;white-space:pre-wrap">'
+  +r.parts.map(p=>'<span title="'+esc(p.role)+'" style="font-family:Georgia,serif"><sup style="font:600 9.5px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);margin-right:3px">'+esc(p.role)+'</sup>'+esc(p.text)+'</span>').join(' ')+'</div>'
+  +(r.missing.length?'<div style="font-size:12px;color:var(--mut);margin-top:5px">Still to answer: '+esc(r.missing.join(', '))+'.</div>':'');}
+function draftUse(){const d=draftKeep(),r=INKDRAFT.build(d.kind,d.ans,S.reg);
+ if(!r.parts.length){toast('Answer the first question, then Inkwell can draft.');return;}
+ try{closeModal();}catch(e){}
+ const at=ed.selectionEnd;inkAltsOpen({s:at,e2:at,t:''},'');
+ ALTS.push({kind:'Draft',text:r.text,why:'Built from your answers ('+r.parts.map(p=>p.role.toLowerCase()).join(', ')+'). The ideas are yours; Inkwell added only the joining words.'+(r.missing.length?' Still to answer: '+r.missing.join(', ').toLowerCase()+'.':'')});
+ renderAlts('');}
+function composeModel(){
  const mb=document.getElementById('modalBody');if(!mb)return;
  mb.innerHTML='<h3>✨ Draft</h3>'
   +'<p style="color:var(--mut);font-size:13px;margin-bottom:12px">Say what to write. The draft appears in a card beside your cursor; <b>Use this</b> puts it there. Nothing is inserted until you choose.</p>'
   +'<textarea id="composeInput" style="width:100%;min-height:90px;font-family:inherit;font-size:14px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="e.g. A short paragraph introducing my research question on urban heat islands, for a general reader"></textarea>'
   +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
   +'<button class="primary" onclick="composeRun(document.getElementById(\'composeInput\').value)">Draft ▸</button>'
-  +'<button class="lkbtn" onclick="closeModal()">Cancel</button></div>'
+  +'<button class="lkbtn" onclick="compose()">◂ Draft with me</button><button class="lkbtn" onclick="closeModal()">Cancel</button></div>'
   +'<div style="margin-top:12px;font-size:11px;color:var(--mut);line-height:1.6">Drafting needs a writing model: the server (⚙ Engine) or the Pro model. It never invents citations, numbers or facts; check every claim it makes.</div>';
  try{document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}catch(e){}
  setTimeout(()=>{try{document.getElementById('composeInput').focus();}catch(e){}},60);
@@ -14538,7 +14620,7 @@ const TOUR=[
   t:'A rewrite, offline',b:'Here is Concise, from the rules engine, on this device, in a card beside the words. The tabs try the other styles: Scholarly, Casual, Plainer and more. A rewrite never touches the page until you press Use this. With a writing model, its version appears too.',
   tip:'Read both versions aloud. The one you can say in a breath usually wins.'},
  {chap:'Rewriting and drafting',sub:'Draft',spot:'.hdr .draftBtn',go:()=>{try{closeAlts();}catch(e){}},
-  t:'✨ Draft',b:'Draft writes to order from a short brief. It needs a writing model: on this device, on your laptop, or on your Mac mini. Without one, Inkwell says so rather than guess.'},
+  t:'✨ Draft',b:'Draft with me asks a few questions (for a paragraph: its point, the reason, the evidence, what it shows) and joins your answers into prose, each sentence labelled with the move it makes. No model is needed. With a writing model on, you may ask it to draft from a brief instead.'},
  {chap:'The coach',sub:'The menu',spot:'#menu',go:()=>tourMenu('coach'),
   t:'🎓 Coach',b:'The Coach menu holds the tests a good supervisor would run: questions, objections, reader reactions, a structure pass, a memo, references, originality, and a grade against a rubric.'},
  {chap:'The coach',sub:'Socrat',spot:'#modalBody',go:()=>{hideMenu();openModal('socrat');},
@@ -14547,7 +14629,7 @@ const TOUR=[
  {chap:'The coach',sub:'Authorship',spot:'#modalBody',go:()=>{closeModal();openModal('authorship');},
   t:'📜 Authorship',b:'Authorship records how a page came to be: typed, pasted, dictated, accepted from suggestions, or written by a model. A fair record you can save.'},
  {chap:'The coach',sub:'The rest',spot:'.hdr button[onclick*="\'coach\'"]',go:()=>{closeModal();},
-  t:'More from the coach',b:'Reviewer raises hostile objections; Reader reactions shows how the page will land; Deep read checks structure; Grade marks the page against a rubric. Some need a writing model, and each says so when it does.'},
+  t:'More from the coach',b:'Reviewer raises hostile objections; Reader reactions shows how the page will land; Deep read checks structure; Grade marks the page against a rubric from what Inkwell can count on it, and shows what it counted. All of them work offline.'},
  {chap:'Sources',sub:'Insert',spot:'#menu',go:()=>tourMenu('insert'),
   t:'✱ Insert',b:'Insert puts a citation, a footnote, or a References section at the caret, in the citation style you choose. Dictation starts here too.'},
  {chap:'Sources',sub:'Fontes',spot:'button[onclick*="openFontesStage"]',go:()=>hideMenu(),
@@ -14753,15 +14835,38 @@ function renderPatterns(){
     for, with the lesson itself attached so the pattern IS the teaching */
  var el=document.getElementById('patList');if(!el)return;
  var st=S.stats||{};
- var entries=Object.keys(st).filter(function(k){return st[k]>0;}).sort(function(a,b){return st[b]-st[a];});
+ /* 7.49: [name, count] pairs (the list once showed a name's first letter) */
+ var entries=Object.keys(st).filter(function(k){return st[k]>0&&k;}).sort(function(a,b){return st[b]-st[a];}).map(function(k){return [k,st[k]];});
  if(!entries.length){el.innerHTML='Accept a few fixes and Inkwell learns what to teach you.';return;}
  el.innerHTML='<div style="font-size:10.5px;color:var(--mut);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase">What your accepted fixes keep teaching</div>'+
  entries.slice(0,6).map(function(pair){
   var L=lessonFor(pair[0]);
   return '<div style="padding:8px 6px;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px"><span>'+esc(pair[0])+'</span><b style="color:var(--acc)">'+pair[1]+'×</b></div>'+
-  '<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:3px;font-family:Georgia,serif">'+esc(L[0])+'</div></div>';
+  '<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:3px;font-family:Georgia,serif">'+esc(L[0])+'</div>'+
+  (((S.statEx||{})[pair[0]]||[]).length?'<button class="lkbtn" style="margin-top:5px;font-size:11.5px" onclick="patPractise('+JSON.stringify(pair[0]).replace(/"/g,'&quot;')+')">Practise with your own sentences ▸</button>':'')+'</div>';
  }).join('');
 }
+/* 7.49: practice from the writer's own slips: each sentence as it was, the
+   slip underlined; the writer says what stands there, and the lesson answers */
+function patPractise(why){const ex=((S.statEx||{})[why]||[]).slice(0,3);if(!ex.length)return toast('Accept a fix of this kind first');
+ const L=lessonFor(why);PATP={why:why,ex:ex,ok:0};
+ document.getElementById('modalBody').innerHTML='<h3>Practise: '+esc(why)+'</h3>'+
+  '<p style="font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 10px">'+(ex.length===1?'A sentence':ex.length+' sentences')+' from your own pages, as you first wrote '+(ex.length===1?'it':'them')+'. What should stand in place of the underlined words?</p>'+
+  ex.map((x,i)=>'<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font:15px/1.65 Georgia,serif">'+esc(x.ctx.slice(0,x.at))+'<u style="text-decoration-color:var(--gold);text-decoration-thickness:2px">'+esc(x.ctx.slice(x.at,x.at+x.len))+'</u>'+esc(x.ctx.slice(x.at+x.len))+'</div>'+
+   '<div class="row" style="gap:6px;margin-top:6px"><input id="pp'+i+'" style="flex:1;font:14px Georgia,serif;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="Type what belongs there" onkeydown="if(event.key===\'Enter\')patCheck('+i+')"><button class="lkbtn" onclick="patCheck('+i+')">Check</button></div><div id="ppr'+i+'" style="font-size:12.5px;margin-top:5px"></div></div>').join('')+
+  '<div style="font-size:12.5px;color:var(--mut);margin-top:10px;font-family:Georgia,serif;line-height:1.6">'+esc(L[0])+'</div>'+
+  '<div class="row" style="margin-top:10px"><button class="primary" onclick="closeModal()">Done</button></div>';
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');
+ setTimeout(()=>{try{document.getElementById('pp0').focus();}catch(e){}},60);}
+let PATP=null;
+function patCheck(i){if(!PATP)return;const x=PATP.ex[i],inp=document.getElementById('pp'+i),out=document.getElementById('ppr'+i);if(!x||!inp||!out)return;
+ const n=v=>String(v).replace(/\s+/g,' ').trim(),got=n(inp.value),want=n(x.fix);
+ if(!got){inp.focus();return;}
+ if(got===want||(x.alt||[]).some(a=>n(a)===got)){out.innerHTML='<span style="color:#2e7d4f">\u2714 Yes: \u201c'+esc(want)+'\u201d.</span>';
+  if(!x.done){x.done=true;PATP.ok++;
+   /* each sentence mended here counts one off the pattern: the number going to zero is the mastery */
+   if(S.stats[PATP.why]>0){S.stats[PATP.why]--;SV('stats',S.stats);renderPatterns();}}}
+ else out.innerHTML='<span style="color:#b03a2e">Not quite.</span> The page took \u201c'+esc(want)+'\u201d'+(got.toLowerCase()===want.toLowerCase()?' (look at the capital letters)':'')+'.';}
 (function boot(){
  /* 6.57: every phase runs in its own guard. A fault names itself in the
     footer instead of quietly stranding everything after it. */
