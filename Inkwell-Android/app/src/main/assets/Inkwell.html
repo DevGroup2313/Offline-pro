@@ -653,6 +653,11 @@ body[data-motion=minimal] button{box-shadow:none !important}
 .crow .cwhy{margin-left:auto;color:var(--mut);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%}
 .crow .cexp{color:var(--acc);font-size:13px;flex-shrink:0}
 .crow .cremove{flex-shrink:0;width:24px;height:24px;padding:0;font-size:11px;border-radius:50%;color:var(--mut);box-shadow:var(--sh-sm);margin-left:2px}
+.catLeg .catF{background:none;border:0;box-shadow:none;padding:2px 7px;margin:0 2px 0 0;border-radius:10px;font:inherit;color:inherit;cursor:pointer}
+.catLeg button.catF.on{background:var(--acc);color:#fff;font-weight:600}
+.catLeg button.catF .cdot{margin-right:4px}
+.catLeg .catF:hover{background:var(--card-hi)}
+#stWords{cursor:pointer}
 .crow .cadd{flex-shrink:0;height:24px;padding:0 8px;font-size:11px;border-radius:12px;color:var(--gold);box-shadow:var(--sh-sm);margin-left:4px;white-space:nowrap}
 .crow .cremove:hover{color:var(--red);transform:none}
 /* the door: a real window. Dragged by its head, resized from every edge and corner */
@@ -1980,7 +1985,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
    </div>
   </div>
   <div id="status">
-   <span id="stWords">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
+   <span id="stWords" onclick="openPerformance()" title="Performance: counts, reading and speaking time, readability">0 words</span><span id="stGain"></span><span id="stRead">1 min read</span><span id="stWps"></span><span id="stLex"></span>
    <span id="stFlesch">· readability</span><span id="stScore" style="font-weight:700;color:var(--acc)" title="The writing mark: accuracy, clarity, vocabulary, sentences and register, on the scale you chose">· mark</span><span id="stCerr">0 issues</span><span id="stBuild" style="margin-left:8px;opacity:.85"></span>
    <span id="stSel"></span><button type="button" id="inkNoteNext" class="inkNoteBtn" onclick="inkNoteNext()" title="Leave yourself a note: it is shown with your place next time" hidden>✎ Note for next time</button><button type="button" id="iwToday" class="inkNoteBtn" onclick="inkTodayCard()" title="Today's words and time, by document" hidden></button><span id="stSave" style="font-size:11px" title="Everything on the page is written to this device."></span><span style="margin-left:auto" id="stModel"></span><button class="foldBtn" style="margin:0;align-self:center" onclick="foldFoot()" title="Fold the footer away">▾</button>
   </div>
@@ -14341,6 +14346,7 @@ const MENUS={
   ['🧩 My way of working: comfort, where I was, three at a time',()=>openModal('myway'),()=>{try{const g=INKWAY.get();return (g.comfort.on||g.where.on||g.three.on)?'on':'';}catch(e){return '';}}],
   ['🔊 Soundscape',()=>toggleSound(),()=>S.sound?'on':''],
   ['🎯 Goals: who, what, why',()=>openModal('goals')],
+  ['📊 Performance: counts, times, readability',()=>openPerformance()],
   ['🧭 Guided tour',()=>startTour()],
   ['1× One suggestion at a time',()=>toggleSolo(),()=>S.solo?'on':''],
   ['◌ Motion: '+({full:'Full',calm:'Calm',minimal:'Minimal'}[S.motion]),()=>cycleMotion()]],
@@ -16746,6 +16752,44 @@ const IRREG_PL={childs:'children',womans:'women',foots:'feet',tooths:'teeth',mou
 const MODALS='can|could|will|would|shall|should|may|might|must|cannot';
 const NEG_AUX="didn['’]t|doesn['’]t|don['’]t|did not|does not|do not|can['’]t|couldn['’]t|won['’]t|wouldn['’]t|shouldn['’]t|mustn['’]t";
 const TRANSITIONS='However|Moreover|Furthermore|Nevertheless|Nonetheless|Consequently|Additionally|Nowadays|Firstly|Secondly|Thirdly|Lastly|Unfortunately|Fortunately|Personally|Honestly|Surprisingly|Interestingly|In addition|For example|For instance|In conclusion|To conclude|To sum up|In my opinion|In my view|On the other hand|On the one hand|Of course|In fact|As a result|In general|In short|In summary|Above all|All in all|After all|In other words|To be honest|As a matter of fact';
+/* 7.49: inclusive language, as Grammarly's delivery notes offer it: a
+   word that names people by one sex, a disability, an age or an origin in a
+   way many readers now find narrow, with the plainer words style guides
+   (APA's guidance on bias-free language among them) suggest. Advice, not
+   correction: it is a style note, never inside a quotation, and not in
+   creative writing, where the words may be a character's. */
+const INCL_PL=(m,one,many)=>/(?:men|women|s)$/i.test(m)?many:one;
+const INCL=[
+ {re:/\bchair(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'chair','chairs'),alts:['chair','chairperson'],cat:'s',ncre:true,label:'Inclusive language: "chair" names the role, not the sex'},
+ {re:/\bmankind\b/gi,to:'humanity',alts:['humanity','humankind','people'],cat:'s',ncre:true,label:'Inclusive language: "humanity" or "humankind" includes everyone'},
+ {re:/\bmanpower\b/gi,to:'workforce',alts:['workforce','staff','personnel'],cat:'s',ncre:true,label:'Inclusive language: "workforce" or "staff"'},
+ {re:/\bman-made\b/gi,to:'artificial',alts:['artificial','synthetic','human-made'],cat:'s',ncre:true,label:'Inclusive language: "artificial", "synthetic" or "human-made"'},
+ {re:/\bman-hours?\b/gi,to:m=>/s$/i.test(m)?'person-hours':'person-hour',cat:'s',ncre:true,label:'Inclusive language: "person-hours"'},
+ {re:/\bpolice(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'police officer','police officers'),cat:'s',ncre:true,label:'Inclusive language: "police officer"'},
+ {re:/\bfirem[ae]n\b/gi,to:m=>INCL_PL(m,'firefighter','firefighters'),cat:'s',ncre:true,label:'Inclusive language: "firefighter"'},
+ {re:/\b(?:post|mail)m[ae]n\b/gi,to:m=>INCL_PL(m,'postal worker','postal workers'),alts:['postal worker','mail carrier'],cat:'s',ncre:true,label:'Inclusive language: "postal worker" or "mail carrier"'},
+ {re:/\bbusiness(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'businessperson','businesspeople'),alts:['businessperson','executive','entrepreneur'],cat:'s',ncre:true,label:'Inclusive language: "businessperson" or "executive"'},
+ {re:/\bspokes(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'spokesperson','spokespeople'),cat:'s',ncre:true,label:'Inclusive language: "spokesperson"'},
+ {re:/\bsales(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'salesperson','salespeople'),cat:'s',ncre:true,label:'Inclusive language: "salesperson"'},
+ {re:/\bstewardess(?:es)?\b/gi,to:m=>/es$/i.test(m)?'flight attendants':'flight attendant',cat:'s',ncre:true,label:'Inclusive language: "flight attendant"'},
+ {re:/\bcameram[ae]n\b/gi,to:m=>INCL_PL(m,'camera operator','camera operators'),cat:'s',ncre:true,label:'Inclusive language: "camera operator"'},
+ {re:/\bforefathers\b/gi,to:'ancestors',alts:['ancestors','forebears'],cat:'s',ncre:true,label:'Inclusive language: "ancestors" or "forebears"'},
+ {re:/\blayman['’]s terms\b/gi,to:'plain terms',alts:['plain terms','lay terms','everyday language'],cat:'s',ncre:true,label:'Inclusive language: "plain terms" or "lay terms"'},
+ {re:/\blaym[ae]n\b/gi,to:m=>INCL_PL(m,'layperson','laypeople'),cat:'s',ncre:true,label:'Inclusive language: "layperson"'},
+ {re:/\bthe common man\b/gi,to:'ordinary people',cat:'s',ncre:true,label:'Inclusive language: "ordinary people"'},
+ {re:/\b(is|are|was|were|be|been|being) (?:wheelchair[- ]bound|confined to a wheelchair)\b/gi,to:(m,v)=>({is:'uses',are:'use',was:'used',were:'used',be:'use',been:'used',being:'using'}[v.toLowerCase()])+' a wheelchair',cat:'s',ncre:true,label:'Inclusive language: "uses a wheelchair": the chair gives freedom, it does not bind or confine'},
+ {re:/\bthe (?:disabled|handicapped)\b(?! (?:toilet|toilets|parking|space|spaces|entrance|access|bay|bays)\b)/gi,to:'disabled people',alts:['disabled people','people with disabilities'],cat:'s',ncre:true,label:'Inclusive language: "disabled people" or "people with disabilities", not a group named by its condition'},
+ {re:/\bhandicapped\b/gi,to:'disabled',cat:'s',ncre:true,label:'Inclusive language: "disabled" is the word most people now use'},
+ {re:/\bthe (?:blind|deaf)\b(?=[\s,.;:]+(?:and|or|are|were|have|had|who|in|to|of|can|could|[,.;:]))/gi,to:m=>m.replace(/^the /i,'')+' people',cat:'s',ncre:true,label:'Inclusive language: name the people ("blind people"), not the condition'},
+ {re:/\bthe elderly\b/gi,to:'older people',alts:['older people','older adults'],cat:'s',ncre:true,label:'Inclusive language: "older people" or "older adults"'},
+ {re:/\belderly (people|persons|patients|adults|women|men|residents)\b/gi,to:'older $1',cat:'s',ncre:true,label:'Inclusive language: "older" describes without labelling'},
+ {re:/\bmentally retarded\b/gi,to:'with an intellectual disability',cat:'s',ncre:true,label:'Inclusive language: "with an intellectual disability"'},
+ {re:/\b(?:black|white)list(?:s|ed|ing)?\b/gi,to:m=>m.replace(/^black/i,x=>x[0]==='B'?'Block':'block').replace(/^white/i,x=>x[0]==='W'?'Allow':'allow'),cat:'s',ncre:true,label:'Inclusive language: "blocklist" and "allowlist" say what the list does'},
+ {re:/\billegal (alien|aliens|immigrant|immigrants)\b/gi,to:(m,a)=>'undocumented '+(/s$/i.test(a)?'immigrants':'immigrant'),cat:'s',ncre:true,label:'Inclusive language: "undocumented immigrant" names a status, not a person'},
+ {re:/\bOriental (people|man|woman|men|women|person|persons)\b/g,cs:true,to:'Asian $1',cat:'s',ncre:true,label:'Inclusive language: "Asian" (or the country) for people; "Oriental" now reads as dated'},
+ {re:/\bEskimos?\b/g,cs:true,to:null,alts:['Inuit','Yupik','Iñupiat'],cat:'s',ncre:true,label:'Inclusive language: name the people, "Inuit" or "Yupik", where you can'},
+ {re:/\bcommit(?:ted|s|ting)? suicide\b/gi,to:m=>/committed/i.test(m)?'died by suicide':/commits/i.test(m)?'dies by suicide':/committing/i.test(m)?'dying by suicide':'die by suicide',cat:'s',ncre:true,label:'Inclusive language: "died by suicide", as health writers now say: "commit" carries the old sense of a crime'}
+];
 const GRAM39=[
  /* the pronoun I in lower case, wherever it stands alone; not a list marker
     ("(i)", "i)"), a numeral ("part i", "chapter i") or an abbreviation ("i.e.") */
@@ -17367,7 +17411,7 @@ function ruleEdits(t){
  var _pkey=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+((S.muteWords||[]).length)+'|'+(S.citeStyle||'');
  if(__packSig!==_pkey||!__packArr){
   __packSig=_pkey;
-  __packArr=GRAM47.concat(BASE).concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39);
+  __packArr=GRAM47.concat(BASE).concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39).concat(INCL);
   if(S.reg==='scholarly')__packArr=__packArr.concat(SCHOLAR).concat(SCHOLAR_XTRA).concat(SCHOLAR3).concat(SCHOLAR4).concat(SCHOLAR5).concat(SCHOLAR6).concat(SCHOLAR7).concat(SCHOLAR8).concat(SCHOLAR9).concat(SCHOLAR10).concat(SCHOLAR11).concat(SCHOLAR12).concat(SCHOLAR13).concat(SCHOLAR13B).concat(SCHOLAR14).concat(SCHOLAR15).concat(SCHOLAR16).concat(SCHOLAR17).concat(SCHOLAR18);
   if(S.reg==='creative')__packArr=__packArr.concat(CREATIVE);
   var _knob=(typeof docKnob==='function')?docKnob():null;
@@ -17386,6 +17430,7 @@ function ruleEdits(t){
   if(r.npre&&r.npre.test(t.slice(Math.max(0,m.start-24),m.start)))continue;
   if(S.reg==='casual'&&r.cat==='s')continue;
   if(r.nsch&&S.reg==='scholarly')continue;
+  if(r.ncre&&S.reg==='creative')continue;
   if(r.dict&&inkDictHas(m.raw))continue;
   if(r.noparen){const pb=t.slice(Math.max(0,m.start-160),m.start);if(pb.lastIndexOf('(')>pb.lastIndexOf(')'))continue;}
   /* 7.37: fx gives the fix from the matched words directly, for a pattern that looks ahead past them */
@@ -17486,6 +17531,8 @@ function hideTips(){try{var c=document.getElementById("tipCard");if(c)c.style.di
 function expandRow(i){EXPID=(EXPID===i?-1:i);renderCards();}
 function inkStyleSwitch(){
  return '<div style="margin:0 2px 10px"><button class="lkbtn" onclick="inkToggleStyle()">'+(S.showStyle?'Hide clarity and style notes':'Show clarity and style notes'+(INK_STYLE_HIDDEN?' ('+INK_STYLE_HIDDEN+')':''))+'</button></div>';}
+let INK_CATF=null;
+function inkCatFilter(k){INK_CATF=(k&&INK_CATF!==k)?k:null;EXPID=-1;CARDSIG='';renderCards();}
 function renderCards(){
  const c=document.getElementById('cards'),three=ink3On();
  document.getElementById('stCerr').textContent=three?(EDITS.length?'Worth a look':'Nothing to note'):EDITS.length+' issue'+(EDITS.length===1?'':'s');
@@ -17494,7 +17541,7 @@ function renderCards(){
     marks itself changes. The counts above stay truthful either way. */
  /* the signature keys on spans and fix lengths, not on whole strings, so a
     thesis-scale list does not spend its render budget copying text */
- const sig=(three?'3:'+ink3Shown().join(',')+':':'')+(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
+ const sig=(INK_CATF||'')+(three?'3:'+ink3Shown().join(',')+':':'')+(S.solo?'s1:':'')+(S.showStyle?'st:':'')+INK_STYLE_HIDDEN+':'+EXPID+':'+EDITS.length+':'+EDITS.map(e=>e.start+'x'+e.end+'x'+((e.fix||'').length)).join(',');
  if(sig===CARDSIG)return;
  CARDSIG=sig;
  if(!EDITS.length){c.innerHTML='<div class="inst" style="color:var(--mut);font-size:13px">'+(S.showStyle?'✨ Nothing to note.':'✨ No correctness issues found.')+'</div>'+inkStyleSwitch();return;}
@@ -17507,14 +17554,17 @@ function renderCards(){
    (more?'<button class="ink3Next" onclick="ink3Next()">Show the next three</button>':'')+inkStyleSwitch();
   return;}
  const counts={};EDITS.forEach(e=>counts[e.cat]=(counts[e.cat]||0)+1);
- const leg=['g','c','s','r','ai'].filter(k=>counts[k]).map(k=>'<span><i class="cdot c-'+k+'"></i>'+inkCap1(NAMES[k])+' <b>'+counts[k]+'</b></span>').join('');
+ /* 7.49: the legend filters the list, a kind at a time (Grammarly's tabs) */
+ if(INK_CATF&&!counts[INK_CATF])INK_CATF=null;
+ const leg=['g','c','s','r','ai'].filter(k=>counts[k]).map(k=>'<button type="button" class="catF'+(INK_CATF===k?' on':'')+'" title="'+(INK_CATF===k?'Show every kind again':'Show only '+NAMES[k]+' notes')+'" onclick="inkCatFilter(\''+k+'\')"><i class="cdot c-'+k+'"></i>'+inkCap1(NAMES[k])+' <b>'+counts[k]+'</b></button>').join('')+(INK_CATF?'<button type="button" class="catF" onclick="inkCatFilter(null)">All</button>':'');
  /* a very long list of flags is rendered as the first 400 plus a count; the
     rest appear as you work down. DOM weight stays bounded on a thesis-scale
     document, and Locate/Accept indexes stay true because the array is whole. */
- const CARCAP=400,shown=EDITS.slice(0,CARCAP),restN=EDITS.length-shown.length;
+ const view=EDITS.map((e,i)=>[e,i]).filter(x=>!INK_CATF||x[0].cat===INK_CATF);
+ const CARCAP=400,shown=view.slice(0,CARCAP),restN=view.length-shown.length;
  c.innerHTML=(leg?'<div class="catLeg">'+leg+'</div>':'')+
   '<div style="font-size:11px;color:var(--mut);margin:0 2px 9px">A quiet list. Tap a row to open it, or press <b>1×</b> above to go one at a time.</div>'+inkStyleSwitch()+
-  shown.map((e,i)=>EXPID===i?cardHTML(e,i,false):inkRowHTML(e,i)).join('')+
+  shown.map(([e,i])=>EXPID===i?cardHTML(e,i,false):inkRowHTML(e,i)).join('')+
   (restN>0?'<div style="font-size:12px;color:var(--mut);text-align:center;padding:10px 4px;font-style:italic">+ '+restN+' more; work down the list and they appear as the row above clears.</div>':'');}
 /* ================= MY WAY OF WORKING (7.44) =================
    INKWAY (src/lib/myway_core.js) holds the settings and the look; here they
@@ -18430,6 +18480,7 @@ Object.assign(LESSONS,{
 /* 7.45: the doctoral checks' lessons */
 if(typeof INKDPHIL!=='undefined')Object.assign(LESSONS,INKDPHIL.LESSONS);
 if(typeof INKCONSIST!=='undefined')Object.assign(LESSONS,INKCONSIST.LESSONS);
+LESSONS['Inclusive language']=['Words that name people by one sex ("chairman"), by a condition ("the disabled") or by an old label leave some readers out. Style guides, APA\u2019s guidance on bias-free language among them, suggest plainer words that name the role or the people. In a quotation or a character\u2019s speech, the words stay as they were said.','"The chairman spoke to the elderly." \u2192 "The chair spoke to older people."'];
 function lessonFor(why){
  /* exact prefix first; then the part after a model's name ("Laptop model:
     Verb form"); a contained key only when it is long enough not to catch an
@@ -21522,6 +21573,54 @@ function syl(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(!w)return 0;
    number of notes of every kind: a thesis chapter read as a Fail, and a
    beginner's essay scored like a native student's. */
 let MARKC={sig:'',at:0,m:null};
+/* 7.49: Performance, as Grammarly shows it, from Inkwell's own counts: the
+   page's size, its reading and speaking time (250 and 130 words a minute),
+   its word and sentence length beside measured texts (the median of 40
+   open-access articles and of 50 native student essays, LOCNESS), two
+   readability scores in plain words, the share of different and of rare
+   words, and the writing mark. The report can be saved as a text file. */
+const PERF_REF={pub:{w:5.6,s:21},stu:{w:4.6,s:20}};
+function inkClock(min){const m=Math.floor(min),s=Math.round((min-m)*60);return (m?m+' min ':'')+(s||!m?s+' sec':'');}
+function inkPerf(t){
+ const words=wordCt(t),sl=INKMARK.sentences(t),sents=sl.length||1,P=typeof INKGRADE!=='undefined'?INKGRADE.paragraphs(t):[];
+ const toks=(INKMARK.prose(t).match(/[A-Za-z][A-Za-z'’-]*/g)||[]);
+ let sy=0;for(const w of toks)sy+=syl(w);
+ const nw=toks.length||1,wl=toks.reduce((a,w)=>a+w.replace(/['’]s$/,'').length,0)/nw,sLen=nw/sents;
+ const fre=Math.round(Math.max(0,Math.min(100,206.835-1.015*sLen-84.6*(sy/nw)))),fkg=Math.max(0,Math.round((0.39*sLen+11.8*(sy/nw)-15.59)*10)/10);
+ const low=toks.map(w=>w.toLowerCase().replace(/['’]s$/,'')),uniq=new Set(low).size;
+ let rare=null;if(SPELLD){let r=0;for(const w of low){const lv=INKSPELL.level(SPELLD,w);if(lv<0||lv>=50)r++;}rare=r/nw;}
+ return {chars:t.length,charsNS:t.replace(/\s/g,'').length,words,sents:sl.length,paras:P.length,read:words/250,speak:words/130,wl,sLen,fre,fkg,uniq:uniq/nw,rare};}
+function inkFreText(f){return f>=70?'easy for most readers':f>=50?'plain enough for a general reader':f>=30?'hard: it suits readers used to academic prose':'very hard: likely to be understood by graduates, and heavy going for many readers';}
+function openPerformance(){
+ const t=ed.value;if(!t.trim())return toast('Write something first 🙂');
+ const p=inkPerf(t);let mk=null;try{mk=inkMarkNow(t);}catch(e){}
+ const row=(k,v)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)"><span>'+k+'</span><b style="color:var(--acc)">'+v+'</b></div>';
+ const cmp=(v,ref,unit)=>{const lo=Math.min(v,ref.stu,ref.pub)*0.85,hi=Math.max(v,ref.stu,ref.pub)*1.1,pc=x=>Math.round(100*(x-lo)/(hi-lo));
+  return '<div style="position:relative;height:8px;border-radius:4px;background:var(--line);margin:6px 0 3px"><i title="Student essays" style="position:absolute;left:'+pc(ref.stu)+'%;top:-3px;width:2px;height:14px;background:var(--mut)"></i><i title="Published articles" style="position:absolute;left:'+pc(ref.pub)+'%;top:-3px;width:2px;height:14px;background:var(--gold)"></i><i style="position:absolute;left:calc('+pc(v)+'% - 6px);top:-2px;width:12px;height:12px;border-radius:50%;background:var(--acc)"></i></div>'+
+   '<div style="font-size:11px;color:var(--mut)">Yours '+v.toFixed(1)+unit+' · student essays '+ref.stu+unit+' · published articles '+ref.pub+unit+'</div>';};
+ const d=S.docs.find(x=>x.id===S.active);
+ document.getElementById('modalBody').innerHTML='<h3>📊 Performance</h3>'+
+  (mk?'<p style="font-size:13px;line-height:1.6;margin:0 0 10px">Writing mark: <b>'+esc(inkMarkText(mk.mark))+'</b>. It counts accuracy, clarity, vocabulary, sentences and register; working through the notes raises it.</p>':'')+
+  '<h4 style="font-family:Georgia,serif;margin:12px 0 4px">Counts</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px;font-size:13px">'+
+   row('Characters',p.chars.toLocaleString())+row('Reading time',inkClock(p.read))+row('Characters without spaces',p.charsNS.toLocaleString())+row('Speaking time',inkClock(p.speak))+
+   row('Words',p.words.toLocaleString())+row('Paragraphs',p.paras.toLocaleString())+row('Sentences',p.sents.toLocaleString())+row('Different words',Math.round(p.uniq*100)+'%')+'</div>'+
+  '<h4 style="font-family:Georgia,serif;margin:14px 0 4px">Readability</h4><div style="font-size:13px">'+
+   '<div style="margin:6px 0 10px"><b>Word length</b>'+cmp(p.wl,{stu:PERF_REF.stu.w,pub:PERF_REF.pub.w},' letters')+'</div>'+
+   '<div style="margin:6px 0 10px"><b>Sentence length</b>'+cmp(p.sLen,{stu:PERF_REF.stu.s,pub:PERF_REF.pub.s},' words')+'</div>'+
+   row('Reading ease (Flesch, 0 to 100)',p.fre)+row('School grade (Flesch\u2013Kincaid, US)',p.fkg)+(p.rare!==null?row('Rare words',Math.round(p.rare*100)+'%'):'')+
+   '<p style="font-size:12.5px;line-height:1.6;margin:8px 0 0;font-family:Georgia,serif">Your text is '+esc(inkFreText(p.fre))+'. Scholarly prose usually scores between 10 and 40; that is no fault in itself, but a long sentence can often be split.</p></div>'+
+  '<p style="font-size:11px;color:var(--mut);line-height:1.5;margin:10px 0 0">Reading time at 250 words a minute, speaking time at 130. The comparison is the median of 40 open-access articles and of 50 native student essays (LOCNESS), measured once; none of those texts is kept in Inkwell. Rare words are those outside the common part of Inkwell\u2019s word list; specialist terms count among them.</p>'+
+  '<div class="row" style="margin-top:12px;gap:8px"><button class="primary" onclick="perfSave()">Save the report</button><button class="lkbtn" onclick="closeModal()">Close</button></div>';
+ document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');}
+function perfSave(){const t=ed.value,p=inkPerf(t),d=S.docs.find(x=>x.id===S.active),title=(d&&d.title)||'Untitled';let mk=null;try{mk=inkMarkNow(t);}catch(e){}
+ const L=['Inkwell performance report','Document: '+title,'Date: '+new Date().toLocaleString(),'',
+  mk?'Writing mark: '+inkMarkText(mk.mark):'','Characters: '+p.chars+' ('+p.charsNS+' without spaces)','Words: '+p.words,'Sentences: '+p.sents,'Paragraphs: '+p.paras,
+  'Reading time: '+inkClock(p.read)+' (250 words a minute)','Speaking time: '+inkClock(p.speak)+' (130 words a minute)','',
+  'Word length: '+p.wl.toFixed(1)+' letters (student essays '+PERF_REF.stu.w+', published articles '+PERF_REF.pub.w+')',
+  'Sentence length: '+p.sLen.toFixed(1)+' words (student essays '+PERF_REF.stu.s+', published articles '+PERF_REF.pub.s+')',
+  'Reading ease (Flesch): '+p.fre+', '+inkFreText(p.fre),'School grade (Flesch-Kincaid, US): '+p.fkg,'Different words: '+Math.round(p.uniq*100)+'%',
+  p.rare!==null?'Rare words: '+Math.round(p.rare*100)+'%':'','','Issues waiting: '+EDITS.length].filter(x=>x!==null);
+ inkSaveString(title.replace(/[\\/:*?"<>|]+/g,' ').trim()+' - performance.txt','text/plain',L.join('\n'));}
 function inkMarkNow(t){
  const sig=t.length+'|'+EDITS.length+'|'+S.reg+'|'+(S.docType||'');
  const now=Date.now();
