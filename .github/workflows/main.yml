@@ -1,0 +1,646 @@
+# THE OFFLINE PROJECT  |  Copyright (c) 2026 Yannie D. Forest. All rights reserved.
+# NO LICENCE IS GRANTED. See LICENCE.txt.
+#
+# Builds The Offline Project for iPhone and iPad on GitHub's own Mac computers (they
+# have Xcode, so your own computer needs neither) and puts TheOfflineProject.ipa on this
+# repository's Releases page. One file works on both iPhone and iPad.
+#
+# WHERE THE FILES GO IN THE REPOSITORY
+#   iphone-ipad/                      the Xcode project (the folder of that name
+#                                     in "iPhone and iPad project")
+#   .github/workflows/build-ipa.yml   this file, at the TOP of the repository
+# The project can share a repository with another project of the same app,
+# for example the Fire tablet project, the way Ingenium's repository holds
+# both. This file builds only when something inside iphone-ipad/ (or this
+# file itself) changes, so an upload for the Fire tablet never starts a Mac.
+#
+# TheOfflineProject.ipa is NOT signed. Apple lets no app onto an iPhone or iPad unless
+# it is signed with an Apple ID, so Sideloadly signs it with yours while it
+# installs it over the USB cable, the way Inkwell and Ingenium are installed.
+# See READ ME FIRST.txt.
+#
+# COST. For a PRIVATE repository GitHub counts each minute on a Mac computer
+# as ten minutes of the monthly allowance (as far as I know; please check
+# GitHub's current figures on its billing pages). So:
+#   - after an upload it only builds and publishes, which takes minutes;
+#   - opening the app in Apple's iPhone simulator, to check that its page
+#     loads, runs only when you ask: Actions, "Build The Offline Project for iPhone
+#     and iPad", "Run workflow", tick "Also open the app in the iPhone
+#     simulator", then the green "Run workflow". That check can take half an
+#     hour of Mac time, because a simulator can be slow to start.
+#
+# Made by The Forge from the recipe that builds Carpe Diem for iPhone and iPad
+# (the same Xcode project), with the checks of the recipes that build Inkwell
+# and Ingenium.
+
+name: Build The Offline Project for iPhone and iPad
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'iphone-ipad/**'
+      - '!iphone-ipad/README.txt'
+      - '!iphone-ipad/LICENCE.txt'
+      - '.github/workflows/build-ipa.yml'
+  workflow_dispatch:
+    inputs:
+      simulator_check:
+        description: 'Also open the app in the iPhone simulator and check its page (up to about 30 more Mac minutes)'
+        type: boolean
+        default: false
+      ipad_photo:
+        description: 'Also photograph the app on an iPad simulator (up to 15 more Mac minutes)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# several uploads in a row start one build, not one each
+concurrency:
+  group: ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_FOLDER: iphone-ipad
+  WANT_SIM: ${{ github.event_name == 'workflow_dispatch' && (inputs.simulator_check || inputs.ipad_photo) }}
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: iphone-ipad
+    steps:
+      - name: Get the project
+        uses: actions/checkout@v4
+
+      - name: Find the Xcode project
+        working-directory: .
+        run: |
+          if [ ! -d "$APP_FOLDER" ]; then
+            echo "::error::There is no folder named $APP_FOLDER at the top of this repository. Upload the CONTENTS of the folder 'iPhone and iPad project' from the package: the folders .github and $APP_FOLDER."
+            exit 1
+          fi
+          P=$(cd "$APP_FOLDER" && ls -d *.xcodeproj 2>/dev/null | head -n 1)
+          if [ -z "$P" ]; then echo "::error::No .xcodeproj inside $APP_FOLDER. Upload the folder $APP_FOLDER from 'iPhone and iPad project' again."; exit 1; fi
+          echo "PROJ=$P" >> "$GITHUB_ENV"
+          echo "Project: $APP_FOLDER/$P"
+          xcodebuild -version
+
+      - name: Build the app (unsigned)
+        run: |
+          test -f "TheOfflineProject/www/the_offline_project.html" || { echo "::error::$APP_FOLDER/TheOfflineProject/www/the_offline_project.html is missing. Upload the folder $APP_FOLDER again."; exit 1; }
+          SDKS="iphoneos"
+          if [ "$WANT_SIM" = "true" ]; then SDKS="iphoneos iphonesimulator"; fi
+          for SDK in $SDKS; do
+            xcodebuild -project "$PROJ" -target TheOfflineProject -configuration Release -sdk "$SDK" \
+              SYMROOT="$RUNNER_TEMP/build-$SDK" \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+              build >> "$RUNNER_TEMP/build-log.txt" 2>&1
+            echo "built for $SDK"
+          done
+
+      - name: If the build failed, show why
+        if: failure()
+        working-directory: .
+        run: |
+          grep -n "error:" "$RUNNER_TEMP/build-log.txt" | head -n 40 || echo "(no lines with error:)"
+          tail -n 60 "$RUNNER_TEMP/build-log.txt" || echo "(no build log was written)"
+
+      - name: Keep the build log, pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: ${{ runner.temp }}/build-log.txt
+          if-no-files-found: ignore
+
+      - name: Pack the IPA
+        run: |
+          APP="$RUNNER_TEMP/build-iphoneos/Release-iphoneos/TheOfflineProject.app"
+          test -f "$APP/www/the_offline_project.html" || { echo "::error::The built app holds no www/the_offline_project.html."; exit 1; }
+          cmp -s "$APP/www/the_offline_project.html" "TheOfflineProject/www/the_offline_project.html" || { echo "::error::The app inside the IPA is not the file the_offline_project.html that was uploaded."; exit 1; }
+          rm -rf "$RUNNER_TEMP/ipa" "$RUNNER_TEMP/out"; mkdir -p "$RUNNER_TEMP/ipa/Payload" "$RUNNER_TEMP/out"
+          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$RUNNER_TEMP/out/TheOfflineProject.ipa" Payload)
+          PASS=$(grep -m1 '^Pass:' BUILD_INFO.txt | tr -dc '0-9' || true)
+          echo "PASS=$PASS" >> "$GITHUB_ENV"
+          echo "TheOfflineProject.ipa: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"), version $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"), $(stat -f %z "$RUNNER_TEMP/out/TheOfflineProject.ipa") bytes, SHA-256 $(shasum -a 256 "$RUNNER_TEMP/out/TheOfflineProject.ipa" | cut -d ' ' -f 1)"
+
+      # Kept with the run BEFORE anything else is tried, so the IPA can always
+      # be downloaded from the run's page ("Artifacts") once it is built.
+      - name: Keep the IPA with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-offline-project-ipa
+          path: ${{ runner.temp }}/out/TheOfflineProject.ipa
+          if-no-files-found: error
+
+      - name: Put the IPA on the Releases page
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG=the-offline-project-ipa
+          IPA="$RUNNER_TEMP/out/TheOfflineProject.ipa"
+          NOTES="The Offline Project for iPhone and iPad, build ${PASS}. Built $(date -u '+%d %B %Y, %H:%M UTC') from branch ${GITHUB_REF_NAME}, commit ${GITHUB_SHA:0:7}. One file for iPhone and iPad.
+          To install: on a computer (Windows or Mac), download TheOfflineProject.ipa below, open Sideloadly, connect the iPhone or iPad with its cable, drag TheOfflineProject.ipa into Sideloadly, type your Apple ID and press Start. On Windows, Sideloadly also needs iTunes and iCloud from Apple's own website. Tapping the file on the iPhone or iPad installs nothing.
+          With a free Apple ID the app must be installed again this way every 7 days (your work stays); a paid Apple Developer account makes each install last a year. See READ ME FIRST.txt."
+          HINT="::error::GitHub refused to publish. In this repository: Settings, Actions, General, Workflow permissions: choose 'Read and write permissions', Save, then 'Re-run all jobs'."
+          # GitHub's upload server sometimes answers with an error of its own
+          # (HTTP 500), and a later try goes through. Four tries, further apart.
+          publish() {
+            if gh release view "$TAG" > /dev/null 2>&1; then
+              gh release upload "$TAG" "$IPA" --clobber
+            else
+              gh release create "$TAG" "$IPA" --target "$GITHUB_SHA" \
+                --title "The Offline Project for iPhone and iPad" --notes "$NOTES"
+            fi
+          }
+          OK=0
+          for WAIT in 0 15 30 60; do
+            if [ "$WAIT" -gt 0 ]; then echo "GitHub did not accept it; trying again in $WAIT seconds."; sleep "$WAIT"; fi
+            if publish; then OK=1; break; fi
+          done
+          if [ "$OK" != 1 ]; then echo "GitHub did not accept the IPA after four tries. Run the workflow again later."; echo "$HINT"; exit 1; fi
+          gh release edit "$TAG" --notes "$NOTES" || true
+          echo "### Published TheOfflineProject.ipa (build ${PASS})" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}" >> "$GITHUB_STEP_SUMMARY"
+
+      # ------------------------------------------------------------------
+      # Only when started by hand with the box ticked: open the app in Apple's
+      # iPhone simulator, wait for its page to report (up to 16 minutes, as
+      # Ingenium's check waits), and add the result to the release notes.
+      # A simulator that does not start in time is reported as a warning; an
+      # app that starts but whose page does not report fails the run.
+      - name: Open the app in the iPhone simulator and check its page
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulator_check }}
+        timeout-minutes: 45
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/shots"
+          within() {   # runs a command for at most $1 seconds (macOS has no timeout command)
+            local n=$1; shift
+            set -m
+            "$@" & local p=$!
+            set +m
+            ( sleep "$n"; kill -TERM -- "-$p" 2>/dev/null || kill "$p" 2>/dev/null ) > /dev/null 2>&1 < /dev/null & local w=$!
+            wait "$p"; local rc=$?
+            kill "$w" > /dev/null 2>&1; wait "$w" 2> /dev/null
+            return $rc
+          }
+          pick() {   # first available device whose name starts with $1, on the newest iOS
+            xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          rts=sorted([k for k in d if 'iOS' in k], key=lambda k:[int(x) for x in k.split('iOS-')[-1].split('-') if x.isdigit()])
+          for rt in reversed(rts):
+              for dev in d[rt]:
+                  if dev['name'].startswith('$1'): print(dev['udid']); sys.exit(0)
+          "
+          }
+          note() {   # adds one line to the release notes; never fails the step
+            gh release view the-offline-project-ipa --json body -q .body > "$RUNNER_TEMP/notes.txt" 2> /dev/null \
+              && printf '\n%s\n' "$1" >> "$RUNNER_TEMP/notes.txt" \
+              && gh release edit the-offline-project-ipa --notes-file "$RUNNER_TEMP/notes.txt" > /dev/null 2>&1 \
+              || echo "::warning::The result could not be added to the release notes."
+          }
+          WHEN=$(date -u '+%d %B %Y')
+          APP="$RUNNER_TEMP/build-iphonesimulator/Release-iphonesimulator/TheOfflineProject.app"
+          if [ ! -d "$APP" ]; then echo "::error::There is no simulator build to open."; exit 1; fi
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          UDID=$(pick iPhone)
+          if [ -z "$UDID" ]; then echo "::warning::No iPhone simulator on this runner; the page check was skipped."; exit 0; fi
+          echo "iPhone simulator: $UDID"
+          xcrun simctl boot "$UDID" > /dev/null 2>&1
+          if ! within 600 xcrun simctl bootstatus "$UDID" -b > /dev/null; then
+            echo "::warning::The iPhone simulator did not start within 10 minutes; the page check was skipped. Run it again later."
+            exit 0
+          fi
+          if ! within 300 xcrun simctl install "$UDID" "$APP"; then
+            echo "::error::The app did not install in the simulator."
+            note "Opened in the iPhone simulator on $WHEN: NOT CHECKED, the app did not install there."
+            exit 1
+          fi
+          LOG="$RUNNER_TEMP/pagetest.log"
+          xcrun simctl launch --console-pty "$UDID" "$BID" -shell_pagetest > "$LOG" 2>&1 &
+          LP=$!
+          for i in $(seq 1 240); do
+            if grep -q "SHELL_PAGETEST PAGE" "$LOG" 2> /dev/null; then break; fi
+            sleep 4
+          done
+          kill "$LP" > /dev/null 2>&1
+          echo "---------------- what the app said ----------------"
+          grep -v '^[[:space:]]*$' "$LOG" | tail -n 40
+          echo "---------------------------------------------------"
+          LINE=$(grep "SHELL_PAGETEST PAGE" "$LOG" | tail -n 1)
+          within 300 xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/iPhone.png" > /dev/null 2>&1 || echo "No photograph: the simulator did not take one within 5 minutes."
+          within 60 xcrun simctl terminate "$UDID" "$BID" > /dev/null 2>&1
+          within 120 xcrun simctl shutdown "$UDID" > /dev/null 2>&1
+          if [ -z "$LINE" ]; then
+            echo "::error::The app was started in the simulator but its page did not report within 16 minutes (see the lines above)."
+            note "Opened in the iPhone simulator on $WHEN: the page did NOT report within 16 minutes. See the run on the Actions tab."
+            exit 1
+          fi
+          printf '%s\n' "${LINE#*SHELL_PAGETEST PAGE }" > "$RUNNER_TEMP/pagetest.json"
+          python3 - "$RUNNER_TEMP/pagetest.json" <<'PY'
+          import json, os, sys
+          r = json.loads(open(sys.argv[1]).read().strip())
+          bad = []
+          if not r.get('title'): bad.append('the page has no title')
+          if not r.get('text'): bad.append('the page shows no text')
+          if not r.get('storage'): bad.append('the page could not keep anything in its storage')
+          if not r.get('bridge'): bad.append('the page did not find the file saver')
+          for e in r.get('first') or []: print('::warning::page error: ' + str(e)[:300])
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write('### iPhone simulator: ' + ('the page opened' if not bad else 'PROBLEM') + '\n\n')
+              f.write('Title: %s; text: %s characters; storage: %s; file saver: %s; page errors: %s\n' % (r.get('title'), r.get('text'), r.get('storage'), r.get('bridge'), r.get('errors')))
+          with open(sys.argv[1] + '.verdict', 'w') as f:
+              f.write('; '.join(bad))
+          if bad:
+              print('::error::' + '; '.join(bad)); sys.exit(1)
+          print('The page opened: ' + json.dumps(r))
+          PY
+          RC=$?
+          if [ "$RC" -eq 0 ]; then
+            note "Opened in the iPhone simulator on $WHEN: the page loaded, kept what it stored, and found the file saver."
+          else
+            note "Opened in the iPhone simulator on $WHEN: PROBLEM: $(cat "$RUNNER_TEMP/pagetest.json.verdict" 2> /dev/null). See the run on the Actions tab."
+          fi
+          exit $RC
+
+      - name: Photograph the app on an iPad simulator
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_photo }}
+        continue-on-error: true
+        timeout-minutes: 15
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/shots"
+          within() {
+            local n=$1; shift
+            set -m
+            "$@" & local p=$!
+            set +m
+            ( sleep "$n"; kill -TERM -- "-$p" 2>/dev/null || kill "$p" 2>/dev/null ) > /dev/null 2>&1 < /dev/null & local w=$!
+            wait "$p"; local rc=$?
+            kill "$w" > /dev/null 2>&1; wait "$w" 2> /dev/null
+            return $rc
+          }
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          rts=sorted([k for k in d if 'iOS' in k], key=lambda k:[int(x) for x in k.split('iOS-')[-1].split('-') if x.isdigit()])
+          for rt in reversed(rts):
+              for dev in d[rt]:
+                  if dev['name'].startswith('iPad'): print(dev['udid']); sys.exit(0)
+          ")
+          if [ -z "$UDID" ]; then echo "No iPad simulator available."; exit 0; fi
+          APP="$RUNNER_TEMP/build-iphonesimulator/Release-iphonesimulator/TheOfflineProject.app"
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          xcrun simctl boot "$UDID" > /dev/null 2>&1
+          within 540 xcrun simctl bootstatus "$UDID" -b > /dev/null || { echo "The iPad simulator did not start in time; no photograph."; exit 0; }
+          within 180 xcrun simctl install "$UDID" "$APP" || { echo "The app did not install on the iPad simulator."; exit 0; }
+          within 60 xcrun simctl launch "$UDID" "$BID"
+          sleep 60
+          within 180 xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/iPad.png" || echo "No photograph."
+          within 60 xcrun simctl terminate "$UDID" "$BID"
+          within 120 xcrun simctl shutdown "$UDID"
+          exit 0
+
+      - name: Keep the photographs with this run
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && (inputs.simulator_check || inputs.ipad_photo) }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-photographs
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: warn
+# THE OFFLINE PROJECT  |  Copyright (c) 2026 Yannie D. Forest. All rights reserved.
+# NO LICENCE IS GRANTED. See LICENCE.txt.
+#
+# Builds The Offline Project for iPhone and iPad on GitHub's own Mac computers (they
+# have Xcode, so your own computer needs neither) and puts TheOfflineProject.ipa on this
+# repository's Releases page. One file works on both iPhone and iPad.
+#
+# WHERE THE FILES GO IN THE REPOSITORY
+#   iphone-ipad/                      the Xcode project (the folder of that name
+#                                     in "iPhone and iPad project")
+#   .github/workflows/build-ipa.yml   this file, at the TOP of the repository
+# The project can share a repository with another project of the same app,
+# for example the Fire tablet project, the way Ingenium's repository holds
+# both. This file builds only when something inside iphone-ipad/ (or this
+# file itself) changes, so an upload for the Fire tablet never starts a Mac.
+#
+# TheOfflineProject.ipa is NOT signed. Apple lets no app onto an iPhone or iPad unless
+# it is signed with an Apple ID, so Sideloadly signs it with yours while it
+# installs it over the USB cable, the way Inkwell and Ingenium are installed.
+# See READ ME FIRST.txt.
+#
+# COST. For a PRIVATE repository GitHub counts each minute on a Mac computer
+# as ten minutes of the monthly allowance (as far as I know; please check
+# GitHub's current figures on its billing pages). So:
+#   - after an upload it only builds and publishes, which takes minutes;
+#   - opening the app in Apple's iPhone simulator, to check that its page
+#     loads, runs only when you ask: Actions, "Build The Offline Project for iPhone
+#     and iPad", "Run workflow", tick "Also open the app in the iPhone
+#     simulator", then the green "Run workflow". That check can take half an
+#     hour of Mac time, because a simulator can be slow to start.
+#
+# Made by The Forge from the recipe that builds Carpe Diem for iPhone and iPad
+# (the same Xcode project), with the checks of the recipes that build Inkwell
+# and Ingenium.
+
+name: Build The Offline Project for iPhone and iPad
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'iphone-ipad/**'
+      - '!iphone-ipad/README.txt'
+      - '!iphone-ipad/LICENCE.txt'
+      - '.github/workflows/build-ipa.yml'
+  workflow_dispatch:
+    inputs:
+      simulator_check:
+        description: 'Also open the app in the iPhone simulator and check its page (up to about 30 more Mac minutes)'
+        type: boolean
+        default: false
+      ipad_photo:
+        description: 'Also photograph the app on an iPad simulator (up to 15 more Mac minutes)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# several uploads in a row start one build, not one each
+concurrency:
+  group: ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_FOLDER: iphone-ipad
+  WANT_SIM: ${{ github.event_name == 'workflow_dispatch' && (inputs.simulator_check || inputs.ipad_photo) }}
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: iphone-ipad
+    steps:
+      - name: Get the project
+        uses: actions/checkout@v4
+
+      - name: Find the Xcode project
+        working-directory: .
+        run: |
+          if [ ! -d "$APP_FOLDER" ]; then
+            echo "::error::There is no folder named $APP_FOLDER at the top of this repository. Upload the CONTENTS of the folder 'iPhone and iPad project' from the package: the folders .github and $APP_FOLDER."
+            exit 1
+          fi
+          P=$(cd "$APP_FOLDER" && ls -d *.xcodeproj 2>/dev/null | head -n 1)
+          if [ -z "$P" ]; then echo "::error::No .xcodeproj inside $APP_FOLDER. Upload the folder $APP_FOLDER from 'iPhone and iPad project' again."; exit 1; fi
+          echo "PROJ=$P" >> "$GITHUB_ENV"
+          echo "Project: $APP_FOLDER/$P"
+          xcodebuild -version
+
+      - name: Build the app (unsigned)
+        run: |
+          test -f "TheOfflineProject/www/the_offline_project.html" || { echo "::error::$APP_FOLDER/TheOfflineProject/www/the_offline_project.html is missing. Upload the folder $APP_FOLDER again."; exit 1; }
+          SDKS="iphoneos"
+          if [ "$WANT_SIM" = "true" ]; then SDKS="iphoneos iphonesimulator"; fi
+          for SDK in $SDKS; do
+            xcodebuild -project "$PROJ" -target TheOfflineProject -configuration Release -sdk "$SDK" \
+              SYMROOT="$RUNNER_TEMP/build-$SDK" \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+              build >> "$RUNNER_TEMP/build-log.txt" 2>&1
+            echo "built for $SDK"
+          done
+
+      - name: If the build failed, show why
+        if: failure()
+        working-directory: .
+        run: |
+          grep -n "error:" "$RUNNER_TEMP/build-log.txt" | head -n 40 || echo "(no lines with error:)"
+          tail -n 60 "$RUNNER_TEMP/build-log.txt" || echo "(no build log was written)"
+
+      - name: Keep the build log, pass or fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: ${{ runner.temp }}/build-log.txt
+          if-no-files-found: ignore
+
+      - name: Pack the IPA
+        run: |
+          APP="$RUNNER_TEMP/build-iphoneos/Release-iphoneos/TheOfflineProject.app"
+          test -f "$APP/www/the_offline_project.html" || { echo "::error::The built app holds no www/the_offline_project.html."; exit 1; }
+          cmp -s "$APP/www/the_offline_project.html" "TheOfflineProject/www/the_offline_project.html" || { echo "::error::The app inside the IPA is not the file the_offline_project.html that was uploaded."; exit 1; }
+          rm -rf "$RUNNER_TEMP/ipa" "$RUNNER_TEMP/out"; mkdir -p "$RUNNER_TEMP/ipa/Payload" "$RUNNER_TEMP/out"
+          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$RUNNER_TEMP/out/TheOfflineProject.ipa" Payload)
+          PASS=$(grep -m1 '^Pass:' BUILD_INFO.txt | tr -dc '0-9' || true)
+          echo "PASS=$PASS" >> "$GITHUB_ENV"
+          echo "TheOfflineProject.ipa: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"), version $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"), $(stat -f %z "$RUNNER_TEMP/out/TheOfflineProject.ipa") bytes, SHA-256 $(shasum -a 256 "$RUNNER_TEMP/out/TheOfflineProject.ipa" | cut -d ' ' -f 1)"
+
+      # Kept with the run BEFORE anything else is tried, so the IPA can always
+      # be downloaded from the run's page ("Artifacts") once it is built.
+      - name: Keep the IPA with this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-offline-project-ipa
+          path: ${{ runner.temp }}/out/TheOfflineProject.ipa
+          if-no-files-found: error
+
+      - name: Put the IPA on the Releases page
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG=the-offline-project-ipa
+          IPA="$RUNNER_TEMP/out/TheOfflineProject.ipa"
+          NOTES="The Offline Project for iPhone and iPad, build ${PASS}. Built $(date -u '+%d %B %Y, %H:%M UTC') from branch ${GITHUB_REF_NAME}, commit ${GITHUB_SHA:0:7}. One file for iPhone and iPad.
+          To install: on a computer (Windows or Mac), download TheOfflineProject.ipa below, open Sideloadly, connect the iPhone or iPad with its cable, drag TheOfflineProject.ipa into Sideloadly, type your Apple ID and press Start. On Windows, Sideloadly also needs iTunes and iCloud from Apple's own website. Tapping the file on the iPhone or iPad installs nothing.
+          With a free Apple ID the app must be installed again this way every 7 days (your work stays); a paid Apple Developer account makes each install last a year. See READ ME FIRST.txt."
+          HINT="::error::GitHub refused to publish. In this repository: Settings, Actions, General, Workflow permissions: choose 'Read and write permissions', Save, then 'Re-run all jobs'."
+          # GitHub's upload server sometimes answers with an error of its own
+          # (HTTP 500), and a later try goes through. Four tries, further apart.
+          publish() {
+            if gh release view "$TAG" > /dev/null 2>&1; then
+              gh release upload "$TAG" "$IPA" --clobber
+            else
+              gh release create "$TAG" "$IPA" --target "$GITHUB_SHA" \
+                --title "The Offline Project for iPhone and iPad" --notes "$NOTES"
+            fi
+          }
+          OK=0
+          for WAIT in 0 15 30 60; do
+            if [ "$WAIT" -gt 0 ]; then echo "GitHub did not accept it; trying again in $WAIT seconds."; sleep "$WAIT"; fi
+            if publish; then OK=1; break; fi
+          done
+          if [ "$OK" != 1 ]; then echo "GitHub did not accept the IPA after four tries. Run the workflow again later."; echo "$HINT"; exit 1; fi
+          gh release edit "$TAG" --notes "$NOTES" || true
+          echo "### Published TheOfflineProject.ipa (build ${PASS})" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}" >> "$GITHUB_STEP_SUMMARY"
+
+      # ------------------------------------------------------------------
+      # Only when started by hand with the box ticked: open the app in Apple's
+      # iPhone simulator, wait for its page to report (up to 16 minutes, as
+      # Ingenium's check waits), and add the result to the release notes.
+      # A simulator that does not start in time is reported as a warning; an
+      # app that starts but whose page does not report fails the run.
+      - name: Open the app in the iPhone simulator and check its page
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulator_check }}
+        timeout-minutes: 45
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/shots"
+          within() {   # runs a command for at most $1 seconds (macOS has no timeout command)
+            local n=$1; shift
+            set -m
+            "$@" & local p=$!
+            set +m
+            ( sleep "$n"; kill -TERM -- "-$p" 2>/dev/null || kill "$p" 2>/dev/null ) > /dev/null 2>&1 < /dev/null & local w=$!
+            wait "$p"; local rc=$?
+            kill "$w" > /dev/null 2>&1; wait "$w" 2> /dev/null
+            return $rc
+          }
+          pick() {   # first available device whose name starts with $1, on the newest iOS
+            xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          rts=sorted([k for k in d if 'iOS' in k], key=lambda k:[int(x) for x in k.split('iOS-')[-1].split('-') if x.isdigit()])
+          for rt in reversed(rts):
+              for dev in d[rt]:
+                  if dev['name'].startswith('$1'): print(dev['udid']); sys.exit(0)
+          "
+          }
+          note() {   # adds one line to the release notes; never fails the step
+            gh release view the-offline-project-ipa --json body -q .body > "$RUNNER_TEMP/notes.txt" 2> /dev/null \
+              && printf '\n%s\n' "$1" >> "$RUNNER_TEMP/notes.txt" \
+              && gh release edit the-offline-project-ipa --notes-file "$RUNNER_TEMP/notes.txt" > /dev/null 2>&1 \
+              || echo "::warning::The result could not be added to the release notes."
+          }
+          WHEN=$(date -u '+%d %B %Y')
+          APP="$RUNNER_TEMP/build-iphonesimulator/Release-iphonesimulator/TheOfflineProject.app"
+          if [ ! -d "$APP" ]; then echo "::error::There is no simulator build to open."; exit 1; fi
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          UDID=$(pick iPhone)
+          if [ -z "$UDID" ]; then echo "::warning::No iPhone simulator on this runner; the page check was skipped."; exit 0; fi
+          echo "iPhone simulator: $UDID"
+          xcrun simctl boot "$UDID" > /dev/null 2>&1
+          if ! within 600 xcrun simctl bootstatus "$UDID" -b > /dev/null; then
+            echo "::warning::The iPhone simulator did not start within 10 minutes; the page check was skipped. Run it again later."
+            exit 0
+          fi
+          if ! within 300 xcrun simctl install "$UDID" "$APP"; then
+            echo "::error::The app did not install in the simulator."
+            note "Opened in the iPhone simulator on $WHEN: NOT CHECKED, the app did not install there."
+            exit 1
+          fi
+          LOG="$RUNNER_TEMP/pagetest.log"
+          xcrun simctl launch --console-pty "$UDID" "$BID" -shell_pagetest > "$LOG" 2>&1 &
+          LP=$!
+          for i in $(seq 1 240); do
+            if grep -q "SHELL_PAGETEST PAGE" "$LOG" 2> /dev/null; then break; fi
+            sleep 4
+          done
+          kill "$LP" > /dev/null 2>&1
+          echo "---------------- what the app said ----------------"
+          grep -v '^[[:space:]]*$' "$LOG" | tail -n 40
+          echo "---------------------------------------------------"
+          LINE=$(grep "SHELL_PAGETEST PAGE" "$LOG" | tail -n 1)
+          within 300 xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/iPhone.png" > /dev/null 2>&1 || echo "No photograph: the simulator did not take one within 5 minutes."
+          within 60 xcrun simctl terminate "$UDID" "$BID" > /dev/null 2>&1
+          within 120 xcrun simctl shutdown "$UDID" > /dev/null 2>&1
+          if [ -z "$LINE" ]; then
+            echo "::error::The app was started in the simulator but its page did not report within 16 minutes (see the lines above)."
+            note "Opened in the iPhone simulator on $WHEN: the page did NOT report within 16 minutes. See the run on the Actions tab."
+            exit 1
+          fi
+          printf '%s\n' "${LINE#*SHELL_PAGETEST PAGE }" > "$RUNNER_TEMP/pagetest.json"
+          python3 - "$RUNNER_TEMP/pagetest.json" <<'PY'
+          import json, os, sys
+          r = json.loads(open(sys.argv[1]).read().strip())
+          bad = []
+          if not r.get('title'): bad.append('the page has no title')
+          if not r.get('text'): bad.append('the page shows no text')
+          if not r.get('storage'): bad.append('the page could not keep anything in its storage')
+          if not r.get('bridge'): bad.append('the page did not find the file saver')
+          for e in r.get('first') or []: print('::warning::page error: ' + str(e)[:300])
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write('### iPhone simulator: ' + ('the page opened' if not bad else 'PROBLEM') + '\n\n')
+              f.write('Title: %s; text: %s characters; storage: %s; file saver: %s; page errors: %s\n' % (r.get('title'), r.get('text'), r.get('storage'), r.get('bridge'), r.get('errors')))
+          with open(sys.argv[1] + '.verdict', 'w') as f:
+              f.write('; '.join(bad))
+          if bad:
+              print('::error::' + '; '.join(bad)); sys.exit(1)
+          print('The page opened: ' + json.dumps(r))
+          PY
+          RC=$?
+          if [ "$RC" -eq 0 ]; then
+            note "Opened in the iPhone simulator on $WHEN: the page loaded, kept what it stored, and found the file saver."
+          else
+            note "Opened in the iPhone simulator on $WHEN: PROBLEM: $(cat "$RUNNER_TEMP/pagetest.json.verdict" 2> /dev/null). See the run on the Actions tab."
+          fi
+          exit $RC
+
+      - name: Photograph the app on an iPad simulator
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.ipad_photo }}
+        continue-on-error: true
+        timeout-minutes: 15
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/shots"
+          within() {
+            local n=$1; shift
+            set -m
+            "$@" & local p=$!
+            set +m
+            ( sleep "$n"; kill -TERM -- "-$p" 2>/dev/null || kill "$p" 2>/dev/null ) > /dev/null 2>&1 < /dev/null & local w=$!
+            wait "$p"; local rc=$?
+            kill "$w" > /dev/null 2>&1; wait "$w" 2> /dev/null
+            return $rc
+          }
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          rts=sorted([k for k in d if 'iOS' in k], key=lambda k:[int(x) for x in k.split('iOS-')[-1].split('-') if x.isdigit()])
+          for rt in reversed(rts):
+              for dev in d[rt]:
+                  if dev['name'].startswith('iPad'): print(dev['udid']); sys.exit(0)
+          ")
+          if [ -z "$UDID" ]; then echo "No iPad simulator available."; exit 0; fi
+          APP="$RUNNER_TEMP/build-iphonesimulator/Release-iphonesimulator/TheOfflineProject.app"
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          xcrun simctl boot "$UDID" > /dev/null 2>&1
+          within 540 xcrun simctl bootstatus "$UDID" -b > /dev/null || { echo "The iPad simulator did not start in time; no photograph."; exit 0; }
+          within 180 xcrun simctl install "$UDID" "$APP" || { echo "The app did not install on the iPad simulator."; exit 0; }
+          within 60 xcrun simctl launch "$UDID" "$BID"
+          sleep 60
+          within 180 xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/shots/iPad.png" || echo "No photograph."
+          within 60 xcrun simctl terminate "$UDID" "$BID"
+          within 120 xcrun simctl shutdown "$UDID"
+          exit 0
+
+      - name: Keep the photographs with this run
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && (inputs.simulator_check || inputs.ipad_photo) }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-photographs
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: warn
