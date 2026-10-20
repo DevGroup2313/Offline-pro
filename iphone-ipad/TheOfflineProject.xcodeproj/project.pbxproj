@@ -1,0 +1,279 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA00B1000000000000000001 /* ShellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000001 /* ShellApp.swift */; };
+		AA00B1000000000000000002 /* DeskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000002 /* DeskView.swift */; };
+		AA00B1000000000000000003 /* ShellSchemeHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000003 /* ShellSchemeHandler.swift */; };
+		AA00B1000000000000000004 /* SaveSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000004 /* SaveSheet.swift */; };
+		AA00B1000000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000005 /* Assets.xcassets */; };
+		AA00B1000000000000000006 /* www in Resources */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000006 /* www */; };
+		AA00B1000000000000000007 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA00F1000000000000000007 /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA00F1000000000000000001 /* ShellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellApp.swift; sourceTree = "<group>"; };
+		AA00F1000000000000000002 /* DeskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskView.swift; sourceTree = "<group>"; };
+		AA00F1000000000000000003 /* ShellSchemeHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellSchemeHandler.swift; sourceTree = "<group>"; };
+		AA00F1000000000000000004 /* SaveSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveSheet.swift; sourceTree = "<group>"; };
+		AA00F1000000000000000005 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA00F1000000000000000006 /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		AA00F1000000000000000007 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		AA00F1000000000000000008 /* TheOfflineProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheOfflineProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA00F1000000000000000009 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA00A1000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00B1000000000000000007 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA00E1000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				AA00E1000000000000000002 /* TheOfflineProject */,
+				AA00E1000000000000000003 /* Frameworks */,
+				AA00E1000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA00E1000000000000000002 /* TheOfflineProject */ = {
+			isa = PBXGroup;
+			children = (
+				AA00F1000000000000000001 /* ShellApp.swift */,
+				AA00F1000000000000000002 /* DeskView.swift */,
+				AA00F1000000000000000003 /* ShellSchemeHandler.swift */,
+				AA00F1000000000000000004 /* SaveSheet.swift */,
+				AA00F1000000000000000009 /* Info.plist */,
+				AA00F1000000000000000005 /* Assets.xcassets */,
+				AA00F1000000000000000006 /* www */,
+			);
+			path = TheOfflineProject;
+			sourceTree = "<group>";
+		};
+		AA00E1000000000000000003 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA00F1000000000000000007 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AA00E1000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA00F1000000000000000008 /* TheOfflineProject.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA00C1000000000000000001 /* TheOfflineProject */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA00D1000000000000000001 /* Build configuration list for PBXNativeTarget "TheOfflineProject" */;
+			buildPhases = (
+				AA0091000000000000000001 /* Sources */,
+				AA00A1000000000000000001 /* Frameworks */,
+				AA0081000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TheOfflineProject;
+			productName = TheOfflineProject;
+			productReference = AA00F1000000000000000008 /* TheOfflineProject.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0071000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				ORGANIZATIONNAME = "Yannie D. Forest";
+				TargetAttributes = {
+					AA00C1000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = AA00D1000000000000000002 /* Build configuration list for PBXProject "TheOfflineProject" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA00E1000000000000000001;
+			productRefGroup = AA00E1000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA00C1000000000000000001 /* TheOfflineProject */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0081000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00B1000000000000000005 /* Assets.xcassets in Resources */,
+				AA00B1000000000000000006 /* www in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0091000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA00B1000000000000000001 /* ShellApp.swift in Sources */,
+				AA00B1000000000000000002 /* DeskView.swift in Sources */,
+				AA00B1000000000000000003 /* ShellSchemeHandler.swift in Sources */,
+				AA00B1000000000000000004 /* SaveSheet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA0061000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20261019;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "TheOfflineProject/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 20261019;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannieforest.theofflineproject";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA0061000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20261019;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "TheOfflineProject/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 20261019;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannieforest.theofflineproject";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AA0061000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0061000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA00D1000000000000000001 /* Build configuration list for PBXNativeTarget "TheOfflineProject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0061000000000000000001 /* Debug */,
+				AA0061000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA00D1000000000000000002 /* Build configuration list for PBXProject "TheOfflineProject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0061000000000000000003 /* Debug */,
+				AA0061000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = AA0071000000000000000001 /* Project object */;
+}

@@ -1,0 +1,6 @@
+The Offline Project
+Build: 2026-10-19
+Pass: 20261019
+Stamp: 20261019
+Copyright (c) 2026 Yannie D. Forest. All rights reserved.
+NO LICENCE IS GRANTED.
