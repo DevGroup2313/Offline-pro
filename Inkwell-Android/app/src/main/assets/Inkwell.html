@@ -11096,7 +11096,7 @@ const BUILD='7.50 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='14c40aa657f0c28b0790f4e01e7b8bbf58481ba49267003aa60b8c19778606ba';
+const PAGE_SHA='2143cb1e40cac41225b37b112fe01d14dee26e426dc0a697184425363e3710fb';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -24217,9 +24217,9 @@ function patPractise(why,n,one){const ex=one?[one]:((S.statEx||{})[why]||[]).sli
  document.getElementById('modalBody').innerHTML='<h3>Practise: '+esc(why)+'</h3>'+
   '<p style="font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 10px">'+(ex.length===1?'A sentence':ex.length+' sentences')+' from your own pages, as you first wrote '+(ex.length===1?'it':'them')+'. What should stand in place of the underlined words?</p>'+
   ex.map((x,i)=>'<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="font:15px/1.65 Georgia,serif">'+esc(x.ctx.slice(0,x.at))+'<u style="text-decoration-color:var(--gold);text-decoration-thickness:2px">'+esc(x.ctx.slice(x.at,x.at+x.len))+'</u>'+esc(x.ctx.slice(x.at+x.len))+'</div>'+
-   '<div class="row" style="gap:6px;margin-top:6px"><input id="pp'+i+'" style="flex:1;font:14px Georgia,serif;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="Type what belongs there" onkeydown="if(event.key===\'Enter\')patCheck('+i+')"><button class="lkbtn" onclick="patCheck('+i+')">Check</button></div><div id="ppr'+i+'" style="font-size:12.5px;margin-top:5px"></div></div>').join('')+
+   '<div class="row" style="gap:6px;margin-top:6px"><input id="pp'+i+'" style="flex:1;font:14px Georgia,serif;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card-hi);color:var(--text)" placeholder="Type what belongs there" onkeydown="if(event.key===\'Enter\')patCheck('+i+')"><button style="flex:initial;padding:6px 18px" class="lkbtn" onclick="patCheck('+i+')">Check</button></div><div id="ppr'+i+'" style="font-size:12.5px;margin-top:5px"></div></div>').join('')+
   '<div style="font-size:12.5px;color:var(--mut);margin-top:10px;font-family:Georgia,serif;line-height:1.6">'+esc(L[0])+'</div>'+
-  '<div class="row" style="margin-top:10px"><button class="primary" onclick="closeModal()">Done</button></div>';
+  '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="primary" style="flex:initial;padding:7px 22px;font-size:13px" onclick="closeModal()">Done</button></div>';
  document.getElementById('modal').style.display='flex';document.body.classList.add('modalOn');
  setTimeout(()=>{try{document.getElementById('pp0').focus();}catch(e){}},60);}
 let PATP=null;
