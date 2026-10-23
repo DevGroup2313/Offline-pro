@@ -30,8 +30,8 @@ android {
         applicationId 'studio.inkwell.app'
         minSdk 24
         targetSdk 34
-        versionCode 74900 + runNumber
-        versionName '7.49'
+        versionCode 75000 + runNumber
+        versionName '7.50'
 
         // 7.35: the tablet's writing model (llama.cpp), built for 64-bit ARM
         // tablets (the release); the test build adds the 64-bit x86 emulator

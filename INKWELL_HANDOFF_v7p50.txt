@@ -1,0 +1,172 @@
+INKWELL v7.50: HANDOFF NOTES
+============================
+Date: 23 October 2026. Read INKWELL_HANDOFF_v7p49.txt and the earlier notes
+for everything before 7.50.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data (Write & Improve, LOCNESS, CoNLL-2014,
+JFLEG, the published articles, the thesis sample, the 100,000-word test
+thesis) is never in the repository and never trained on. SECURITY.txt names
+what the app's own checks look for; keep it private too.
+
+WHY 7.50
+--------
+The writer asked, above every other request, for the offline corrector and
+editor to be pushed much further with no model: to teach, correct and edit
+at a doctoral standard, and to teach while it helps, in a way that suits
+their AuDHD and never feels like a lesson. Alongside: Tabula to save and
+print inside Inkwell as Word does; Inkwell offered to open documents on
+every device; the writing model to load in Safari; the seal icon to fill
+its canvas on the Mac mini, the iPhone and the iPad; the door's tour as a
+quiet link above its buttons; Tabula's side buttons sized to their row; the
+Welcome page's first example rewritten properly; the licence and the
+distribution made explicit, with technical layers behind them. Inkwell
+only: the other apps are handled in their own chats.
+
+WHAT CHANGED
+------------
+1. The gaps corrector (src/lib/gaps_core.js, INKGAPS; stage G4).
+   - An audit of the 7.49 corrector on the Write & Improve tuning half, by
+     ERRANT error type, listed where it was silent. Eight families answer
+     it: a preposition missing its last word ("in spite all") or the wrong
+     dependent preposition ("interested on", "good in maths", "based in
+     the book", "at 2019"); a missing article before a singular count noun
+     ("is experienced person", "one of best"); number after a quantity
+     ("many problem", "one of the reason", "much accidents", "a lots of");
+     the verb's form after a modal, "do", "have" or "to" ("will
+     delighted", "doesn't matters", "have went", "a way to learning",
+     "interested to improve", "I am interesting in", "to mingle and
+     meeting"); agreement with a gerund, a country, a plural head before
+     "of", "there are a", two subjects and "and", a plural with a
+     determiner, a singular subject with a base verb; a capital inside a
+     sentence and glued names ("NewZealand"); morphology ("nowaday",
+     "everyday" as an adverb, "a lot of peoples", "good relation with",
+     "more easy than").
+   - Wired after the learner checks (gapsCheck in src/inkwell.html; the
+     lib in tools/build_inkwell.py). The lexicon (INKLEX) confirms parts
+     of speech when it has been read; without it the lists serve. The
+     page now reads the lexicon about eight seconds after the desk opens
+     on a computer with the memory for it (navigator.deviceMemory absent
+     or 4 GB and more; 35 MB once read) and scans again; a tablet reads
+     it the first time Alternatives or Rewrite asks, as before.
+   - The first draft doubled the share of correct sentences changed. Every
+     new change on the correct sets was listed by its reason and read
+     (scratchpad newedits2.js: the new edits of one run against another,
+     judged against the reference). The plural-after-a-quantity rule was
+     most of the fault; each fault got its guard and a test. Measured,
+     whole page, cat "g" fixes, ERRANT span-based, against 7.49:
+
+       set                              7.49 P / R / F0.5     7.50
+       W&I tuning half (1,698)          66.1 / 7.7 / 0.261    67.0 / 8.6 / 0.284
+       W&I report half (1,698)          64.0 / 7.3 / 0.251    62.5 / 7.7 / 0.257
+       CoNLL-2014 (1,312)               75.6 / 7.3 / 0.262    73.9 / 7.6 / 0.270
+       correct Wikipedia, tuning        58 of 1,500 (3.9%)    64 (4.3%)
+       correct Wikipedia, report        72 of 1,500 (4.8%)    73 (4.9%)
+
+     Of the 41 new fixes on the tuning half, 17 are the annotator's own
+     change, 2 touch the same words another way, 21 are right fixes the
+     annotator did not make or made inside a wider rewrite, and one was
+     wrong and is now guarded. tools/grammar/README.md, "7.50", has the
+     record; tools/grammar/gaps_test.js has 125 cases, 29 of them
+     published sentences the first draft wrongly changed.
+   - Every gaps note has a lesson (src/lib/refine_core.js, by family) and
+     carries its family's name (pat), which Your patterns counts.
+2. Learning as you go (src/lib/myway_core.js, a new group in My way of
+   working; both on from the start, the panel's footer says so).
+   - The rule after a fix: when a fix is accepted, the line at the foot
+     of the page carries the change and the lesson's first sentence for
+     five seconds, and goes (inkRuleToast). Nothing to open; the same
+     rule waits under "Learn" on every card. The plain receipt where no
+     lesson fits, or when switched off.
+   - One sentence from last time: once a day, after the desk and any card
+     of its own are up (never over the door, a Where was I? card or a
+     modal), one slip the writer mended on an earlier day comes back as
+     first written, to mend from memory in one go, or to leave for
+     another day (inkLastOffer; each kept slip now carries its time, so a
+     sentence mended minutes ago is never offered).
+   - Your patterns groups the gaps notes by family ("The verb's form after
+     a modal, do, have or to", "A word and its preposition"), with the
+     family's lesson and practice from the writer's own sentences.
+3. Safari: the writing model installs and runs.
+   - fnclip_core.js bound itself to window, which the model's worker lacks
+     (Safari's module worker has no window and no this), so the worker
+     died at its first script; it binds to self.
+   - The page's Content-Security-Policy (from 9cc1af1, after 7.49) allowed
+     connect-src * only, and * covers no blob: or data: address; the
+     runtime fetches its wasm through a blob address. connect-src carries
+     blob: and data:. Verified in WebKit (Playwright's, with the test site
+     from Inkwell-Web/build_site.py): LFM2.5 350M downloads, compiles and
+     answers ("ready, in this window on the processor"). 7.49 as released
+     has no policy, so nothing shipped broken.
+4. Icons (tools/icons/make_icons.mjs): the seal is drawn at 0.96 of its
+   canvas on the Mac .icns, the Mac and Windows launcher images, and the
+   iPhone, iPad and home-screen icon (was 0.94, and 0.82 for iOS), lifted
+   0.3% instead of 0.6%, so neither its lower rim nor its glow is cut. The
+   iOS mask holds a circle of the full side, so nothing of the seal is
+   hidden. Packed with tools/icons/pack_icons.py (Pillow).
+5. From the commits after 7.49 (5e34a82, 9cc1af1), also in this release:
+   - Tabula saves a new document to the device (.docx, .pdf, .txt, .html)
+     and prints, inside Inkwell, on every host: the carpe-save and
+     carpe-print messages are answered by the page (inkSaveBase64,
+     inkPrintBytes), by the Fire app (print_document, PrintManager), the
+     iPhone app (printFile) and the desktop launchers.
+   - Inkwell is offered to open .docx, .pdf and text files from the device
+     (Fire: VIEW and SEND intent filters; iPhone and iPad:
+     CFBundleDocumentTypes; Mac: CFBundleDocumentTypes and argv; Windows:
+     file associations in the installer); a Word or web document opens in
+     Tabula, a text-like one on the desk (inkOpenExternalFile).
+   - The door offers the guided tour as a quiet link above its buttons;
+     the Welcome page's first example ("big data stuff") gets a proper
+     rewrite offline (heldTo and nounStuff in rewrite_core.js; the "stuff"
+     and "well known" rules); Tabula's side buttons sized to their row.
+   - Ownership and distribution made explicit (LICENCE.txt) and the
+     technical layers behind them (SECURITY.txt): the Fire app checks its
+     own signing certificate and says when it is not the author's; the
+     page checks its own text (PAGE_SHA, stamped by the build; Studio, The
+     Inkwell Guide, "This copy"); the policy above; allowBackup off; R8.
+
+TESTS
+-----
+gaps_test.js 125, learner_test.js 160, mark_test.js 26, spell_test.js 136,
+rewrite run.js 328, coach_test.js 38, explain_test.js 45, para_test.js 44,
+sentence_test.mjs 24 (the built page). All pass on the released build.
+
+HOW 7.50 WAS BUILT AND RELEASED
+-------------------------------
+- Versions: src/inkwell.html (BUILD), Inkwell-Android/app/build.gradle
+  (versionCode 75000 + run, versionName), InkwellCore.java (BUILD),
+  Inkwell-Mac and Inkwell-Windows inkwell_app.py (LAUNCHER_BUILD),
+  Inkwell-Web/VERSION.txt, Inkwell-iOS/project.yml (MARKETING_VERSION).
+- The page: python3 tools/build_inkwell.py (Inkwell.html and the Fire
+  assets; the rooms carry myway_core.js, so scriba and fontes are rebuilt
+  with it).
+- The kits: python3 packaging/make_packages.py <folder> --kits --no-key.
+  The public repositories never receive signing/; check the kits for
+  .jks, .keystore and signing.properties before pushing.
+- The APK: built here with Gradle 8.14.3 and the Android SDK
+  (assembleRelease, the author's key from signing/), named
+  Inkwell-7.50-build1.apk; apksigner verify --print-certs shows the
+  author's fingerprint (SECURITY.txt).
+- The Mac apps: packaging/make_mac_prebuilt.py from the last Actions
+  image (release mac-build-27), build 35, both architectures, sealed with
+  rcodesign.
+- The web app package holds the finished site; the writer uploads it to
+  the site's host (Inkwell-Web/SITE_URL.txt).
+- The four DevGroup2313 repositories (inkwell-android-fire,
+  inwell-mac-intel, inkwell-mac-mini, inkwell-windows) each receive the
+  kit's contents, the handoff, their README at 7.50 and the ready-made
+  build under builds/. Nothing is pushed to yabban-maker/inkwell-fire.
+
+NOT DONE YET
+------------
+- The corrector's recall is 8.6% of the annotators' changes on learner
+  essays; the next audit by error type names the remaining silences
+  (tense across a sentence, word choice, missing commas inside a clause,
+  the articles the statistics could not decide). Each stage is measured
+  the same way, precision first.
+- Standalone Tabula and Scriba apps: deferred at the writer's word
+  (Inkwell only in this chat).
+- Mac and Windows code signing need the author's own certificates
+  (SECURITY.txt); without them the systems warn at first launch as now.
+- The iPhone and iPad app is built on the writer's Mac from the kit, as
+  before; the home-screen web app is the fallback.

@@ -1,5 +1,36 @@
-INKWELL 7.39 FOR THE MAC MINI (APPLE SILICON, 16 GB)
+INKWELL 7.50 FOR THE MAC MINI (APPLE SILICON, 16 GB)
 ====================================================
+
+NEW IN 7.50
+-----------
+- The corrector catches more, offline and with no model: a preposition
+  missing its last word ("in spite all") or the wrong one ("interested
+  on"), a missing article ("is experienced person"), a singular after a
+  quantity ("many problem"), the verb's form after will, can, does, have
+  and "to" ("will delighted", "have went", "a way to learning"),
+  agreement ("Sharing rooms have", "the chances of accident is"), a
+  capital inside a sentence ("thinking It would"), and slips such as
+  "nowaday". Measured against 7.49 on learner essays: about a tenth more
+  errors found, precision kept, correct prose touched no more than
+  before. Every note carries its lesson.
+- Learning as you go: when you accept a fix, one line at the foot of the
+  page says the rule behind it, and goes. Once a day, one sentence of
+  your own that you mended on an earlier day comes back, to mend from
+  memory. Your patterns groups your slips by family. Both are on from the
+  start; My way of working switches them off.
+- Tabula saves a new document to the device (Word, PDF, text, web page)
+  and prints, inside Inkwell, on every device. Inkwell is offered to open
+  Word, PDF and text files from the device (Share, Open with, a double
+  click), into Tabula.
+- Safari: the writing model installs and runs (two faults mended).
+- The seal icon fills its canvas on the Mac and on the iPhone and iPad.
+- The door offers the guided tour as a quiet link above its buttons; the
+  Welcome page's first example gets a proper rewrite; Tabula's side
+  buttons are sized to their row.
+- Ownership made explicit (LICENCE.txt: no licence is granted, permission
+  is personal and revocable, the author alone distributes). The app
+  checks its own signature and its own text: Studio, The Inkwell Guide,
+  "This copy". See INKWELL_HANDOFF_v7p50.txt.
 
 NEW IN 7.39
 -----------
@@ -75,7 +106,7 @@ PART A. INSTALL
    installer; your documents are never on it. From 7.38, Inkwell puts it
    away by itself when you open Inkwell from Applications. To put it away
    by hand: right-click it on the Desktop and choose Eject.
-4. Look for "v7.39" beside the date at the top. If your documents are not
+4. Look for "v7.50" beside the date at the top. If your documents are not
    there: File, Import library, and choose the file from step 1.
 
 

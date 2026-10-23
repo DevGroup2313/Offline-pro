@@ -1,4 +1,4 @@
-INKWELL 7.45 FOR WINDOWS
+INKWELL 7.50 FOR WINDOWS
 ========================
 
 This zip brings Inkwell 7.45 to the Inkwell already installed on your
@@ -18,7 +18,7 @@ INSTALL (ABOUT A MINUTE)
 4. Drag the folder "Inkwell 7.45 page" into that window.
    If an older folder such as "Inkwell 7.40 page" is there, you can delete
    it: Inkwell always opens the newest page.
-5. Open Inkwell from the Start menu as usual. Look for "v7.45" beside the
+5. Open Inkwell from the Start menu as usual. Look for "v7.50" beside the
    date at the top.
 
 Your documents, the Start menu entry and the uninstaller stay as they are.
@@ -36,6 +36,37 @@ On the Mac mini: Studio, Engine, "Share with my other devices on this
 Wi-Fi". It shows an address and a 6-digit code. Here: Engine, "Another
 computer's model". Enter both. The pill at the top then names the Mac mini's
 model.
+
+NEW IN 7.50
+-----------
+- The corrector catches more, offline and with no model: a preposition
+  missing its last word ("in spite all") or the wrong one ("interested
+  on"), a missing article ("is experienced person"), a singular after a
+  quantity ("many problem"), the verb's form after will, can, does, have
+  and "to" ("will delighted", "have went", "a way to learning"),
+  agreement ("Sharing rooms have", "the chances of accident is"), a
+  capital inside a sentence ("thinking It would"), and slips such as
+  "nowaday". Measured against 7.49 on learner essays: about a tenth more
+  errors found, precision kept, correct prose touched no more than
+  before. Every note carries its lesson.
+- Learning as you go: when you accept a fix, one line at the foot of the
+  page says the rule behind it, and goes. Once a day, one sentence of
+  your own that you mended on an earlier day comes back, to mend from
+  memory. Your patterns groups your slips by family. Both are on from the
+  start; My way of working switches them off.
+- Tabula saves a new document to the device (Word, PDF, text, web page)
+  and prints, inside Inkwell, on every device. Inkwell is offered to open
+  Word, PDF and text files from the device (Share, Open with, a double
+  click), into Tabula.
+- Safari: the writing model installs and runs (two faults mended).
+- The seal icon fills its canvas on the Mac and on the iPhone and iPad.
+- The door offers the guided tour as a quiet link above its buttons; the
+  Welcome page's first example gets a proper rewrite; Tabula's side
+  buttons are sized to their row.
+- Ownership made explicit (LICENCE.txt: no licence is granted, permission
+  is personal and revocable, the author alone distributes). The app
+  checks its own signature and its own text: Studio, The Inkwell Guide,
+  "This copy". See INKWELL_HANDOFF_v7p50.txt.
 
 NEW IN 7.49
 -----------
