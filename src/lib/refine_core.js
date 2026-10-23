@@ -824,6 +824,14 @@
   /* ---------- lessons by kind ---------- */
   /* [principle, example]; the more particular kinds come first */
   const LESSON = [
+    /* 7.50: the gaps' family names, as Your patterns groups them */
+    [/^A word and its preposition/, ['Some words carry their preposition with them: depend on, interested in, listen to, in spite of, the reason for. Learn the pair as one word.', '"it depends the weather" → "it depends on the weather"']],
+    [/^A missing article/, ['A singular thing that can be counted never stands bare (a person, an idea, the best way): it takes a, an or the.', '"is experienced person" → "is an experienced person"']],
+    [/^Singular or plural after a quantity/, ['After many, several, both, a number and "one of", the noun is plural; many goes with things you count, much with what you measure.', '"many problem" → "many problems"']],
+    [/^The verb’s form after a modal/, ['After will, can, should, does and "to", the verb stays bare; after have, has and had it is the participle.', '"will delighted" → "will delight"; "have went" → "have gone"']],
+    [/^The verb agrees with its subject/, ['Find the real subject before choosing the verb: one thing takes the -s form, more than one takes the plain form.', '"the chances of accident is" → "the chances of accident are"']],
+    [/^A capital inside a sentence/, ['A capital letter inside a sentence marks a name. An ordinary word keeps its small letter, however important it feels.', '"thinking It would" → "thinking it would"']],
+    [/^A fixed form/, ['A few forms are simply fixed: nowadays, every day (two words, when), people, a relationship between people, easier.', '"more easy than" → "easier than"']],
     /* 7.50: the gaps (gaps_core.js): the principle behind each family, in six words where it can be */
     [/^“In spite” takes|^“In front” takes|^“In order” takes|^“According” takes|^“Depend” takes|^“Listen” takes|^“Instead” takes|^“One of them”|^“Percent” takes|^“Provide someone|^“Pay attention” takes|^“Arrive at”|^“Wait for”|^“Belong to”/, ['Some words carry their preposition with them: depend on, listen to, wait for, in spite of. Learn the pair as one word.', '"it depends the weather" → "it depends on the weather"']],
     [/^“Interested in”|^“Good at”|^“Afraid of”|^“Depend on”|^“Consist of”|^“Married to”|^“Similar to”|^“Capable of”|^“Responsible for”|^“Aware of”|^“Famous for”|^“Participate in”|^“Take part in”|^“Take care of”|^“Committed to”/, ['An adjective or a verb keeps its own preposition: interested in, good at, afraid of, consist of. The pair is fixed, whatever the language you think in.', '"interested on history" → "interested in history"']],

@@ -9339,13 +9339,15 @@ function learnerCheck(t,ms,out){
    agreement, capitals and morphology the audit found the rules silent on.
    The lexicon, when it is read, confirms parts of speech; the lists serve
    before that. An edit never lands on another note's ground. */
+const GAPS_PAT={prep:'A word and its preposition',det:'A missing article',num:'Singular or plural after a quantity',form:'The verb’s form after a modal, “do”, “have” or “to”',agree:'The verb agrees with its subject',orth:'A capital inside a sentence',morph:'A fixed form'};
 function gapsCheck(t,ms,out){
  if(typeof INKGAPS==='undefined')return;
  let es=[];try{es=INKGAPS.check(t);}catch(e){return;}
  for(const e of es){
   if(inMask(e.start,ms))continue;
   if(out.some(o=>e.start<o.end&&e.end>o.start||(e.start===e.end&&o.start<=e.start&&o.end>=e.start)))continue;
-  out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam});}}
+  /* the family's name (pat) is what Your patterns counts; the note's own why teaches the particular */
+  out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam,pat:GAPS_PAT[e.fam]});}}
 /* ===== restored card + bubble + accept + undo cluster (regressed away in 6.58) ===== */
 let CARDSIG="";
 const bub=document.getElementById('bubble');
@@ -9627,7 +9629,8 @@ function inkWayBoot(){if(typeof INKWAY==='undefined')return;
  document.addEventListener('selectionchange',function(){if(!inkWayOn('where'))return;clearTimeout(wt);wt=setTimeout(function(){if(_fRoot&&document.activeElement===_fRoot)inkWhereSave();},1500);});
  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')inkWhereSave();});
  window.addEventListener('pagehide',inkWhereSave);
- setTimeout(function(){const dr=document.getElementById('door');if(dr&&dr.style.display==='flex'){const w=setInterval(function(){if(dr.style.display!=='flex'){clearInterval(w);inkWhereOffer();}},700);}else inkWhereOffer();},600);}
+ setTimeout(function(){const dr=document.getElementById('door');if(dr&&dr.style.display==='flex'){const w=setInterval(function(){if(dr.style.display!=='flex'){clearInterval(w);inkWhereOffer();}},700);}else inkWhereOffer();},600);
+ setTimeout(function(){inkLastOffer(0);},4000);}
 window.addEventListener('load',function(){setTimeout(inkWayBoot,700);});
 function inkRowHTML(e,i){return '<div class="crow" onclick="expandRow('+i+')"><span class="cdot c-'+e.cat+'"></span>'+
    '<span class="cor">'+esc(e.orig)+'</span>'+
@@ -9656,7 +9659,7 @@ function citeUndoPoint(){pushUndo();const d=inkDoc();if(!d)return;
 function statKey(why){why=String(why||'');return why.length>48?why.split(/[:.]/)[0].trim():why;}
 function bumpStat(why,ex){why=statKey(why);S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);
  /* 7.49: the writer's own slip is kept (six to a pattern) for practice */
- if(ex&&ex.ctx){const all=S.statEx||{},L=(all[why]||[]).filter(x=>x.ctx!==ex.ctx);L.unshift(ex);all[why]=L.slice(0,6);S.statEx=all;SV('statEx',all);}
+ if(ex&&ex.ctx){ex.t=Date.now();const all=S.statEx||{},L=(all[why]||[]).filter(x=>x.ctx!==ex.ctx);L.unshift(ex);all[why]=L.slice(0,6);S.statEx=all;SV('statEx',all);}
  renderPatterns();}
 /* the sentence round a slip, with the slip's place in it, before the fix */
 function statExample(t,e){if(typeof e.fix!=='string'||e.end<=e.start)return null;
@@ -9679,9 +9682,37 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  const ex=statExample(ed.value,e);
  const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
  if(!r){scan();return;}
- bumpStat(e.why||'',ex);
+ bumpStat(e.pat||e.why||'',ex);
  ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
- if(wasFirst)showTip('learn');toast('Accepted ✔');clearSel();}
+ if(wasFirst)showTip('learn');inkRuleToast(e);clearSel();}
+/* 7.50: The rule after a fix (My way of working, on from the start): the
+   lesson's first sentence, at the foot of the page for a breath, with the
+   change itself; nothing to open. Where no lesson fits, the plain receipt. */
+function inkRuleToast(e){
+ if(!inkWayOn('rule'))return toast('Accepted ✔');
+ let r='';try{const L=lessonFor(e.why||'');r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
+ const m=/^(.*?[.!?])(?:\s|$)/.exec(r);if(m)r=m[1];
+ if(r.length>118)r=r.slice(0,116).replace(/\s+\S*$/,'')+'…';
+ if(!r)return toast('Accepted ✔');
+ const chg=(typeof e.orig==='string'&&e.orig.trim()&&typeof e.fix==='string'&&e.fix.trim()&&e.orig.length<40&&e.fix.length<40)?'“'+e.orig.trim()+'” → “'+e.fix.trim()+'”  ·  ':'';
+ toast('Accepted ✔  ·  '+chg+r,5200);}
+/* 7.50: One sentence from last time (My way of working, on from the start):
+   once a day, after the desk and any card of its own are up, one slip the
+   writer mended before, as first written, to mend from memory. Not while
+   the door is up, a card is showing or a modal is open: it waits. */
+function inkLastOffer(n){try{
+ n=n||0;if(!inkWayOn('last')||typeof INKWAY==='undefined')return;
+ const dr=document.getElementById('door'),busy=(dr&&dr.style.display==='flex')||document.getElementById('iwCard')||document.getElementById('iwAsk')||document.body.classList.contains('modalOn')||(document.getElementById('modal')||{}).style.display==='flex';
+ if(busy){if(n<400)setTimeout(function(){inkLastOffer(n+1);},1500);return;}
+ const day=new Date().toISOString().slice(0,10);if(localStorage.getItem('ink_lastDay')===day)return;
+ /* a sentence from an earlier day, never one mended minutes ago */
+ const today0=new Date();today0.setHours(0,0,0,0);
+ const ex=S.statEx||{},st=S.stats||{};const old=k=>(ex[k]||[]).filter(x=>!x.t||x.t<today0.getTime());
+ const keys=Object.keys(ex).filter(k=>old(k).length&&st[k]>0).sort((a,b)=>st[b]-st[a]);if(!keys.length)return;
+ const k=keys[0],one=old(k)[0];localStorage.setItem('ink_lastDay',day);
+ const name=statKey(k);
+ INKWAY.ask({doc:document,night:inkWayNight(),id:'iwLast',title:'One sentence from last time',text:'A sentence of yours, mended before, as you first wrote it. The pattern: '+name.charAt(0).toLowerCase()+name.slice(1)+'. Mend it again from memory, in one go, or leave it for another day.',buttons:[['Mend it',function(){patPractise(k,1,one);},true],['Not today',null]]});
+}catch(e){}}
 function inkDictHas(w){const l=String(w||'').toLowerCase();return (S.spellDict||[]).some(x=>{x=String(x).toLowerCase();return x===l||l.indexOf(x)===0&&/^(?:s|ed|ing|es)$/.test(l.slice(x.length));});}
 /* 7.49: a dismissed note stays dismissed in its document: it is known by
    its kind, its words and the words around it, so it returns only if that
@@ -9720,7 +9751,7 @@ function wbMute(i){const e=EDITS[i];if(!e||!e.wb)return;const w=e.wb;
 function wbUnmute(i){S.muteWords.splice(i,1);SV('muteWords',S.muteWords);WB=null;openModal('rules');scan();}
 function acceptAll(){const es=EDITS.filter(e=>typeof e.fix==='string');if(!es.length)return toast('Nothing to fix');inkAuthMark('f');
  if(es.length>=4)snap('Before Fix all');
- pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.why||'',statExample(t0,e)));}let t=ed.value;
+ pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.pat||e.why||'',statExample(t0,e)));}let t=ed.value;
  es.slice().sort((a,b)=>b.start-a.start).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
  ed.value=t;afterChange();SND.fixall();showUndoChip();clearSel();
  const r=+document.getElementById('rhCount').textContent;
@@ -15206,7 +15237,7 @@ function renderPatterns(){
 }
 /* 7.49: practice from the writer's own slips: each sentence as it was, the
    slip underlined; the writer says what stands there, and the lesson answers */
-function patPractise(why){const ex=((S.statEx||{})[why]||[]).slice(0,3);if(!ex.length)return toast('Accept a fix of this kind first');
+function patPractise(why,n,one){const ex=one?[one]:((S.statEx||{})[why]||[]).slice(0,n||3);if(!ex.length)return toast('Accept a fix of this kind first');
  const L=lessonFor(why);PATP={why:why,ex:ex,ok:0};
  document.getElementById('modalBody').innerHTML='<h3>Practise: '+esc(why)+'</h3>'+
   '<p style="font-size:13px;color:var(--mut);line-height:1.6;margin:0 0 10px">'+(ex.length===1?'A sentence':ex.length+' sentences')+' from your own pages, as you first wrote '+(ex.length===1?'it':'them')+'. What should stand in place of the underlined words?</p>'+

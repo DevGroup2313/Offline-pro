@@ -2609,12 +2609,18 @@ function sessSlideView(list, k) {
    Tabula and in Scriba; Gentle time and Quiet senses everywhere (the band
    and the questions are drawn by Inkwell's page, over the rooms, and the
    rooms tell it when the writer is working). FEATURES lists them all, with
-   where each works; the panel is drawn from it. */
+   where each works; the panel is drawn from it.
+   7.50: Learning as you go. The rule after a fix (one line at the foot of
+   the page when a fix is accepted, the rule in a breath) and One sentence
+   from last time (once a day, a slip of the writer's own, mended before,
+   comes back to mend from memory). Both are on from the start: the
+   teaching is the point of the desk, and either is switched off here. */
 (function (root) {
   'use strict';
   var KEY = 'ink_way', WKEY = 'ink_where:';
   var DEF = { small: { on: false }, next: { on: false }, draft: { on: false }, ruler: { on: false }, time: { on: false },
     where: { on: false }, today: { on: false },
+    rule: { on: true }, last: { on: true },
     three: { on: false }, wait: { on: false }, quiet: { on: false },
     comfort: { on: false, size: 110, line: 1.9, letter: 0.02, font: '', paper: '' } };
   /* [key, name, where it works, what it does], in the panel's groups */
@@ -2629,6 +2635,9 @@ function sessSlideView(list, k) {
     ['Finding your place', [
       ['where', 'Where was I?', 'Desk, Tabula, Scriba and Fontes', 'When you open a document, a small card says where you stopped, with the note you left yourself, and takes you straight there. One press, or \u201cNot now\u201d. While it is on, \u201cNote for next time\u201d sits at the foot of the page.'],
       ['today', 'Today so far', DESK, 'A quiet count of today\u2019s work at the foot of the page: the words you added and the time you spent, by document. No streaks and no targets, only what you did.']]],
+    ['Learning as you go', [
+      ['rule', 'The rule after a fix', DESK, 'When you accept a fix, one line at the foot of the page says the rule behind it, in a breath, and goes. Nothing to open, nothing to remember on purpose. The same rule waits under \u201cLearn \u25b8\u201d on every card. On from the start.'],
+      ['last', 'One sentence from last time', DESK, 'Once a day, when you open Inkwell, one sentence of your own that you mended before comes back as you first wrote it, to mend again in one go, or to leave for another day. A slip mended from memory stops being a slip. On from the start.']]],
     ['Less at once, easier on the senses', [
       ['three', 'Three at a time', DESK, 'Suggestions come three at a time, correctness first, with no running count. The next three wait behind one button. The wording is plain: \u201cWorth a look\u201d, never \u201cError\u201d.'],
       ['wait', 'Messages wait for me', DESK, 'A message stays until you close it, instead of vanishing after three seconds. Nothing opens by itself: a tip waits behind a small button until you want it.'],
@@ -3044,7 +3053,7 @@ function sessSlideView(list, k) {
         html += '</div>';
       });
     });
-    html += '<p class="iw-foot">Each is off until you switch it on. One choice serves Inkwell, Tabula, Scriba and Fontes, and stays on this device. ' +
+    html += '<p class="iw-foot">Each is off until you switch it on, but for the two under Learning as you go, which are on from the start. One choice serves Inkwell, Tabula, Scriba and Fontes, and stays on this device. ' +
       (app === 'inkwell' ? '' : 'Some of these work on Inkwell\u2019s desk only; each says where it works.') + '</p></div>';
     return html;
   }
