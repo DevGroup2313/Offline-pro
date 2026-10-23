@@ -458,3 +458,38 @@ the first draft are gone. On the tuning half, 20 of the 31 new fixes are the
 annotator's own, and the eleven others are commas the annotator left ("In
 this report we will", "On my vacation I went"). learner_test.js: 182.
 
+## After 7.50: precision on published prose (stage G6, second part)
+
+Every change the corrector made on the two correct Wikipedia sets (159 in
+3,000 sentences) was listed by its reason and read. Most are what the
+sets carry rather than faults of the rules: names and Latin the dictionary
+lacks (41), spaces before a full stop or a comma left by the extraction
+(40), rows that begin mid-sentence (16), and optional commas (15). The
+rest were wrong, and each got its guard and a test:
+
+- a collective noun with a plain verb ("the first team play") now gets the
+  note without a fix, since British usage may treat a team, a government
+  or a committee as plural ("every" and "each" still take the fix);
+- a day or a year followed by a capitalised word is a title or an event
+  ("at Saturday Night", "at 1997 Survivor Series"), not a preposition slip;
+- a word with an inner capital before a capitalised word is a name
+  ("uDiscover Music");
+- "six home runs", "those top three teams": after a number, an -s word
+  that may be a verb is the compound's head, not a verb;
+- "what a journey this ends up being": a verb and its particle, not a
+  plural noun after "this";
+- "as they pleased", "than they expected": no verb is missing;
+- "on the night" is the British idiom for the night of an event; only "in
+  the night" becomes "at night".
+
+| set | before P / R / F0.5 | after |
+|---|---|---|
+| W&I tuning half | 66.2 / 9.0 / 0.291 | 66.4 / 9.0 / 0.291 |
+| W&I report half | 62.1 / 7.9 / 0.261 | 62.3 / 7.9 / 0.262 |
+| CoNLL-2014 | 74.0 / 7.7 / 0.271 | 74.3 / 7.7 / 0.272 |
+| correct Wikipedia, tuning | 72 (4.8%) | 68 (4.5%) |
+| correct Wikipedia, report | 76 (5.1%) | 72 (4.8%) |
+
+One real fix is given up: "the federal government let each state" keeps
+its note and loses its fix. learner_test.js 188, gaps_test.js 130.
+

@@ -316,6 +316,7 @@
       /* the adjective must end the phrase: no noun after it ("it good idea" is another error) */
       if (after && !/^(to|that|for|than|because|and|but|so|if|when|as|in|at|on|with|about|enough|too|very|of|from|by|though|although|while|now|then|here|there|today|again|also|still|yet|only|just)$/i.test(after.w)) continue;
       if (bw === 'if' && pw === 'it') continue;
+      if (/^(as|than|what|whatever|however|wherever|whenever)$/.test(bw)) continue;   /* "as they pleased", "than they expected" */
       out.push({ start: q.s, end: q.s, orig: '', fix: be + ' ', why: 'A sentence needs its verb: "' + p.w + ' ' + be + ' ' + (adv ? adv + ' ' : '') + aw + '"', cat: 'g', fam: 'aux' });
     }
   }
@@ -401,7 +402,7 @@
       const manyLike = MANY.test(pw) || twoWord('a', 'few') || oneOfDet || twoWord('lot', 'of') || twoWord('lots', 'of') || twoWord('plenty', 'of') || twoWord('number', 'of') || twoWord('one', 'of');
       /* a noun before another noun describes it ("team championships", "summer homes"): not the head */
       const after2 = after ? next(ws, t, j + 1) : null;
-      const compound = (after && (PLURAL.has(aw) || NOUN.has(aw) || /^[A-Z]/.test(after.w) || /['’]s$/.test(aw) || (/[a-z]s$/.test(aw) && !/(ss|us|is|ous)$/.test(aw) && !FORM.has(aw)) || (/ing$/.test(aw) && after2 && (PLURAL.has(lc(after2.w)) || NOUN.has(lc(after2.w)))))) || /[-‑–]/.test(t[n.e] || '');
+      const compound = (after && (PLURAL.has(aw) || NOUN.has(aw) || /^[A-Z]/.test(after.w) || /^(?:two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|\d+)$/.test(aw) || (/^(?:two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundred|thousand|\d+)$/.test(pw) && /[a-z]s$/.test(aw) && FORM.has(aw) && !/^(is|was|has|does)$/.test(aw) && !/^[a-z]+(?:ss|us|is)$/.test(aw)) || /['’]s$/.test(aw) || (/[a-z]s$/.test(aw) && !/(ss|us|is|ous)$/.test(aw) && !FORM.has(aw)) || (/ing$/.test(aw) && after2 && (PLURAL.has(lc(after2.w)) || NOUN.has(lc(after2.w)))))) || /[-‑–]/.test(t[n.e] || '');
       /* "both patient and clinician": "both ... and" coordinates singulars */
       const bothAnd = pw === 'both' && (ws.slice(j + 1, j + 11).some(x => lc(x.w) === 'and') || /^(down|up|out|off|away|back|over|together|apart)$/.test(aw));
       /* "one of justification", "one of harmony": "one of" without a
@@ -430,7 +431,8 @@
       const conj = pw === 'that' && !sentenceStart(t, p.s) && !(prev(ws, t, i) && PREPS.test(prev(ws, t, i).w)) && (!/[,;:(]\s*$/.test(t.slice(Math.max(0, p.s - 3), p.s)) || OBJ_TAKER.test(pvw) || /^(remember|think|say|said|know|believe|hope|mean|means|meant|feel|felt|found|think|thought|sure|clear|true|fact|idea|so|note|noted|means)$/.test(pvw));
       /* 7.43: "This contrasts with", "This leaves a gap": a verb, not a noun */
       const verbUse = /^(the|a|an|with|to|from|for|on|in|at|by|that|this|these|those|its|their|our|his|her|my|your|us|them|him|me|it|some|many|much|more|less|no|not|also|only|both|each|every|all|any|fundamental|important|significant|several|new)$/.test(aw);
-      if (/^(this|that)$/.test(pw) && !conj && j === i + 1 && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !verbUse && !/^(means|series|species|news|headquarters)$/.test(nw)) {
+      const verbParticle = !!after && /^(up|down|out|off|away|back|over|through|around|about|into|onto|upon)$/i.test(after.w);   /* "this ends up": a verb and its particle */
+      if (/^(this|that)$/.test(pw) && !conj && j === i + 1 && PLURAL.has(nw) && /^[a-z]/.test(n.w) && !compound && !verbUse && !verbParticle && !/^(means|series|species|news|headquarters)$/.test(nw)) {
         out.push({ start: p.s, end: p.e, fix: caseLike(p.w, pw === 'this' ? 'these' : 'those'), why: '"' + cap(pw) + '" is singular; a plural noun takes "' + (pw === 'this' ? 'these' : 'those') + '"', cat: 'g', fam: 'num' });
         continue;
       }
@@ -491,7 +493,7 @@
   const PREP = [
     [/\bin the internet\b/gi, 'on the internet', 'Things are "on the internet"'],
     [/\b(in|at) (tv|the radio|the phone|the bus|the train|the plane|the way home)\b/gi, 'on $2', 'It is "on TV", "on the bus", "on the phone"'],
-    [/\b(in|on) the night\b(?! of| when| that| before| after| the| he| she| it| we| they| i\b| you| my| our| his| her| their| there| which| in| on| at| between| following| preceding)/gi, 'at night', 'It is "at night"'],
+    [/\b(in) the night\b(?! of| when| that| before| after| the| he| she| it| we| they| i\b| you| my| our| his| her| their| there| which| in| on| at| between| following| preceding| sky| air| itself)/gi, 'at night',   /* not "on the night": British idiom for the night of an event */ 'It is "at night"'],
     [/\b(at|on) the (morning|afternoon|evening)\b/gi, 'in the $2', 'It is "in the morning", "in the evening"'],
     [/\b(at|on|in) (midnight|noon|midday|dawn|dusk|sunset|sunrise|lunchtime|breakfast time|dinner time)\b/gi, (m, p, n) => (lc(p) === 'at' ? m : 'at ' + n), 'It is "at midnight", "at noon"'],
     [/\bin the weekend\b/gi, 'at the weekend', 'It is "at the weekend" (or "on the weekend")'],

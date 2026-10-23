@@ -3,7 +3,7 @@
    with no second value must be left alone. Runs without the lexicon. */
 const path = require('path');
 const G = require(path.join(__dirname, '..', '..', 'src', 'lib', 'gaps_core.js'));
-function apply(t) { const E = G.check(t).sort((a, b) => a.start - b.start); let out = '', pos = 0; for (const e of E) { if (e.start < pos) continue; out += t.slice(pos, e.start) + e.fix; pos = e.end; } return out + t.slice(pos); }
+function apply(t) { const E = G.check(t).sort((a, b) => a.start - b.start); let out = '', pos = 0; for (const e of E) { if (e.start < pos || typeof e.fix !== 'string') continue; out += t.slice(pos, e.start) + e.fix; pos = e.end; } return out + t.slice(pos); }   /* a note with no fix leaves the text */
 const cases = [
   /* prepositions missing their last word */
   ['In spite all these benefits, I prefer the car.', 'In spite of all these benefits, I prefer the car.'],
@@ -75,7 +75,7 @@ const cases = [
   ['There are a notice on the door.', 'There is a notice on the door.'],
   ['Michael and Kate was so happy.', 'Michael and Kate were so happy.'],
   ['My best friends was my parents.', 'My best friends were my parents.'],
-  ['The government let each state decide.', 'The government lets each state decide.'],
+  ['The government let each state decide.'],   /* a collective noun: the note stands with no fix (British usage) */
   ['A technological development make people believe it.', 'A technological development makes people believe it.'],
   /* capitals and glued names */
   ['I was thinking It would be hard.', 'I was thinking it would be hard.'],
@@ -139,6 +139,10 @@ const cases = [
   ['Reading these chapters is a pleasure.'],
   ['I think that public transport in future is going to change.'],
   ['When I arrived my uncle was waiting for me.'],
+  ['The first team play in the Cornwall Combination.'],
+  ['He was a contributing editor at Saturday Night.'],
+  ['He fought at 1997 Survivor Series.'],
+  ['Reviews from uDiscover Music were kind.'],
   /* and still caught */
   ['Pollution is several issue that we have to deal with.', 'Pollution is several issues that we have to deal with.'],
   ['There are not as many people around you.'],

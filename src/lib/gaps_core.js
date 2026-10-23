@@ -180,8 +180,8 @@
     [/\b(on|at) the (morning|afternoon|evening)\b/gi, 'in the $2', '“In the morning”, “in the afternoon”, “in the evening”'],
     [/\b(in|on) (night|midnight|noon|midday|dawn|dusk|sunrise|sunset|lunchtime|the moment)\b(?!\s+(?:of|time|shift|club|sky|school|bus|flight|train|life|vision|air|mode|light|hours|owl|out|before|after))/gi, 'at $2', '“At night”, “at noon”, “at the moment”'],
     [/\b(in|on) present\b(?=\s*[,.;:!?]|\s+(?:the|there|it|we|i|you|they|he|she|people|many|most|some|this|these|our|my)\b)/gi, 'at present', '“At present”'],
-    [/\b(in|at) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays|sundays)\b/gi, 'on $2', 'A day takes “on”: “on Monday”'],
-    [/\b(at|on) (19|20)(\d\d)\b(?![-:\/]|\.\d|\s*(?:hours|hrs|h)\b)/g, 'in $2$3', 'A year takes “in”: “in 2019”'],
+    [/\b(in|at) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|mondays|tuesdays|wednesdays|thursdays|fridays|saturdays|sundays)\b(?!\s+[A-Z])/gi, 'on $2', 'A day takes “on”: “on Monday”'],
+    [/\b(at|on) (19|20)(\d\d)\b(?![-:\/]|\.\d|\s*(?:hours|hrs|h)\b|\s+[A-Z])/g, 'in $2$3', 'A year takes “in”: “in 2019”'],
     [/\b(?:in|on) (home)\b(?!-)(?!\s+(?:care|office|page|pages|economics|team|teams|games?|grounds?|affairs|loans?|improvements?|cooking|décor|decor|furnishings|delivery|appliances|insurance|working|schooling|education|town|towns|country|countries|cities|city|and away|or away|rule|run|runs|video|videos|screen|screens|use|button|row|straight|stretch|front|turf|win|wins|shirt|kit|side|crowd|market|counties|county|secretary|visit|visits|help|helper|helpers|nursing|carer|carers|birth|births|owner|owners|ownership|comforts|cinema|computer|computers|automation|network|networks|life|address|town))/gi, 'at $1', '“At home”'],
     [/\bon (work|school|university|college|church)\b(?=\s*(?:[.,;:!?]|$)|\s+(?:and|or|but|all|every|with|on|at|in|by|for|because|so|yet|while|when|until|after|before|now|today|tomorrow|yesterday|tonight|this|that|last|next|than|too|as|since|I|we|you|they|he|she|it|there)\b)/gi, 'at $1', '“At work”, “at school”, “at university”'],
     [/\b(by|on|according to) my (opinion|point of view|view)\b/gi, 'in my $2', '“In my opinion”'],
@@ -383,6 +383,7 @@
     }
     return true;
   }
+  const COLLECTIVE = /^(team|government|staff|committee|family|band|police|crew|couple|public|company|group|class|audience|jury|council|board|firm|majority|minority|population|crowd|generation|party|army|orchestra|choir|club|cast|department|management|union|enemy|navy|community|society|nation|country|school|university|college|church|press|media|opposition|cabinet|parliament|congress|senate|ministry|office|bank|hospital|side|pair|gang|mob|faculty|clergy|public)$/;
   R.push(function agreement(t, out) {
     const ws = words(t);
     for (let i = 0; i < ws.length; i++) {
@@ -442,6 +443,7 @@
         if (/^(be|have)$/.test(v.l)) continue;
         const d = ws[k + 1]; if (!d || gap(t, v, d) || !/^(the|a|an|this|that|these|those|my|our|your|their|his|her|its|each|every|all|some|many|much|more|less|no|any|people|us|them|him|her|me|you|it|to|that|what|how|whether|about|on|in|at|with|for|from|up|down|out|off|away|back|over|through|into|onto|not|well|very|more|less|freedom|money|time|place|rise|attention|pollution|problems|benefits|chance|sense|power|pressure|damage|harm|trouble|stress|shape|part|care|control|use|way|room|space|life|lives|food|water|energy|light|heat|noise|waste|jobs|work|money)$/.test(d.l)) continue;
         if (i > 0 && !gap(t, ws[i - 1], a) && /^(of|in|on|at|for|with|by|from|to|than|that|which|who|and|or|if|when|while|because|as|like|unlike)$/.test(ws[i - 1].l)) continue;   /* the noun belongs to an earlier phrase */
+        if (COLLECTIVE.test(n.l) && !/^(every|each)$/.test(a.l)) { if (sOf(v.l) !== v.l) out.push({ start: v.s, end: v.e, orig: v.w, fix: null, why: 'A singular subject takes “-s” on the verb (“' + a.l + ' ' + n.l + ' ' + sOf(v.l) + '”); British usage may treat a ' + n.l + ' as plural', cat: 'g', fam: 'agree' }); continue; }
         push(out, v.s, v.e, v.w, sOf(v.l), 'A singular subject takes “-s” on the verb: “' + a.l + ' ' + n.l + ' ' + sOf(v.l) + '”', 'agree');
       }
     }
@@ -456,7 +458,7 @@
       const a = ws[i], p = ws[i - 1];
       if (GLUED[a.l]) { push(out, a.s, a.e, a.w, GLUED[a.l], 'Two words: “' + GLUED[a.l] + '”', 'orth'); continue; }
       if (!NO_CAP.test(a.w) || sentStart(t, a.s) || gap(t, p, a)) continue;
-      if (!/^[a-z]/.test(p.w)) continue;                      /* after another capital it may be a name or a title */
+      if (!/^[a-z]/.test(p.w) || /[a-z][A-Z]/.test(p.w)) continue;                      /* after another capital, or a word with an inner capital, it may be a name or a title */
       if (/^(mr|mrs|ms|dr|prof|st|mount|lake|river|new|north|south|east|west|the|of|de|von|van|le|la|du|des|el|al|bin|san|santa|saint|king|queen|prince|princess|lord|lady|sir|dame|president|professor|doctor|captain|general|uncle|aunt|black|white|red|green|blue)$/.test(p.l)) continue;
       const n = ws[i + 1]; if (n && !gap(t, a, n) && /^[A-Z]/.test(n.w) && !/^(I)$/.test(n.w)) continue;   /* "the Great Wall", "a New Year" */
       /* a title's small words: "Science and Technology", "House of Representatives", "Money in the Bank" */
