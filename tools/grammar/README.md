@@ -372,3 +372,52 @@ Nothing lost on learners. The whole page on the held-out W&I half
 (ERRANT, cat "g" fixes): 212 true and 119 false fixes (P 64.1%) to 215
 and 115 (P 65.2%, R 6.7%, F0.5 0.237). Correct Wikipedia sentences
 touched: 77 to 67 of 1500.
+
+## 7.50: the gaps (stage G4)
+
+An audit of the 7.49 corrector on the W&I tuning half, by ERRANT error
+type, listed where it was silent: a preposition missing its last word ("in
+spite all") or the wrong dependent preposition ("interested on"), a missing
+article before a singular count noun ("is experienced person"), a singular
+after a quantity ("many problem"), the verb form after a modal, "do", "have"
+or "to" ("will delighted", "have went", "a way to learning"), agreement with
+a gerund, a country or a plural head noun ("Sharing rooms have", "the
+chances of accident is"), a capital inside a sentence ("thinking It would")
+and a few morphology slips ("nowaday", "interesting in", "everyday" as an
+adverb). src/lib/gaps_core.js (INKGAPS) holds eight families for these,
+wired into the page's rules after the learner checks. The lexicon (INKLEX)
+confirms parts of speech when it has been read; without it, the lists and
+the regular spellings serve. The page now reads the lexicon soon after the
+desk opens on a computer with the memory for it (35 MB once read); a tablet
+reads it the first time Alternatives or Rewrite asks, as before.
+tools/grammar/gaps_test.js: 125 cases.
+
+The first draft doubled the share of correct sentences changed (3.9% to
+7.7%). Every new change on the correct sets was listed by its reason and
+read. The plural-after-a-quantity rule was most of the fault (a word already
+plural, "two years" to "yearses" with the lexicon's noun "years"; a noun
+before the head, "two studio albums"; "the two leave", "both in"), with the
+agreement rule reading "that public transport in future is" and "How does
+the author create" as plain clauses, "many people" taken for a mass noun,
+and "Bryant & May was" taken for the modal. Each got its guard and a test
+(29 published sentences that must be left alone). Then the whole page, cat
+"g" fixes, ERRANT span-based, against 7.49:
+
+| set | 7.49 P / R / F0.5 | 7.50 P / R / F0.5 |
+|---|---|---|
+| W&I tuning half (1,698) | 66.1 / 7.7 / 0.261 | 67.0 / 8.6 / 0.284 |
+| W&I report half (1,698) | 64.0 / 7.3 / 0.251 | 62.5 / 7.7 / 0.257 |
+| CoNLL-2014 (1,312) | 75.6 / 7.3 / 0.262 | 73.9 / 7.6 / 0.270 |
+| correct Wikipedia, tuning (1,500) | 58 changed (3.9%) | 64 (4.3%) |
+| correct Wikipedia, report (1,500) | 72 changed (4.8%) | 73 (4.9%) |
+
+The 41 new fixes on the tuning half, read one by one against the reference:
+17 are the annotator's own change; 2 touch the same words another way
+("there are a notice", where the annotator rewrote the clause); 22 the
+token match counts false, of which 21 are right fixes the annotator did not
+make or made inside a wider rewrite ("will delighted" to "will delight",
+"Nowaday" to "Nowadays", "taking care by me" to "of", "the federal
+government let" to "lets") and one was wrong ("When I arrived my uncle was
+waiting" wants a comma, not "at": the rule no longer fires before a
+possessive). Every gaps note carries a lesson (refine_core.js, by family)
+and a family name, so the syllabus in Your patterns groups them.

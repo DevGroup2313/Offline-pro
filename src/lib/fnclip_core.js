@@ -122,4 +122,4 @@
   }
 
   root.INKFNCLIP = { wordHTML: wordHTML, parse: parse, noteText: noteText };
-})(typeof window !== 'undefined' ? window : this);
+})(typeof self !== 'undefined' ? self : this);   /* 7.50: self, not window: the model worker loads this script too, and Safari's worker has no window and no this */

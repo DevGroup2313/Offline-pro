@@ -7,7 +7,7 @@
      the one library host the model runtime comes from; nothing injected from any
      other address runs. Connections stay open (the laptop link is any address on
      the home network; the models come from Hugging Face). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob: data:; child-src 'self' blob: data:; frame-src 'self' blob: data: about:; style-src 'self' 'unsafe-inline' blob: data:; img-src 'self' blob: data: https: http:; media-src 'self' blob: data: https: http:; font-src 'self' blob: data:; connect-src *; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob: data:; child-src 'self' blob: data:; frame-src 'self' blob: data: about:; style-src 'self' 'unsafe-inline' blob: data:; img-src 'self' blob: data: https: http:; media-src 'self' blob: data: https: http:; font-src 'self' blob: data:; connect-src * blob: data:; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1879,6 +1879,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 @@LIB_REFINE_CORE@@
 @@LIB_LEARNER_DATA@@
 @@LIB_LEARNER_CORE@@
+@@LIB_GAPS_CORE@@
 @@LIB_MARK_CORE@@
 @@LIB_GRADE_CORE@@
 @@LIB_DRAFT_CORE@@
@@ -9293,6 +9294,7 @@ function ruleEdits(t){
   out.push({start:m.start,end:m.start+m.raw.length,orig:m.raw,fix,why:'Your rule: '+ur.label,cat:'r'});}}catch(e){}}
  articleCheck(t,ms,out);
  learnerCheck(t,ms,out);
+ gapsCheck(t,ms,out);
  longSentenceCheck(t,ms,out);
  commaSpliceCheck(t,ms,out);
  rhythmCheck(t,ms,out);
@@ -9332,6 +9334,17 @@ function learnerCheck(t,ms,out){
  for(const e of es){
   if(inMask(e.start,ms))continue;
   if(out.some(o=>e.start<o.end&&e.end>o.start))continue;
+  out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam});}}
+/* 7.50: the gaps (INKGAPS): prepositions, articles, number, verb forms,
+   agreement, capitals and morphology the audit found the rules silent on.
+   The lexicon, when it is read, confirms parts of speech; the lists serve
+   before that. An edit never lands on another note's ground. */
+function gapsCheck(t,ms,out){
+ if(typeof INKGAPS==='undefined')return;
+ let es=[];try{es=INKGAPS.check(t);}catch(e){return;}
+ for(const e of es){
+  if(inMask(e.start,ms))continue;
+  if(out.some(o=>e.start<o.end&&e.end>o.start||(e.start===e.end&&o.start<=e.start&&o.end>=e.start)))continue;
   out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam});}}
 /* ===== restored card + bubble + accept + undo cluster (regressed away in 6.58) ===== */
 let CARDSIG="";
@@ -16115,6 +16128,12 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
   // warning or reloads the window. In a plain browser pywebview is absent,
   // mark() simply does nothing, and that is fine.
   try{setTimeout(inkPendingOpenAsk,900);setTimeout(inkSignedAsk,1500);}catch(e){}
+  /* 7.50: the lexicon is read soon after the desk is up, on a computer with
+     the memory for it (35 MB once read), so the corrector's part-of-speech
+     checks have it from the first minutes; a tablet reads it the first time
+     Alternatives or Rewrite asks, as before. The desk is scanned again once
+     it is in. */
+  try{var dm=navigator.deviceMemory;if(dm===undefined||dm>=4)setTimeout(function(){try{inkLexLoad().then(function(ok){if(ok){try{__ruleSig='';scan();}catch(e){}}});}catch(e){}},8000);}catch(e){}
   function mark(){ try{ window.pywebview.api.mark_booted();
     try{ if(window.__inkBootFault && window.pywebview.api.report_error){ window.pywebview.api.report_error('boot-fault (late flush): '+window.__inkBootFault); window.__inkBootFault=null; } }catch(e3){}
     try{ if(typeof window.__inkStorageRecheck==='function') window.__inkStorageRecheck(); }catch(e2){}

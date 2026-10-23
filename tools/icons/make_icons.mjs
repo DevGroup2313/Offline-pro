@@ -20,12 +20,16 @@ await page.goto('https://ink.local/Inkwell.html'); await page.waitForTimeout(150
 // before the page is replaced by the icon scenes
 const SHOTS = [];
 for (const [n, sz] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) SHOTS.push([`android_${n}.png`, sz, false, 0.94]);
-SHOTS.push(['web_192.png', 192, false, 0.94], ['web_512.png', 512, false, 0.94], ['apple_touch_180.png', 180, true, 0.82], ['ios_1024.png', 1024, true, 0.82], ['round_1024.png', 1024, false, 0.94], ['round_512.png', 512, false, 0.94]);
+// 7.50: the seal fills its canvas on the Mac (the .icns from round_1024) and on
+// the iPhone and iPad (ios_1024, apple_touch_180): 0.96 of the side, the
+// margin only what the seal's lower edge and its glow need. The home screen's
+// rounded mask holds a circle of the full side, so nothing of the seal is cut.
+SHOTS.push(['web_192.png', 192, false, 0.94], ['web_512.png', 512, false, 0.94], ['apple_touch_180.png', 180, true, 0.96], ['ios_1024.png', 1024, true, 0.96], ['round_1024.png', 1024, false, 0.96], ['round_512.png', 512, false, 0.96]);
 for (const sz of [16, 24, 32, 48, 64, 128, 256]) SHOTS.push([`ico_${sz}.png`, sz, false, 0.96]);
 const SEALS = await page.evaluate((list) => { const o = {}; list.forEach(s => { o[s] = inkwellSeal(s, false); }); return o; }, [...new Set(SHOTS.map(x => Math.round(x[1] * x[3])))]);
 async function shot(name, size, opaque, scale) {
   // the seal's edge reaches 1.5% below its circle, so it is set with a small margin
-  const s = Math.round(size * scale), off = Math.round((size - s) / 2) - Math.round(size * 0.006), seal = SEALS[s];
+  const s = Math.round(size * scale), off = Math.round((size - s) / 2) - Math.round(size * (scale >= 0.95 ? 0.003 : 0.006)), seal = SEALS[s];
   const ground = opaque ? 'background:#f2e7cc;' : 'background:transparent;';
   await page.setViewportSize({ width: size, height: size });
   await page.setContent(`<html><body style="margin:0;width:${size}px;height:${size}px;overflow:hidden;${ground}"><div style="position:absolute;left:${Math.round((size - s) / 2)}px;top:${off}px;width:${s}px;height:${s}px">${seal}</div></body></html>`);
