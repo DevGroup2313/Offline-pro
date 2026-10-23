@@ -37,6 +37,32 @@
         <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
+    <!-- 7.50: Inkwell is offered for a document (Open With, a double-click
+         once chosen): Word files into Tabula, PDFs and the rest onto the desk -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key><string>Word document</string>
+            <key>CFBundleTypeRole</key><string>Editor</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>org.openxmlformats.wordprocessingml.document</string><string>com.microsoft.word.doc</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key><string>PDF document</string>
+            <key>CFBundleTypeRole</key><string>Viewer</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>com.adobe.pdf</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key><string>Text document</string>
+            <key>CFBundleTypeRole</key><string>Editor</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>public.plain-text</string><string>net.daringfireball.markdown</string><string>public.rtf</string><string>org.oasis-open.opendocument.text</string><string>public.html</string></array>
+        </dict>
+    </array>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright (c) 2026 Yannie D. Forest. All rights reserved.</string>
 </dict>

@@ -112,7 +112,7 @@ jobs:
           [ -f scriba_v729.html ] && extra="$extra --add-data scriba_v729.html:."
           [ -f fontes_v729.html ] && extra="$extra --add-data fontes_v729.html:."
           python -m PyInstaller --noconfirm --clean --windowed --onedir --name Inkwell \
-            --icon inkwell.icns --osx-bundle-identifier studio.inkwell.desk \
+            --icon inkwell.icns --osx-bundle-identifier studio.inkwell.desk --argv-emulation \
             --runtime-hook "../$MAC_DIR/build/quiet_console.py" \
             --add-data "Inkwell.html:." --add-data "vendor:vendor" --add-data "bin:bin" \
             --add-data "server.py:." --add-data "inkwell.png:." --add-data "inkwell.icns:." $extra \

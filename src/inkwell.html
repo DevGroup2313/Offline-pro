@@ -3,6 +3,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- 7.50: scripts run only from the page itself, its own blobs and workers, and
+     the one library host the model runtime comes from; nothing injected from any
+     other address runs. Connections stay open (the laptop link is any address on
+     the home network; the models come from Hugging Face). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob: data:; child-src 'self' blob: data:; frame-src 'self' blob: data: about:; style-src 'self' 'unsafe-inline' blob: data:; img-src 'self' blob: data: https: http:; media-src 'self' blob: data: https: http:; font-src 'self' blob: data:; connect-src *; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -522,6 +527,10 @@ body[data-motion=minimal] #modal .box.guide3D{animation:none}
 .tour3d:active{background:#1a4157;box-shadow:0 1px 1px #14100a0c;transition-duration:.04s}
 [data-theme=dark] .tour3d{background:var(--acc);color:#0c151c;border-color:var(--acc);text-shadow:none;box-shadow:0 1px 2px #0006}
 [data-theme=dark] .tour3d:hover{background:linear-gradient(#326d91,#1e4d6a);box-shadow:0 2px 5px #000a}
+/* 7.50: the Guide's "This copy": build, signature, the page's own checksum */
+.thisCopy{margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.7}
+.thisCopy h4{font-family:Georgia,serif;margin:0 0 4px;font-size:14px}
+.thisCopy div>b{color:var(--ink)}
 .guideHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .guideHeadL{display:flex;align-items:center;gap:12px;min-width:0}
 .guideHeadL h3{margin:0;font-family:Georgia,'Iowan Old Style',serif;font-size:20px}
@@ -1488,8 +1497,8 @@ body.kbd .doorRow button:not(.primary):focus-visible{box-shadow:0 4px 0 #c7ab72,
 /* the footer: a brass hairline and the maker's name in italic */
 .doorFoot{border-top:0;position:relative;margin-top:24px;padding-top:16px;font-size:11.5px;letter-spacing:.04em}
 /* 7.50: the door's way into the tour, a line of text above the buttons */
-.doorTour{font-family:var(--disp);font-size:15px;font-weight:500;color:#5c5444;margin-top:14px}
-.doorTour+.doorRow{margin-top:16px}
+.doorTour{font-family:var(--disp);font-size:15px;font-weight:500;color:#5c5444;margin-top:26px}
+.doorTour+.doorRow{margin-top:24px}
 .doorTour a{color:#17384c;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(169,128,58,.55);padding-bottom:1px;transition:color .15s,border-color .15s}
 .doorTour a:hover{color:#8a6526;border-bottom-color:#8a6526}
 [data-theme=dark] .doorTour{color:#b5a888}
@@ -2108,6 +2117,10 @@ window.__inkBootMarks=[];
 function inkMark(m){try{window.__inkBootMarks.push(m);}catch(e){}}
 
 const BUILD='7.49 · XIX · OCTOBRIS · MMXXVI';
+/* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
+   writes it over the placeholder, hashing the page with the placeholder in
+   place); "This copy" in the Guide hashes the page the same way and compares */
+const PAGE_SHA='@@PAGE_SHA@@';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -4590,6 +4603,61 @@ window.addEventListener('message',function(e){
  }catch(x){}
  function fallbackDL(m){try{var a=document.createElement('a');a.href='data:'+(m.mime||'application/octet-stream')+';base64,'+m.data;a.download=m.name||'document';document.body.appendChild(a);a.click();a.remove();}catch(y){}}
 });
+/* 7.50: a document the device asked Inkwell to open (Open with, Share, a
+   double-click once Inkwell is chosen): a Word file or a web page goes to
+   Tabula (Tabula reads them whole, with their formatting); a PDF, RTF,
+   OpenDocument, Markdown or text file comes onto the desk as its text, by
+   the desk's own readers. The host hands it over at once when the page is
+   up (inkOpenExternalFile), else the page asks at boot (pending_open). */
+function inkOpenExternalFile(o){
+ try{if(typeof o==='string')o=JSON.parse(o);}catch(e){return false;}
+ if(!o||!o.data)return false;
+ var name=String(o.name||'document'),mime=String(o.mime||''),ext=(name.match(/\.([A-Za-z0-9]+)$/)||['',''])[1].toLowerCase();
+ var bin;try{bin=atob(String(o.data).replace(/\s+/g,''));}catch(e){toast('That file could not be read.');return false;}
+ var u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+ var isWord=/^(docx|doc)$/.test(ext)||/wordprocessingml|msword/.test(mime);
+ var isWeb=/^(html?|xhtml)$/.test(ext)||/text\/html/.test(mime);
+ var textLike=/^(txt|md|markdown|rtf|odt|pdf)$/.test(ext)||/^text\/|pdf|rtf|opendocument/.test(mime);
+ function ready(){try{document.body.classList.remove('doorOn');var d=document.getElementById('door');if(d&&d.style.display==='flex')closeDoor();}catch(e){}}
+ if(isWord||isWeb){
+  try{localStorage.setItem('cd_open_pending_tabula',JSON.stringify({name:name,type:mime||(isWord?'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'text/html'),b64:String(o.data).replace(/\s+/g,'')}));}
+  catch(e){toast('That file is too large to hand to Tabula here; open it from Tabula\u2019s File menu.');return false;}
+  ready();setTimeout(function(){try{openTabulaStage();toast('\u201c'+name+'\u201d opens in Tabula.');}catch(e){}},60);return true;}
+ if(textLike||!ext){ready();setTimeout(function(){try{importUserDoc({target:{files:[new File([u8],name,{type:mime})],value:''}});}catch(e){toast('That file could not be read here.');}},60);return true;}
+ toast('Inkwell does not read .'+ext+' files; a .docx, .pdf, .rtf, .odt, .txt, .md or .html file opens.');return false;}
+window.inkOpenExternalFile=inkOpenExternalFile;
+function inkPendingOpenAsk(){
+ try{var api=window.pywebview&&window.pywebview.api;if(!api||!api.pending_open)return;
+  Promise.resolve(api.pending_open()).then(function(j){if(j)setTimeout(function(){inkOpenExternalFile(j);},400);}).catch(function(){});}catch(e){}}
+/* 7.50: the host's word on who signed this copy (the Fire app compares its
+   certificate with the author's); a copy signed by anyone else says so on
+   the desk, once a session, and in the Guide's "This copy" */
+var INK_SIGNED='';
+function inkSignedAsk(){
+ try{var api=window.pywebview&&window.pywebview.api;if(!api||!api.host_info)return;
+  Promise.resolve(api.host_info()).then(function(h){if(!h||!h.signed)return;INK_SIGNED=String(h.signed);
+   if(INK_SIGNED==='other'&&!sessionStorage.getItem('ink_signedSaid')){try{sessionStorage.setItem('ink_signedSaid','1');}catch(e){}
+    setTimeout(function(){toast('This copy of Inkwell was not signed by its author. The Guide\u2019s \u201cThis copy\u201d says more.');},2500);}}).catch(function(){});}catch(e){}}
+/* 7.50: "This copy": the build marker, the page's own checksum against the
+   author's, and the host's word on the signature */
+async function inkThisCopy(){
+ var el=document.getElementById('thisCopy');if(!el)return;
+ var h='<div><b>Build</b> '+esc(BUILD)+'</div>';
+ var signed=INK_SIGNED==='author'?'signed by its author':INK_SIGNED==='other'?'<b style="color:var(--red)">not signed by its author</b> (re-signed, or a test build)':'the system does not say (a browser, or a desktop app)';
+ h+='<div><b>Signature</b> '+signed+'</div>';
+ var verdict='';
+ try{
+  if(!/^[0-9a-f]{64}$/.test(PAGE_SHA))verdict='no checksum was written into this copy (a source build)';
+  else if(!window.crypto||!crypto.subtle)verdict='this browser cannot compute the checksum';
+  else{var r=await fetch(location.href,{cache:'no-store'});var t=await r.text();
+   t=t.replace("const PAGE_SHA='"+PAGE_SHA+"';","const PAGE_SHA='"+'@@'+'PAGE_SHA'+'@@'+"';");
+   var d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));
+   var hex=Array.from(new Uint8Array(d)).map(function(b){return ('0'+b.toString(16)).slice(-2);}).join('');
+   verdict=hex===PAGE_SHA?'<b style="color:var(--green,#2a7a4b)">the text is the author\u2019s</b> (SHA-256 '+esc(PAGE_SHA.slice(0,16))+'\u2026)':'<b style="color:var(--red)">the text has been changed</b> since the author built it (expected '+esc(PAGE_SHA.slice(0,16))+'\u2026, found '+esc(hex.slice(0,16))+'\u2026)';}
+ }catch(e){verdict='the page could not be read back here to check it ('+esc(String(e&&e.message||e))+')';}
+ h+='<div><b>Page</b> '+verdict+'</div>';
+ h+='<div style="margin-top:6px;color:var(--mut)">Inkwell is the sole work of Yannie D. Forest, who alone may distribute, sell, edit or withdraw it. A genuine copy comes from the author or a channel the author names; an altered copy is not Inkwell. See LICENCE.txt in every package.</div>';
+ el.innerHTML=h;}
 /* 7.50: Tabula and Scriba hand a file to their host as Carpe Diem's rooms do
    (carpe-save, with the bytes) and ask it to print (carpe-print). Inkwell
    listened for neither, so "Save a copy to this device" and Print did
@@ -14421,6 +14489,7 @@ function openModalDo(which){
   ['Send it onward','File ▸ exports a real Word .docx (headings, tables, and footnotes as Word\u2019s own footnotes), plain text, or the whole library as JSON.']]
  .map((s,i)=>'<div class="stp"><div class="n">'+(i+1)+'</div><div><b style="font-family:Georgia,serif">'+s[0]+'</b><p>'+s[1]+'</p></div></div>').join('')+
  '</div><div style="margin:14px 0 2px;text-align:center"><button onclick="bakeAppIcon()" title="Redraw the Desktop icon from this seal, exactly as the app draws it">Redraw the Desktop icon from this seal</button></div><div style="margin:10px 0 6px;text-align:center;font-size:11px;letter-spacing:.14em;color:var(--mut)">Inkwell &nbsp;·&nbsp; build '+BUILD+'</div><div style="text-align:center;font-size:10.5px;color:var(--acc);font-weight:600;margin:6px 0 1px">Designed and built by Yannie D. Forest.</div><div style="text-align:center;font-size:10px;color:var(--mut);margin:0 0 6px">&copy; 2026. All rights reserved.</div><button class="primary" onclick="closeModal()">Begin</button>';}
+ if(which==='guide'){b.insertAdjacentHTML('beforeend','<div class="thisCopy"><h4>This copy</h4><div id="thisCopy" style="color:var(--mut)">Checking\u2026</div></div>');setTimeout(inkThisCopy,30);}
  if(which==='tabula'){b.innerHTML='<div class="guideHead"><div class="guideHeadL"><span style="font-size:22px;line-height:1">▦</span><h3>Tabula tools</h3></div></div>'+
  '<p style="font-size:13px;color:var(--mut);line-height:1.65;margin-bottom:12px">The family word processor lends the desk her three household skills: tables, notes and a contents page. Each writes plain, portable markup into the document; each exports to real Word structures.</p>'+
  '<h4 style="font-family:Georgia,serif;margin:10px 0 6px">A table</h4>'+
@@ -16045,6 +16114,7 @@ body[data-theme="night"] #cd-em-menu .cd-em-row:hover{
   // script. The launcher waits for this and, once it arrives, never shows a
   // warning or reloads the window. In a plain browser pywebview is absent,
   // mark() simply does nothing, and that is fine.
+  try{setTimeout(inkPendingOpenAsk,900);setTimeout(inkSignedAsk,1500);}catch(e){}
   function mark(){ try{ window.pywebview.api.mark_booted();
     try{ if(window.__inkBootFault && window.pywebview.api.report_error){ window.pywebview.api.report_error('boot-fault (late flush): '+window.__inkBootFault); window.__inkBootFault=null; } }catch(e3){}
     try{ if(typeof window.__inkStorageRecheck==='function') window.__inkStorageRecheck(); }catch(e2){}

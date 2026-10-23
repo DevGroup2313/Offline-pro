@@ -29,6 +29,23 @@ def read(path):
         return f.read()
 
 
+def stamp_sha(page):
+    """7.50: the page's own SHA-256, written into const PAGE_SHA. The hash is
+    of the page with the placeholder in place; "This copy" in the Guide puts
+    the placeholder back into that one line, hashes the same bytes and
+    compares. A packager that changes the page afterwards must call this
+    again (make_packages.py does)."""
+    import hashlib
+    blank = "const PAGE_SHA='@@PAGE_SHA@@';"
+    if page.count(blank) == 1:
+        return page.replace(blank, "const PAGE_SHA='%s';" % hashlib.sha256(page.encode("utf-8")).hexdigest(), 1)
+    m = re.search(r"const PAGE_SHA='([0-9a-f]{64})';", page)
+    if not m:
+        sys.exit("src/inkwell.html must hold const PAGE_SHA='@@PAGE_SHA@@' exactly once")
+    unstamped = page.replace(m.group(0), blank, 1)
+    return unstamped.replace(blank, "const PAGE_SHA='%s';" % hashlib.sha256(unstamped.encode("utf-8")).hexdigest(), 1)
+
+
 def build():
     page = read(os.path.join(SRC, "inkwell.html")).decode("utf-8")
     rooms = {}
@@ -70,6 +87,7 @@ def build():
     if page.find("<head>") < 0 or page.find("<head>") > 2000:
         sys.exit("src/inkwell.html must open with its <head>")
     page = page.replace("<head>", "<head>\n<!-- BUILD='%s': read by the desktop launchers to choose the newest page -->" % m.group(1), 1)
+    page = stamp_sha(page)
     outputs = {
         os.path.join("Inkwell-Android", "app", "src", "main", "assets", "Inkwell.html"): page.encode("utf-8"),
         "Inkwell.html": page.encode("utf-8"),

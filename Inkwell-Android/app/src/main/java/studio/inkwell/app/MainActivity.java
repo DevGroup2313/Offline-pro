@@ -12,7 +12,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -52,6 +55,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -79,6 +83,9 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private byte[] pendingSaveBytes;
     private String pendingSaveName;
+    /* 7.50: a document the tablet asked Inkwell to open (JSON: name, mime,
+       data), kept until the page takes it or is told of it */
+    private String pendingOpen;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -115,6 +122,7 @@ public class MainActivity extends Activity {
         web.setDownloadListener((url, userAgent, disposition, mime, length) -> onDownload(url, disposition, mime));
 
         if (state == null || web.restoreState(state) == null) web.loadUrl(InkwellCore.START_URL);
+        takeDocumentFrom(getIntent());
     }
 
     @Override
@@ -180,6 +188,83 @@ public class MainActivity extends Activity {
         return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /* 7.50: a document arriving while Inkwell is open (Open with, Share) */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (takeDocumentFrom(intent) && web != null && pendingOpen != null) {
+            final String json = pendingOpen;
+            web.evaluateJavascript("(function(){try{if(window.inkOpenExternalFile){window.inkOpenExternalFile("
+                    + json + ");return true;}}catch(e){}return false;})()", v -> {
+                if ("true".equals(v)) pendingOpen = null;   // the page took it; else it asks at boot
+            });
+        }
+    }
+
+    /** Reads the document an ACTION_VIEW or ACTION_SEND intent names into
+     *  pendingOpen. Up to 40 MB; a larger file is refused with a message. */
+    private boolean takeDocumentFrom(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        Uri u = null;
+        if (Intent.ACTION_VIEW.equals(action)) u = intent.getData();
+        else if (Intent.ACTION_SEND.equals(action)) {
+            try { u = intent.getParcelableExtra(Intent.EXTRA_STREAM); } catch (RuntimeException ignored) { }
+        }
+        if (u == null) return false;
+        try {
+            InputStream in = getContentResolver().openInputStream(u);
+            if (in == null) return false;
+            byte[] bytes;
+            try { bytes = Store.readAll(in); } finally { in.close(); }
+            if (bytes.length > 40 * 1024 * 1024) {
+                Toast.makeText(this, "That file is larger than 40 MB; open it through Tabula's File menu instead.", Toast.LENGTH_LONG).show();
+                return false;
+            }
+            String name = displayName(u);
+            String mime = intent.getType();
+            if (mime == null || mime.isEmpty()) mime = getContentResolver().getType(u);
+            if (mime == null) mime = "";
+            pendingOpen = "{\"name\":" + InkwellCore.jsonQuote(name) + ",\"mime\":" + InkwellCore.jsonQuote(mime)
+                    + ",\"data\":" + InkwellCore.jsonQuote(Base64.encodeToString(bytes, Base64.NO_WRAP)) + "}";
+            return true;
+        } catch (IOException | RuntimeException e) {
+            Toast.makeText(this, "That file could not be read: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            return false;
+        }
+    }
+
+    /** 7.50: whether this APK carries the author's signing certificate.
+     *  "author", "other" or "unknown". */
+    private String signedByAuthor() {
+        try {
+            PackageManager pm = getPackageManager();
+            Signature[] sigs;
+            if (Build.VERSION.SDK_INT >= 28) {
+                PackageInfo pi = pm.getPackageInfo(getPackageName(), PackageManager.GET_SIGNING_CERTIFICATES);
+                SigningInfo si = pi.signingInfo;
+                if (si == null) return "unknown";
+                sigs = si.hasMultipleSigners() ? si.getApkContentsSigners() : si.getSigningCertificateHistory();
+            } else {
+                @SuppressWarnings("deprecation")
+                PackageInfo pi = pm.getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES);
+                sigs = pi.signatures;
+            }
+            if (sigs == null || sigs.length == 0) return "unknown";
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            for (Signature sg : sigs) {
+                byte[] d = md.digest(sg.toByteArray());
+                StringBuilder hex = new StringBuilder();
+                for (byte b : d) hex.append(String.format("%02x", b & 0xff));
+                if (InkwellCore.AUTHOR_CERT_SHA256.equalsIgnoreCase(hex.toString())) return "author";
+            }
+            return "other";
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
     private String hostInfoJson() {
         boolean speech = false;
         try {
@@ -191,7 +276,7 @@ public class MainActivity extends Activity {
         try {
             ua = web != null ? web.getSettings().getUserAgentString() : "";
         } catch (RuntimeException ignored) { }
-        return InkwellCore.hostInfoJson(ua, speech, micGranted());
+        return InkwellCore.hostInfoJson(ua, speech, micGranted(), signedByAuthor());
     }
 
     private String readAssetText(String path) throws IOException {
@@ -459,6 +544,14 @@ public class MainActivity extends Activity {
             }
             runOnUiThread(() -> startSave(name, mime, bytes));
             return "true";
+        }
+
+        /** 7.50: the document the tablet asked Inkwell to open, once */
+        @JavascriptInterface
+        public String takePendingOpen() {
+            String j = pendingOpen;
+            pendingOpen = null;
+            return j == null ? "" : j;
         }
 
         /** 7.50: Tabula's Print. A web view's window.print() does nothing on

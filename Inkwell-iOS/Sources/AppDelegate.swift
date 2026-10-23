@@ -17,4 +17,17 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window = window
         return true
     }
+
+    /// 7.50: a document handed to Inkwell (Open in, Share, a tap in Files).
+    /// A copy is read here; the page opens it in Tabula or on the desk.
+    func application(_ app: UIApplication, open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        guard let root = window?.rootViewController as? WebViewController else { return false }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard let data = try? Data(contentsOf: url) else { return false }
+        if data.count > 40 * 1024 * 1024 { return false }
+        root.openExternal(name: url.lastPathComponent, data: data)
+        return true
+    }
 }

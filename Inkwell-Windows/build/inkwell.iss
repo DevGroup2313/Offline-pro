@@ -37,6 +37,8 @@ WizardStyle=modern
 CloseApplications=yes
 RestartApplications=no
 ArchitecturesInstallIn64BitMode=x64compatible
+; 7.50: Inkwell is offered in "Open with" for documents (never made the default)
+ChangesAssociations=yes
 
 [Tasks]
 ; 7.38: the Desktop shortcut is now unticked unless the writer ticks it. The
@@ -51,6 +53,33 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 [Icons]
 Name: "{userprograms}\Inkwell"; Filename: "{app}\Inkwell.exe"; WorkingDir: "{app}"; Comment: "Inkwell {#AppVersion}"
 Name: "{userdesktop}\Inkwell"; Filename: "{app}\Inkwell.exe"; WorkingDir: "{app}"; Comment: "Inkwell {#AppVersion}"; Tasks: desktopshortcut
+
+[Registry]
+; 7.50: a document type of Inkwell's own, and Inkwell listed under "Open with"
+; for Word files, PDFs, text, Markdown, RTF, OpenDocument and web pages. The
+; entries are the current user's, go with the uninstall, and never take the
+; default away from Word or the PDF reader.
+Root: HKCU; Subkey: "Software\Classes\Inkwell.Document"; ValueType: string; ValueName: ""; ValueData: "Inkwell document"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Inkwell.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Inkwell.exe,0"
+Root: HKCU; Subkey: "Software\Classes\Inkwell.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Inkwell.exe"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "Inkwell"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Inkwell.exe"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".docx"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".doc"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".txt"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".md"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".rtf"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".odt"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\Applications\Inkwell.exe\SupportedTypes"; ValueType: string; ValueName: ".html"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\.docx\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.doc\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.txt\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.md\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.rtf\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.odt\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.html\OpenWithProgids"; ValueType: string; ValueName: "Inkwell.Document"; ValueData: ""; Flags: uninsdeletevalue
 
 [InstallDelete]
 ; The program files of the older installer, which ran Inkwell through Python.

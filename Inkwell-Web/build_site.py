@@ -183,6 +183,11 @@ def main():
 
     with open(os.path.join(assets, "Inkwell.html"), encoding="utf-8") as f:
         page = inject_head(f.read(), share_tags(site_url()) + HEAD_TAGS)
+    # 7.50: the page's own checksum, written again now that the home-screen
+    # tags have changed its bytes (tools/build_inkwell.py explains the stamp)
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
+    from build_inkwell import stamp_sha
+    page = stamp_sha(page)
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
         f.write(page)
 

@@ -1,0 +1,71 @@
+INKWELL: HOW IT IS PROTECTED, AND WHAT IS LEFT TO YOU
+=====================================================
+Written for the author. Revised 23 October 2026. Read with LICENCE.txt.
+
+WHAT THE APP DOES BY ITSELF (from 7.50)
+----------------------------------------
+1. The Fire app checks its own signature. Every APK carries the certificate
+   it was signed with. Inkwell compares that certificate's SHA-256 with the
+   author's (InkwellCore.AUTHOR_CERT_SHA256). A copy re-signed by anyone
+   else, or a public build signed with the Android test key, shows a quiet
+   notice on the desk: "This copy of Inkwell was not signed by its author."
+   Nothing is blocked; the writer is told. The author's fingerprint:
+   fb61155d169125522e62a508894075f5767e65d621ab59f4f8af2858cff847c8
+   (apksigner verify --print-certs shows it.)
+2. The page checks its own text. At build time tools/build_inkwell.py writes
+   the SHA-256 of the whole page into it (PAGE_SHA, computed with the
+   placeholder in place). Studio, The Inkwell Guide, "This copy" reads the
+   page back from where it was loaded, hashes it the same way, and shows
+   "the text is the author's" or "the text has been changed". On a Mac the
+   app's own seal check (make_mac_prebuilt.py) covers the bundle as well.
+3. A Content-Security-Policy in the page allows scripts only from the page
+   itself, its own blobs and workers, and the one library host it uses
+   (cdn.jsdelivr.net, for the model runtime). A script injected from any
+   other address does not run. Objects and plug-ins are refused; the page
+   cannot be made to submit a form anywhere.
+4. The Fire app no longer allows the system's backup tools to copy its data
+   out (allowBackup is off): the library leaves the tablet only through
+   Inkwell's own File menu. The release is shrunk and its Java names
+   obscured (R8); the page is the real work and stays readable on purpose
+   (LICENCE.txt says why).
+5. The web view's remote debugging is on only in debuggable builds, never
+   in a release.
+6. Every copy carries a build marker (const BUILD, the version and date), and
+   a copy given to a named person can carry a marker of its own.
+
+WHAT CANNOT BE DONE, STATED PLAINLY
+------------------------------------
+- A single readable HTML file cannot be hidden from the person who holds it.
+  Obscuring it would break the promise the licence makes (that its offline
+  claim can be read and verified) and would stop no one determined. The
+  licence, the markers and the signature are the protection: a stolen copy
+  is identifiable, an altered copy is disowned, and a re-signed app says so.
+- A check inside the app can be removed by someone who edits the app. The
+  signature check tells the honest reader what they hold; it does not stop
+  the dishonest one. The author's own channel is the only guarantee of a
+  genuine copy.
+- Code signing for the Mac and Windows apps needs the author's own
+  certificate (an Apple Developer ID; a Windows code-signing certificate).
+  Without it the systems warn at first launch, as they do now. With it, the
+  systems themselves refuse an altered app. This is the strongest step
+  available and only the author can take it.
+
+WHAT IS LEFT TO THE AUTHOR
+--------------------------
+- Keep the source repositories PRIVATE. The Fire kit's signing key
+  (signing/inkwell.jks, signing/signing.properties) lives only in a private
+  repository and in the public repositories' encrypted secrets.
+- Two-factor authentication on the GitHub account, and on the Apple and
+  Microsoft accounts when they are used for signing.
+- Give access to a repository, a kit, a key or a secret only in writing, to
+  a named person, for a named purpose, and withdraw it when that purpose
+  ends (GitHub: Settings, Collaborators; Settings, Secrets). A withdrawn
+  collaborator keeps nothing: rotate the signing key's password and the
+  secrets after any withdrawal.
+- Distribute only through the channels you name: the DevGroup2313
+  repositories' Releases, and copies you hand over yourself. Say so in the
+  READMEs, as LICENCE.txt now does.
+- Check a build before you hand it on: apksigner verify --print-certs on
+  the APK (the fingerprint above), and Studio, The Inkwell Guide, "This
+  copy" inside the app.
+- Keep this file private: it names what the checks look for.

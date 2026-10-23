@@ -32,6 +32,22 @@ targets:
         NSLocalNetworkUsageDescription: Inkwell connects to your own laptop on this Wi-Fi to use its writing model.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # 7.50: Inkwell is offered for a document on the phone or tablet
+        # (Open in, Share): Word files into Tabula, PDFs and the rest onto the desk
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Word document
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.openxmlformats.wordprocessingml.document, com.microsoft.word.doc]
+          - CFBundleTypeName: PDF document
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.adobe.pdf]
+          - CFBundleTypeName: Text document
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.plain-text, net.daringfireball.markdown, public.rtf, org.oasis-open.opendocument.text, public.html]
+        LSSupportsOpeningDocumentsInPlace: false
         UILaunchScreen: {}
         UIRequiresFullScreen: false
         UISupportedInterfaceOrientations:

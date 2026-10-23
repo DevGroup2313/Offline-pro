@@ -83,11 +83,24 @@ final class InkwellCore {
         return b.append('}').toString();
     }
 
+    /** 7.50: the SHA-256 of the certificate Inkwell's author signs the app
+     *  with. An APK re-signed by anyone else carries another certificate, and
+     *  the page says so (see MainActivity.signedByAuthor). A build signed with
+     *  the Android test key (a public build with no secrets) says so too. */
+    static final String AUTHOR_CERT_SHA256 = "fb61155d169125522e62a508894075f5767e65d621ab59f4f8af2858cff847c8";
+
     static String hostInfoJson(String webview, boolean speechService, boolean micGranted) {
+        return hostInfoJson(webview, speechService, micGranted, "unknown");
+    }
+
+    /** signed: "author" (the author's certificate), "other" (re-signed, or the
+     *  test key) or "unknown" (the system would not say). */
+    static String hostInfoJson(String webview, boolean speechService, boolean micGranted, String signed) {
         return "{\"launcher\":" + jsonQuote(BUILD + "-android")
                 + ",\"platform\":\"android\",\"native_host\":true,\"mic_handler\":true,\"local_model\":true"
                 + ",\"mic_permission\":" + micGranted
                 + ",\"speech_service\":" + speechService
+                + ",\"signed\":" + jsonQuote(signed == null ? "unknown" : signed)
                 + ",\"webview\":" + jsonQuote(webview == null ? "" : webview) + "}";
     }
 
@@ -125,6 +138,8 @@ final class InkwellCore {
       + "  save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},\n"
       // 7.50: a room's PDF to the system's print sheet
       + "  print_document:function(n,m,b){try{return P(A.printFile(String(n),String(m||'application/pdf'),String(b))==='true');}catch(e){return P(false);}},\n"
+      // 7.50: a document the tablet asked Inkwell to open, taken once at boot
+      + "  pending_open:function(){try{return P(A.takePendingOpen());}catch(e){return P('');}},\n"
       + "  storage_set:function(k,v){try{A.storageSet(String(k),String(v));return P(true);}catch(e){return P(false);}},\n"
       // 7.40: the keeping, whole copies of the library in the app's own folder (Keep.java)
       + "  keep_copy:function(m,meta,body){try{return P(A.keepCopy(String(m),String(meta),String(body))==='true');}catch(e){return P(false);}},\n"

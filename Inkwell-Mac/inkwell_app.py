@@ -942,6 +942,97 @@ def save_bytes(win, name, mime, data_b64):
         return False
 
 
+# 7.50: a document the system asked Inkwell to open (a double-click on a
+# .docx or a PDF once Inkwell is chosen for it). At launch it arrives as an
+# argument (on a Mac through PyInstaller's argv emulation, on Windows from the
+# installer's association); while Inkwell runs, a Mac sends it to the app's
+# delegate (_install_open_files below). The page takes it at boot through
+# pending_open, or at once through inkOpenExternalFile.
+_PENDING_OPEN = []
+_OPEN_EXT = (".docx", ".doc", ".pdf", ".rtf", ".odt", ".txt", ".md", ".markdown", ".html", ".htm")
+_OPEN_MIME = {".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".doc": "application/msword",
+              ".pdf": "application/pdf", ".rtf": "application/rtf", ".odt": "application/vnd.oasis.opendocument.text",
+              ".md": "text/markdown", ".markdown": "text/markdown", ".html": "text/html", ".htm": "text/html", ".txt": "text/plain"}
+
+
+def _open_payload(path):
+    """The JSON the page's inkOpenExternalFile takes, or None."""
+    import base64, json
+    try:
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in _OPEN_EXT or not os.path.isfile(path):
+            return None
+        if os.path.getsize(path) > 40 * 1024 * 1024:
+            log_problem("open: %s is larger than 40 MB" % path)
+            return None
+        with open(path, "rb") as fh:
+            raw = fh.read()
+        return json.dumps({"name": os.path.basename(path), "mime": _OPEN_MIME.get(ext, "application/octet-stream"),
+                           "data": base64.b64encode(raw).decode("ascii")})
+    except Exception:
+        log_problem("open: could not read %s" % path, sys.exc_info())
+        return None
+
+
+def queue_open_files(paths):
+    for p in paths or []:
+        j = _open_payload(p)
+        if j:
+            _PENDING_OPEN.append(j)
+
+
+def take_pending_open():
+    """The page asks at boot: one document, or ''."""
+    return _PENDING_OPEN.pop(0) if _PENDING_OPEN else ""
+
+
+def open_files_now(win, paths):
+    """A document arriving while Inkwell runs: handed to the page at once;
+    kept for the page's next boot if the page is not up."""
+    for p in paths or []:
+        j = _open_payload(p)
+        if not j:
+            continue
+        try:
+            took = win.evaluate_js("(function(){try{if(window.inkOpenExternalFile){window.inkOpenExternalFile(" + j + ");return true;}}catch(e){}return false;})()")
+        except Exception:
+            took = False
+        if not took:
+            _PENDING_OPEN.append(j)
+
+
+def _install_open_files(api):
+    """macOS: documents opened while Inkwell runs reach the application's
+    delegate. pywebview makes its own delegate when it starts; a subclass of
+    it, set in its place beforehand, adds the one method and keeps the rest."""
+    if sys.platform != "darwin":
+        return
+    try:
+        from webview.platforms import cocoa as _cocoa
+        Base = _cocoa.BrowserView.AppDelegate
+
+        class InkwellAppDelegate(Base):
+            def application_openFiles_(self, app, files):
+                try:
+                    paths = [str(f) for f in files]
+                    win = getattr(api, "main_window", None)
+                    if win is not None:
+                        open_files_now(win, paths)
+                    else:
+                        queue_open_files(paths)
+                except Exception:
+                    log_problem("open: the delegate could not take the files", sys.exc_info())
+                try:
+                    app.replyToOpenOrPrint_(0)
+                except Exception:
+                    pass
+
+        _cocoa.BrowserView.AppDelegate = InkwellAppDelegate
+        log_problem("open: the Mac delegate takes documents while Inkwell runs")
+    except Exception:
+        log_problem("open: the Mac delegate could not be set", sys.exc_info())
+
+
 def print_document(win, name, mime, data_b64):
     """7.50: Tabula's Print, as Carpe Diem's Mac app answers it.
 
@@ -1682,6 +1773,10 @@ class InkwellApi:
         """7.50: a room's PDF to the system's own print path."""
         return print_document(getattr(self, "main_window", None), name, mime, data_b64)
 
+    def pending_open(self):
+        """7.50: the document the system asked Inkwell to open, once."""
+        return take_pending_open()
+
     def host_info(self):
         """What the window host can do, so Scriba can say precisely why the
         microphone is or is not available."""
@@ -1873,6 +1968,10 @@ class InkwellApiSingle:
     def print_document(self, name, mime, data_b64):
         """7.50: a room's PDF to the system's own print path."""
         return print_document(getattr(self, "main_window", None), name, mime, data_b64)
+
+    def pending_open(self):
+        """7.50: the document the system asked Inkwell to open, once."""
+        return take_pending_open()
 
     def host_info(self):
         """What the window host can do, so Scriba can say precisely why the
@@ -2206,6 +2305,12 @@ def main():
         except Exception as e:
             print("export failed: %s" % e)
             sys.exit(1)
+    # 7.50: documents named on the command line (a double-click on a file the
+    # system hands to Inkwell) wait for the page
+    try:
+        queue_open_files([a for a in sys.argv[1:] if not a.startswith("-") and os.path.isfile(a)])
+    except Exception:
+        pass
     app_html = find_app_html()
     if not app_html:
         tell_user(
@@ -2303,6 +2408,7 @@ def main():
         log_problem("mac: one window, the app draws its own floating windows")
     else:
         api = InkwellApi(app_url)
+    _install_open_files(api)
     try:
         window = _make_window(webview, api, app_url, app_html)
     except BaseException:

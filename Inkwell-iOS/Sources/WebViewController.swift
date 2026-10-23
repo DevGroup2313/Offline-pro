@@ -156,6 +156,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
          window.pywebview={api:{
           save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},
           print_document:function(n,m,b){return P(post({op:'printFile',name:String(n),mime:String(m||'application/pdf'),data:String(b)}));},
+          pending_open:function(){try{var j=window.__inkPendingOpen||'';window.__inkPendingOpen='';return P(j);}catch(e){return P('');}},
           storage_set:function(k,v){return P(post({op:'storageSet',key:String(k),value:String(v)}));},
           rescue_offer:function(){try{var st=window.__inkBridgeStoreAtLaunch||{};if(!st.docs)return P('');
            var o={docs:JSON.parse(st.docs),active:st.active?JSON.parse(st.active):null,notes:st.notes?JSON.parse(st.notes):[],snaps:st.snaps?JSON.parse(st.snaps):{}};
@@ -272,6 +273,26 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         } catch {
             showMessage("The file could not be saved: \(error.localizedDescription)")
         }
+    }
+
+    /// 7.50: a document the phone or tablet asked Inkwell to open. The page
+    /// takes it at once when it is up, else at its next boot.
+    func openExternal(name: String, data: Data) {
+        let mime: String
+        switch (name as NSString).pathExtension.lowercased() {
+        case "docx": mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        case "doc": mime = "application/msword"
+        case "pdf": mime = "application/pdf"
+        case "rtf": mime = "application/rtf"
+        case "odt": mime = "application/vnd.oasis.opendocument.text"
+        case "md", "markdown": mime = "text/markdown"
+        case "html", "htm": mime = "text/html"
+        default: mime = "text/plain"
+        }
+        let payload: [String: Any] = ["name": name, "mime": mime, "data": data.base64EncodedString()]
+        let json = WebViewController.json(payload)
+        let js = "(function(){try{if(window.inkOpenExternalFile){window.inkOpenExternalFile(\(json));return true;}}catch(e){}window.__inkPendingOpen=\(WebViewController.json(json));return false;})()"
+        webView.evaluateJavaScript(js, completionHandler: nil)
     }
 
     /// 7.50: Tabula's Print. A web view has no window.print() here; the
