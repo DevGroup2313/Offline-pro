@@ -608,7 +608,7 @@
 
   /* commas */
   const SUBORD = /^(if|when|although|though|because|since|while|after|before|unless|until|once|whenever|whereas|wherever|as long as|as soon as|even if|even though|in case|as)$/i;
-  const OPENERS = ['also', 'first', 'second', 'third', 'in my opinion', 'first of all', 'on the one hand', 'on the other hand', 'in addition', 'at first', 'after that', 'after all', 'in the end', 'to sum up', 'all in all', 'of course', 'in fact', 'as a result', 'nowadays', 'unfortunately', 'fortunately', 'luckily', 'personally', 'besides', 'furthermore', 'moreover', 'secondly', 'thirdly', 'lastly', 'firstly', 'afterwards', 'actually', 'honestly', 'frankly', 'obviously', 'clearly', 'surprisingly', 'hopefully', 'sadly', 'anyway', 'otherwise', 'however', 'therefore', 'thus', 'hence', 'nevertheless', 'nonetheless', 'consequently', 'for example', 'for instance', 'in conclusion', 'to conclude', 'last but not least', 'in other words', 'for this reason', 'because of this', 'because of that', 'despite this', 'as a consequence', 'in short', 'in particular', 'above all', 'what is more', 'apart from that', 'besides that', 'on top of that', 'by the way', 'as for me', 'in my view', 'in this case', 'in that case', 'in general', 'generally speaking', 'to be honest', 'in contrast', 'by contrast', 'on the contrary', 'at the same time', 'at the end of the day', 'as a matter of fact', 'as far as i am concerned', 'as far as i know', 'to begin with', 'to start with', 'in the first place', 'in the second place', 'at last', 'finally', 'meanwhile', 'eventually', 'indeed', 'similarly', 'likewise', 'instead', 'in the meantime', 'in a word', 'in brief', 'to summarise', 'to summarize', 'in summary'];
+  const OPENERS = ['before that', 'this way', 'in this way', 'in the same way', 'at the same time', 'in this case', 'in that case', 'in the meantime', 'in the long run', 'in the future', 'in the past', 'at the moment', 'at that time', 'at the time', 'on the contrary', 'in general', 'in brief', 'in summary', 'to be honest', 'needless to say', 'as far as i am concerned', 'as far as i know', 'from my point of view', 'in my view', 'to my mind', 'for one thing', 'in theory', 'in practice', 'in reality', 'in effect', 'on balance', 'all things considered', 'on the whole', 'by the way', 'by contrast', 'by comparison', 'in comparison', 'in contrast', 'likewise', 'similarly', 'ultimately', 'eventually', 'finally', 'meanwhile', 'suddenly', 'even so', 'also', 'first', 'second', 'third', 'in my opinion', 'first of all', 'on the one hand', 'on the other hand', 'in addition', 'at first', 'after that', 'after all', 'in the end', 'to sum up', 'all in all', 'of course', 'in fact', 'as a result', 'nowadays', 'unfortunately', 'fortunately', 'luckily', 'personally', 'besides', 'furthermore', 'moreover', 'secondly', 'thirdly', 'lastly', 'firstly', 'afterwards', 'actually', 'honestly', 'frankly', 'obviously', 'clearly', 'surprisingly', 'hopefully', 'sadly', 'anyway', 'otherwise', 'however', 'therefore', 'thus', 'hence', 'nevertheless', 'nonetheless', 'consequently', 'for example', 'for instance', 'in conclusion', 'to conclude', 'last but not least', 'in other words', 'for this reason', 'because of this', 'because of that', 'despite this', 'as a consequence', 'in short', 'in particular', 'above all', 'what is more', 'apart from that', 'besides that', 'on top of that', 'by the way', 'as for me', 'in my view', 'in this case', 'in that case', 'in general', 'generally speaking', 'to be honest', 'in contrast', 'by contrast', 'on the contrary', 'at the same time', 'at the end of the day', 'as a matter of fact', 'as far as i am concerned', 'as far as i know', 'to begin with', 'to start with', 'in the first place', 'in the second place', 'at last', 'finally', 'meanwhile', 'eventually', 'indeed', 'similarly', 'likewise', 'instead', 'in the meantime', 'in a word', 'in brief', 'to summarise', 'to summarize', 'in summary'];
   const OPENER_RE = new RegExp('^(' + OPENERS.slice().sort((a, b) => b.length - a.length).map(o => o.replace(/ /g, '\\s+')).join('|') + ')(\\s+)(?=[A-Za-z])', 'i');
   const MAIN_START = /^(will|would|can|could|should|must|may|might|am|is|are|was|were|have|has|had|do|does|did|need|want|think|believe|feel|like|prefer|'ll|'d|'m|'re|'ve|ll|d|m|re|ve|cannot|can't|won't|wouldn't|couldn't|shouldn't|don't|doesn't|didn't|haven't|hasn't|isn't|aren't|wasn't|weren't)$/i;
   function comma(t, ws, out) {
@@ -620,9 +620,9 @@
       /* an opener with no comma */
       const om = OPENER_RE.exec(body);
       const restO = om ? body.slice(om[1].length + om[2].length) : '';
-      const prepOpener = om && /^(in addition|as a result|in contrast|by contrast|besides|instead|apart from that|on top of that|because of this|because of that|despite this|as a consequence|in the end|at first|after all|at last|at the same time|in general|in particular|in short|in brief|in summary|in fact|of course|above all|first of all|to begin with|to start with|on the one hand|on the other hand|in the first place|in the second place|in my opinion|in my view|in this case|in that case|for this reason|in other words|in the meantime|last but not least|all in all|what is more|as for me|by the way|in a word)$/i.test(om[1]);
+      const prepOpener = om && /^(in addition|as a result|in contrast|by contrast|by comparison|in comparison|in the same way|in this way|this way|before that|at the moment|at that time|at the time|in the future|in the past|in theory|in practice|in reality|in effect|on balance|on the whole|on the contrary|in the long run|likewise|similarly|eventually|finally|meanwhile|suddenly|ultimately|even so|besides|instead|apart from that|on top of that|because of this|because of that|despite this|as a consequence|in the end|at first|after all|at last|at the same time|in general|in particular|in short|in brief|in summary|in fact|of course|above all|first of all|to begin with|to start with|on the one hand|on the other hand|in the first place|in the second place|in my opinion|in my view|in this case|in that case|for this reason|in other words|in the meantime|last but not least|all in all|what is more|as for me|by the way|in a word)$/i.test(om[1]);
       /* "In addition to the benefits", "Besides these items": the opener is a preposition here, not an opener */
-      const openerIsPrep = prepOpener && /^(to|of|for|from|with|in|on|at|by|about|that)\b/i.test(restO) || prepOpener && (/^(these|those|this|his|her|their|its|my|our|your|the|a|an|such|all|some|most|many|several|other|one|two|three)\b/.test(restO) || /^([A-Z]|\d)/.test(restO)) && !/^(the|a|an|this|these|those|my|our|their|his|her|its|your|one|some|most|many|all|several|two|three) [a-z]+ (is|are|was|were|has|have|had|will|would|can|could|should|must|may|might|do|does|did|[a-z]+ed|[a-z]+s)\b/i.test(restO);
+      const openerIsPrep = prepOpener && /^(to|of|for|from|with|in|on|at|by|about|that|when|which|where|as|than|while|if)\b/i.test(restO) || prepOpener && (/^(these|those|this|his|her|their|its|my|our|your|the|a|an|such|all|some|most|many|several|other|one|two|three)\b/.test(restO) || /^(?:[A-Z][a-z]|\d)/.test(restO)) && !/^(the|a|an|this|these|those|my|our|their|his|her|its|your|one|some|most|many|all|several|two|three) [a-z]+ (is|are|was|were|has|have|had|will|would|can|could|should|must|may|might|do|does|did|[a-z]+ed|[a-z]+s)\b/i.test(restO);   /* 7.50: "I" is a subject, not a name */
       if (om && !/^[,;:]/.test(body.slice(om[1].length)) && !openerIsPrep) {
         const at = a + lead + om[1].length;
         const rest = body.slice(om[1].length + om[2].length);
@@ -652,6 +652,48 @@
             break;
           }
           if (FORM.has(l) || MODAL.test(l) || AUX_BE.test(l) || /^(is|are|was|were|has|have|had|'s|'re|'m|'ve)$/.test(l)) hasVerb = true;
+        }
+      }
+      /* 7.50: an opening phrase or clause the rule above did not see: a
+         prepositional phrase of three words or more before a pronoun subject
+         ("In the same way I had"), and an opening clause or phrase before a
+         determiner and its noun ("When I arrived my uncle was", "After some
+         years the girl decided"). The main clause must follow at once with
+         its verb; a second subject and verb soon after ("By the time I
+         arrived the party was over") leaves the edge uncertain, so nothing
+         is said. */
+      if (!/,/.test(body) && sw.length >= 5 && !om && !tm) {
+        const PREP0 = /^(in|on|at|for|after|before|during|by|with|without|from|under|over|through|despite|like|unlike|among|between|within|across|around|throughout|since|until|inside|outside|near|beside|behind|besides|while|when|whenever|once|although|though|because|if|unless)$/i;
+        const DET0 = /^(the|a|an|my|our|your|their|his|her|its|these|those|some|many|most|every|each|all|no)$/i;   /* not this or that: as often a pronoun or a conjunction */
+        const NOTNOUN = w => MAIN_START.test(w) || AUX_BE.test(w) || MODAL.test(w) || PAST0.test(w) || SUBJ_PRON.test(w) || /^(there|that|this|it|not|also|then|now|still|just|only|so|very)$/i.test(w);
+        const PAST0 = /^(went|came|took|gave|made|saw|knew|thought|said|told|found|left|felt|brought|bought|taught|kept|met|lost|paid|sold|sent|spent|built|heard|held|led|read|meant|learnt|understood|stood|won|sat|put|cut|let|ran|ate|wrote|drove|spoke|broke|chose|forgot|grew|threw|drew|fell|began|drank|sang|swam|wore|became|got|had|was|were|did|could|would|should|might)$/i;
+        const VERB0 = w => { const l = lc(w); return MAIN_START.test(l) || FORM.has(l) || /^[a-z]{3,}ed$/.test(l) || PAST0.test(l) || MODAL.test(l) || AUX_BE.test(l); };
+        const first = lc(sw[0].w), isClause = SUBORD.test(first) && first !== 'as';
+        if (PREP0.test(first) || isClause) {
+          let seenVerb = false;
+          for (let i = 1; i < Math.min(sw.length - 1, 10); i++) {
+            const w = sw[i], p = sw[i - 1], n = sw[i + 1];
+            if (gap(t, p, w)) break;
+            const l = lc(w.w);
+            if (isClause && (FORM.has(l) || /ing$/.test(l) || VERB0(l))) seenVerb = true;
+            if (isClause && !seenVerb && !(PREP0.test(first) && i >= 3)) continue;
+            if (!isClause && i < 3) continue;
+            let subj = false;
+            if (SUBJ_PRON.test(w.w) && n && !gap(t, w, n) && VERB0(n.w)) subj = true;
+            else if (DET0.test(w.w) && n && i + 2 < sw.length && !gap(t, w, n) && !gap(t, n, sw[i + 2]) && /^[a-z]+$/i.test(n.w) && !NOTNOUN(n.w) && VERB0(sw[i + 2].w) && !/^(the|a|an)$/i.test(sw[i + 2].w)) subj = true;   /* the word after a determiner is its noun ("the match was"), unless it can only be a verb or a pronoun ("that has", "that he") */
+            if (!subj) continue;
+            if (/^(where|which|that|who|whom|whose|when|because|if|and|or|but|as|than|while|so|what|how|why|to|of|for|with|by|from|in|on|at)$/i.test(p.w)) break;   /* the subject belongs to the phrase */
+            let second = false; const vi = SUBJ_PRON.test(w.w) ? i + 1 : i + 2;
+            for (let j = vi + 1; j < Math.min(sw.length - 1, vi + 6); j++) {
+              if (gap(t, sw[j - 1], sw[j])) break;
+              if ((SUBJ_PRON.test(sw[j].w) || /^there$/i.test(sw[j].w)) && VERB0(sw[j + 1].w)) { second = true; break; }
+              if (DET0.test(sw[j].w) && j + 2 < sw.length && VERB0(sw[j + 2].w)) { second = true; break; }
+            }
+            if (second) break;
+            if (out.some(e => e.start === p.e || e.start === w.s)) break;
+            out.push({ start: p.e, end: w.s, orig: t.slice(p.e, w.s), fix: ', ', why: 'A comma closes the opening ' + (isClause ? '"' + sw[0].w + '" clause' : 'phrase "' + t.slice(sw[0].s, p.e) + ',"') + ' before the main one', cat: 'g', fam: 'comma' });
+            break;
+          }
         }
       }
       /* "I like it but I" → ", but I" */

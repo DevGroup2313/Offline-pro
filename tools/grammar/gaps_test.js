@@ -48,6 +48,7 @@ const cases = [
   ['It was performed by black person.', 'It was performed by a black person.'],
   ['It is one of best films.', 'It is one of the best films.'],
   ['The price is same.', 'The price is the same.'],
+  ['Believe me, it is very beautiful place.', 'Believe me, it is a very beautiful place.'],
   /* number */
   ['There are many problem to solve.', 'There are many problems to solve.'],
   ['One of the reason is cost.', 'One of the reasons is cost.'],

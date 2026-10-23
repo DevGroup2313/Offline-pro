@@ -114,6 +114,29 @@ same('then: no comma asked', 'Then I went to him.', 'comma');
 same('however good', 'However good it is, we will not buy it.', 'comma');
 same('as: left alone', 'As the war ended the troops went home.', 'comma');
 same('an existing comma', 'If you want it, you can have it.', 'comma');
+/* 7.50: the opening phrase or clause before a determiner, and the prepositional opener */
+to('a clause before "my uncle"', 'When I arrived my uncle was waiting for me.', 'When I arrived, my uncle was waiting for me.', 'comma');
+to('in the same way', 'In the same way I had the ideas and the words.', 'In the same way, I had the ideas and the words.', 'comma');
+to('a prepositional opener', 'In the next morning I ate a piece of cake.', 'In the next morning, I ate a piece of cake.', 'comma');
+to('for the last two years', 'For the last two years I have joined the club.', 'For the last two years, I have joined the club.', 'comma');
+to('after finding', 'After finding the adoption papers she contacted the agency.', 'After finding the adoption papers, she contacted the agency.', 'comma');
+to('after some years', 'After some years the girl decided to leave.', 'After some years, the girl decided to leave.', 'comma');
+to('before that', 'Before that I had always thought so.', 'Before that, I had always thought so.', 'comma');
+to('because the weather', 'Because the weather was bad the match was cancelled.', 'Because the weather was bad, the match was cancelled.', 'comma');
+to('in this essay', 'In this essay I will argue for a change.', 'In this essay, I will argue for a change.', 'comma');
+same('the city I live in', 'In the city I live in there are many parks.', 'comma');
+same('by the time', 'By the time I arrived the party was over.', 'comma');
+same('on the day he died', 'On the day he died the town mourned.', 'comma');
+same('a two-word opener', 'At night the city is quiet.', 'comma');
+same('in 2019', 'In 2019 I moved here.', 'comma');
+same('where I lived', 'In the house where I lived there was a garden.', 'comma');
+same('an opener with its comma', 'In the same way, I had the ideas.', 'comma');
+same('on the table there', 'On the table there was a book.', 'comma');
+same('a topic that has', 'In recent years human ecology has been a topic that has interested many.', 'comma');
+same('remarked that he', 'In another interview he remarked that he had made the video.', 'comma');
+same('in comparison to', 'In comparison to other parties it is small.', 'comma');
+same('at the moment when', 'At the moment when she told him he left.', 'comma');
+to('in the future children', 'In the future children will learn at home.', 'In the future, children will learn at home.', 'comma');
 
 /* 7.43: correct scholarly prose, from published articles, left alone */
 same('a list-final noun is not the subject', 'Engagement with literature, colleagues, and patients was repeatedly mentioned.', 'sva');

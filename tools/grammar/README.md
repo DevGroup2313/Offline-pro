@@ -421,3 +421,40 @@ government let" to "lets") and one was wrong ("When I arrived my uncle was
 waiting" wants a comma, not "at": the rule no longer fires before a
 possessive). Every gaps note carries a lesson (refine_core.js, by family)
 and a family name, so the syllabus in Your patterns groups them.
+
+## After 7.50: the comma after an opening phrase or clause (stage G6, first part)
+
+The audit of the 7.50 corrector by error type (W&I tuning half): missing
+punctuation 354 missed against 68 hit, nearly all commas, and the largest
+group a comma after an opening phrase or clause ("In the same way I had",
+"When I arrived my uncle was", "After some years the girl decided"). The
+learner module's comma family (learner_core.js) saw an opener from its list,
+a fronted clause before a pronoun subject, and "but" between clauses. It now
+also sees a prepositional phrase of three words or more before a pronoun
+subject, and an opening clause or phrase before a determiner and its noun,
+where the main clause follows at once with its verb. A second subject and
+verb soon after ("By the time I arrived the party was over", "On the day he
+died the town mourned") leaves the edge uncertain and nothing is said; a
+determiner's word that can only be a verb or a pronoun ("a topic that has",
+"remarked that he") is not a subject; "I" after an opener is a subject, not
+a name. Twenty-two more openers ("in the same way", "before that", "at the
+moment", "in the future"), each refused when a preposition, "when", "which"
+or "as" follows. The article rule allows an adverb before the adjective
+("is a very beautiful place"), and the count-noun list gains the commonest
+nouns it lacked (place, thing, area, name).
+
+| set | 7.50 P / R / F0.5 | now |
+|---|---|---|
+| W&I tuning half | 67.0 / 8.6 / 0.284 | 66.2 / 9.0 / 0.291 |
+| W&I report half | 62.5 / 7.7 / 0.257 | 62.1 / 7.9 / 0.261 |
+| CoNLL-2014 | 73.9 / 7.6 / 0.270 | 74.0 / 7.7 / 0.271 |
+| correct Wikipedia, tuning | 64 (4.3%) | 72 (4.8%) |
+| correct Wikipedia, report | 73 (4.9%) | 76 (5.1%) |
+
+The new changes on correct prose were read: all eleven are commas after a
+short opening phrase that published prose often leaves out ("After his
+recovery he was given", "On his left leg he wore"); the two wrong shapes of
+the first draft are gone. On the tuning half, 20 of the 31 new fixes are the
+annotator's own, and the eleven others are commas the annotator left ("In
+this report we will", "On my vacation I went"). learner_test.js: 182.
+
