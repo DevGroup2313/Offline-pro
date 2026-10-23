@@ -1,4 +1,4 @@
-INKWELL 7.50 FOR MAC: THE READY-MADE APP
+INKWELL 7.51 FOR MAC: THE READY-MADE APP
 ========================================
 
 This zip holds Inkwell.app, ready to use. There is nothing to build, no
@@ -20,7 +20,7 @@ INSTALL OR UPDATE
    documents are not inside the app, so they stay where they are
    (~/Library/Application Support/Inkwell).
 4. Open Inkwell from Applications, not from the Downloads folder.
-5. Look for "v7.50" beside the date at the top.
+5. Look for "v7.51" beside the date at the top.
 
 THE FIRST OPENING
 -----------------
@@ -52,6 +52,24 @@ On the Fire tablet: Engine, "Your computer's model".
 Enter the address and the code. The pill at the top then names the Mac
 mini's model. If it says "computer linked, no model loaded", load a model on
 the Mac mini first (Engine there).
+
+NEW IN 7.51
+-----------
+- The corrector adds the comma after an opening phrase or clause ("In the
+  same way, I had", "When I arrived, my uncle was", "After some years,
+  the girl decided"), measured as before: more errors found on learner
+  essays, precision kept.
+- Fewer wrong notes on published prose: a team or a government with a
+  plain verb is noted without a fix (British usage allows it); a day or a
+  year before a name is a title or an event; "six home runs", "this ends
+  up", "as they pleased" and "on the night" are left alone.
+- The rule after a rewrite: when you use a rewrite, one line at the foot
+  of the page says the first change kept and the reason behind it, as it
+  does after an accepted fix.
+- The message at the foot of the page wears the desk's own face: cream
+  with a brass edge by day, midnight by night, no longer ink-black. The
+  practice card's Done and Check buttons sit at their own width.
+  See INKWELL_HANDOFF_v7p51.txt.
 
 NEW IN 7.50
 -----------

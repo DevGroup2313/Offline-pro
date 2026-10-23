@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * is placed in the page, safe names and paths.
  */
 final class InkwellCore {
-    static final String BUILD = "7.50";
+    static final String BUILD = "7.51";
     /** A secure (https) origin that never touches the network: every request
      *  to it is answered from the app's own assets. Secure origins may use the
      *  microphone; the origin never changes, so the page's storage is stable. */

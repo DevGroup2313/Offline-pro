@@ -1,4 +1,4 @@
-INKWELL 7.50 FOR IPHONE AND IPAD
+INKWELL 7.51 FOR IPHONE AND IPAD
 ================================
 
 TWO WAYS TO HAVE INKWELL ON AN IPHONE OR IPAD
@@ -19,7 +19,7 @@ TODAY: THE WEB APP ON THE HOME SCREEN
 2. On the iPhone or iPad, open that address in Safari.
 3. Share, "Add to Home Screen", Add.
 4. Open Inkwell from the Home Screen once while online, so it keeps its
-   files for offline use. Look for "v7.50" beside the date.
+   files for offline use. Look for "v7.51" beside the date.
 - Updating later: when the site is updated on Netlify, open Inkwell from the
   Home Screen while online; the new version shows at the first or second
   opening.
@@ -29,6 +29,24 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   copy on another device is wise for long work: File, Move the library to
   another device.
 
+
+NEW IN 7.51
+-----------
+- The corrector adds the comma after an opening phrase or clause ("In the
+  same way, I had", "When I arrived, my uncle was", "After some years,
+  the girl decided"), measured as before: more errors found on learner
+  essays, precision kept.
+- Fewer wrong notes on published prose: a team or a government with a
+  plain verb is noted without a fix (British usage allows it); a day or a
+  year before a name is a title or an event; "six home runs", "this ends
+  up", "as they pleased" and "on the night" are left alone.
+- The rule after a rewrite: when you use a rewrite, one line at the foot
+  of the page says the first change kept and the reason behind it, as it
+  does after an accepted fix.
+- The message at the foot of the page wears the desk's own face: cream
+  with a brass edge by day, midnight by night, no longer ink-black. The
+  practice card's Done and Check buttons sit at their own width.
+  See INKWELL_HANDOFF_v7p51.txt.
 
 NEW IN 7.50
 -----------

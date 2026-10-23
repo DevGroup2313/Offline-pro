@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.50" beside the date at the top.
+Look for "v7.51" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,24 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.51
+-----------
+- The corrector adds the comma after an opening phrase or clause ("In the
+  same way, I had", "When I arrived, my uncle was", "After some years,
+  the girl decided"), measured as before: more errors found on learner
+  essays, precision kept.
+- Fewer wrong notes on published prose: a team or a government with a
+  plain verb is noted without a fix (British usage allows it); a day or a
+  year before a name is a title or an event; "six home runs", "this ends
+  up", "as they pleased" and "on the night" are left alone.
+- The rule after a rewrite: when you use a rewrite, one line at the foot
+  of the page says the first change kept and the reason behind it, as it
+  does after an accepted fix.
+- The message at the foot of the page wears the desk's own face: cream
+  with a brass edge by day, midnight by night, no longer ink-black. The
+  practice card's Done and Check buttons sit at their own width.
+  See INKWELL_HANDOFF_v7p51.txt.
 
 NEW IN 7.50
 -----------

@@ -1,0 +1,80 @@
+INKWELL v7.51: HANDOFF NOTES
+============================
+Date: 23 October 2026, later the same day as 7.50. Read
+INKWELL_HANDOFF_v7p50.txt and the earlier notes for everything before.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data is never in the repository and never
+trained on. SECURITY.txt stays private.
+
+WHY 7.51
+--------
+The writer asked for the work after 7.50 to reach the DevGroup2313
+repositories: the corrector's next stage, the rule after a rewrite, and two
+corrections of the look (the practice card's Done button was as wide as
+the card; the message at the foot of the page was ink-black on cream).
+
+WHAT CHANGED
+------------
+1. The comma after an opening phrase or clause (src/lib/learner_core.js,
+   the comma family; tools/grammar/README.md, "After 7.50", first part).
+   A prepositional phrase of three words or more before a pronoun subject,
+   and an opening clause or phrase before a determiner and its noun, where
+   the main clause follows at once with its verb; nothing where a second
+   subject and verb come soon after ("By the time I arrived the party was
+   over"), where the determiner's word can only be a verb or a pronoun, or
+   where an opener is followed by a preposition, "when", "which" or "as".
+   Twenty-two more openers. W&I tuning half F0.5 0.284 to 0.291, report
+   half 0.257 to 0.261, CoNLL-2014 0.270 to 0.271.
+2. Precision on published prose (the same README, second part). Every
+   change on the two correct sets was read by reason; seven misfiring
+   shapes guarded, each with a test: a collective noun with a plain verb
+   gets the note without a fix (British usage); a day or a year before a
+   capitalised word is a title or an event; a word with an inner capital
+   is a name; after a number an -s word that may be a verb heads the
+   compound; "this ends up" is a verb and its particle; "as they pleased"
+   lacks no verb; "on the night" stays. Correct prose changed 4.8% to
+   4.5% (tuning) and 5.1% to 4.8% (report); precision up on every learner
+   set, recall kept. The article rule allows an adverb before the
+   adjective ("is a very beautiful place").
+3. The rule after a rewrite (inkRwToast in src/inkwell.html): when a
+   rewrite is used, the line at the foot of the page carries the first
+   change kept that a rule explains, with its reason, for a breath (The
+   rule after a fix, My way of working); the undo chip stays. The "well
+   known" recast has its own reason (rewrite_core.js WHYS.held). The rule
+   in a breath (inkRuleLine) takes a lesson's first sentence, and the
+   second when the first is only a short question, within two rows.
+4. The look. The message at the foot of the page (#toast) wears the
+   cards' face: cream with a brass edge by day, the night cards' midnight
+   by night, the receipt word (Accepted, Applied) in brass. The practice
+   card's Done button sits at the right at its own width, and Check beside
+   the answer box (the card's row had stretched each button across it).
+
+TESTS
+-----
+learner_test.js 188, gaps_test.js 130, mark_test.js 26, spell_test.js
+136, rewrite run.js 328, explain_test.js 45, coach_test.js 38,
+para_test.js 44, sentence_test.mjs 24. All pass on the released build.
+
+HOW 7.51 WAS BUILT AND RELEASED
+-------------------------------
+As 7.50 (INKWELL_HANDOFF_v7p50.txt): versions in the seven files, the page
+built with tools/build_inkwell.py, the kits with make_packages.py --kits
+--no-key (checked for key files), the APK built here with the author's
+key (Inkwell-7.51-build1.apk, fingerprint in SECURITY.txt), the Mac apps
+with make_mac_prebuilt.py from release mac-build-27 at build 36, the four
+DevGroup2313 repositories given the kit, the handoff, their README and the
+build under builds/. The web app package goes to the writer for the site;
+the iPhone and iPad kit is built on the writer's Mac.
+
+NOT DONE YET
+------------
+- As in 7.50: the corrector's remaining silences are context-dependent
+  (prepositions in context, tense across a sentence, articles by meaning,
+  word choice); rule stages now yield about half a point of F0.5 each.
+  The careful offline grammar model (opt-in) measured 0.42 to 0.48 in this
+  record; the choice between more rule stages and that model is the
+  writer's.
+- The private source repository is ahead of its disconnected GitHub copy
+  and lives only in the session's container until the writer names a
+  private destination.

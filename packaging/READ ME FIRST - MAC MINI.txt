@@ -1,5 +1,23 @@
-INKWELL 7.50 FOR THE MAC MINI (APPLE SILICON, 16 GB)
+INKWELL 7.51 FOR THE MAC MINI (APPLE SILICON, 16 GB)
 ====================================================
+
+NEW IN 7.51
+-----------
+- The corrector adds the comma after an opening phrase or clause ("In the
+  same way, I had", "When I arrived, my uncle was", "After some years,
+  the girl decided"), measured as before: more errors found on learner
+  essays, precision kept.
+- Fewer wrong notes on published prose: a team or a government with a
+  plain verb is noted without a fix (British usage allows it); a day or a
+  year before a name is a title or an event; "six home runs", "this ends
+  up", "as they pleased" and "on the night" are left alone.
+- The rule after a rewrite: when you use a rewrite, one line at the foot
+  of the page says the first change kept and the reason behind it, as it
+  does after an accepted fix.
+- The message at the foot of the page wears the desk's own face: cream
+  with a brass edge by day, midnight by night, no longer ink-black. The
+  practice card's Done and Check buttons sit at their own width.
+  See INKWELL_HANDOFF_v7p51.txt.
 
 NEW IN 7.50
 -----------
@@ -106,7 +124,7 @@ PART A. INSTALL
    installer; your documents are never on it. From 7.38, Inkwell puts it
    away by itself when you open Inkwell from Applications. To put it away
    by hand: right-click it on the Desktop and choose Eject.
-4. Look for "v7.50" beside the date at the top. If your documents are not
+4. Look for "v7.51" beside the date at the top. If your documents are not
    there: File, Import library, and choose the file from step 1.
 
 

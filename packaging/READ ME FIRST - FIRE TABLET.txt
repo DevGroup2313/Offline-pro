@@ -1,7 +1,7 @@
-INKWELL 7.50 FOR THE FIRE TABLET (ANDROID)
+INKWELL 7.51 FOR THE FIRE TABLET (ANDROID)
 ==========================================
 
-THIS PACKAGE HOLDS: Inkwell-7.50-build1.apk, the app itself, built and
+THIS PACKAGE HOLDS: Inkwell-7.51-build1.apk, the app itself, built and
 signed with Inkwell's own key, so it installs over the Inkwell already on
 the tablet and keeps your documents.
 NOT FOR: iPhone or iPad (an iPhone or iPad cannot open an .apk file).
@@ -20,7 +20,7 @@ INSTALL ON THE FIRE TABLET BY USB
 4. Copy the .apk into the tablet's "Download" folder.
 5. On the tablet: open Files, then Downloads, tap the .apk, then Install
    (or Update).
-6. Open Inkwell. Look for "v7.50" beside the date at the top.
+6. Open Inkwell. Look for "v7.51" beside the date at the top.
 
 
 YOUR DOCUMENTS
@@ -33,6 +33,24 @@ YOUR DOCUMENTS
   To move documents to another device: File, Move the library to another
   device.
 
+
+NEW IN 7.51
+-----------
+- The corrector adds the comma after an opening phrase or clause ("In the
+  same way, I had", "When I arrived, my uncle was", "After some years,
+  the girl decided"), measured as before: more errors found on learner
+  essays, precision kept.
+- Fewer wrong notes on published prose: a team or a government with a
+  plain verb is noted without a fix (British usage allows it); a day or a
+  year before a name is a title or an event; "six home runs", "this ends
+  up", "as they pleased" and "on the night" are left alone.
+- The rule after a rewrite: when you use a rewrite, one line at the foot
+  of the page says the first change kept and the reason behind it, as it
+  does after an accepted fix.
+- The message at the foot of the page wears the desk's own face: cream
+  with a brass edge by day, midnight by night, no longer ink-black. The
+  practice card's Done and Check buttons sit at their own width.
+  See INKWELL_HANDOFF_v7p51.txt.
 
 NEW IN 7.50
 -----------
