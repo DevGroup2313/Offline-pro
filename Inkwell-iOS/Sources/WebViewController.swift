@@ -155,6 +155,7 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
           respond:function(i,p){return R.postMessage({op:'aiRespond',instructions:String(i||''),prompt:String(p||'')}).then(function(r){return r||{error:'no answer'};},function(e){return {error:String(e)};});}};
          window.pywebview={api:{
           save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},
+          print_document:function(n,m,b){return P(post({op:'printFile',name:String(n),mime:String(m||'application/pdf'),data:String(b)}));},
           storage_set:function(k,v){return P(post({op:'storageSet',key:String(k),value:String(v)}));},
           rescue_offer:function(){try{var st=window.__inkBridgeStoreAtLaunch||{};if(!st.docs)return P('');
            var o={docs:JSON.parse(st.docs),active:st.active?JSON.parse(st.active):null,notes:st.notes?JSON.parse(st.notes):[],snaps:st.snaps?JSON.parse(st.snaps):{}};
@@ -232,6 +233,11 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
                let bytes = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) {
                 saveFile(name: name, data: bytes)
             }
+        case "printFile":
+            if let name = body["name"] as? String, let base64 = body["data"] as? String,
+               let bytes = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) {
+                printFile(name: name, data: bytes)
+            }
         case "edges":
             if let top = body["top"] as? String, let bottom = body["bottom"] as? String {
                 applyEdges(top: top, bottom: bottom)
@@ -266,6 +272,23 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         } catch {
             showMessage("The file could not be saved: \(error.localizedDescription)")
         }
+    }
+
+    /// 7.50: Tabula's Print. A web view has no window.print() here; the
+    /// room's own PDF goes to the system's print sheet (AirPrint, or Save to
+    /// Files as a PDF).
+    private func printFile(name: String, data: Data) {
+        let pc = UIPrintInteractionController.shared
+        let info = UIPrintInfo(dictionary: nil)
+        info.outputType = .general
+        info.jobName = WebViewController.safeFileName(name)
+        pc.printInfo = info
+        if UIPrintInteractionController.canPrint(data) {
+            pc.printingItem = data
+        } else {
+            pc.printFormatter = webView.viewPrintFormatter()
+        }
+        pc.present(from: view.bounds, in: view, animated: true, completionHandler: nil)
     }
 
     /// Apple's own "Save to Files" dialog, which is how an app hands a file to

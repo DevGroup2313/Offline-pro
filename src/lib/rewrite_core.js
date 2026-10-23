@@ -333,7 +333,57 @@
       return keepCase(verb + (after ? ' ' + after : ''))(m);
     }];
   }
+  /* 7.50: the base of a verb that stands in its -s form ("changes" to
+     "change"), from the lexicon when it is loaded, else by the regular
+     spellings; null where it is not certain */
+  const VB_IRR = { is: 'be', has: 'have', does: 'do', goes: 'go', focuses: 'focus', buses: 'bus', gases: 'gas', biases: 'bias', analyses: 'analyse', uses: 'use', causes: 'cause', raises: 'raise', closes: 'close', loses: 'lose', chooses: 'choose', poses: 'pose', pauses: 'pause', arises: 'arise', rises: 'rise', increases: 'increase', decreases: 'decrease', releases: 'release', promises: 'promise', praises: 'praise', houses: 'house', pleases: 'please' };
+  const VB_NOT = /^(?:are|were|was|this|thus|yes|us|its|his|hers|ours|yours|theirs|always|perhaps|sometimes|towards|across|unless|whereas|as|less|plus|minus|various|serious|previous|obvious|famous|numerous|enormous|dangerous|nervous|anxious|curious|jealous|delicious|precious|conscious|religious|ambitious|tremendous|ridiculous|mysterious|is|news|means|species|series|analysis|basis|crisis|thesis|emphasis|hypothesis|physics|politics|economics|mathematics|statistics|ethics|genetics|linguistics|phonetics|dynamics|electronics|athletics|gymnastics|process|progress|success|access|business|witness|stress|loss|glass|class|grass|mass|chess|bus|gas|plus)$/;
+  function verbBase(w) {
+    const lw = String(w || '').toLowerCase(), X = root.INKLEX;
+    if (X && X.ready) {
+      try {
+        const b = X.bases(lw);
+        const s3 = b.find(o => o.pos === 'v' && o.form === 's'); if (s3) return s3.base;
+        if (b.some(o => o.pos === 'v' && o.form === '') && !b.some(o => o.pos === 'n' && o.form === '') && !/s$/.test(lw)) return lw;
+        return null;
+      } catch (e) {}
+    }
+    if (VB_IRR[lw]) return VB_IRR[lw];
+    if (VB_NOT.test(lw) || !/s$/.test(lw) || lw.length < 4) return null;
+    if (/ies$/.test(lw)) return lw.slice(0, -3) + 'y';
+    if (/(ss|sh|ch|x|z)es$/.test(lw)) return lw.slice(0, -2);
+    if (/[^s]s$/.test(lw)) return lw.slice(0, -1);
+    return null;
+  }
+  const cap1 = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+  const SUBJ_STOP = /^(?:the|a|an|this|these|those|such|most|many|some|all|every|each|no|our|their|its|his|her|my|your|of|in|on|at|to|for|with|by|from|and|or|but|not|that|which|who|as|than)$/i;
+  /* 7.50: "It is well known that big data changes everything" becomes "Big
+     data is widely held to change everything": the claim's subject first,
+     and the knowing named as a holding, which can be cited. Only where the
+     verb's base form is certain and the subject is a noun phrase of four
+     words or fewer. */
+  function heldTo(m, pre, rest) {
+    const words = rest.split(/\s+/);
+    for (let k = 1; k <= 4 && k < words.length - 1; k++) {
+      const verb = words[k], base = verbBase(verb);
+      if (!base || SUBJ_STOP.test(words[k - 1])) continue;
+      const plural = base === verb.toLowerCase() && !/s$/.test(verb.toLowerCase());
+      if (!plural && !/s$/.test(verb.toLowerCase())) continue;
+      const subj = words.slice(0, k).join(' '), tail = words.slice(k + 1).join(' ');
+      return pre + cap1(subj) + (plural ? ' are widely held to ' : ' is widely held to ') + base + (tail ? ' ' + tail : '');
+    }
+    return m;
+  }
+  const NOUN_STUFF = /^(?:data|research|work|study|science|tech|technology|business|policy|media|marketing|software|hardware|finance|health|legal|academic|computer|internet|online|digital|ai|statistics|maths|math|physics|chemistry|biology|history|politics|economics|management|school|university|college|office|home|house|kitchen|garden|car|camera|phone|music|art|design|writing|reading|teaching|learning|training|coding|programming|admin|tax|insurance|banking|medical|hospital|church|government|military|army|police|court|law|theory|lab|laboratory|project|thesis|exam|course|class|lecture|seminar|grammar|language|library|archive|museum|theatre|theater|film|video|audio|radio|news|sport|sports|football|fitness|food|cooking|baking|travel|holiday|wedding|baby|family|farm|factory|shop|market|trade|sales|customer|client|user|player|team|committee|board|council|network|security|privacy|safety|climate|energy|water|housing|transport|traffic|rail|road|building|construction|planning|budget|funding|grant)$/i;
+  function nounStuff(m, w) {
+    let noun = NOUN_STUFF.test(w);
+    if (!noun) { try { const X = root.INKLEX; if (X && X.ready) { const b = X.bases(w.toLowerCase()); noun = b.some(o => o.pos === 'n') && !b.some(o => o.pos === 'a' && o.form === ''); } } catch (e) {} }
+    return noun ? w : m;
+  }
   const RECAST = [
+    tag([new RegExp(S0 + 'it is (?:well|widely|commonly|generally) (?:known|accepted|recognised|recognized|understood|agreed|believed) that ([^.!?;:]+)', 'gi'), heldTo], 'opener'),
+    /* "big data stuff" is "big data": the noun says it */
+    tag([/\b([A-Za-z][\w-]{2,}) stuff\b(?!\s*(?:like|such as))/g, nounStuff], 'wordy'),
     /* "It is very clear that this is ..." becomes "This is ..." */
     tag(atStart('it (?:is|seems|appears|becomes) ' + DEG + '(?:clear|obvious|evident|apparent|plain) that\\s+'), 'opener'),
     tag(atStart('it (?:is|should be) (?:also |particularly |especially |very )?(?:important|essential|crucial|vital|interesting|useful|significant) to (?:note|remember|recognise|recognize|stress|emphasise|emphasize|point out|mention|observe|highlight|bear in mind) that\\s+'), 'filler'),

@@ -352,5 +352,12 @@ module.exports = [
   ['hedge', 'It is clear that the method works.', 'It appears that the method works.'],
   ['neutral', 'It is very clear that this is wrong.', 'This is wrong.'],
   ['professional', 'It is a really important issue.', 'It is an important issue.'],
-  ['professional', 'It is not really important.', '=']
+  ['professional', 'It is not really important.', '='],
+  /* 7.50: the Welcome page's first sentence */
+  ['scholarly', 'It is well known that big data stuff changes everything.', 'Big data is widely held to change everything.'],
+  ['concise', 'It is well known that big data stuff changes everything.', 'Big data is widely held to change everything.'],
+  ['scholarly', 'It is widely accepted that the method works well.', 'The method is widely held to work well.'],
+  ['scholarly', 'It is well known that this is a problem.', '='],
+  ['concise', 'We sorted the research stuff into folders.', 'We sorted the research into folders.'],
+  ['concise', 'We kept the stuff in boxes.', '=']
 ];

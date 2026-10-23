@@ -123,6 +123,8 @@ final class InkwellCore {
       + "   on:function(f){ML.push(f);}};}\n"
       + " window.pywebview={api:{\n"
       + "  save_file:function(n,m,b){return P(window.InkwellNative.saveFile(n,m,b));},\n"
+      // 7.50: a room's PDF to the system's print sheet
+      + "  print_document:function(n,m,b){try{return P(A.printFile(String(n),String(m||'application/pdf'),String(b))==='true');}catch(e){return P(false);}},\n"
       + "  storage_set:function(k,v){try{A.storageSet(String(k),String(v));return P(true);}catch(e){return P(false);}},\n"
       // 7.40: the keeping, whole copies of the library in the app's own folder (Keep.java)
       + "  keep_copy:function(m,meta,body){try{return P(A.keepCopy(String(m),String(meta),String(body))==='true');}catch(e){return P(false);}},\n"

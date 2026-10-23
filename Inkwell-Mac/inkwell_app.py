@@ -942,6 +942,46 @@ def save_bytes(win, name, mime, data_b64):
         return False
 
 
+def print_document(win, name, mime, data_b64):
+    """7.50: Tabula's Print, as Carpe Diem's Mac app answers it.
+
+    WKWebView, which the Mac app draws through, does not implement
+    window.print(), so a print request made inside a room reached nothing.
+    The room's own PDF is written to a temporary file and opened with the
+    system's own application (Preview), whose print dialog is the Mac's.
+    On Windows the web view prints on its own, so this returns False and the
+    room goes on to its own print dialog.
+
+    Returns the path opened, or False so the page can fall back.
+    """
+    import base64, os, subprocess, sys, tempfile
+    if not sys.platform == "darwin":
+        return False
+    try:
+        raw = base64.b64decode(data_b64 or "")
+    except Exception:
+        log_problem("print_document: undecodable payload")
+        return False
+    if not raw:
+        return False
+    safe = "".join(c for c in str(name or "document") if c.isalnum() or c in " ._-").strip() or "document"
+    try:
+        folder = os.path.join(tempfile.gettempdir(), "InkwellPrint")
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, safe)
+        with open(path, "wb") as fh:
+            fh.write(raw)
+    except Exception as exc:
+        log_problem("print_document: could not write %s (%s)" % (safe, exc))
+        return False
+    try:
+        subprocess.Popen(["/usr/bin/open", path])
+        return path
+    except Exception as exc:
+        log_problem("print_document: open failed (%s)" % (exc,))
+        return False
+
+
 def _bake_icon_from_svg(svg_text):
     """Rasterise the app's own seal with this Mac's own QuickLook and assemble
     the icon set with sips and iconutil. The desktop icon becomes the door seal
@@ -1638,6 +1678,10 @@ class InkwellApi:
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)
 
+    def print_document(self, name, mime, data_b64):
+        """7.50: a room's PDF to the system's own print path."""
+        return print_document(getattr(self, "main_window", None), name, mime, data_b64)
+
     def host_info(self):
         """What the window host can do, so Scriba can say precisely why the
         microphone is or is not available."""
@@ -1825,6 +1869,10 @@ class InkwellApiSingle:
 
     def save_file(self, name, mime, data_b64):
         return save_bytes(None, name, mime, data_b64)
+
+    def print_document(self, name, mime, data_b64):
+        """7.50: a room's PDF to the system's own print path."""
+        return print_document(getattr(self, "main_window", None), name, mime, data_b64)
 
     def host_info(self):
         """What the window host can do, so Scriba can say precisely why the

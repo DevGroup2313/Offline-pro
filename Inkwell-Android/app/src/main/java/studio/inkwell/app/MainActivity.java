@@ -17,7 +17,14 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CancellationSignal;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.print.PageRange;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
+import android.print.PrintManager;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
 import android.speech.SpeechRecognizer;
@@ -354,6 +361,50 @@ public class MainActivity extends Activity {
         return last == null ? "model.gguf" : last;
     }
 
+    /* 7.50: the system's print sheet for a PDF a room has written */
+    private void startPrint(String name, String mime, byte[] bytes) {
+        PrintManager pm = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+        if (pm == null) {
+            Toast.makeText(this, "This device has no printing service. Save the PDF instead.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String job = InkwellCore.safeFileName(name == null || name.isEmpty() ? "Inkwell document" : name);
+        try {
+            if (mime != null && mime.startsWith("application/pdf")) {
+                pm.print(job, new PdfBytesAdapter(job, bytes), new PrintAttributes.Builder().build());
+            } else {
+                pm.print(job, web.createPrintDocumentAdapter(job), new PrintAttributes.Builder().build());
+            }
+        } catch (RuntimeException e) {
+            Toast.makeText(this, "Printing is not available here: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static class PdfBytesAdapter extends PrintDocumentAdapter {
+        private final String name;
+        private final byte[] bytes;
+        PdfBytesAdapter(String name, byte[] bytes) { this.name = name; this.bytes = bytes; }
+
+        @Override
+        public void onLayout(PrintAttributes oldAttrs, PrintAttributes newAttrs, CancellationSignal signal,
+                             LayoutResultCallback cb, Bundle extras) {
+            if (signal != null && signal.isCanceled()) { cb.onLayoutCancelled(); return; }
+            cb.onLayoutFinished(new PrintDocumentInfo.Builder(name)
+                    .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build(), true);
+        }
+
+        @Override
+        public void onWrite(PageRange[] pages, ParcelFileDescriptor dest, CancellationSignal signal,
+                            WriteResultCallback cb) {
+            try (OutputStream os = new FileOutputStream(dest.getFileDescriptor())) {
+                os.write(bytes);
+                cb.onWriteFinished(new PageRange[]{PageRange.ALL_PAGES});
+            } catch (IOException e) {
+                cb.onWriteFailed(e.getMessage());
+            }
+        }
+    }
+
     private void startSave(String name, String mime, byte[] bytes) {
         pendingSaveBytes = bytes;
         pendingSaveName = InkwellCore.safeFileName(name);
@@ -407,6 +458,22 @@ public class MainActivity extends Activity {
                 return "false";
             }
             runOnUiThread(() -> startSave(name, mime, bytes));
+            return "true";
+        }
+
+        /** 7.50: Tabula's Print. A web view's window.print() does nothing on
+         *  Android; the room's own PDF goes to the system's print sheet, which
+         *  can also save it as a PDF. */
+        @JavascriptInterface
+        public String printFile(final String name, final String mime, String base64) {
+            final byte[] bytes;
+            try {
+                bytes = Base64.decode(base64, Base64.DEFAULT);
+            } catch (IllegalArgumentException e) {
+                return "false";
+            }
+            if (bytes.length == 0) return "false";
+            runOnUiThread(() -> startPrint(name, mime, bytes));
             return "true";
         }
 

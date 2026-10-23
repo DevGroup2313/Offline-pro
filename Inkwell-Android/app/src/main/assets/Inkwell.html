@@ -859,6 +859,12 @@ body[data-motion=minimal] .doorRow button,body[data-motion=minimal] .doorRow but
 .cdDockXpt>span svg{width:32px !important;height:32px !important;stroke-width:1.9}
 body[data-motion=minimal] .cdDockXpt{animation:none !important}
 @keyframes cdHourTurn{0%,89%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+/* 7.50: the three emblems read as one size. The moon fills its box where the
+   hourglass and the seal sit inside theirs, so the moon is drawn smaller and
+   the seal larger. */
+#tabDockTheme>span.cdTglIc,.cdDockTheme>span.cdTglIc{font-size:30px !important;width:36px !important;height:36px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important}
+#tabDockHoro>span,.cdDockHoro>span{font-size:33px !important}
+#tabDock .scheMini,.appStage .scheMini{--S:40px}
 #tabDockTgl{opacity:.55;color:#1B6B93;font:600 22px/1 Georgia,serif !important;width:46px !important;height:46px !important;border-radius:50% !important;border:none !important;background:transparent !important;cursor:pointer !important;box-shadow:none !important;display:flex !important;align-items:center !important;justify-content:center !important;transition:transform .15s ease,opacity .15s ease !important}
 #tabDockTgl:hover{opacity:1 !important;transform:translateY(-2px) scale(1.05) !important}
 [data-theme=dark] #tabDockTgl{color:#5BAEDB;opacity:.9}
@@ -1736,6 +1742,14 @@ body.kbd .doorRow button:not(.primary):focus-visible{box-shadow:0 4px 0 #c7ab72,
 [data-theme=dark] .dknob{background:linear-gradient(#2a3644,#151e28);border-color:#2b3a4a}
 /* the footer: a brass hairline and the maker's name in italic */
 .doorFoot{border-top:0;position:relative;margin-top:24px;padding-top:16px;font-size:11.5px;letter-spacing:.04em}
+/* 7.50: the door's way into the tour, a line of text above the buttons */
+.doorTour{font-family:var(--disp);font-size:15px;font-weight:500;color:#5c5444;margin-top:14px}
+.doorTour+.doorRow{margin-top:16px}
+.doorTour a{color:#17384c;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(169,128,58,.55);padding-bottom:1px;transition:color .15s,border-color .15s}
+.doorTour a:hover{color:#8a6526;border-bottom-color:#8a6526}
+[data-theme=dark] .doorTour{color:#b5a888}
+[data-theme=dark] .doorTour a{color:#d8c28e;border-bottom-color:rgba(201,169,100,.5)}
+[data-theme=dark] .doorTour a:hover{color:#f0dfae;border-bottom-color:#f0dfae}
 .doorFoot:before{content:'';position:absolute;top:0;left:12%;right:12%;height:1px;background:linear-gradient(90deg,transparent,var(--hair),transparent)}
 .doorFoot .byline{font-family:var(--disp);font-style:italic;font-weight:500;font-size:16.5px;letter-spacing:.01em;color:#17384c}
 [data-theme=dark] .doorFoot .byline{color:#d8c28e}
@@ -1909,6 +1923,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
  <div class="doorRule"><span></span><em>An offline writing studio</em><span></span></div>
  </div>
  <p class="doorNote">Inkwell is an ink pot and a workbench at once: it corrects as you write, offers stronger words from its own bank, learns only your voice, and shows its working. Behind this door your documents, your notes, and your rules wait exactly where you left them; every mark it makes stays on this device.</p>
+ <div class="doorTour">New here? <a href="#" onclick="closeDoor(true);return false" title="Twelve short chapters, with live demonstrations; about ten minutes">Take the guided tour</a></div>
  <div class="doorRow">
   <button class="primary" id="doorOpen" onclick="closeDoor()">Open the desk</button>
   <button onclick="closeDoor();openModal('newdoc')" style="color:var(--acc)">New document</button>
@@ -3274,7 +3289,57 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       return keepCase(verb + (after ? ' ' + after : ''))(m);
     }];
   }
+  /* 7.50: the base of a verb that stands in its -s form ("changes" to
+     "change"), from the lexicon when it is loaded, else by the regular
+     spellings; null where it is not certain */
+  const VB_IRR = { is: 'be', has: 'have', does: 'do', goes: 'go', focuses: 'focus', buses: 'bus', gases: 'gas', biases: 'bias', analyses: 'analyse', uses: 'use', causes: 'cause', raises: 'raise', closes: 'close', loses: 'lose', chooses: 'choose', poses: 'pose', pauses: 'pause', arises: 'arise', rises: 'rise', increases: 'increase', decreases: 'decrease', releases: 'release', promises: 'promise', praises: 'praise', houses: 'house', pleases: 'please' };
+  const VB_NOT = /^(?:are|were|was|this|thus|yes|us|its|his|hers|ours|yours|theirs|always|perhaps|sometimes|towards|across|unless|whereas|as|less|plus|minus|various|serious|previous|obvious|famous|numerous|enormous|dangerous|nervous|anxious|curious|jealous|delicious|precious|conscious|religious|ambitious|tremendous|ridiculous|mysterious|is|news|means|species|series|analysis|basis|crisis|thesis|emphasis|hypothesis|physics|politics|economics|mathematics|statistics|ethics|genetics|linguistics|phonetics|dynamics|electronics|athletics|gymnastics|process|progress|success|access|business|witness|stress|loss|glass|class|grass|mass|chess|bus|gas|plus)$/;
+  function verbBase(w) {
+    const lw = String(w || '').toLowerCase(), X = root.INKLEX;
+    if (X && X.ready) {
+      try {
+        const b = X.bases(lw);
+        const s3 = b.find(o => o.pos === 'v' && o.form === 's'); if (s3) return s3.base;
+        if (b.some(o => o.pos === 'v' && o.form === '') && !b.some(o => o.pos === 'n' && o.form === '') && !/s$/.test(lw)) return lw;
+        return null;
+      } catch (e) {}
+    }
+    if (VB_IRR[lw]) return VB_IRR[lw];
+    if (VB_NOT.test(lw) || !/s$/.test(lw) || lw.length < 4) return null;
+    if (/ies$/.test(lw)) return lw.slice(0, -3) + 'y';
+    if (/(ss|sh|ch|x|z)es$/.test(lw)) return lw.slice(0, -2);
+    if (/[^s]s$/.test(lw)) return lw.slice(0, -1);
+    return null;
+  }
+  const cap1 = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+  const SUBJ_STOP = /^(?:the|a|an|this|these|those|such|most|many|some|all|every|each|no|our|their|its|his|her|my|your|of|in|on|at|to|for|with|by|from|and|or|but|not|that|which|who|as|than)$/i;
+  /* 7.50: "It is well known that big data changes everything" becomes "Big
+     data is widely held to change everything": the claim's subject first,
+     and the knowing named as a holding, which can be cited. Only where the
+     verb's base form is certain and the subject is a noun phrase of four
+     words or fewer. */
+  function heldTo(m, pre, rest) {
+    const words = rest.split(/\s+/);
+    for (let k = 1; k <= 4 && k < words.length - 1; k++) {
+      const verb = words[k], base = verbBase(verb);
+      if (!base || SUBJ_STOP.test(words[k - 1])) continue;
+      const plural = base === verb.toLowerCase() && !/s$/.test(verb.toLowerCase());
+      if (!plural && !/s$/.test(verb.toLowerCase())) continue;
+      const subj = words.slice(0, k).join(' '), tail = words.slice(k + 1).join(' ');
+      return pre + cap1(subj) + (plural ? ' are widely held to ' : ' is widely held to ') + base + (tail ? ' ' + tail : '');
+    }
+    return m;
+  }
+  const NOUN_STUFF = /^(?:data|research|work|study|science|tech|technology|business|policy|media|marketing|software|hardware|finance|health|legal|academic|computer|internet|online|digital|ai|statistics|maths|math|physics|chemistry|biology|history|politics|economics|management|school|university|college|office|home|house|kitchen|garden|car|camera|phone|music|art|design|writing|reading|teaching|learning|training|coding|programming|admin|tax|insurance|banking|medical|hospital|church|government|military|army|police|court|law|theory|lab|laboratory|project|thesis|exam|course|class|lecture|seminar|grammar|language|library|archive|museum|theatre|theater|film|video|audio|radio|news|sport|sports|football|fitness|food|cooking|baking|travel|holiday|wedding|baby|family|farm|factory|shop|market|trade|sales|customer|client|user|player|team|committee|board|council|network|security|privacy|safety|climate|energy|water|housing|transport|traffic|rail|road|building|construction|planning|budget|funding|grant)$/i;
+  function nounStuff(m, w) {
+    let noun = NOUN_STUFF.test(w);
+    if (!noun) { try { const X = root.INKLEX; if (X && X.ready) { const b = X.bases(w.toLowerCase()); noun = b.some(o => o.pos === 'n') && !b.some(o => o.pos === 'a' && o.form === ''); } } catch (e) {} }
+    return noun ? w : m;
+  }
   const RECAST = [
+    tag([new RegExp(S0 + 'it is (?:well|widely|commonly|generally) (?:known|accepted|recognised|recognized|understood|agreed|believed) that ([^.!?;:]+)', 'gi'), heldTo], 'opener'),
+    /* "big data stuff" is "big data": the noun says it */
+    tag([/\b([A-Za-z][\w-]{2,}) stuff\b(?!\s*(?:like|such as))/g, nounStuff], 'wordy'),
     /* "It is very clear that this is ..." becomes "This is ..." */
     tag(atStart('it (?:is|seems|appears|becomes) ' + DEG + '(?:clear|obvious|evident|apparent|plain) that\\s+'), 'opener'),
     tag(atStart('it (?:is|should be) (?:also |particularly |especially |very )?(?:important|essential|crucial|vital|interesting|useful|significant) to (?:note|remember|recognise|recognize|stress|emphasise|emphasize|point out|mention|observe|highlight|bear in mind) that\\s+'), 'filler'),
@@ -12918,6 +12983,27 @@ window.addEventListener('message',function(e){
  }catch(x){}
  function fallbackDL(m){try{var a=document.createElement('a');a.href='data:'+(m.mime||'application/octet-stream')+';base64,'+m.data;a.download=m.name||'document';document.body.appendChild(a);a.click();a.remove();}catch(y){}}
 });
+/* 7.50: Tabula and Scriba hand a file to their host as Carpe Diem's rooms do
+   (carpe-save, with the bytes) and ask it to print (carpe-print). Inkwell
+   listened for neither, so "Save a copy to this device" and Print did
+   nothing inside it on every device. A save goes the desk's own road (the
+   system's save dialog on the Fire, iPhone, Mac and Windows; a download in a
+   browser). A print goes to the host where it has a printer of its own (the
+   Fire and the iPhone open the system's print sheet; the Mac opens the PDF
+   in Preview); elsewhere the room prints its own page. */
+function inkBytesB64(b){try{var u=b instanceof Uint8Array?b:new Uint8Array(b||0),s='',CH=0x8000;for(var i=0;i<u.length;i+=CH)s+=String.fromCharCode.apply(null,u.subarray(i,i+CH));return btoa(s);}catch(e){return '';}}
+function inkPrintBytes(name,mime,b64){
+ return new Promise(function(res){
+  try{var api=window.pywebview&&window.pywebview.api;
+   if(api&&api.print_document&&b64){Promise.resolve(api.print_document(name,mime,b64)).then(function(p){res(!!p);},function(){res(false);});return;}
+  }catch(x){}
+  res(false);});}
+window.addEventListener('message',function(e){
+ try{var m=e&&e.data;if(!m||!m.kind)return;
+  if(m.kind==='carpe-save'){var b64=inkBytesB64(m.bytes);if(!b64){toast('Nothing to save.');return;}inkSaveBase64(String(m.name||'document'),String(m.mime||'application/octet-stream'),b64);return;}
+  if(m.kind==='carpe-print'){var src=e.source;var reply=function(ok){try{if(src)src.postMessage({kind:'carpe-print-reply',ok:!!ok},'*');}catch(x){}};
+   inkPrintBytes(String(m.name||'document.pdf'),String(m.mime||'application/pdf'),inkBytesB64(m.bytes)).then(reply,function(){reply(false);});return;}
+ }catch(x){}});
 
 /* ================= SPRINT ================= */
 /* 7.36: the 25-minute sprint is Clepsydra now (Carpe Diem's timer). Its chip in
@@ -13366,12 +13452,15 @@ function showDoor(){const d=document.getElementById('door');
   c.style.left=Math.min(Math.max(8,g.x),Math.max(8,innerWidth-w-8))+'px';
   c.style.top=Math.min(Math.max(8,g.y),Math.max(8,innerHeight-h-8))+'px';
   c.style.width=w+'px';c.style.height=h+'px';c.style.maxHeight='none';}}
-function closeDoor(){
+/* 7.50: the door's own way into the tour (as Carpe Diem and the Forge offer
+   it); a writer who takes it is not offered it again */
+function closeDoor(tour){
  try{if(S.sound&&window.SND&&SND.doorOpen)SND.doorOpen();}catch(e){}const d=document.getElementById('door');SND.door();
 inkMark('doorFns');
  S.door=!document.getElementById('doorChk').checked;SV('door',S.door);
  document.body.classList.remove('doorOn');d.classList.add('gone');setTimeout(()=>{d.style.display='none';},480);
  ed.focus();doorTipCycle();
+ if(tour===true){SV('tourOffered',1);setTimeout(function(){try{startTour(true);}catch(e){}},520);return;}
  setTimeout(function(){try{tourOffer();}catch(e){}},700);}
 /* the door behaves like a window: drag the head, resize from every edge */
 let doorWired=false;
@@ -15776,7 +15865,7 @@ const SCHOLAR=[
  /* 7.43: "proves difficult", "proved valuable": "prove" as "turn out" is not a claim */
  {re:/\b(?:prove[sd]?|proven) (?:that|beyond)\b|\bthis proves\b|\bproof that\b/gi,to:null,cat:'s',label:'Overclaim: demonstrate? suggest?'},
  {re:/\b(obviously|clearly|undeniably|of course|needless to say)\b(?=\s*,)/gi,to:null,cat:'s',label:'Dismissive claim: argue it instead'},
- {re:/\b(big|nice)\b/g,cs:true,to:null,cat:'c',label:'Imprecise adjective',alts:{big:['substantial','considerable','extensive'],nice:['elegant','careful','rigorous']}},
+ {re:/\b(big(?!\s+(?:data|bang|picture|deal|brother|sister|tech|five|ten|four|three|apple|city|cat|game|screen|toe|top|shot|wig|business|pharma|name|names|day|break|moment|time|and|or|language|in|as|is|ben|easy|oil|money|bucks|hearted|house|band|boss|c|d|b|screen|wheel|win|hit|fish|sky|smoke|brother|wave|one)\b)|nice)\b/g,cs:true,to:null,cat:'c',label:'Imprecise adjective',alts:{big:['substantial','considerable','extensive'],nice:['elegant','careful','rigorous']}},
  {re:/!/g,to:null,cat:'s',label:'Exclamation: not used in scholarly prose'},
  {re:/(many scholars|some researchers|studies show|it is well known|everyone knows)(?![^.]{0,120}\((?:19|20)\d\d)/gi,to:null,cat:'s',label:'Weasel phrase: cite a source'},
  {re:/(such as|including)[^.;]{1,60}\betc\./gi,to:null,cat:'c',label:'"etc." after a such-as list is redundant'},
@@ -16082,6 +16171,25 @@ function passiveCheck(t,ms,out){
 /* A sentence that starts in lowercase after a full stop. Guarded against
    abbreviations (e.g., i.e., etc., Dr., fig.), decimals, and initials. */
 var SENT_ABBR=/(?:e\.g|i\.e|eg|ie|etc|viz|cf|vs|al|al\.|fig|figs|pp|p|vol|vols|no|nos|dr|mr|mrs|ms|prof|st|sec|sect|ch|chap|ca|inc|ltd|co|jr|sr|approx|rev|ed|eds|trans|para|paras|esp|incl|ref|refs|tab|app|n|nn|ll|vv|ser|pt|op|loc|ibid)\.?$/i;
+/* 7.50: "stuff" after a noun ("big data stuff", "the research stuff") adds
+   nothing: the noun says it, and the fix is to drop the word. Elsewhere the
+   bank's alternatives stand. A noun is known by the lexicon when it is
+   loaded, and by a list of the usual compounds when it is not. */
+const STUFF_NOUNS=/^(?:data|research|work|study|science|tech|technology|business|policy|media|marketing|software|hardware|finance|health|legal|academic|computer|internet|online|digital|ai|statistics|stats|maths|math|physics|chemistry|biology|history|politics|economics|management|school|university|college|office|home|house|kitchen|garden|car|camera|phone|music|art|design|writing|reading|teaching|learning|training|coding|programming|admin|hr|it|tax|insurance|banking|medical|hospital|church|government|military|army|police|court|law|theory|lab|laboratory|project|thesis|exam|course|class|lecture|seminar|grammar|language|library|archive|museum|theatre|theater|film|video|audio|radio|news|sport|sports|football|fitness|food|cooking|baking|travel|holiday|wedding|baby|family|church|farm|factory|shop|market|trade|sales|customer|client|user|player|team|committee|board|council|network|security|privacy|safety|climate|energy|water|housing|transport|traffic|rail|road|building|construction|planning|budget|funding|grant|research-related)$/i;
+function stuffCheck(t,ms,out){
+ const re=/\b([A-Za-z][A-Za-z-]+)(\s+stuff)\b(?!\s*(?:like|such as))/g;let m;
+ while((m=re.exec(t))){const w=m[1],lw=w.toLowerCase();
+  if(/^(?:the|a|an|this|that|these|those|some|any|all|much|more|less|other|such|my|your|his|her|our|their|its|no|own|same|new|old|good|bad|great|right|wrong|hard|easy|free|real|little|few|many|cool|nice|weird|random|basic|important|serious|boring|funny|fun|and|or|of|with|about|for|on|in|is|are|was|were|be|have|has|had|do|does|did|get|got)$/.test(lw))continue;
+  let noun=STUFF_NOUNS.test(lw);
+  if(!noun){try{if(typeof INKLEX!=='undefined'&&INKLEX.ready){const b=INKLEX.bases(lw);noun=b.some(o=>o.pos==='n')&&!b.some(o=>o.pos==='a'&&o.form==='');}}catch(e){}}
+  if(!noun)continue;
+  const st=m.index+w.length,en=m.index+m[0].length;
+  if(inMask(st,ms))continue;
+  let clash=false;
+  for(let i=out.length-1;i>=0;i--){const o=out[i];if(!(st<o.end&&en>o.start))continue;
+   if(/^Register: vague noun|^Weak word/.test(String(o.why||'')))out.splice(i,1);else if(typeof o.fix==='string')clash=true;}
+  if(clash)continue;
+  out.push({start:st,end:en,orig:t.slice(st,en),fix:'',why:'“Stuff” after a noun adds nothing: “'+w+'” says it',cat:'c'});}}
 function capitalCheck(t,ms,out){
  var re=/(\w)(\.\s+)([a-z])/g,m,guard=0;
  while((m=re.exec(t))&&guard++<3000){
@@ -16727,9 +16835,9 @@ const GRAM38=[
  {re:/([.!?])\1{1,}/g,to:'$1',cat:'g',label:'One terminal mark is enough'},
  {re:/,,+/g,to:',',cat:'g',label:'One comma is enough'},
  /* hyphenation of compound modifiers */
- {re:/\bwell (known|documented|established|founded|argued|defined|developed|researched|supported|informed|intentioned|reasoned|structured|organized|organised|written|read|balanced|designed|considered|thought|crafted|crafted|prepared|presented|informed)\b(?=\s+[a-z])/g,to:'well-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
- {re:/\bhigh (quality|risk|level|speed|density|frequency|resolution|performance|impact|status|profile|profile|profile)\b(?=\s+[a-z])/g,to:'high-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
- {re:/\blow (quality|risk|level|speed|density|frequency|resolution|performance|cost|profile)\b(?=\s+[a-z])/g,to:'low-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
+ {re:/\bwell (known|documented|established|founded|argued|defined|developed|researched|supported|informed|intentioned|reasoned|structured|organized|organised|written|read|balanced|designed|considered|thought|crafted|crafted|prepared|presented|informed)\b(?=\s+[a-z])/g,fx:function(r){return r.replace(/^(well) /i,'$1-');},to:'well-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
+ {re:/\bhigh (quality|risk|level|speed|density|frequency|resolution|performance|impact|status|profile|profile|profile)\b(?=\s+[a-z])/g,fx:function(r){return r.replace(/^(high) /i,'$1-');},to:'high-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
+ {re:/\blow (quality|risk|level|speed|density|frequency|resolution|performance|cost|profile)\b(?=\s+[a-z])/g,fx:function(r){return r.replace(/^(low) /i,'$1-');},to:'low-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
  {re:/\blong (term|standing|running|held|established)\b(?=\s+[a-z])/g,to:'long-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
  {re:/\bshort (term|lived|sighted)\b(?=\s+[a-z])/g,to:'short-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
  {re:/\bthird (party|person|party|party)\b(?=\s+[a-z])/g,to:'third-$1',cat:'g',label:'Hyphenate a compound modifier before a noun'},
@@ -16805,6 +16913,14 @@ const TRANSITIONS='However|Moreover|Furthermore|Nevertheless|Nonetheless|Consequ
    correction: it is a style note, never inside a quotation, and not in
    creative writing, where the words may be a character's. */
 const INCL_PL=(m,one,many)=>/(?:men|women|s)$/i.test(m)?many:one;
+/* 7.50: the Welcome page's own first sentence found the gap: outside the
+   scholarly register the opener drew no note at all, and "big data stuff"
+   drew the bank's "material". A named form of the knowing in any register
+   (the scholarly pack asks for the citation instead), and the noun's own
+   name for "stuff" (stuffCheck). */
+const GRAM50=[
+ {re:/\bit is (?:well|widely|commonly|generally) (?:known|accepted|recognised|recognized|understood|agreed) that\b/gi,to:null,cat:'s',nsch:true,label:'“Well known” to whom? Name who holds it, or cite the knowing',alts:['it is widely held that','many hold that','it is often claimed that']}
+];
 const INCL=[
  {re:/\bchair(?:wo)?m[ae]n\b/gi,to:m=>INCL_PL(m,'chair','chairs'),alts:['chair','chairperson'],cat:'s',ncre:true,label:'Inclusive language: "chair" names the role, not the sex'},
  {re:/\bmankind\b/gi,to:'humanity',alts:['humanity','humankind','people'],cat:'s',ncre:true,label:'Inclusive language: "humanity" or "humankind" includes everyone'},
@@ -17457,7 +17573,7 @@ function ruleEdits(t){
  var _pkey=S.reg+'|'+(S.docType||'')+'|'+(S.dialect||'')+'|'+((S.muteWords||[]).length)+'|'+(S.citeStyle||'');
  if(__packSig!==_pkey||!__packArr){
   __packSig=_pkey;
-  __packArr=GRAM47.concat(BASE).concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39).concat(INCL);
+  __packArr=GRAM47.concat(BASE).concat(MORE).concat(DPHIL).concat(REDUN).concat(CONFUSE).concat(SVAGREE).concat(GRAM2).concat(GRAM3).concat(GRAM4).concat(GRAM5).concat(GRAM6).concat(GRAM7).concat(GRAM8).concat(GRAM9).concat(GRAM10).concat(GRAM11).concat(GRAM12).concat(GRAM13).concat(GRAM14).concat(GRAM15).concat(GRAM16).concat(GRAM17).concat(GRAM18).concat(GRAM19).concat(GRAM20).concat(GRAM21).concat(GRAM22).concat(GRAM23).concat(GRAM24).concat(GRAM25).concat(GRAM26).concat(GRAM27).concat(GRAM28).concat(GRAM29).concat(GRAM30).concat(GRAM31).concat(GRAM32).concat(GRAM33).concat(GRAM34).concat(GRAM35).concat(GRAM36).concat(GRAM37).concat(GRAM38).concat(GRAM39).concat(GRAM50).concat(INCL);
   if(S.reg==='scholarly')__packArr=__packArr.concat(SCHOLAR).concat(SCHOLAR_XTRA).concat(SCHOLAR3).concat(SCHOLAR4).concat(SCHOLAR5).concat(SCHOLAR6).concat(SCHOLAR7).concat(SCHOLAR8).concat(SCHOLAR9).concat(SCHOLAR10).concat(SCHOLAR11).concat(SCHOLAR12).concat(SCHOLAR13).concat(SCHOLAR13B).concat(SCHOLAR14).concat(SCHOLAR15).concat(SCHOLAR16).concat(SCHOLAR17).concat(SCHOLAR18);
   if(S.reg==='creative')__packArr=__packArr.concat(CREATIVE);
   var _knob=(typeof docKnob==='function')?docKnob():null;
@@ -17509,6 +17625,7 @@ function ruleEdits(t){
  passiveCheck(t,ms,out);
  passiveDensity(t,out);
  capitalCheck(t,ms,out);
+ stuffCheck(t,ms,out);
  periodSpaceCheck(t,ms,out);
  repeatWordCheck(t,ms,out);
  svInterveningCheck(t,ms,out);
