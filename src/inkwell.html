@@ -9691,8 +9691,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
 function inkRuleToast(e){
  if(!inkWayOn('rule'))return toast('Accepted ✔');
  let r='';try{const L=lessonFor(e.why||'');r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
- const m=/^(.*?[.!?])(?:\s|$)/.exec(r);if(m)r=m[1];
- if(r.length>118)r=r.slice(0,116).replace(/\s+\S*$/,'')+'…';
+ r=inkRuleLine(r);
  if(!r)return toast('Accepted ✔');
  const chg=(typeof e.orig==='string'&&e.orig.trim()&&typeof e.fix==='string'&&e.fix.trim()&&e.orig.length<40&&e.fix.length<40)?'“'+e.orig.trim()+'” → “'+e.fix.trim()+'”  ·  ':'';
  toast('Accepted ✔  ·  '+chg+r,5200);}
@@ -9700,6 +9699,9 @@ function inkRuleToast(e){
    once a day, after the desk and any card of its own are up, one slip the
    writer mended before, as first written, to mend from memory. Not while
    the door is up, a card is showing or a modal is open: it waits. */
+/* the rule in a breath: the first sentence, and the second as well when the first is only a short question, within one line */
+function inkRuleLine(r){r=String(r||'').trim();const m=/^(.*?[.!?])(?:\s+(.*))?$/.exec(r);if(m){r=m[1];if(r.length<40&&m[2]){const m2=/^(.*?[.!?])(?:\s|$)/.exec(m[2]);if(m2&&(r.length+m2[1].length)<=118)r+=' '+m2[1];}}
+ if(r.length>118)r=r.slice(0,116).replace(/\s+\S*$/,'')+'…';return r;}
 function inkLastOffer(n){try{
  n=n||0;if(!inkWayOn('last')||typeof INKWAY==='undefined')return;
  const dr=document.getElementById('door'),busy=(dr&&dr.style.display==='flex')||document.getElementById('iwCard')||document.getElementById('iwAsk')||document.body.classList.contains('modalOn')||(document.getElementById('modal')||{}).style.display==='flex';
@@ -12982,7 +12984,19 @@ function useAlt(i){const a=ALTS[i];if(!a||!ALTSEL)return;
  const r=inkSafeReplace(ALTSEL.s,ALTSEL.e2,ALTSEL.t,text,ALTSEL.before);
  if(!r)return;
  ed.setSelectionRange(r.s,r.e);afterChange();
- closeAlts();try{showUndoChip();}catch(e){toast('Applied ✔');}}
+ closeAlts();inkRwToast(a);}
+/* 7.50: the rule after a rewrite, as after a fix (The rule after a fix, My
+   way of working): the first change kept that a rule explains, with its
+   reason, at the foot of the page for a breath. The undo chip stays as it
+   was; the plain receipt where the chip cannot show. */
+function inkRwToast(a){
+ let chip=true;try{showUndoChip();}catch(e){chip=false;}
+ let line='';
+ if(inkWayOn('rule')){try{const G=a&&a.G;if(G&&G.length){const k=G.findIndex((g,i)=>a.ch[i]!=='o'&&g.ruled&&g.reasons&&g.reasons.length);
+  if(k>=0){const g=G[k],c=a.ch[k],to=typeof c==='number'?g.alts[c]:g.to;const r=inkRuleLine(g.reasons[0].text);
+   const sh=x=>{x=String(x||'').trim();const w=x.split(/\s+/);return w.length>7?w.slice(0,4).join(' ')+' … '+w.slice(-2).join(' '):x;};
+   line=(g.from.trim()&&String(to||'').trim()?'“'+sh(g.from)+'” → “'+sh(to)+'”  ·  ':'')+r;}}}catch(e){line='';}}
+ if(line)toast('Applied ✔  ·  '+line,5200);else if(!chip)toast('Applied ✔');}
 /* ===== 7.30: Rewrite ▾ and ✨ Draft =====
    Both menus called rewrite() and compose(), which no longer existed, so every
    Rewrite item and the Draft button stopped with an error. Restored here on

@@ -381,7 +381,7 @@
     return noun ? w : m;
   }
   const RECAST = [
-    tag([new RegExp(S0 + 'it is (?:well|widely|commonly|generally) (?:known|accepted|recognised|recognized|understood|agreed|believed) that ([^.!?;:]+)', 'gi'), heldTo], 'opener'),
+    tag([new RegExp(S0 + 'it is (?:well|widely|commonly|generally) (?:known|accepted|recognised|recognized|understood|agreed|believed) that ([^.!?;:]+)', 'gi'), heldTo], 'held'),
     /* "big data stuff" is "big data": the noun says it */
     tag([/\b([A-Za-z][\w-]{2,}) stuff\b(?!\s*(?:like|such as))/g, nounStuff], 'wordy'),
     /* "It is very clear that this is ..." becomes "This is ..." */
@@ -771,6 +771,7 @@
     overclaim: 'A claim of certainty. A careful word matches what the evidence can show.',
     /* 7.43 */
     opener: '“It is clear that” only announces the point. State the point; if it is clear, the reader will see that it is.',
+    held: '“Well known” to whom? The claim is given its holders (“is widely held to”), so the reader knows it is a view, and whose; a citation can then name them.',
     expletive: '“There are … who” makes the reader wait for the subject. Starting with the subject saves words and puts the actors first.',
     something: '“It is something that” is a long way round. Say what it does.',
     closer: 'A noun (“examination”) carries what a long verb phrase did, in fewer words.',
