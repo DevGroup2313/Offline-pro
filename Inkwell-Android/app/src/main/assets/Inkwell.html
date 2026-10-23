@@ -11101,7 +11101,7 @@ const BUILD='7.50 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='0ff42834659d36e298a096c98c1edb6e23ad0ed0e31623ae861df15df54255c1';
+const PAGE_SHA='e40b912cca1d13227bf8466d2c08bdc949cd0409d480ad4e433af33768ab1cc5';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -18680,8 +18680,8 @@ function inkRuleToast(e){
    writer mended before, as first written, to mend from memory. Not while
    the door is up, a card is showing or a modal is open: it waits. */
 /* the rule in a breath: the first sentence, and the second as well when the first is only a short question, within one line */
-function inkRuleLine(r){r=String(r||'').trim();const m=/^(.*?[.!?])(?:\s+(.*))?$/.exec(r);if(m){r=m[1];if(r.length<40&&m[2]){const m2=/^(.*?[.!?])(?:\s|$)/.exec(m[2]);if(m2&&(r.length+m2[1].length)<=118)r+=' '+m2[1];}}
- if(r.length>118)r=r.slice(0,116).replace(/\s+\S*$/,'')+'…';return r;}
+function inkRuleLine(r){r=String(r||'').trim();const m=/^(.*?[.!?])(?:\s+(.*))?$/.exec(r);if(m){r=m[1];if(r.length<40&&m[2]){const m2=/^(.*?[.!?])(?:\s|$)/.exec(m[2]);if(m2&&(r.length+m2[1].length)<=150)r+=' '+m2[1];}}
+ if(r.length>150)r=r.slice(0,148).replace(/\s+\S*$/,'')+'…';return r;}
 function inkLastOffer(n){try{
  n=n||0;if(!inkWayOn('last')||typeof INKWAY==='undefined')return;
  const dr=document.getElementById('door'),busy=(dr&&dr.style.display==='flex')||document.getElementById('iwCard')||document.getElementById('iwAsk')||document.body.classList.contains('modalOn')||(document.getElementById('modal')||{}).style.display==='flex';
