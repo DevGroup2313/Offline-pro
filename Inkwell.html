@@ -499,7 +499,11 @@ body[data-motion=minimal] #tipCard.min{animation:none}
 #tipCard .lbl{margin:0 0 6px;color:var(--gold)}
 #tipTxt{font-size:13.5px;line-height:1.65;font-family:Georgia,serif}
 #tipCard .row{margin-top:10px}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;font-size:13px;max-width:min(620px,calc(100vw - 32px));box-sizing:border-box;text-align:center;line-height:1.45;display:none;z-index:80;box-shadow:var(--sh-lg);animation:rise .3s var(--pop)}
+/* 7.51: the message card in the desk's own face (the cream of the cards by day, the midnight of the night cards), never ink-black */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,#fffefb 0%,#fbf6ea 100%);color:#231d15;border:1px solid #dcc9a0;padding:11px 20px;border-radius:16px;font-size:13px;max-width:min(620px,calc(100vw - 32px));box-sizing:border-box;text-align:center;line-height:1.45;display:none;z-index:80;box-shadow:0 3px 6px rgba(20,16,10,.09),0 14px 28px rgba(20,16,10,.12),0 34px 66px rgba(20,16,10,.12),inset 0 1px 0 #fff;animation:rise .3s var(--pop)}
+#toast .tLead{color:#7a5f22;font-weight:700}
+[data-theme=dark] #toast .tLead{color:#e8c77a}
+[data-theme=dark] #toast{background:linear-gradient(180deg,#1e2834 0%,#17202a 100%);color:#f2f5f8;border-color:#3a4a5c;box-shadow:0 3px 6px #000b,0 14px 28px #000a,0 34px 66px #000b,inset 0 1px 0 rgba(255,255,255,.07)}
 #modal{position:fixed;inset:0;background:#0009;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:90}
 /* 7.47: the writing model's install, shown inside the Engine panel */
 .wmLive,.wmSteps,.wmFall{font-size:12.5px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin:8px 0;box-shadow:inset 0 1px 2px #00000012}
@@ -11101,7 +11105,7 @@ const BUILD='7.50 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='64d7306734ef6d1791491278901b1740fcce45b5936f76e8072b89dac269274d';
+const PAGE_SHA='0350cc05353e9b084910510b1866c93b6efa36500471e9a18b19eee231e78cdc';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -24197,7 +24201,11 @@ document.addEventListener('keydown',e=>{if(!tourOn||!document.getElementById('in
  if(e.key==='ArrowRight'){e.preventDefault();const b=document.querySelector('#inkTour .itNext');if(b)b.click();}
  else if(e.key==='ArrowLeft'){e.preventDefault();const b=[...document.querySelectorAll('#inkTour .itLink')].find(x=>x.textContent==='Back');if(b)b.click();}});
 window.addEventListener('resize',()=>{if(tourOn){TOURDRAG=null;tourPlace();}});
-function toast(msg,ms){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';
+function toast(msg,ms){const t=document.getElementById('toast');
+ /* 7.51: the receipt word ("Accepted ✔", "Applied ✔") in the cards' brass, the rest in ink */
+ const m=/^((?:Accepted|Applied|Undone|Saved)\s*✔)(\s+·\s+)([\s\S]+)$/.exec(String(msg));
+ if(m)t.innerHTML='<b class="tLead">'+esc(m[1])+'</b>'+esc(m[2])+esc(m[3]);else t.textContent=msg;
+ t.style.display='block';
  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms||2600);}
 
 /* ================= KEYS ================= */
