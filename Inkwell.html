@@ -931,9 +931,13 @@ body.sideFolded .foldBtn,body.panelFolded .foldBtn{align-self:center;margin:0}
 #altCard .acNote{font-size:10.5px;color:var(--mut);margin:6px 0 2px;line-height:1.55}
 #altCard .acBusy{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:acspin .8s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes acspin{to{transform:rotate(360deg)}}
-#undoChip{position:fixed;left:18px;bottom:64px;z-index:67;display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:11.5px;box-shadow:var(--sh-md);cursor:pointer;animation:rise .25s var(--pop)}
+#undoChip{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:67;display:none;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:11.5px;box-shadow:var(--sh-md);cursor:pointer;animation:rise .25s var(--pop)}
 #undoChip b{color:var(--acc)}
-#undoChip:hover{transform:translateY(-2px)}
+#undoChip:hover{transform:translateX(-50%) translateY(-2px)}
+#toast .tUndo{margin-left:12px;padding:2px 11px;border-radius:999px;border:1px solid #dcc9a0;background:#fff;color:#7a5f22;font:inherit;font-weight:700;cursor:pointer;vertical-align:baseline;box-shadow:0 1px 2px rgba(20,16,10,.08)}
+#toast .tUndo:hover{background:#fbf3df}
+[data-theme=dark] #toast .tUndo{border-color:#3a4a5c;background:#243040;color:#e8c77a;box-shadow:none}
+[data-theme=dark] #toast .tUndo:hover{background:#2c3a4c}
 /* alternatives live in the suggestions panel, beside the fixes; never over the page */
 .altHead{display:flex;align-items:center;gap:8px;padding:4px 2px 9px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700}
 .altHead .lkbtn{margin-left:auto}
@@ -1973,7 +1977,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
 </div>
 <div id="sticky-pins"></div>
 <div id="hovFix"></div>
-<div id="undoChip" onclick="undo();this.style.display='none'">✔ Applied; <b>Undo</b></div>
+<div id="undoChip" onclick="undo();this.style.display='none'">Applied ✔ · <b>Undo</b></div>
 <div id="tipCard"><div class="tipHead" id="tipGrab"><div class="lbl">💡 TIP</div><button class="tipMini" onclick="toggleTipMin(event)" title="Fold the tip away">▁</button></div>
  <div id="tipBody"><div id="tipTxt"></div>
  <div class="row"><button class="lkbtn" onclick="nextTip()">Next ▸</button><button class="lkbtn" onclick="hideTips()">Hide tips</button></div></div></div>
@@ -11105,7 +11109,7 @@ const BUILD='7.51 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='e1dc41627c14b112e7b353ca817d32bc7602e1b22c9ca215bd44c1f3bf1968f2';
+const PAGE_SHA='c7db5598108dcd91da74136a49f83d35e2449d2a2e96752d160414b05b2951e2';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -15138,7 +15142,7 @@ const MENUS={
   ['Aa Readable type',()=>toggleReadable(),()=>S.readable?'on':''],
   ['💭 Chain of thought',()=>toggleThink(),()=>S.showThink?'on':''],
   ['☀ Display & Sound',()=>openModal('display'),()=>''],
-  ['🧩 My way of working: comfort, where I was, three at a time',()=>openModal('myway'),()=>{try{const g=INKWAY.get();return (g.comfort.on||g.where.on||g.three.on)?'on':'';}catch(e){return '';}}],
+  ['🧩 My way of working: comfort, where I was, learning as you go',()=>openModal('myway'),()=>{try{const g=INKWAY.get();return (g.comfort.on||g.where.on||g.three.on)?'on':'';}catch(e){return '';}}],
   ['🔊 Soundscape',()=>toggleSound(),()=>S.sound?'on':''],
   ['🎯 Goals: who, what, why',()=>openModal('goals')],
   ['📊 Performance: counts, times, readability',()=>openPerformance()],
@@ -21368,7 +21372,11 @@ document.addEventListener('mousedown',e=>{if(!e.target.closest('#hovFix')&&!ed.c
 
 /* undo chip: the one-press way back, shown after any accepted fix */
 let undoChipT=null;
-function showUndoChip(){const c=document.getElementById('undoChip');c.style.display='inline-flex';
+/* 7.52: one receipt at the foot. The chip shows where the message shows,
+   never over the shelf's button; when a message follows at once, Undo
+   rides the message and the chip stands down (toast). */
+var UNDO_AT=0;
+function showUndoChip(){const c=document.getElementById('undoChip');UNDO_AT=Date.now();c.style.display='inline-flex';
  clearTimeout(undoChipT);undoChipT=setTimeout(()=>{c.style.display='none';},5200);}
 
 /* the Grammarly motion we were missing: tap a coloured line to open its suggestion */
@@ -23515,7 +23523,7 @@ function openModalDo(which){
  [['Write','Anything. The rules engine underlines as you type; nothing leaves this device.'],
   ['Choose a register','Casual relaxes style flags; Professional is the working default; Creative adds fiction craft (dialogue punctuation, filter words, borrowed images); Scholarly adds the doctoral pack and protects your citations.'],
   ['Correct deeply','✔ Correct runs the full offline rules engine: spelling, agreement, confusables, punctuation mechanics, redundancy, wordiness, nominalisations, and the doctoral pack. A local model, if you ever add one (Studio ▸ ⚙), layers on top. It is never required, and the desk is complete without it.'],
-  ['Learn as you go','Cards carry a Learn ▸ lesson. Patterns turns accepted fixes into your syllabus.'],
+  ['Learn as you go','Cards carry a Learn ▸ lesson, and after an accepted fix the line at the foot says the rule in a breath. Patterns turns accepted fixes into your syllabus, by family, with practice from your own sentences; once a day, one sentence from last time comes back to mend from memory (Studio ▸ 🧩 My way of working).'],
   ['Think with Socrat','🎓 Socrat questions you one step at a time; answers land in your Brainstorm doc.'],
   ['Read the structure','🔬 Deep read checks paragraphs, signposts and citation coverage, and can write margin notes onto the page.'],
   ['Check and keep the apparatus','📚 References checks citations both directions, flags duplicates and missing years, edits entries in place, and adds new ones by form.'],
@@ -23924,7 +23932,7 @@ function tourQ(sel){try{return document.querySelector(sel);}catch(e){return null
 function tourEditIndex(re){return EDITS.findIndex(e=>re.test((e.why||'')+' '+(e.orig||'')));}
 function tourMenu(name){hideMenu();const b=[...document.querySelectorAll('.menuBtn,button')].find(x=>new RegExp("showMenu\\(event,'"+name+"'\\)").test(x.getAttribute('onclick')||''));
  if(b)showMenu({stopPropagation(){},target:b},name);return '#menu';}
-function tourCloseLayers(){try{hideMenu();}catch(e){}try{if(document.getElementById('modal').style.display==='flex')closeModal();}catch(e){}
+function tourCloseLayers(){try{hideMenu();}catch(e){}try{tourToastDown();}catch(e){}try{if(document.getElementById('modal').style.display==='flex')closeModal();}catch(e){}
  try{if(ALTMODE)closeAlts();}catch(e){}try{document.querySelectorAll('.sticky-card-menu-back,.sticky-panel-back').forEach(x=>x.remove());}catch(e){}}
 function tourStage(want){try{if(want!=='tabula'&&document.getElementById('tabStageFrame'))closeTabulaStage();}catch(e){}
  try{if(want!=='scriba')closeAppStage('scriba');}catch(e){}try{if(want!=='fontes')closeAppStage('fontes');}catch(e){}}
@@ -23943,7 +23951,7 @@ const TOURCH={
  'The coach':{tease:'The tests a good supervisor would run on a page.',close:'The coach asks the questions an examiner will ask, while there is still time to answer them.'},
  'Sources':{tease:'Citations, footnotes, and your library of sources.',close:'Your sources live in one place, and every citation comes from there.'},
  'Your documents':{tease:'Opening, outlining, starting, and keeping your work safe.',close:'Your library is yours, and Inkwell keeps it safe by itself: File, Earlier copies brings back any earlier day.'},
- 'Focus':{tease:'The water clock, a quieter desk, and settings for your senses.',close:'The desk can be as quiet as you need it to be, and the clock keeps time for you.'},
+ 'Focus':{tease:'The water clock, a quieter desk, your senses, and learning as you go.',close:'The desk can be as quiet as you need it to be. The clock keeps time for you, and the rules arrive one breath at a time.'},
  'Notes':{tease:'Schedae, and notes you pin to the desk.',close:'A stray thought has a place to wait now, and the page keeps your place.'},
  'The rooms':{tease:'Tabula, Scriba and Fontes, the three rooms off the desk.',close:'Three rooms, one desk: the work moves freely among them.'},
  'Studio':{tease:'Your rules, your voice, the engines, and the look of the desk.',close:'Studio is where the desk becomes yours.'},
@@ -23972,8 +23980,11 @@ const TOUR=[
  {chap:'Correcting',sub:'Opening a suggestion',spot:'#cards',go:()=>{const i=tourEditIndex(/Agreement|results was/);if(i>=0){EXPID=i;CARDSIG='';renderCards();try{locate(i);}catch(e){}try{hideBubble();}catch(e){}}},
   t:'▾ Open a suggestion',b:'We have opened one. A card gives the fix, the reason, and a short lesson. Read the lesson once; it is the reason the slip will not come back.',
   tip:'A verb agrees with its subject, even when other words sit between them: “The list of results is long.”'},
- {chap:'Correcting',spot:'#paper',go:()=>{const i=tourEditIndex(/Agreement|results was/),e=EDITS[i];if(e&&ed.value.slice(e.start,e.end)===e.orig)acceptOne(i);},
+ {chap:'Correcting',spot:'#paper',go:()=>{const i=tourEditIndex(/Agreement|results was/),e=EDITS[i];if(e&&ed.value.slice(e.start,e.end)===e.orig){window.__tourAcc={why:e.why,orig:e.orig,fix:e.fix};acceptOne(i);}},
   t:'✓ Accept it',b:'We accepted it, and the page changed: “The results were clear.” The row has left the list. Undo puts it back: ↺ in the toolbar, or Ctrl+Z.'},
+ {chap:'Correcting',spot:'#toast',go:()=>tourRuleToast(),
+  t:'The rule in a breath',b:'The line at the foot took the fix and the rule behind it: what changed, and why, in one sentence. It stays five seconds and goes, so there is nothing to open and nothing to study. The same rule waits under Learn ▸ on every card for when you want it.',
+  tip:'This is The rule after a fix, under Learning as you go in My way of working. It is on from the start, and a switch turns it off.'},
  {chap:'Correcting',sub:'Spelling',spot:'#cards',go:()=>{const i=tourEditIndex(/^Spelling.*alot|alot/);if(i>=0){EXPID=i;CARDSIG='';renderCards();}},
   t:'🔤 Spelling',b:'Spelling is checked against a dictionary of British, American and Canadian words, on this device. A word it does not know can be added to your own dictionary from its card.',
   tip:'“A lot” is always two words; “alot” is one of the commonest slips in English.'},
@@ -24000,7 +24011,8 @@ const TOUR=[
   t:'🎛 Instruments',b:'The Instruments tab reads the page back to you: a writing mark on the UK or US scale, formality, tone, and the rhythm of your sentence lengths.',
   tip:'Good prose varies its sentence lengths. A row of long bars in Rhythm is a cue to break one up.'},
  {chap:'Clarity and style',spot:'#patList',go:()=>setRTab('instr'),
-  t:'Your patterns',b:'Every fix you accept is counted. Your commonest slips become your syllabus, each with a short lesson. Mastery is the count going down to zero.'},
+  t:'Your patterns',b:'Every fix you accept is counted by the rule behind it. Your commonest slips become your syllabus, each with its lesson and with practice from your own sentences, as you first wrote them. Mastery is the count going down to zero.',
+  tip:'Practise with your own sentences ▸ shows each slip as you wrote it and asks what should stand there. The lesson answers.'},
  {chap:'Rewriting and drafting',sub:'Rewrite',spot:'#menu',go:()=>{setRTab('sugg');tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');tourMenu('rewrite');},
   t:'↻ Rewrite',b:'Select a passage, then open Rewrite. We have selected a wordy sentence on the sample page. The first group rewrites the selection; the presets give paragraph styles; the last item rewrites it your way, from your own prompt.'},
  {chap:'Rewriting and drafting',sub:'An offline rewrite',spot:'#altCard',go:()=>{hideMenu();tourSelect('Due to the fact that the evidence is strong, the team made a decision to continue.');rewrite('concise');try{hideBubble();}catch(e){}},
@@ -24037,6 +24049,9 @@ const TOUR=[
   t:'« » Fold the shelves',b:'The « and » buttons fold the side shelves away, and the page widens. Press them again, or the labels at the edge, to bring them back.'},
  {chap:'Focus',sub:'Your senses',spot:'#menu',go:()=>tourMenu('studio'),
   t:'Readable type, motion and sound',b:'In Studio: Readable type sets larger, more open type; Motion calms or stops animation; Soundscape turns soft sounds on or off; 1× keeps suggestions to one at a time.'},
+ {chap:'Focus',sub:'Learning as you go',spot:'#modalBody .iw-sec[data-sec="rule"]',go:()=>{hideMenu();openModal('myway');},
+  t:'🧩 Learning as you go',b:'My way of working holds small supports for focus, for finding your place again, and for comfort, and two for learning without a lesson. The rule after a fix is the line you saw at the foot. One sentence from last time brings back, once a day, a slip you mended on an earlier day, as you first wrote it, to mend from memory in one go, or to leave for another day.',
+  tip:'Both are on from the start. Nothing is scored, and nothing leaves this device: the sentences are your own, kept here.'},
  {chap:'Notes',sub:'Schedae',spot:'#scheFab',go:()=>hideMenu(),
   t:'✎ Schedae',b:'The round pen button is Schedae, your notes. Press it to jot a thought without leaving the page. It can be dragged along the edge of the desk.'},
  {chap:'Notes',sub:'A pinned note',spot:'.sticky-note[data-sn-id^="sn-tour-"]',go:()=>tourNote(),
@@ -24077,6 +24092,12 @@ function tourSpot(sel){tourClearSpot();if(!sel)return null;let tries=0;const gen
   tourPlace();return true;};
  if(!ring())(function retry(){if(tries++>14||ring())return;setTimeout(retry,120);})();}
 function tourSampleReset(){const d=S.docs.find(x=>x.id===TOUR_SAMPLE_ID);if(!d||d.text===TOUR_SAMPLE)return;d.text=TOUR_SAMPLE;if(S.active===TOUR_SAMPLE_ID){ed.value=TOUR_SAMPLE;try{afterChange();}catch(e){scan();}}}
+/* 7.52: the rule in a breath, held while its card is up (the desk itself shows it for five seconds) */
+function tourRuleToast(){const e=window.__tourAcc||{why:'',orig:'results was',fix:'results were'};
+ let r='';try{const L=lessonFor(e.why||'');r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
+ r=inkRuleLine(r)||'A verb agrees with its subject, even when other words sit between them.';
+ toast('Accepted ✔  ·  “'+String(e.orig||'').trim()+'” → “'+String(e.fix||'').trim()+'”  ·  '+r,120000);const t=document.getElementById('toast');if(t)t._tour=true;}
+function tourToastDown(){const t=document.getElementById('toast');if(t&&t._tour){t._tour=false;clearTimeout(t._t);t.style.display='none';}}
 function tourSampleOpen(){
  if(!TOURSAVE)return;
  if(!S.docs.some(d=>d.id===TOUR_SAMPLE_ID))S.docs.unshift({id:TOUR_SAMPLE_ID,title:'Tour sample (removed after the tour)',text:TOUR_SAMPLE,ts:Date.now(),baseWords:0,tour:true});
@@ -24120,6 +24141,7 @@ function tourRender(){
  if(!tourOn)return;const s=TOUR[TOURI];SV('tourAt',TOURI);
  /* every card after the welcome works on the sample page, whatever was opened meanwhile */
  if(TOURI>=1)tourSampleOpen();
+ if(s.spot!=='#toast')tourToastDown();
  try{if(s.go)s.go();}catch(e){}
  const card=tourCard(),b=tourChapBounds(TOURI),sub=tourSubFor(TOURI);
  tourTop(card,s.chap+(sub&&sub!==s.chap?' · '+sub:'')+' · '+b.pos+' of '+b.n);
@@ -24205,6 +24227,8 @@ function toast(msg,ms){const t=document.getElementById('toast');
  /* 7.51: the receipt word ("Accepted ✔", "Applied ✔") in the cards' brass, the rest in ink */
  const m=/^((?:Accepted|Applied|Undone|Saved)\s*✔)(\s+·\s+)([\s\S]+)$/.exec(String(msg));
  if(m)t.innerHTML='<b class="tLead">'+esc(m[1])+'</b>'+esc(m[2])+esc(m[3]);else t.textContent=msg;
+ if(Date.now()-UNDO_AT<600){const c=document.getElementById('undoChip');if(c)c.style.display='none';
+  const u=document.createElement('button');u.type='button';u.className='tUndo';u.textContent='Undo';u.onclick=function(ev){ev.stopPropagation();t.style.display='none';undo();};t.appendChild(u);ms=Math.max(ms||0,5200);}
  t.style.display='block';
  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',ms||2600);}
 
