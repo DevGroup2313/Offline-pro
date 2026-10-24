@@ -1,0 +1,59 @@
+INKWELL v7.53: HANDOFF NOTES (in progress)
+==========================================
+Date: 24 October 2026. Read INKWELL_HANDOFF_v7p52.txt and the earlier notes
+for everything before. This file grows with the stages of 7.53 and is
+finished at the release.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data is never in the repository and never
+trained on. SECURITY.txt stays private. The private source lives on the
+"inkwell" branch of DevGroup2313/Offline-pro (private, at the writer's
+word); yabban-maker/inkwell-fire is disconnected and receives nothing.
+
+WHY 7.53
+--------
+The writer's standing request: the offline corrector and editor pushed
+further, at a doctoral standard, teaching while it helps, with no model
+needed. After 7.52 the audit by type still named missing commas and tense
+as the largest silences; this release takes what was deterministic in
+each.
+
+WHAT CHANGED
+------------
+1. Stage G8 (src/lib/learner_core.js; tools/grammar/README.md, "the
+   opening's comma before any subject"): the comma after a fronted time
+   phrase before a name or a noun subject ("One day Penny discovered",
+   "The next day the people of the town went"); the opening phrase or
+   clause of 7.50 with three bars lifted (a comma later in the sentence,
+   a time opener read as a preposition, a clause inside the main one) and
+   the guards those bars had hidden (a verb before the subject, a name and
+   its verb inside the phrase, a title's capital, a regnal numeral, the
+   clause after a later comma); the comma after "and" before an aside a
+   comma already closes ("and, according to them,"); the verb joined by
+   "and" keeping the past of the finite verb before it ("went with Ana and
+   give her" → gave; "were poor and don't have" → didn't), with the
+   participle, the infinitive, the present on the way and the verbs of
+   argument left alone. The page gives tense its own family in Your
+   patterns ("The tense, kept all the way through") with its lesson, and
+   folds the old counts into it once (inkFoldStats, key 753).
+
+   Whole page, ERRANT F0.5, from 7.52: W&I tuning half 0.311 to 0.318,
+   report half 0.274 to 0.280, CoNLL-2014 0.279 to 0.284; correct prose
+   changed 4.1% to 4.3% (tuning) and 4.4% to 4.5% (report). Published prose, read with
+   the same harness on both pages: 388 notes (269 with a fix) to 395 notes (276 with a fix);
+   the thesis sample carries none either way.
+
+TESTS
+-----
+learner_test.js 247, gaps_test.js 177, spell_test.js 190, refine_test.js
+108, mark_test.js 26, rewrite run.js 328, explain_test.js 45,
+coach_test.js 38, para_test.js 44, sentence_test.mjs 24.
+
+NOT DONE YET
+------------
+- The corrector's remaining silences are contextual: a narrative's tense
+  across sentences, a preposition both forms of which are acceptable,
+  articles by meaning, word choice. Rule stages yield half a point of
+  F0.5 or less.
+- The release itself (versions in the seven files, kits, APK, Mac apps,
+  the four DevGroup2313 repositories) has not been made for 7.53.

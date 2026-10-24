@@ -250,6 +250,40 @@ same('a list item takes no stop', '- an item in a list that runs on for more tha
 /* the whole check never overlaps and keeps order */
 const E = L.check('Yesterday he go to school and they was happy, so they plays.');
 ok('edits in order, none overlapping', E.every((e, i) => i === 0 || e.start >= E[i - 1].end), E);
+/* 7.53: the comma after a time opener before any subject; the comma after "and" before a closed aside */
+to('after some years the girl decided that she', 'After some years the girl decided that she had to move.', 'After some years, the girl decided that she had to move.', 'comma');
+to('one day + a name', 'One day Penny discovered it and went to tell the queen.', 'One day, Penny discovered it and went to tell the queen.', 'comma');
+to('the next day + the people of the town', 'The next day the people of the town went to church.', 'The next day, the people of the town went to church.', 'comma');
+same('the next day was: a subject', 'The next day was sunny and warm.', 'comma');
+to('in the past two years I', 'In the past two years I have worked in the Scout Organization, helping the manager.', 'In the past two years, I have worked in the Scout Organization, helping the manager.', 'comma');
+to('on the first day I, a comma later', 'On the first day I was very angry because my parents did not take Ilaria, my best friend.', 'On the first day, I was very angry because my parents did not take Ilaria, my best friend.', 'comma');
+to('ten years later she', 'Ten years later she returned to the village.', 'Ten years later, she returned to the village.', 'comma');
+to('and, according to them,', 'It was suggested by two friends of mine and according to them, the food was good.', 'It was suggested by two friends of mine and, according to them, the food was good.', 'comma');
+to('and, in her opinion,', 'I met her before and in her opinion, as a Mexican, that restaurant was terrible.', 'I met her before and, in her opinion, as a Mexican, that restaurant was terrible.', 'comma');
+same(', and in fact, stands', 'He came, and in fact, he stayed.', 'comma');
+same('and in the morning I: no closing comma', 'We went home and in the morning I read.', 'comma');
+same('last year the company: the choice stays', 'Last year the company reported a loss.', 'comma');
+same('every day I go', 'Every day I go to school.', 'comma');
+
+/* 7.53: the verb joined by "and" keeps the past of the finite verb before it */
+to('went ... and give → gave', 'The animals went with Ana and give her an incentive.', 'The animals went with Ana and gave her an incentive.', 'tense');
+to("were poor and don't → didn't", "The herders were poor and don't have enough food.", "The herders were poor and didn't have enough food.", 'tense');
+to('ate ... and play → played', 'We ate delicious food and play interesting games.', 'We ate delicious food and played interesting games.', 'tense');
+to('got up and look → looked', 'She got up and look around.', 'She got up and looked around.', 'tense');
+to('worked hard and then win → won', 'They worked hard and then win the prize.', 'They worked hard and then won the prize.', 'tense');
+to('published in 1990 and later move → moved', 'She published the book in 1990 and later move to Paris.', 'She published the book in 1990 and later moved to Paris.', 'tense');
+same('started to cry and get: the infinitive', 'Michael started to cry and get mad.', 'tense');
+same('were collected and show: the data', 'The data were collected in 2019 and show that the effect holds.', 'tense');
+same('argued ... and suggest: the present of argument', 'Smith argued that the model fails and suggest a new one.', 'tense');
+same('bread and milk', 'She bought bread and milk.', 'tense');
+same('bread and butter for', 'We bought bread and butter for breakfast.', 'tense');
+same('has eaten and play', 'He has eaten and play.', 'tense');
+same('used in this study and described', 'The methods used in this study and described above give a clear result.', 'tense');
+same('went home and read', 'I went home and read a book.', 'tense');
+same('will go and see', 'We will go to Rome and see the Forum.', 'tense');
+same('wanted to go and see', 'She wanted to go home and see her mother.', 'tense');
+same('were tired and want: no pronoun subject', 'The participants were tired and want to leave.', 'tense');
+
 ok('families listed', L.families.length === 9, L.families);
 
 console.log(pass + ' of ' + (pass + fails.length) + ' pass');

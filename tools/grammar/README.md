@@ -727,3 +727,96 @@ lacks, marked without a fix.
 | correct Wikipedia, report | 67 (4.5%) | 66 (4.4%) |
 
 gaps_test.js 177, learner_test.js 217, spell_test.js 188.
+
+## After 7.52: the opening's comma before any subject, the aside after "and", and the verb joined by "and" (stage G8)
+
+The 7.52 audit by type left missing commas (M:PUNCT, 327 of 422 on the
+tuning half) and tense (R:VERB:TENSE, 182 of 189) as the largest silences.
+Most of each is contextual; what was deterministic was read sentence by
+sentence against the libraries (scratchpad g8probe.js) and gathered into
+one stage (learner_core.js comma, tense):
+
+- the fronted time phrase before any subject, not only a pronoun: a name
+  with its verb ("One day Penny discovered", "The next day Huck went") or
+  a determiner, its noun and the verb ("The next day the people of the
+  town went"); "The next day was sunny" is a subject and takes none; the
+  list grew ("the next day", "next time", "that night", "ten years later",
+  "since then");
+- the opening phrase or clause of 7.50 with three bars lifted: a comma
+  later in the sentence no longer blocks it ("On the first day I was very
+  angry because my parents didn't take with us Ilaria, my best friend"); a
+  time opener read as a preposition leaves the later rules free ("In the
+  past two years I have worked"); a clause inside the main one is not a
+  second main clause ("After some years the girl decided that she had to
+  move"), unless the opening is short and its subject a pronoun ("In
+  another interview he remarked that" keeps the writer's choice);
+- the guards those bars had been hiding, each with a test: a verb before
+  the candidate subject makes it an object ("While youngsters use their
+  time", "did not know he was a spy"), unless the verb is intransitive
+  ("When I arrived my uncle was waiting") or the word is a noun after its
+  determiner ("In my dreams I had seen"); a name and its verb inside the
+  phrase ("In many scenes Slade leaves the audience"); a title's capital
+  is no noun ("In his earlier A Linguistic Guide"); a regnal numeral is no
+  pronoun ("Though King Charles I was"); more prepositions bind the subject
+  to the phrase ("If people around the world", "those who lives within the
+  community"); the clause after a later comma is the main one ("By the
+  time the brigade arrived, the Japanese had"); a "While" clause needs its
+  verb before any subject ("While Nicholas Carr's The Shallows argued");
+  after a clause's verb, a noun and then a pronoun open a relative clause
+  without "that" ("While these are the mechanisms I have focused on",
+  "the right person you want"), so no comma stands between them;
+- the comma after "and", "but", "or" or "yet" before an aside that a comma
+  already closes ("and according to them, the food" → "and, according to
+  them,"; "and in her opinion, as a Mexican,"): a multi-word aside only
+  (according to …, in her opinion, in other words, for example, as such,
+  in reality), never a lone adverb ("and consequently," is the writer's)
+  and never at the sentence's own start ("And of course, he");
+- the verb joined by "and" keeps the tense of the finite verb before it:
+  "went with Ana and give her" → gave, "ate delicious food and play" →
+  played, "got up and look around" → looked, "were poor and don't have" →
+  didn't, "worked hard and then win" → won. The finite verb is a past form
+  with its subject before it (a pronoun, a name, or a noun followed by the
+  verb's object or an intransitive verb); a participle after have, be or
+  get, before "by", or after its noun ("time spent online", "the methods
+  used in this study", "the observed associations") is not; "to" anywhere
+  before stops it ("started to cry and get mad", "used to train the system
+  and improve", "efforts to protect and reinforce"); a present verb on the
+  way stops it ("I never speak and learn", "the government seek … and
+  take"); verbs of thought and argument stay present ("argued … and
+  suggest"); a word as often a noun or an adjective is a verb only before
+  its object ("bread and butter for", "and play interesting games"); a
+  past form that is as often a noun needs a pronoun subject ("structure
+  thought and introduce"). The note names both verbs: The verb joined by
+  "and" keeps the past of "went": "gave".
+
+The page gives the tense notes their own family in Your patterns ("The
+tense, kept all the way through"), with a lesson (refine_core.js LESSON),
+and the counts kept under the old wordings fold into it once
+(inkFoldStats, key 753).
+
+Published prose was read with the same harness on the 7.52 page and on
+this one (scratchpad base752, prose_base752.txt against prose_phem7.txt),
+so that the lexicon's loading could not colour the comparison: the 40
+articles went from 388 correctness notes (269 with a fix) to 395 notes (276 with a fix); the
+additions are the commas an editor would place ("In this article, I
+argue", "In the first stanza, no punctuation marks are used", "Nine months
+later, he recovered", "and, according to mathematical proportions,"). The
+thesis sample carries no note either way. The four tense misfires of the
+first round ("used to train the system and improve", "the observed
+associations remain weak and do not", "efforts to protect and reinforce",
+"helped structure thought and introduce") and the comma inside "While
+Nicholas Carr's The Shallows argued" are the guards above.
+
+| set | 7.52 P / R / F0.5 | this stage |
+|---|---|---|
+| W&I tuning half | 66.5 / 9.9 / 0.311 | 66.7 / 10.3 / 0.318 |
+| W&I report half | 62.6 / 8.4 / 0.274 | 62.6 / 8.7 / 0.280 |
+| CoNLL-2014 | 75.0 / 8.0 / 0.279 | 75.1 / 8.1 / 0.284 |
+| correct Wikipedia, tuning | 62 (4.1%) | 64 (4.3%) |
+| correct Wikipedia, report | 66 (4.4%) | 67 (4.5%) |
+
+What the clean sets now change is the optional comma after a fronted time
+phrase ("Two years later the company introduced", "After the demise of
+the CSL he spent"), which an editor may place or not.
+
+learner_test.js 247, gaps_test.js 177, spell_test.js 190, refine_test.js 108.

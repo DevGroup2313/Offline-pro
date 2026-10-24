@@ -869,6 +869,9 @@
     [/^"Agree" is a verb/, ['"Agree" is a verb, so it needs no "am" or "is" before it: "I agree", "she agrees".', '"I am agree" → "I agree"']],
     [/needs "(?:am|is|are)" before it|^A sentence needs its verb/, ['Every sentence needs a verb. An -ing word or an adjective on its own is not one: add am, is or are.', '"I going home" → "I am going home" · "It very important" → "It is very important"']],
     [/set in the past/, ['A sentence set in the past (yesterday, last week, two years ago) takes past-tense verbs all the way through.', '"Yesterday I go" → "Yesterday I went"']],
+    [/keeps the past|the verb joined by [“"]and[”"]/, ['Verbs joined by "and" share a tense: when the first is in the past, the one after "and" stays in the past too.', '"went home and play" → "went home and played"']],
+    [/^The tense, kept all the way through/, ['A sentence set in the past keeps its verbs in the past, and verbs joined by "and" share the tense of the first.', '"Yesterday I go" → "Yesterday I went" · "got up and look" → "got up and looked"']],
+    [/^A comma after [“"](?:and|but|or|yet)[”"] opens the aside/, ['An aside such as "in my opinion" or "according to them" sits between two commas; after "and" or "but", the first comma comes straight after that word.', '"and according to them, the" → "and, according to them, the"']],
     [/^After "[^"]+", the plural noun|is singular; a plural noun takes/, ['After many, several, these, those and a number, the noun is plural; "this" and "that" go with a singular noun, "these" and "those" with a plural one.', '"many student" → "many students" · "this things" → "these things"']],
     [/^After "[^"]+", the singular noun/, ['After every, each, another, a and an, the noun is singular.', '"every students" → "every student" · "a cars" → "a car"']],
     [/^The phrase is|^The phrase takes|^"A lot of" takes|^"Such a"|^A singular countable noun takes|^"A" before a consonant/, ['Some phrases always carry "the" or "a": in the future, on the other hand, at the end, for the first time. A singular countable noun needs "a" or "an" before it.', '"in future" → "in the future" · "is good idea" → "is a good idea"']],
@@ -970,7 +973,7 @@
       return [QQ(capW(subj)) + ' means more than one, so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
     }
     /* number after a quantity */
-    if (pat === 'Singular or plural after a quantity' || /^Singular or plural after a quantity|^After \u201c|^After "/.test(why)) {
+    if (pat === 'Singular or plural after a quantity' || (/^Singular or plural after a quantity|^After \u201c|^After "/.test(why) && !/keeps the past/.test(why))) {
       if (ow.length !== 1 || fw.length !== 1) return null;
       const noun = fw[0], before = prevWords(t, e.start, 3);
       const m = /\b(one of the|each|every|another|many|several|few|a few|various|numerous|both|two|three|four|five|six|seven|eight|nine|ten|hundreds of|thousands of|a lot of|lots of|a number of|most|some|all|these|those|much|this|that)$/i.exec(before);

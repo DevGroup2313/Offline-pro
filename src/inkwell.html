@@ -9687,14 +9687,15 @@ const PAT_FAMILIES=[
  ['Capitals',/^Capital|^Capitalise|^A sentence begins with a capital|^Sentence begins lowercase/],
  ['A word and its preposition',/^[“"][A-Za-z’' ]+ (?:in|on|at|of|for|to|with|from|by|about|into|against|upon)[”"]|^It is "(?:at|in|on) |takes “(?:to|of|on|for|in|at|with|from|by|about)”|^A word and its preposition|^“Into” is one word|^“On the internet”|^“At night”|^“In my opinion”|takes no “about”|takes no preposition/],
  ['The verb’s form after a modal, “do”, “have” or “to”',/^After “[^”]+” the verb|^Two verbs after|^“Interested in” doing|^“Capable of” doing|^The verb’s form after/],
- ['One word or two, and the spaces',/^A space follows|is one word$|is written as two words|^"cannot" is one word|^Space after|^Space before|^Missing space|^Two words, not one/]];
+ ['One word or two, and the spaces',/^A space follows|is one word$|is written as two words|^"cannot" is one word|^Space after|^Space before|^Missing space|^Two words, not one/],
+ ['The tense, kept all the way through',/set in the past|keeps the past|^The sentence is set in|takes its past form|^After [“"][^”"]+[”"], the verb joined by/]];
 function patFamily(e){if(!e)return '';if(e.pat)return e.pat;const why=String(e.why||'');for(const f of PAT_FAMILIES)if(f[1].test(why))return f[0];return why;}
 /* once: the counts kept under each wording of a rule fold into their families */
 let _statsFolded=false;
-function inkFoldStats(){if(_statsFolded)return;_statsFolded=true;try{if(localStorage.getItem('ink_statsFold')==='752')return;const st=S.stats||{},ex=S.statEx||{},ns={},nx={};
+function inkFoldStats(){if(_statsFolded)return;_statsFolded=true;try{if(localStorage.getItem('ink_statsFold')==='753')return;const st=S.stats||{},ex=S.statEx||{},ns={},nx={};
  for(const k of Object.keys(st)){const f=statKey(patFamily({why:k}));ns[f]=(ns[f]||0)+(st[k]||0);}
  for(const k of Object.keys(ex)){const f=statKey(patFamily({why:k}));nx[f]=(nx[f]||[]).concat(ex[k]||[]).slice(0,6);}
- S.stats=ns;S.statEx=nx;SV('stats',ns);SV('statEx',nx);localStorage.setItem('ink_statsFold','752');}catch(e){}}
+ S.stats=ns;S.statEx=nx;SV('stats',ns);SV('statEx',nx);localStorage.setItem('ink_statsFold','753');}catch(e){}}
 function statKey(why){why=String(why||'');return why.length>56?why.split(/[:.]/)[0].trim():why;}
 function bumpStat(why,ex){why=statKey(why);S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);
  /* 7.49: the writer's own slip is kept (six to a pattern) for practice */

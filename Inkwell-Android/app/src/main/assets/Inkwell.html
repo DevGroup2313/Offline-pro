@@ -7398,6 +7398,9 @@ such as = x: like, including`
     [/^"Agree" is a verb/, ['"Agree" is a verb, so it needs no "am" or "is" before it: "I agree", "she agrees".', '"I am agree" → "I agree"']],
     [/needs "(?:am|is|are)" before it|^A sentence needs its verb/, ['Every sentence needs a verb. An -ing word or an adjective on its own is not one: add am, is or are.', '"I going home" → "I am going home" · "It very important" → "It is very important"']],
     [/set in the past/, ['A sentence set in the past (yesterday, last week, two years ago) takes past-tense verbs all the way through.', '"Yesterday I go" → "Yesterday I went"']],
+    [/keeps the past|the verb joined by [“"]and[”"]/, ['Verbs joined by "and" share a tense: when the first is in the past, the one after "and" stays in the past too.', '"went home and play" → "went home and played"']],
+    [/^The tense, kept all the way through/, ['A sentence set in the past keeps its verbs in the past, and verbs joined by "and" share the tense of the first.', '"Yesterday I go" → "Yesterday I went" · "got up and look" → "got up and looked"']],
+    [/^A comma after [“"](?:and|but|or|yet)[”"] opens the aside/, ['An aside such as "in my opinion" or "according to them" sits between two commas; after "and" or "but", the first comma comes straight after that word.', '"and according to them, the" → "and, according to them, the"']],
     [/^After "[^"]+", the plural noun|is singular; a plural noun takes/, ['After many, several, these, those and a number, the noun is plural; "this" and "that" go with a singular noun, "these" and "those" with a plural one.', '"many student" → "many students" · "this things" → "these things"']],
     [/^After "[^"]+", the singular noun/, ['After every, each, another, a and an, the noun is singular.', '"every students" → "every student" · "a cars" → "a car"']],
     [/^The phrase is|^The phrase takes|^"A lot of" takes|^"Such a"|^A singular countable noun takes|^"A" before a consonant/, ['Some phrases always carry "the" or "a": in the future, on the other hand, at the end, for the first time. A singular countable noun needs "a" or "an" before it.', '"in future" → "in the future" · "is good idea" → "is a good idea"']],
@@ -7499,7 +7502,7 @@ such as = x: like, including`
       return [QQ(capW(subj)) + ' means more than one, so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
     }
     /* number after a quantity */
-    if (pat === 'Singular or plural after a quantity' || /^Singular or plural after a quantity|^After \u201c|^After "/.test(why)) {
+    if (pat === 'Singular or plural after a quantity' || (/^Singular or plural after a quantity|^After \u201c|^After "/.test(why) && !/keeps the past/.test(why))) {
       if (ow.length !== 1 || fw.length !== 1) return null;
       const noun = fw[0], before = prevWords(t, e.start, 3);
       const m = /\b(one of the|each|every|another|many|several|few|a few|various|numerous|both|two|three|four|five|six|seven|eight|nine|ten|hundreds of|thousands of|a lot of|lots of|a number of|most|some|all|these|those|much|this|that)$/i.exec(before);
@@ -7872,6 +7875,74 @@ such as = x: like, including`
   /* a past marker with a present verb */
   const PAST_MARK = /\b(yesterday|last (?:night|week|month|year|summer|winter|spring|autumn|time|monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend)|(?:\d+|two|three|four|five|six|seven|eight|nine|ten|twenty|thirty|many|several|a few|few|some|a couple of) (?:minutes|hours|days|weeks|months|years|decades|centuries) ago|in (?:19\d\d|20[01]\d)|when i was (?:a child|a kid|young|little|small|a boy|a girl|a student|at school|in school|in high school|\d+)|ago)\b/i;
   function tense(t, ws, out) {
+    /* 7.53: "went with Ana and give her", "were poor and don't have": the verb
+       joined by "and" keeps the tense of the finite verb before it */
+    const PASTF = /^(went|came|took|gave|made|saw|knew|thought|said|told|found|left|felt|brought|bought|taught|kept|met|lost|paid|sold|sent|spent|built|heard|held|led|meant|learnt|understood|stood|won|sat|ran|ate|wrote|drove|spoke|broke|chose|forgot|grew|threw|drew|fell|began|drank|sang|swam|wore|became|got|had|did|woke|hid|rode|rose|flew|blew|slept|fought|caught|shook|stole|froze|tore|swore|bore|bit|lay|laid|lit|fed|bled|dealt|dreamt|struck|stuck|dug|hung|spun|swung|shot|fled|arose|overcame|undertook|withdrew|mistook|forgave|hit|hurt|shut|cost|quit|cut|put|let|set)$/;
+    const STAY = /^(think|know|believe|mean|hope|guess|suppose|remember|wish|want|need|like|love|hate|agree|understand|feel|seem|say|see|argue|suggest|propose|offer|contend|claim|show|demonstrate|examine|explore|discuss|consider|focus|conclude|find|note|observe|maintain|hold|differ|overlook|attain|survive|expect|culminate|recall|refer|use|follow|define|treat|analyse|analyze|identify|describe|outline|distinguish|emphasise|emphasize|indicate|reveal|highlight|provide|include|represent|reflect|remain|continue|tend|appear|exist|require|involve|depend|rely|point|serve|mark|form|constitute|comprise|lead|result|contribute|allow|enable|help|make|do|go|come|get|keep|let|stay|try|put|set|run|call|ask)$/;
+    /* an -ed word at ws[k] is a finite past when a subject stands before it: a
+       pronoun, a name, or a noun followed by the verb's object or an intransitive
+       verb; after have, be or get, or before "by", or as "time spent online",
+       it is a participle (null) */
+    function pastBefore(k, base) {
+      const w = ws[k], l = lc(w.w), pb = ws[k - 1], pl = pb ? lc(pb.w) : '', nx = ws[k + 1] ? lc(ws[k + 1].w) : '';
+      if (!pb || gap(t, pb, w) || /^(have|has|had|be|been|being|am|is|are|was|were|get|got|gets|getting)$/.test(pl) || nx === 'by') return null;
+      const pron = SUBJ_PRON.test(pb.w) || /^(not|never|also|then|just|only|already|always|usually|often|finally|suddenly|quickly|slowly|immediately|soon|all|both)$/.test(pl);
+      const name = /^[A-Z][a-z]+$/.test(pb.w) && !/^(the|a|an|this|that|these|those|my|our|his|her|their|its|your|some|many|most|all|no|each|every|both|such|one)$/i.test(pb.w);
+      const nounSubj = NOUN.has(pl) || PLURAL.has(pl);
+      const finite = /^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|some|all|every|each|me|him|them|us|it|you|himself|herself|themselves|ourselves|myself|home|back|away|up|down|out|off|there|here)$/.test(nx) || INTRANS.has(base);
+      return (pron || name || (nounSubj && finite)) ? w : null;
+    }
+    for (let i = 1; i < ws.length - 1; i++) {
+      if (lc(ws[i].w) !== 'and') continue;
+      let qi = i + 1, q = next(ws, t, i); if (!q) continue;
+      let fixq = null, nounCheck = true;
+      if (/^(then|later|also|soon|finally|quickly|immediately|eventually|suddenly|slowly|afterwards|again|even)$/.test(lc(q.w))) { qi = i + 2; q = next(ws, t, i + 1); if (!q) continue; nounCheck = false; }   /* "and then", "and later": a verb follows */
+      const qw = lc(q.w); if (q.w !== qw) continue;
+      if (qw === "don't" || qw === "doesn't") fixq = "didn't";
+      else if (/^(do|does)$/.test(qw)) { const n1 = next(ws, t, qi); if (!n1 || lc(n1.w) !== 'not') continue; fixq = 'did'; nounCheck = false; }
+      else {
+        const f = formOf(qw); if (!f || f[1] !== 'base' || AMBIG.has(qw) || PLURAL.has(qw) || /^(be|have)$/.test(f[0]) || STAY.test(f[0])) continue;
+        fixq = verbForm(f[0], 'ed'); if (!fixq) continue;
+      }
+      if (nounCheck && fixq !== "didn't") {
+        const n1 = next(ws, t, qi); if (!n1) continue; const nl = lc(n1.w);
+        if (/^(and|or|nor|but|of|than|as|is|are|was|were|has|have|had|will|would|can|could|should|may|might|must|that|which|who)$/i.test(n1.w)) continue;
+        if (FORM.has(nl) && /^(ed|s|ing)$/.test(FORM.get(nl)[1]) && !NOUN.has(nl) && !PLURAL.has(nl) && !isAdj(nl)) continue;   /* "and play became": not a verb */
+        /* "bread and butter for", "clean air": a word as often a noun or an adjective is a verb here only before its object */
+        const object = /^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|some|all|every|each|me|him|them|us|it|you|himself|herself|themselves|ourselves|myself|yourself)$/.test(nl) || (isAdj(nl) && !NOUN.has(nl)) || (NOUN.has(nl) && !/^(and|or)$/.test(lc((next(ws, t, qi + 1) || { w: '' }).w)) && !PREPS.test(nl));
+        if ((NOUN.has(qw) || NOUNISH.has(qw) || isAdj(qw)) && !object) continue;
+      }
+      /* the finite verb before "and", within the clause */
+      let past = null, bad = false;
+      for (let k = i - 1, steps = 0; k >= 0 && steps < 12; k--, steps++) {
+        const w = ws[k], l = lc(w.w);
+        const g = k + 1 <= i ? gap(t, w, ws[k + 1]) : '';
+        if (/[.!?;:"“”\n]/.test(g) || /[.!?;:]/.test(t.slice(w.e, ws[k + 1].s))) break;
+        if (l === 'to') { bad = true; break; }   /* "used to train the system and improve", "efforts to protect and reinforce": the infinitive goes on */
+        if (MODAL.test(l) || /^(am|is|are|be|being|been|has|have|'s|'re|'m|'ve|'ll|'d)$/.test(l) || l === 'will' || l === 'if' || l === 'whether') { bad = true; break; }
+        if (/^(was|were)$/.test(l)) { const sb = ws[k - 1]; const pron = !!sb && SUBJ_PRON.test(sb.w) && !gap(t, sb, w); if (fixq === "didn't" || fixq === 'did' || pron) past = w; else bad = true; break; }
+        if (PASTF.test(l) && !AMBIG.has(l)) { const pb = ws[k - 1]; const pl = pb ? lc(pb.w) : '', nx = ws[k + 1] ? lc(ws[k + 1].w) : '';
+          if (!pb || gap(t, pb, w) || /^(have|has|had|be|been|being|am|is|are|was|were|get|got|gets|getting)$/.test(pl)) { bad = true; break; }
+          const pron = SUBJ_PRON.test(pb.w) || /^(not|never|also|then|just|only|already|always|usually|often|finally|suddenly|quickly|slowly|immediately|soon|all|both)$/.test(pl);
+          if (!pron && /^(thought|left|found|felt|saw|ground|wound|bit|shot|rose|lit|hung|bore|spun|swung|lay|fed|bound|wore|won|meant|read|met|sat|built|cut|put|set|hit|let)$/.test(l)) { bad = true; break; }   /* "structure thought and": a noun */
+          const name = /^[A-Z][a-z]+$/.test(pb.w) && !/^(the|a|an|this|that|these|those|my|our|his|her|their|its|your|some|many|most|all|no|each|every|both|such|one)$/i.test(pb.w);
+          const nounSubj = NOUN.has(pl) || PLURAL.has(pl);
+          const finite = /^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|some|all|every|each|me|him|them|us|it|you|himself|herself|themselves|ourselves|myself|home|back|away|up|down|out|off|there|here)$/.test(nx) || INTRANS.has(FORM.has(l) ? FORM.get(l)[0] : '');
+          if (!(pron || name || (nounSubj && finite))) { bad = true; break; }   /* "time spent online": a participle after its noun */
+          past = w; break; }
+        if (FORM.has(l)) { const f = FORM.get(l);
+          if (f[1] === 'ed' && !AMBIG.has(l) && !NOUN.has(l)) {   /* "She published": the subject before it makes the past ("The excited children" has none) */
+            const r = pastBefore(k, f[0]); if (r === null) { bad = true; break; } past = w; break; }
+          if (f[1] === 's' && !NOUN.has(l) && !PLURAL.has(l)) { bad = true; break; }
+          if (f[1] === 'base' && !NOUNISH.has(f[0]) && !NOUN.has(l) && k > 0 && (SUBJ_PRON.test(ws[k - 1].w) || NOUN.has(lc(ws[k - 1].w)) || PLURAL.has(lc(ws[k - 1].w)) || (k > 1 && /^(not|never|also|always|usually|often|still|just|only)$/.test(lc(ws[k - 1].w)) && SUBJ_PRON.test(ws[k - 2].w)))) { bad = true; break; }   /* "I never speak and", "the government seek": the present */
+        } else if (/^[a-z]{3,}ed$/.test(l) && !NOUN.has(l)) {   /* a regular past the table does not hold ("worked") */
+          const r = pastBefore(k, l.replace(/ed$/, '')); if (r === null) { bad = true; break; } past = w; break;
+        }
+      }
+      if (bad || !past) continue;
+      if ((t.slice(Math.max(0, past.s - 200), q.s).match(/["“]/g) || []).length % 2 === 1) continue;
+      out.push({ start: q.s, end: q.e, fix: fixq, why: 'The verb joined by "and" keeps the past of "' + past.w + '": "' + fixq + '"', cat: 'g', fam: 'tense' });
+    }
     /* "He had no money and they go home": the sentence is in the past before the verb */
     for (let i = 1; i < ws.length - 1; i++) {
       const p = ws[i], q = next(ws, t, i); if (!q) continue;
@@ -8189,6 +8260,8 @@ such as = x: like, including`
   const OPENERS = ['to sum it up', 'once upon a time', 'in addition to this', 'in addition to that', 'in recent years', 'in the last few years', 'in recent times', 'as i said', 'as i mentioned', 'as mentioned above', 'for the most part', 'more importantly', 'most importantly', 'in some cases', 'in many cases', 'in most cases', 'in some ways', 'in many ways', 'in a way', 'in a sense', 'in any case', 'at any rate', 'at present', 'in the beginning', 'at the beginning', 'as usual', 'as always', 'as expected', 'in turn', 'for now', 'until now', 'up to now', 'so far', 'to date', 'to this day', 'in retrospect', 'on reflection', 'that said', 'having said that', 'in that sense', 'to this end', 'with this in mind', 'put simply', 'simply put', 'in essence', 'in sum', 'interestingly', 'admittedly', 'before that', 'this way', 'in this way', 'in the same way', 'at the same time', 'in this case', 'in that case', 'in the meantime', 'in the long run', 'in the future', 'in the past', 'at the moment', 'at that time', 'at the time', 'on the contrary', 'in general', 'in brief', 'in summary', 'to be honest', 'needless to say', 'as far as i am concerned', 'as far as i know', 'from my point of view', 'in my view', 'to my mind', 'for one thing', 'in theory', 'in practice', 'in reality', 'in effect', 'on balance', 'all things considered', 'on the whole', 'by the way', 'by contrast', 'by comparison', 'in comparison', 'in contrast', 'likewise', 'similarly', 'ultimately', 'eventually', 'finally', 'meanwhile', 'suddenly', 'even so', 'also', 'first', 'second', 'third', 'in my opinion', 'first of all', 'on the one hand', 'on the other hand', 'in addition', 'at first', 'after that', 'after all', 'in the end', 'to sum up', 'all in all', 'of course', 'in fact', 'as a result', 'nowadays', 'unfortunately', 'fortunately', 'luckily', 'personally', 'besides', 'furthermore', 'moreover', 'secondly', 'thirdly', 'lastly', 'firstly', 'afterwards', 'actually', 'honestly', 'frankly', 'obviously', 'clearly', 'surprisingly', 'hopefully', 'sadly', 'anyway', 'otherwise', 'however', 'therefore', 'thus', 'hence', 'nevertheless', 'nonetheless', 'consequently', 'for example', 'for instance', 'in conclusion', 'to conclude', 'last but not least', 'in other words', 'for this reason', 'because of this', 'because of that', 'despite this', 'as a consequence', 'in short', 'in particular', 'above all', 'what is more', 'apart from that', 'besides that', 'on top of that', 'by the way', 'as for me', 'in my view', 'in this case', 'in that case', 'in general', 'generally speaking', 'to be honest', 'in contrast', 'by contrast', 'on the contrary', 'at the same time', 'at the end of the day', 'as a matter of fact', 'as far as i am concerned', 'as far as i know', 'to begin with', 'to start with', 'in the first place', 'in the second place', 'at last', 'finally', 'meanwhile', 'eventually', 'indeed', 'similarly', 'likewise', 'instead', 'in the meantime', 'in a word', 'in brief', 'to summarise', 'to summarize', 'in summary'];
   const OPENER_RE = new RegExp('^(' + OPENERS.slice().sort((a, b) => b.length - a.length).map(o => o.replace(/ /g, '\\s+')).join('|') + ')(\\s+)(?=[A-Za-z])', 'i');
   /* 7.52: connectives that take their comma whatever follows ("In my opinion big stars should", "On the one hand travel by car") */
+  /* 7.53: the asides that may follow "and" or "but" and close with a comma */
+  const ASIDE = new Set(['in my opinion', 'in my view', 'to my mind', 'in other words', 'for example', 'for instance', 'in fact', 'in particular', 'as such', 'on the other hand', 'on the one hand', 'what is more', 'above all', 'more importantly', 'most importantly', 'to be honest', 'needless to say', 'from my point of view', 'as far as i am concerned', 'as far as i know', 'in reality', 'in my experience', 'as a matter of fact', 'unfortunately', 'fortunately', 'luckily', 'sadly', 'interestingly', 'surprisingly', 'admittedly', 'ironically', 'what is worse', 'worse still', 'better still', 'last but not least']);
   const CONNECT = new Set(['in my opinion', 'on the one hand', 'on the other hand', 'to sum up', 'to sum it up', 'in conclusion', 'to conclude', 'first of all', 'in other words', 'for example', 'for instance', 'in fact', 'of course', 'as a result', 'in short', 'in summary', 'in brief', 'last but not least', 'all in all', 'as a matter of fact', 'in general', 'generally speaking', 'to be honest', 'needless to say', 'from my point of view', 'in my view', 'to my mind', 'as far as i am concerned', 'as far as i know', 'once upon a time', 'above all', 'for this reason', 'because of this', 'because of that', 'in the end', 'at the end of the day', 'on the contrary', 'what is more', 'on top of that', 'apart from that', 'besides that', 'in the first place', 'in the second place', 'to begin with', 'to start with', 'in a word', 'in essence', 'in sum', 'that said', 'having said that', 'to summarise', 'to summarize', 'however', 'moreover', 'furthermore', 'nevertheless', 'nonetheless', 'consequently', 'firstly', 'secondly', 'thirdly', 'lastly', 'unfortunately', 'fortunately', 'luckily', 'personally', 'honestly', 'frankly', 'interestingly', 'surprisingly', 'sadly', 'hopefully', 'admittedly', 'similarly', 'likewise', 'more importantly', 'most importantly', 'for the most part', 'as i said', 'as i mentioned', 'as mentioned above', 'put simply', 'simply put', 'in retrospect', 'on reflection']);
   /* 7.52: the main clause as an instruction after an opening clause ("If you have the chance of learning a new language do it") */
   const IMPER = new Set('do try remember forget make take go be keep use choose start stop avoid visit read write ask call let look listen check bring buy get put give learn practise practice enjoy wait join follow pick find imagine note see watch turn leave stay move think consider feel add pour mix cook press click select open close save print send tell show pay book order prepare plan contact apply relax breathe focus'.split(' '));
@@ -8207,6 +8280,7 @@ such as = x: like, including`
       const prepOpener = om && /^(in addition|as a result|in contrast|by contrast|by comparison|in comparison|in the same way|in this way|this way|before that|at the moment|at that time|at the time|in the future|in the past|in theory|in practice|in reality|in effect|on balance|on the whole|on the contrary|in the long run|likewise|similarly|eventually|finally|meanwhile|suddenly|ultimately|even so|besides|instead|apart from that|on top of that|because of this|because of that|despite this|as a consequence|in the end|at first|after all|at last|at the same time|in general|in particular|in short|in brief|in summary|in fact|of course|above all|first of all|to begin with|to start with|on the one hand|on the other hand|in the first place|in the second place|in my opinion|in my view|in this case|in that case|for this reason|in other words|in the meantime|last but not least|all in all|what is more|as for me|by the way|in a word)$/i.test(om[1]);
       /* "In addition to the benefits", "Besides these items": the opener is a preposition here, not an opener */
       const openerIsPrep = prepOpener && /^(to|of|for|from|with|in|on|at|by|about|that|when|which|where|as|than|while|if)\b/i.test(restO) || prepOpener && (/^(these|those|this|his|her|their|its|my|our|your|the|a|an|such|all|some|most|many|several|other|one|two|three)\b/.test(restO) || /^(?:[A-Z][a-z]|\d)/.test(restO)) && !/^(the|a|an|this|these|those|my|our|their|his|her|its|your|one|some|most|many|all|several|two|three) [a-z]+ (is|are|was|were|has|have|had|will|would|can|could|should|must|may|might|do|does|did|[a-z]+ed|[a-z]+s)\b/i.test(restO);   /* 7.50: "I" is a subject, not a name */
+      const omOpen = om && !(openerIsPrep && /^(in the past|in the future|at the moment|at that time|at the time|in the beginning|at the beginning|in the end|at first|after that|before that|until now|so far)$/i.test(om[1]));   /* 7.53: a time opener read as a preposition ("In the past two years I") leaves the later rules free */
       if (om && !/^[,;:]/.test(body.slice(om[1].length)) && !openerIsPrep) {
         const at = a + lead + om[1].length;
         const rest = body.slice(om[1].length + om[2].length);
@@ -8214,15 +8288,29 @@ such as = x: like, including`
         const subjStart = /^(the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one)\b/i.test(rest);
         const oKey = om[1].toLowerCase().replace(/\s+/g, ' ');
         const goesOn = /^as i (?:said|mentioned)$/.test(oKey) && /^(?:in|at|on|before|earlier|above|previously|to|already|last|many|several)\b/i.test(rest);   /* "As I mentioned in the beginning": the opener goes on */
+        /* 7.53: a phrase of two words or more before a bare subject and its verb ("In the last few years forensic biology has developed") */
+        const nounVerb = false;   /* a bare noun subject after an opener ("In recent years human ecology has been") keeps the writer's choice */
         const strong = !goesOn && CONNECT.has(oKey) && /^[A-Za-z]/.test(rest) && !/^speaking\b/i.test(rest) && !(oKey === 'of course' && /^not\b/i.test(rest)) && !(oKey === 'in general' && /^(terms|elections?)\b/i.test(rest)) && !(oKey === 'in short' && /^supply\b/i.test(rest)) && !(oKey === 'above all' && /^else\b/i.test(rest));
-        if (!goesOn && (strong || /^(of|the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one|in|on|at|for|with|by|from|to|if|when|because|although|as|since|while|after|before|not|only|even|also|still|just|now|today|nowadays|during|despite|without|what|how|why|where|who|which|whether|being|having|doing|going|getting|making|taking|using|learning|working|studying|living)\b/i.test(rest) && (subjStart || !/^(also|first|second|third)$/i.test(om[1])) || /^[A-Z][a-z]/.test(rest))) {
+        if (!goesOn && (strong || nounVerb || /^(of|the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one|in|on|at|for|with|by|from|to|if|when|because|although|as|since|while|after|before|not|only|even|also|still|just|now|today|nowadays|during|despite|without|what|how|why|where|who|which|whether|being|having|doing|going|getting|making|taking|using|learning|working|studying|living)\b/i.test(rest) && (subjStart || !/^(also|first|second|third)$/i.test(om[1])) || /^[A-Z][a-z]/.test(rest))) {
           if (!(/^(however|thus|hence|finally|instead|indeed|clearly|obviously|generally)$/i.test(om[1]) && /^(good|bad|much|many|hard|long|far|small|big|little|great|difficult|important|strong|well|fast|slow|the)\b/i.test(rest)) && !(/^of course$/i.test(om[1]) && /^not\b/i.test(rest)))
             out.push({ start: at, end: at, orig: '', fix: ',', why: 'A comma after an opening phrase such as "' + cap(om[1].toLowerCase()).replace(/\bi\b/g, 'I') + ',"', cat: 'g', fam: 'comma' });
         }
       }
       /* a fronted time phrase before a pronoun subject: "Two years ago I" */
-      const tm = /^((?:\w+ )?\w+ (?:years?|months?|weeks?|days?|hours?|minutes?) ago|at (?:first|last)|in the end|after (?:that|all|a while)|from (?:then on|now on)|one day|afterwards|meanwhile|eventually|suddenly|unfortunately|fortunately|luckily|sadly|finally|firstly|secondly|lastly)\s+(?=(?:I|we|they|he|she|it|you)\b)/i.exec(body);
-      if (tm && !om && !/,/.test(tm[1])) {
+      const TM_RE = /^((?:\w+ )?\w+ (?:years?|months?|weeks?|days?|hours?|minutes?) (?:ago|later)|at (?:first|last)|in the end|after (?:that|all|a while)|from (?:then on|now on)|one (?:day|morning|night|evening|afternoon)|the (?:next|following) (?:day|morning|night|evening|afternoon|week|month|year)|the (?:first|last) (?:day|night|time)|next time|that (?:day|night|morning|evening|year)|some (?:years|months|weeks|days|time) later|years later|soon after|shortly after|since then|until then|by then|afterwards|meanwhile|eventually|suddenly|unfortunately|fortunately|luckily|sadly|finally|firstly|secondly|lastly)\s+(?=[A-Za-z])/i.exec(body);
+      let tm = TM_RE;
+      if (TM_RE === null) tm = null;
+      else {
+        /* 7.53: the phrase before a pronoun, as before; or before a name with its verb ("One day Penny discovered"), or a determiner, its noun and the verb ("The next day the people went"); "The next day was sunny" is a subject, not an opener */
+        const restT = body.slice(TM_RE[0].length), DET1 = /^(the|a|an|my|our|your|their|his|her|its|these|those|some|many|most|every|each|all|no)$/i;
+        const VERBISH = w => { const l = lc(w); return MAIN_START.test(l) || AUX_BE.test(l) || MODAL.test(l) || (FORM.has(l) && /^(ed|s)$/.test(FORM.get(l)[1]) && !AMBIG.has(l)) || /^(went|came|took|gave|made|saw|knew|thought|said|told|found|left|felt|brought|bought|taught|kept|met|lost|paid|sold|sent|spent|built|heard|held|led|meant|learnt|understood|stood|won|sat|ran|ate|wrote|drove|spoke|broke|chose|forgot|grew|threw|drew|fell|began|drank|sang|swam|wore|became|got|had|was|were|did|could|would|should|might)$/.test(l) || /^[a-z]{3,}ed$/.test(l); };
+        const rw = restT.split(/\s+/);
+        const pron = /^(I|we|they|he|she|it|you)$/.test(rw[0] || '');
+        const name = /^[A-Z][a-z]+$/.test(rw[0] || '') && rw[1] && VERBISH(rw[1]) && !/^(the|a|an)$/i.test(rw[1]);
+        const detNoun = DET1.test(rw[0] || '') && rw[1] && /^[a-z]+$/.test(rw[1]) && !VERBISH(rw[1]) && !SUBJ_PRON.test(rw[1]) && rw[2] && ((VERBISH(rw[2]) && !/^(that|which|who)$/i.test(rw[2])) || (/^(of|in|from|at|on)$/.test(rw[2]) && rw.slice(3, 8).some(VERBISH) && !rw.slice(3, 8).some(x => /^(that|which|who|and|but|or)$/i.test(x))));
+        if (!(pron || name || detNoun)) tm = null;
+      }
+      if (tm && !omOpen && !/,/.test(tm[1])) {
         const at = a + lead + tm[1].length;
         out.push({ start: at, end: at, orig: '', fix: ',', why: 'A comma after an opening time phrase such as "' + tm[1] + ',"', cat: 'g', fam: 'comma' });
       }
@@ -8253,7 +8341,7 @@ such as = x: like, including`
          its verb; a second subject and verb soon after ("By the time I
          arrived the party was over") leaves the edge uncertain, so nothing
          is said. */
-      if (!/,/.test(body) && sw.length >= 5 && !om && !tm) {
+      if (sw.length >= 5 && !omOpen && !tm) {
         const PREP0 = /^(in|on|at|for|after|before|during|by|with|without|from|under|over|through|despite|like|unlike|among|between|within|across|around|throughout|since|until|inside|outside|near|beside|behind|besides|while|when|whenever|once|although|though|because|if|unless)$/i;
         const DET0 = /^(the|a|an|my|our|your|their|his|her|its|these|those|some|many|most|every|each|all|no)$/i;   /* not this or that: as often a pronoun or a conjunction */
         const NOTNOUN = w => MAIN_START.test(w) || AUX_BE.test(w) || MODAL.test(w) || PAST0.test(w) || SUBJ_PRON.test(w) || /^(there|that|this|it|not|also|then|now|still|just|only|so|very)$/i.test(w);
@@ -8267,16 +8355,25 @@ such as = x: like, including`
             if (gap(t, p, w)) break;
             const l = lc(w.w);
             if (isClause && (FORM.has(l) || /ing$/.test(l) || VERB0(l))) seenVerb = true;
-            if (isClause && !seenVerb && !(PREP0.test(first) && i >= 3)) continue;
+            if (isClause && !seenVerb && !(/^(after|before|since|until)$/.test(first) && i >= 3)) continue;   /* 7.53: "After some years the girl": a time phrase; "While Nicholas Carr's The Shallows argued": a clause needs its verb first */
             if (!isClause && i < 3) continue;
             let subj = false;
-            if (SUBJ_PRON.test(w.w) && n && !gap(t, w, n) && VERB0(n.w)) subj = true;
-            else if (DET0.test(w.w) && n && i + 2 < sw.length && !gap(t, w, n) && !gap(t, n, sw[i + 2]) && /^[a-z]+$/i.test(n.w) && !NOTNOUN(n.w) && VERB0(sw[i + 2].w) && !/^(the|a|an)$/i.test(sw[i + 2].w)) subj = true;   /* the word after a determiner is its noun ("the match was"), unless it can only be a verb or a pronoun ("that has", "that he") */
-            if (!subj) continue;
-            if (/^(where|which|that|who|whom|whose|when|because|if|and|or|but|as|than|while|so|what|how|why|to|of|for|with|by|from|in|on|at)$/i.test(p.w)) break;   /* the subject belongs to the phrase */
+            if (SUBJ_PRON.test(w.w) && n && !gap(t, w, n) && VERB0(n.w) && !(w.w === 'I' && /^[A-Z]/.test(p.w))) subj = true;   /* 7.53: "King Charles I was": a numeral */
+            else if (DET0.test(w.w) && n && i + 2 < sw.length && !gap(t, w, n) && !gap(t, n, sw[i + 2]) && /^[a-z]+$/.test(n.w) && !NOTNOUN(n.w) && VERB0(sw[i + 2].w) && !/^(the|a|an)$/i.test(sw[i + 2].w)) subj = true;   /* the word after a determiner is its noun ("the match was"), unless it can only be a verb or a pronoun ("that has", "that he"); 7.53: "A Linguistic Guide": a title's capital is no noun */
+            if (!subj) { if (!isClause && i > 0 && ((/^[A-Z]/.test(w.w) && n && !gap(t, w, n) && VERB0(n.w) && !SUBJ_PRON.test(n.w)) || (VERB0(w.w) && /^[A-Z]/.test(p.w) && i > 1))) break; continue; }   /* 7.53: "In many scenes Slade leaves": a name and its verb inside the phrase; "On the east of Mallorca you" goes on */
+            if (/,/.test(t.slice(a + lead, w.s))) break;   /* 7.53: a comma before the subject; one later in the sentence is no bar */
+            if (/^(where|which|that|who|whom|whose|when|whether|because|if|and|or|but|as|than|while|so|what|how|why|to|of|for|with|by|from|in|on|at|around|over|under|through|across|between|among|into|onto|within|without|near|behind|beside|during|like|via|per|except|against|towards|toward|throughout|along|beyond|above|below|inside|outside|than)$/i.test(p.w)) break;   /* the subject belongs to the phrase */
+            const pNoun = (NOUN.has(lc(p.w)) || PLURAL.has(lc(p.w))) && i > 1 && (/^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|some|many|most|all|no|each|every|both|such|few|several|other|own|first|last|next|same)$/i.test(sw[i - 2].w) || isAdj(lc(sw[i - 2].w)));   /* "In my dreams I": a noun */
+            if (pNoun && isClause && seenVerb && SUBJ_PRON.test(w.w)) break;   /* 7.53: "While these are the mechanisms I have focused on", "the right person you want": a relative clause without "that" */
+            if (!pNoun && VERB0(p.w) && !/^(not|never|also|then|just|only|already|always|usually|often|finally|suddenly|soon|all|both|even|still)$/i.test(p.w) && !INTRANS.has(FORM.has(lc(p.w)) ? FORM.get(lc(p.w))[0] : lc(p.w).replace(/ed$/, ''))) break;   /* 7.53: "While youngsters use their time", "did not know he was": the subject is the verb's object; "When I arrived my uncle" takes none */
             let second = false; const vi = SUBJ_PRON.test(w.w) ? i + 1 : i + 2;
+            const CONJ0 = /^(that|because|if|when|whether|what|how|why|where|which|who|whom|whose|and|or|but|so|as|than|while|since|although|until|after|before|unless|once|says?|said|think|thinks|thought|know|knows|knew|hope|hopes|hoped|believe|believes|believed)$/i;   /* 7.53: "decided that she had": a clause inside the main one */
             for (let j = vi + 1; j < Math.min(sw.length - 1, vi + 6); j++) {
-              if (gap(t, sw[j - 1], sw[j])) break;
+              if (gap(t, sw[j - 1], sw[j])) {   /* 7.53: "By the time the brigade arrived, the Japanese had": the clause after the comma is the main one */
+                if (gap(t, sw[j - 1], sw[j]) === ',' && ((SUBJ_PRON.test(sw[j].w) && VERB0(sw[j + 1].w)) || (DET0.test(sw[j].w) && j + 2 < sw.length && VERB0(sw[j + 2].w)))) second = true;
+                break;
+              }
+              if (CONJ0.test(sw[j - 1].w) && (i >= 4 || !SUBJ_PRON.test(w.w))) continue;
               if ((SUBJ_PRON.test(sw[j].w) || /^there$/i.test(sw[j].w)) && VERB0(sw[j + 1].w)) { second = true; break; }
               if (DET0.test(sw[j].w) && j + 2 < sw.length && VERB0(sw[j + 2].w)) { second = true; break; }
             }
@@ -8286,6 +8383,18 @@ such as = x: like, including`
             break;
           }
         }
+      }
+      /* 7.53: "and according to them, the food": an aside after "and" or "but" that a comma closes is opened by one too */
+      const AS_RE = /\b(and|but|or|yet)\s+([a-z][a-z'’]*(?: [a-z][a-z'’]*){0,4}?)\s*,/gi; let am;
+      while ((am = AS_RE.exec(sent))) {
+        const ph = am[2].toLowerCase();
+        const aside = ASIDE.has(ph) || /^according to (?:[a-z]+ ){1,3}$/.test(ph + ' ') || /^in (?:his|her|their|our|my|your) (?:opinion|view|experience|case)$/.test(ph) || /^in [a-z]+['’]s (?:opinion|view|words)$/.test(ph);
+        if (!aside) continue;
+        if (/^[A-Z]/.test(am[1])) continue;   /* "And of course, he": the sentence's own start keeps the writer's choice */
+        if (/,\s*$/.test(sent.slice(0, am.index))) continue;   /* ", and in fact," stands */
+        const at = a + am.index + am[1].length;
+        if (out.some(e => e.start === at)) continue;
+        out.push({ start: at, end: at, orig: '', fix: ',', why: 'A comma after "' + am[1].toLowerCase() + '" opens the aside "' + am[2] + '," that the next comma closes', cat: 'g', fam: 'comma' });
       }
       /* "I like it but I" → ", but I" */
       for (let i = 2; i < sw.length - 2; i++) {
@@ -11405,7 +11514,7 @@ const BUILD='7.52 · XXIV · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='47d7849ac0ce9f015d4368ae6a5507ea2b9796a4404ecbf655ba4e2dc4f466cf';
+const PAGE_SHA='e59754508cb5fdae01e74c1ed99eb143b44714cc34704ee3fa4a7102798b2626';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -18963,14 +19072,15 @@ const PAT_FAMILIES=[
  ['Capitals',/^Capital|^Capitalise|^A sentence begins with a capital|^Sentence begins lowercase/],
  ['A word and its preposition',/^[“"][A-Za-z’' ]+ (?:in|on|at|of|for|to|with|from|by|about|into|against|upon)[”"]|^It is "(?:at|in|on) |takes “(?:to|of|on|for|in|at|with|from|by|about)”|^A word and its preposition|^“Into” is one word|^“On the internet”|^“At night”|^“In my opinion”|takes no “about”|takes no preposition/],
  ['The verb’s form after a modal, “do”, “have” or “to”',/^After “[^”]+” the verb|^Two verbs after|^“Interested in” doing|^“Capable of” doing|^The verb’s form after/],
- ['One word or two, and the spaces',/^A space follows|is one word$|is written as two words|^"cannot" is one word|^Space after|^Space before|^Missing space|^Two words, not one/]];
+ ['One word or two, and the spaces',/^A space follows|is one word$|is written as two words|^"cannot" is one word|^Space after|^Space before|^Missing space|^Two words, not one/],
+ ['The tense, kept all the way through',/set in the past|keeps the past|^The sentence is set in|takes its past form|^After [“"][^”"]+[”"], the verb joined by/]];
 function patFamily(e){if(!e)return '';if(e.pat)return e.pat;const why=String(e.why||'');for(const f of PAT_FAMILIES)if(f[1].test(why))return f[0];return why;}
 /* once: the counts kept under each wording of a rule fold into their families */
 let _statsFolded=false;
-function inkFoldStats(){if(_statsFolded)return;_statsFolded=true;try{if(localStorage.getItem('ink_statsFold')==='752')return;const st=S.stats||{},ex=S.statEx||{},ns={},nx={};
+function inkFoldStats(){if(_statsFolded)return;_statsFolded=true;try{if(localStorage.getItem('ink_statsFold')==='753')return;const st=S.stats||{},ex=S.statEx||{},ns={},nx={};
  for(const k of Object.keys(st)){const f=statKey(patFamily({why:k}));ns[f]=(ns[f]||0)+(st[k]||0);}
  for(const k of Object.keys(ex)){const f=statKey(patFamily({why:k}));nx[f]=(nx[f]||[]).concat(ex[k]||[]).slice(0,6);}
- S.stats=ns;S.statEx=nx;SV('stats',ns);SV('statEx',nx);localStorage.setItem('ink_statsFold','752');}catch(e){}}
+ S.stats=ns;S.statEx=nx;SV('stats',ns);SV('statEx',nx);localStorage.setItem('ink_statsFold','753');}catch(e){}}
 function statKey(why){why=String(why||'');return why.length>56?why.split(/[:.]/)[0].trim():why;}
 function bumpStat(why,ex){why=statKey(why);S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);
  /* 7.49: the writer's own slip is kept (six to a pattern) for practice */
