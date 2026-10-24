@@ -764,6 +764,8 @@
         const b = list[j]; if (gone.has(b)) continue;
         const overlap = b.start < a.end || (a.start === b.start && a.end === b.end);
         if (!overlap) continue;
+        /* 7.52: an insertion at the head of a note that keeps its first word ("a" before "student", beside "student,"): both stand */
+        if (b.start === b.end && b.start === a.start && typeof a.fix === 'string' && a.orig && a.fix.indexOf(String(a.orig).split(/\s/)[0]) === 0) continue;
         const same = a.start === b.start && a.end === b.end;
         const fa = family(a.why), fb = family(b.why);
         const contains = (a.start <= b.start && a.end >= b.end) || (b.start <= a.start && b.end >= a.end);
@@ -781,9 +783,11 @@
     /* two fixes that overlap would corrupt the text under "Fix all": the
        weaker one becomes a choice to try */
     const fx = out.filter(e => hasFix(e) || e.fix === '').sort((a, b) => a.start - b.start);
+    /* 7.52: an insertion at the head of a fix that keeps its first word ("a" before "student", beside "student,") corrupts nothing when the longer fix is applied first */
+    const headIns = (x, ins) => ins.start === ins.end && ins.start === x.start && typeof x.fix === 'string' && !!x.orig && x.fix.indexOf(String(x.orig).split(/\s/)[0]) === 0;
     for (let i = 1; i < fx.length; i++) {
       const a = fx[i - 1], b = fx[i];
-      if (b.start < a.end) {
+      if (b.start < a.end && !headIns(a, b) && !headIns(b, a)) {
         const lose = score(a) >= score(b) ? b : a;
         const k = out.indexOf(lose);
         if (k >= 0) { const o = Object.assign({}, lose); o.alts = [lose.fix]; o.altView = [lose.fix === '' ? 'cut it' : lose.fix]; o.tryAlts = true; o.fix = null; out[k] = o; }
@@ -915,7 +919,78 @@
     for (const [re, L] of LESSON) if (re.test(why)) return L;
     return null;
   }
+  /* 7.52: a lesson built from the sentence itself, for the families whose
+     rule is general but whose instance is particular: agreement ("results"
+     means more than one, so "were"), number after a quantity ("many"
+     counts more than one, so "problems"), the missing article ("place" is
+     one thing you can count, so "a"). e has orig, fix, why (and pat, the
+     family); t is the text the note sits in. [rule, example] or null. */
+  const QQ = x => '\u201c' + x + '\u201d', capW = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const PRON_ONE = /^(he|she|it|this|that|everyone|everybody|someone|somebody|nobody|each|either|neither|one)$/i, PRON_MANY = /^(they|we|these|those|both|many|several|few|people|children|men|women|police)$/i, PRON_I_YOU = /^(i|you)$/i;
+  const STOPW = /^(of|in|on|at|for|with|to|from|by|that|which|who|whom|and|or|but|is|are|was|were|has|have|had|will|would|can|could|should|than|as|like|if|when|because|while|so)$/i;
+  function nextWords(t, at, n) {
+    const m = /^[\s,]*((?:[A-Za-z][A-Za-z'\u2019-]*\s*){1,4})/.exec(String(t || '').slice(at)); if (!m) return '';
+    const out = []; for (const w of m[1].trim().split(/\s+/)) { if (out.length && (/^[A-Z]/.test(w) || STOPW.test(w))) break; out.push(w); if (out.length >= n) break; } return out.join(' ');
+  }
+  function prevWords(t, at, n) { const ws = String(t || '').slice(Math.max(0, at - 60), at).replace(/[^A-Za-z'\u2019\s]/g, ' ').trim().split(/\s+/).filter(Boolean); return ws.slice(-n).join(' '); }
+  function sentenceLesson(e, t) {
+    if (!e || typeof e.fix !== 'string') return null;
+    const why = String(e.why || ''), pat = String(e.pat || ''), orig = String(e.orig || ''), fix = e.fix;
+    const ex = (orig.trim() || '\u2026') + ' \u2192 ' + fix.trim();
+    const ow = orig.trim().split(/\s+/).filter(Boolean), fw = fix.trim().split(/\s+/).filter(Boolean);
+    /* agreement, and a verb's -s after its subject */
+    if (/^Agreement|agrees with its subject|takes \u201c-s\u201d on the verb|takes the plain verb|^\u201cHe has\u201d|^Verb form$|^A plural subject takes|^A singular subject takes|^The verb agrees with its subject/.test(why) || pat === 'The verb agrees with its subject') {
+      if (ow.length !== fw.length || !ow.length) return null;
+      const di = ow.findIndex((w, i) => w.toLowerCase() !== fw[i].toLowerCase());
+      if (di < 0 || ow.some((w, i) => i !== di && w.toLowerCase() !== fw[i].toLowerCase())) return null;
+      const was = ow[di].toLowerCase(), verb = fw[di].toLowerCase(), before = ow.slice(0, di), after = ow.slice(di + 1);
+      if (before.length && /^there$/i.test(before[before.length - 1])) {
+        const follow = (after.join(' ') + ' ' + nextWords(t, e.end, 1)).trim(), many = /^(are|were|have)$/.test(verb);
+        return ['After ' + QQ('there') + ' the verb agrees with what follows: ' + QQ(follow) + (many ? ' means more than one, so ' : ' means one, so ') + QQ('there ' + verb) + '.', ex];
+      }
+      /* a verb alone ("likes" to "like"): its subject stands just before it in the text */
+      const beforeTxt = before.length ? before.join(' ') : (ow.length === 1 && t ? prevWords(t, e.start, 2) : '');
+      const subj = beforeTxt.replace(/^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|all|some|many|several|both|few|various)\s+/i, '');
+      if (!subj || before.length > 3 || /\s/.test(subj) && !before.length) return null;
+      const sl = subj.toLowerCase();
+      const sg = /^(is|was|has|does|doesn't|isn't|wasn't)$/.test(verb) || (/s$/.test(verb) && !/s$/.test(was));
+      const pl = /^(are|were|have|do|don't|aren't|weren't)$/.test(verb) || (/s$/.test(was) && !/s$/.test(verb));
+      if (sg === pl) return null;
+      if (PRON_I_YOU.test(sl)) return [QQ(capW(subj)) + ' takes ' + QQ(verb) + ', whatever its number: ' + subj + ' ' + verb + '.', ex];
+      if (sg) {
+        if (!(PRON_ONE.test(sl) || !/s$/.test(sl) || /ss$/.test(sl))) return null;   /* "eggs is": the subject stands elsewhere */
+        return [QQ(capW(subj)) + (PRON_ONE.test(sl) ? ' is one person or thing' : ' means one') + ', so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
+      }
+      if (!(PRON_MANY.test(sl) || (/s$/.test(sl) && !/ss$/.test(sl)) || /\band\b/i.test(sl))) return null;   /* "team were": a collective */
+      return [QQ(capW(subj)) + ' means more than one, so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
+    }
+    /* number after a quantity */
+    if (pat === 'Singular or plural after a quantity' || /^Singular or plural after a quantity|^After \u201c|^After "/.test(why)) {
+      if (ow.length !== 1 || fw.length !== 1) return null;
+      const noun = fw[0], before = prevWords(t, e.start, 3);
+      const m = /\b(one of the|each|every|another|many|several|few|a few|various|numerous|both|two|three|four|five|six|seven|eight|nine|ten|hundreds of|thousands of|a lot of|lots of|a number of|most|some|all|these|those|much|this|that)$/i.exec(before);
+      const qn = m ? m[1].toLowerCase() : (before.split(/\s+/).pop() || '').toLowerCase();
+      if (!qn) return null;
+      const plural = /s$/.test(noun) && !/s$/.test(ow[0]);
+      if (qn === 'one of the') return [QQ('One of the') + ' picks one out of several, so the noun is plural: one of the ' + noun + '.', ex];
+      if (plural) return [QQ(capW(qn)) + ' counts more than one, so the noun is plural: ' + qn + ' ' + noun + '.', ex];
+      return [QQ(capW(qn)) + ' takes one at a time, so the noun is singular: ' + qn + ' ' + noun + '.', ex];
+    }
+    /* the missing article */
+    if (pat === 'A missing article' || /^A missing article|^A singular countable noun takes|^A singular count noun takes|^A role takes its article|^A superlative or an ordinal takes/.test(why)) {
+      const low = ow.map(x => x.toLowerCase()), added = fw.filter(w => !low.includes(w.toLowerCase()));
+      if (added.length !== 1 || !/^(a|an|the)$/i.test(added[0])) return null;
+      const art = added[0].toLowerCase(), k = fw.findIndex(w => w === added[0]);
+      const phrase = (orig.trim() ? fw.slice(k + 1).join(' ') : nextWords(t, e.end, 3)).replace(/[.,;:!?]+$/, '');
+      if (!phrase) return null;
+      const parts = phrase.split(/\s+/), noun = parts[parts.length - 1], first = parts[0];
+      if (/superlative|ordinal/i.test(why)) return ['Only one can be the ' + first.toLowerCase() + ', so it takes ' + QQ('the') + ': the ' + phrase + '.', ex];
+      if (/role/i.test(why)) return [QQ(capW(noun)) + ' names a role one person holds, so it takes ' + QQ(art) + ': ' + art + ' ' + phrase + '.', ex];
+      return [QQ(capW(noun)) + ' is one thing you can count, so it takes ' + QQ(art) + (art === 'an' ? ' (\u201can\u201d before a vowel sound)' : '') + ': ' + art + ' ' + phrase + '.', ex];
+    }
+    return null;
+  }
 
-  const api = { refine: refine, dedupe: dedupe, build: build, lesson: lesson, family: family, specFor: specFor, passiveParts: passiveParts, activeText: activeText, cut: cut, agentNumber: agentNumber, baseOfPart: baseOfPart, expandContraction: expandContraction, _T: T, _LESSON: LESSON };
+  const api = { refine: refine, dedupe: dedupe, build: build, lesson: lesson, sentenceLesson: sentenceLesson, family: family, specFor: specFor, passiveParts: passiveParts, activeText: activeText, cut: cut, agentNumber: agentNumber, baseOfPart: baseOfPart, expandContraction: expandContraction, _T: T, _LESSON: LESSON };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKREF = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -1,0 +1,94 @@
+INKWELL v7.52: HANDOFF NOTES (the work after 7.51; the release follows on the writer's word)
+=======================================================================================
+Date: 24 October 2026. Read INKWELL_HANDOFF_v7p51.txt and the earlier notes
+for everything before.
+
+Keep this repository PRIVATE: the Fire package's build kit holds the app's
+signing key. The measurement data is never in the repository and never
+trained on. SECURITY.txt stays private. Since 24 October the private source
+lives on the "inkwell" branch of DevGroup2313/Offline-pro (private, at the
+writer's word); yabban-maker/inkwell-fire is disconnected and receives
+nothing.
+
+WHY 7.52
+--------
+The writer's standing request: the offline corrector and editor pushed
+further, at a doctoral standard, teaching while it helps, with no model
+needed. After 7.51 the work took the remaining silences by type, the
+spelling fix first, then the small deterministic fixes, and made the
+teaching particular: the lesson of a note is now the word or the sentence
+itself, not the family's general line.
+
+WHAT CHANGED
+------------
+1. The guided tour shows the teaching (src/inkwell.html, TOUR): "The rule in
+   a breath" after the accepted fix (the line at the foot held while the
+   card is up), "Your patterns" by family with practice, "Learning as you
+   go" in the Focus chapter (My way of working opened, The rule after a fix
+   ringed). The Guide's "Learn as you go" row and the Studio label name the
+   supports.
+2. One receipt at the foot. The Undo chip stood over the shelf's "+ New
+   document" button; it stands where the message stands, and when a
+   message follows at once Undo rides the message (toast, showUndoChip).
+3. The spelling fix, measured (src/lib/spell_core.js; tools/grammar/
+   README.md, "the spelling fix"): the level cost of a candidate's rarity
+   widened; a long word two slips from its only very common candidate gets
+   the fix; a run of slips is not a phrase of another language; a
+   neighbouring key costs about what a letter left out costs; a slip at
+   the first letter costs more. Guards from the correct sets: a detached
+   prefix, a term glossed in brackets or defined by its sentence, loanwords
+   without accents, the small words of other languages inside names, four-
+   letter words, rare words, a short capital at a sentence's start. The
+   annotator's own spelling fix: 82 of 129 on the tuning half (was 68).
+   Every spelling card teaches the word itself (INKSPELL.lesson: the
+   classic words' lines, else the tricky part read off the slip).
+4. The small deterministic fixes (learner_core.js, gaps_core.js; README,
+   "the small deterministic fixes"): the comma after a connective whatever
+   follows; the comma before an instruction after an opening clause; the
+   comma before "but" with a noun phrase; the space after a sentence's
+   stop, with the capital; the paragraph's missing full stop when another
+   paragraph follows; "in to" after a verb of motion; a role noun's
+   article; "congratulations on", "a beginner at", "smile at", "pray to"
+   God. Two faults in the page's pipeline found by the measurement: the
+   gate dropped "i'm", and an old rule for the missing space blocked the
+   library's fix. A correctness note now takes the place of a style note
+   on the same words (inkYield), which also lets through "cannot", "is a
+   very beautiful place", "a lot of".
+5. The plural subject's verb ("my friends likes" to "like") and the
+   lessons built from the sentence itself for agreement, number and the
+   article (refine_core.js sentenceLesson), on the card, in the line at
+   the foot (read before the page changes, acceptOne e._L) and in the
+   practice's answer. An insertion at the head of a note that keeps its
+   first word stands beside it (dedupe, inkYield), and Fix all applies the
+   longer fix first.
+
+Whole page, ERRANT F0.5, from 7.51: W&I tuning half 0.291 to 0.311,
+report half 0.262 to 0.274, CoNLL-2014 0.272 to 0.278; correct prose
+changed 4.5% to 4.1% (tuning) and 4.8% to 4.5% (report).
+
+TESTS
+-----
+learner_test.js 215, gaps_test.js 153, spell_test.js 182, refine_test.js
+100, mark_test.js 26, rewrite run.js 328, explain_test.js 45,
+coach_test.js 38, para_test.js 44, sentence_test.mjs 24.
+
+HOW 7.52 IS BUILT AND RELEASED (when the writer asks)
+----------------------------------------------------
+As 7.51 (INKWELL_HANDOFF_v7p51.txt): versions in the seven files, the page
+built with tools/build_inkwell.py, the kits with make_packages.py --kits
+--no-key (checked for key files), the APK built here with the author's
+key, the Mac apps with make_mac_prebuilt.py at build 37, the four
+DevGroup2313 public repositories given the kit, the handoff, their README
+and the build under builds/. The web app package goes to the writer for
+the site; the iPhone and iPad kit is built on the writer's Mac. Nothing
+goes to yabban-maker/inkwell-fire.
+
+NOT DONE YET
+------------
+- The 7.52 release itself: this file describes the work; the version
+  numbers still read 7.51 until the release is assembled.
+- The corrector's remaining silences are contextual: a preposition both
+  forms of which are acceptable, tense across a sentence, articles by
+  meaning, word choice, spellings two words could explain ("thay"). Rule
+  stages now yield half a point of F0.5 or less; the opt-in grammar model
+  measured 0.42 to 0.48 in this record.

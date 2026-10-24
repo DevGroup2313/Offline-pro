@@ -9340,7 +9340,11 @@ function ruleEdits(t){
    and style notes on the same words ("In my opinion big stars": the comma,
    not only the wordiness note); it yields to another correctness note */
 function inkYield(out,e){const ov=[];for(let i=0;i<out.length;i++){const o=out[i];if((e.start<o.end&&e.end>o.start)||(e.start===e.end&&o.start<=e.start&&o.end>=e.start))ov.push(i);}
- if(!ov.length)return true;if(ov.some(i=>out[i].cat==='g'))return false;
+ if(!ov.length)return true;
+ /* an insertion at the head of another note that keeps its first word ("a" before "student", beside "student,"): both stand */
+ const heads=o=>e.start===e.end&&o.start===e.start&&typeof o.fix==='string'&&o.orig&&o.fix.indexOf(String(o.orig).split(/\s/)[0])===0;
+ if(ov.some(i=>out[i].cat==='g'&&!heads(out[i])))return false;
+ if(ov.every(i=>heads(out[i])))return true;
  for(let k=ov.length-1;k>=0;k--)out.splice(ov[k],1);return true;}
 function learnerCheck(t,ms,out){
  if(typeof INKLRN==='undefined')return;
@@ -9694,6 +9698,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  const wasFirst=(Object.values(S.stats).reduce((a,b)=>a+b,0)===0);
  const orig=(typeof e.orig==='string'&&e.end>e.start)?e.orig:ed.value.slice(e.start,e.end);
  const ex=statExample(ed.value,e);
+ e._L=lessonForEdit(e,ed.value);   /* 7.52: the lesson is read before the page changes */
  const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
  if(!r){scan();return;}
  bumpStat(e.pat||e.why||'',ex);
@@ -9704,7 +9709,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
    change itself; nothing to open. Where no lesson fits, the plain receipt. */
 function inkRuleToast(e){
  if(!inkWayOn('rule'))return toast('Accepted ✔');
- let r='';try{const L=lessonForEdit(e);r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
+ let r='';try{const L=e._L||lessonForEdit(e);r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
  r=inkRuleLine(r);
  if(!r)return toast('Accepted ✔');
  const chg=(typeof e.orig==='string'&&e.orig.trim()&&typeof e.fix==='string'&&e.fix.trim()&&e.orig.length<40&&e.fix.length<40)?'“'+e.orig.trim()+'” → “'+e.fix.trim()+'”  ·  ':'';
@@ -9768,7 +9773,8 @@ function wbUnmute(i){S.muteWords.splice(i,1);SV('muteWords',S.muteWords);WB=null
 function acceptAll(){const es=EDITS.filter(e=>typeof e.fix==='string');if(!es.length)return toast('Nothing to fix');inkAuthMark('f');
  if(es.length>=4)snap('Before Fix all');
  pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.pat||e.why||'',statExample(t0,e)));}let t=ed.value;
- es.slice().sort((a,b)=>b.start-a.start).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
+ /* 7.52: at one place, the longer fix first, then the insertion at its head ("a" before "student,") */
+ es.slice().sort((a,b)=>b.start-a.start||(b.end-b.start)-(a.end-a.start)).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
  ed.value=t;afterChange();SND.fixall();showUndoChip();clearSel();
  const r=+document.getElementById('rhCount').textContent;
  toast(es.length+' fixes applied ✔'+(r>0?' · '+r+' advisory flags remain; Clear dismisses them':''));}
@@ -9801,7 +9807,10 @@ function hideBubble(){bub.style.display='none';document.getElementById('bubTones
 /* 7.52: a spelling card teaches the word itself (INKSPELL.lesson: the
    classic words' lines, else the tricky part read off the slip); every
    other card its rule */
-function lessonForEdit(e){try{if(e&&/^Spelling/.test(String(e.why||''))&&typeof e.fix==='string'&&e.fix&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(e.orig,e.fix);if(L)return L;}}catch(x){}return lessonFor(e&&e.why||'');}
+function lessonForEdit(e,t){try{if(e&&/^Spelling/.test(String(e.why||''))&&typeof e.fix==='string'&&e.fix&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(e.orig,e.fix);if(L)return L;}}catch(x){}
+ /* 7.52: agreement, number and the article teach from the sentence itself (refine_core.js sentenceLesson) */
+ try{if(e&&typeof INKREF!=='undefined'&&INKREF.sentenceLesson){const L=INKREF.sentenceLesson(e,t!=null?t:(typeof ed!=='undefined'?ed.value:''));if(L)return L;}}catch(x){}
+ return lessonFor(e&&e.why||'');}
 function cardHTML(e,i,solo){
  const L=lessonForEdit(e);
  return '<div class="card'+(solo?' solo':'')+'" style="animation-delay:'+Math.min(i*40,300)+'ms">'+
@@ -15309,7 +15318,8 @@ function patCheck(i){if(!PATP)return;const x=PATP.ex[i],inp=document.getElementB
  const n=v=>String(v).replace(/\s+/g,' ').trim(),got=n(inp.value),want=n(x.fix);
  if(!got){inp.focus();return;}
  /* 7.52: a spelling practice says the word's own lesson with the answer */
- const spl=(function(){try{if(/^Spelling/.test(PATP.why)&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(x.ctx.slice(x.at,x.at+x.len),want);return L?' '+esc(L[0]):'';}}catch(e){}return '';})();
+ const spl=(function(){try{if(/^Spelling/.test(PATP.why)&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(x.ctx.slice(x.at,x.at+x.len),want);return L?' '+esc(L[0]):'';}
+  if(typeof INKREF!=='undefined'&&INKREF.sentenceLesson){const L=INKREF.sentenceLesson({why:PATP.why,pat:PATP.why,orig:x.ctx.slice(x.at,x.at+x.len),fix:want,start:x.at,end:x.at+x.len},x.ctx);return L?' '+esc(L[0]):'';}}catch(e){}return '';})();
  if(got===want||(x.alt||[]).some(a=>n(a)===got)){out.innerHTML='<span style="color:#2e7d4f">\u2714 Yes: \u201c'+esc(want)+'\u201d.</span>'+spl;
   if(!x.done){x.done=true;PATP.ok++;
    /* each sentence mended here counts one off the pattern: the number going to zero is the mastery */

@@ -633,3 +633,41 @@ two complete clauses ("his work with taxonomy, but his ideas", "have
 disappeared, but an adit can still be seen"), which the rule places and
 the encyclopaedia's editors did not; both are standard, and the rule is
 kept.
+
+## After 7.51: the plural subject's verb, and lessons from the sentence itself (stage G7)
+
+"My friends likes football", "their results shows": a determiner, a
+plural noun the lexicon knows, then a verb with -s whose base is a common
+verb. The verb takes its plain form; not when a verb or "of" follows
+("its users needs are"), when the noun has a singular -s ("the news"), or
+when a preposition stands before the determiner ("one of my friends
+likes"). Two hits on the report half and CoNLL-2014, no new change on
+correct prose.
+
+A note's lesson was the family's general line. For agreement, number
+after a quantity and the missing article it is now built from the
+sentence (refine_core.js sentenceLesson): "“Results” means more than one,
+so the verb is “were”: results were"; "After “there” the verb agrees with
+what follows: “many reasons” means more than one, so “there are”";
+"“Many” counts more than one, so the noun is plural: many problems";
+"“One of the” picks one out of several, so the noun is plural"; "“Place”
+is one thing you can count, so it takes “a”: a very beautiful place";
+"“Educator” names a role one person holds, so it takes “an”"; "Only one
+can be the best, so it takes “the”". Where the subject stands elsewhere
+("the box of eggs is") or is a collective ("the team were"), the general
+line stays. The card, the line at the foot after an accepted fix (read
+before the page changes) and the practice's answer carry it.
+
+An insertion at the head of a note that keeps its first word ("a" before
+"student", beside "student,") was dropped as an overlap by the page and
+by the refiner; both now stand, and Fix all applies the longer fix first.
+
+| set | before P / R / F0.5 | after |
+|---|---|---|
+| W&I tuning half | 66.5 / 9.9 / 0.311 | 66.5 / 9.9 / 0.311 |
+| W&I report half | 62.5 / 8.4 / 0.273 | 62.6 / 8.4 / 0.274 |
+| CoNLL-2014 | 74.1 / 7.9 / 0.276 | 74.6 / 7.9 / 0.278 |
+| correct Wikipedia, tuning | 62 (4.1%) | 62 (4.1%) |
+| correct Wikipedia, report | 67 (4.5%) | 67 (4.5%) |
+
+refine_test.js 100, gaps_test.js 153.

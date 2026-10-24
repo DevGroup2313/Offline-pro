@@ -161,6 +161,13 @@ const cases = [
   ['She smiled to herself.'],
   ['They pray for God every day.', 'They pray to God every day.'],
   ['They pray for peace.'],
+  /* 7.52: a plural subject with a determiner, then a verb with -s */
+  ['My friends likes football.', 'My friends like football.'],
+  ['Their results shows a clear trend.', 'Their results show a clear trend.'],
+  ['These days seems long.', 'These days seem long.'],
+  ['Its users needs are clear.'],
+  ['The news makes me sad.'],
+  ['One of my friends likes football.'],
   /* and still caught */
   ['Pollution is several issue that we have to deal with.', 'Pollution is several issues that we have to deal with.'],
   ['There are not as many people around you.'],

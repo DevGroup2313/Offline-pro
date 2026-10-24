@@ -445,6 +445,14 @@
         const di = ws.indexOf(d); if (di > 0 && !gap(t, ws[di - 1], d) && /^(of|in|on|for|with|by|from|to|about|among|between|through|at|under|over|without|within|like|unlike|than|as|and|or)$|ing$/.test(ws[di - 1].l)) d = { l: '' };
         if (DETS.test(d.l)) { const fix = { was: 'were', has: 'have', is: 'are', does: 'do' }[a.l]; push(out, a.s, a.e, a.w, fix, 'A plural subject takes a plural verb: “' + d.l + ' … ' + ws[i - 1].l + ' ' + fix + '”', 'agree'); continue; }
       }
+      /* 7.52: "my friends likes football", "their results shows": a determiner, a plural noun, then a verb with -s */
+      if (/^[a-z]+(?:s|es)$/.test(a.l) && !/^(is|was|has|does)$/.test(a.l) && !SING_S.has(a.l) && i >= 2 && !gap(t, ws[i - 1], a) && !gap(t, ws[i - 2], ws[i - 1]) && /^[a-z]+s$/.test(ws[i - 1].w) && !SING_S.has(ws[i - 1].l) && !MASS.has(ws[i - 1].l) && pluralOf(ws[i - 1].l.replace(/ies$/, 'y').replace(/(s|x|z|ch|sh)es$/, '$1').replace(/s$/, ''))) {
+        const base = a.l.replace(/ies$/, 'y').replace(/(s|x|z|ch|sh)es$/, '$1').replace(/s$/, ''), d = ws[i - 2], n = ws[i + 1];
+        const DETS2 = /^(my|our|your|their|his|her|its|these|those|many|several|both|all|some|few|various)$/;
+        if (BASE_VERBS.has(base) && DETS2.test(d.l) && (!n || gap(t, a, n) || !/^(is|are|was|were|has|have|had|do|does|did|will|would|can|could|should|may|might|must|and|or|that|which|who|of)$/.test(n.l)) && !(i >= 3 && !gap(t, ws[i - 3], d) && /^(of|in|on|for|with|by|from|to|about|among|between|through|at|under|over|without|within|like|unlike|than|as|and|or)$|ing$/.test(ws[i - 3].l))) {
+          push(out, a.s, a.e, a.w, caseLike(a.w, base), 'A plural subject takes the plain verb: \u201c' + d.l + ' ' + ws[i - 1].l + ' ' + base + '\u201d', 'agree'); continue;
+        }
+      }
       /* "the government let each", "every Indian always follow", "it still control": a singular subject, then a base verb */
       if (/^(the|a|an|this|every|each|one|my|our|your|his|her|its)$/.test(a.l) && i + 2 < ws.length && !gap(t, a, ws[i + 1]) && plainClause(t, ws, i)) {
         /* "a technological development", "a business meeting": an adjective or a noun used as one before the head */

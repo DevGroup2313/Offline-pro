@@ -7280,6 +7280,8 @@ such as = x: like, including`
         const b = list[j]; if (gone.has(b)) continue;
         const overlap = b.start < a.end || (a.start === b.start && a.end === b.end);
         if (!overlap) continue;
+        /* 7.52: an insertion at the head of a note that keeps its first word ("a" before "student", beside "student,"): both stand */
+        if (b.start === b.end && b.start === a.start && typeof a.fix === 'string' && a.orig && a.fix.indexOf(String(a.orig).split(/\s/)[0]) === 0) continue;
         const same = a.start === b.start && a.end === b.end;
         const fa = family(a.why), fb = family(b.why);
         const contains = (a.start <= b.start && a.end >= b.end) || (b.start <= a.start && b.end >= a.end);
@@ -7297,9 +7299,11 @@ such as = x: like, including`
     /* two fixes that overlap would corrupt the text under "Fix all": the
        weaker one becomes a choice to try */
     const fx = out.filter(e => hasFix(e) || e.fix === '').sort((a, b) => a.start - b.start);
+    /* 7.52: an insertion at the head of a fix that keeps its first word ("a" before "student", beside "student,") corrupts nothing when the longer fix is applied first */
+    const headIns = (x, ins) => ins.start === ins.end && ins.start === x.start && typeof x.fix === 'string' && !!x.orig && x.fix.indexOf(String(x.orig).split(/\s/)[0]) === 0;
     for (let i = 1; i < fx.length; i++) {
       const a = fx[i - 1], b = fx[i];
-      if (b.start < a.end) {
+      if (b.start < a.end && !headIns(a, b) && !headIns(b, a)) {
         const lose = score(a) >= score(b) ? b : a;
         const k = out.indexOf(lose);
         if (k >= 0) { const o = Object.assign({}, lose); o.alts = [lose.fix]; o.altView = [lose.fix === '' ? 'cut it' : lose.fix]; o.tryAlts = true; o.fix = null; out[k] = o; }
@@ -7431,8 +7435,79 @@ such as = x: like, including`
     for (const [re, L] of LESSON) if (re.test(why)) return L;
     return null;
   }
+  /* 7.52: a lesson built from the sentence itself, for the families whose
+     rule is general but whose instance is particular: agreement ("results"
+     means more than one, so "were"), number after a quantity ("many"
+     counts more than one, so "problems"), the missing article ("place" is
+     one thing you can count, so "a"). e has orig, fix, why (and pat, the
+     family); t is the text the note sits in. [rule, example] or null. */
+  const QQ = x => '\u201c' + x + '\u201d', capW = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const PRON_ONE = /^(he|she|it|this|that|everyone|everybody|someone|somebody|nobody|each|either|neither|one)$/i, PRON_MANY = /^(they|we|these|those|both|many|several|few|people|children|men|women|police)$/i, PRON_I_YOU = /^(i|you)$/i;
+  const STOPW = /^(of|in|on|at|for|with|to|from|by|that|which|who|whom|and|or|but|is|are|was|were|has|have|had|will|would|can|could|should|than|as|like|if|when|because|while|so)$/i;
+  function nextWords(t, at, n) {
+    const m = /^[\s,]*((?:[A-Za-z][A-Za-z'\u2019-]*\s*){1,4})/.exec(String(t || '').slice(at)); if (!m) return '';
+    const out = []; for (const w of m[1].trim().split(/\s+/)) { if (out.length && (/^[A-Z]/.test(w) || STOPW.test(w))) break; out.push(w); if (out.length >= n) break; } return out.join(' ');
+  }
+  function prevWords(t, at, n) { const ws = String(t || '').slice(Math.max(0, at - 60), at).replace(/[^A-Za-z'\u2019\s]/g, ' ').trim().split(/\s+/).filter(Boolean); return ws.slice(-n).join(' '); }
+  function sentenceLesson(e, t) {
+    if (!e || typeof e.fix !== 'string') return null;
+    const why = String(e.why || ''), pat = String(e.pat || ''), orig = String(e.orig || ''), fix = e.fix;
+    const ex = (orig.trim() || '\u2026') + ' \u2192 ' + fix.trim();
+    const ow = orig.trim().split(/\s+/).filter(Boolean), fw = fix.trim().split(/\s+/).filter(Boolean);
+    /* agreement, and a verb's -s after its subject */
+    if (/^Agreement|agrees with its subject|takes \u201c-s\u201d on the verb|takes the plain verb|^\u201cHe has\u201d|^Verb form$|^A plural subject takes|^A singular subject takes|^The verb agrees with its subject/.test(why) || pat === 'The verb agrees with its subject') {
+      if (ow.length !== fw.length || !ow.length) return null;
+      const di = ow.findIndex((w, i) => w.toLowerCase() !== fw[i].toLowerCase());
+      if (di < 0 || ow.some((w, i) => i !== di && w.toLowerCase() !== fw[i].toLowerCase())) return null;
+      const was = ow[di].toLowerCase(), verb = fw[di].toLowerCase(), before = ow.slice(0, di), after = ow.slice(di + 1);
+      if (before.length && /^there$/i.test(before[before.length - 1])) {
+        const follow = (after.join(' ') + ' ' + nextWords(t, e.end, 1)).trim(), many = /^(are|were|have)$/.test(verb);
+        return ['After ' + QQ('there') + ' the verb agrees with what follows: ' + QQ(follow) + (many ? ' means more than one, so ' : ' means one, so ') + QQ('there ' + verb) + '.', ex];
+      }
+      /* a verb alone ("likes" to "like"): its subject stands just before it in the text */
+      const beforeTxt = before.length ? before.join(' ') : (ow.length === 1 && t ? prevWords(t, e.start, 2) : '');
+      const subj = beforeTxt.replace(/^(the|a|an|my|our|your|their|his|her|its|this|that|these|those|all|some|many|several|both|few|various)\s+/i, '');
+      if (!subj || before.length > 3 || /\s/.test(subj) && !before.length) return null;
+      const sl = subj.toLowerCase();
+      const sg = /^(is|was|has|does|doesn't|isn't|wasn't)$/.test(verb) || (/s$/.test(verb) && !/s$/.test(was));
+      const pl = /^(are|were|have|do|don't|aren't|weren't)$/.test(verb) || (/s$/.test(was) && !/s$/.test(verb));
+      if (sg === pl) return null;
+      if (PRON_I_YOU.test(sl)) return [QQ(capW(subj)) + ' takes ' + QQ(verb) + ', whatever its number: ' + subj + ' ' + verb + '.', ex];
+      if (sg) {
+        if (!(PRON_ONE.test(sl) || !/s$/.test(sl) || /ss$/.test(sl))) return null;   /* "eggs is": the subject stands elsewhere */
+        return [QQ(capW(subj)) + (PRON_ONE.test(sl) ? ' is one person or thing' : ' means one') + ', so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
+      }
+      if (!(PRON_MANY.test(sl) || (/s$/.test(sl) && !/ss$/.test(sl)) || /\band\b/i.test(sl))) return null;   /* "team were": a collective */
+      return [QQ(capW(subj)) + ' means more than one, so the verb is ' + QQ(verb) + ': ' + subj + ' ' + verb + '.', ex];
+    }
+    /* number after a quantity */
+    if (pat === 'Singular or plural after a quantity' || /^Singular or plural after a quantity|^After \u201c|^After "/.test(why)) {
+      if (ow.length !== 1 || fw.length !== 1) return null;
+      const noun = fw[0], before = prevWords(t, e.start, 3);
+      const m = /\b(one of the|each|every|another|many|several|few|a few|various|numerous|both|two|three|four|five|six|seven|eight|nine|ten|hundreds of|thousands of|a lot of|lots of|a number of|most|some|all|these|those|much|this|that)$/i.exec(before);
+      const qn = m ? m[1].toLowerCase() : (before.split(/\s+/).pop() || '').toLowerCase();
+      if (!qn) return null;
+      const plural = /s$/.test(noun) && !/s$/.test(ow[0]);
+      if (qn === 'one of the') return [QQ('One of the') + ' picks one out of several, so the noun is plural: one of the ' + noun + '.', ex];
+      if (plural) return [QQ(capW(qn)) + ' counts more than one, so the noun is plural: ' + qn + ' ' + noun + '.', ex];
+      return [QQ(capW(qn)) + ' takes one at a time, so the noun is singular: ' + qn + ' ' + noun + '.', ex];
+    }
+    /* the missing article */
+    if (pat === 'A missing article' || /^A missing article|^A singular countable noun takes|^A singular count noun takes|^A role takes its article|^A superlative or an ordinal takes/.test(why)) {
+      const low = ow.map(x => x.toLowerCase()), added = fw.filter(w => !low.includes(w.toLowerCase()));
+      if (added.length !== 1 || !/^(a|an|the)$/i.test(added[0])) return null;
+      const art = added[0].toLowerCase(), k = fw.findIndex(w => w === added[0]);
+      const phrase = (orig.trim() ? fw.slice(k + 1).join(' ') : nextWords(t, e.end, 3)).replace(/[.,;:!?]+$/, '');
+      if (!phrase) return null;
+      const parts = phrase.split(/\s+/), noun = parts[parts.length - 1], first = parts[0];
+      if (/superlative|ordinal/i.test(why)) return ['Only one can be the ' + first.toLowerCase() + ', so it takes ' + QQ('the') + ': the ' + phrase + '.', ex];
+      if (/role/i.test(why)) return [QQ(capW(noun)) + ' names a role one person holds, so it takes ' + QQ(art) + ': ' + art + ' ' + phrase + '.', ex];
+      return [QQ(capW(noun)) + ' is one thing you can count, so it takes ' + QQ(art) + (art === 'an' ? ' (\u201can\u201d before a vowel sound)' : '') + ': ' + art + ' ' + phrase + '.', ex];
+    }
+    return null;
+  }
 
-  const api = { refine: refine, dedupe: dedupe, build: build, lesson: lesson, family: family, specFor: specFor, passiveParts: passiveParts, activeText: activeText, cut: cut, agentNumber: agentNumber, baseOfPart: baseOfPart, expandContraction: expandContraction, _T: T, _LESSON: LESSON };
+  const api = { refine: refine, dedupe: dedupe, build: build, lesson: lesson, sentenceLesson: sentenceLesson, family: family, specFor: specFor, passiveParts: passiveParts, activeText: activeText, cut: cut, agentNumber: agentNumber, baseOfPart: baseOfPart, expandContraction: expandContraction, _T: T, _LESSON: LESSON };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKREF = api;
 })(typeof self !== 'undefined' ? self : this);
 
@@ -8686,6 +8761,14 @@ such as = x: like, including`
         if (!DETS.test(d.l) && i >= 3 && !gap(t, ws[i - 3], d) && (isAdj(d.l) || /^(best|worst|favourite|favorite|own|other|closest|oldest|youngest|main|only|two|three|four|five|first|last|new|old|good|bad|close|dear|real|true)$/.test(d.l)) && DETS.test(ws[i - 3].l)) d = ws[i - 3];
         const di = ws.indexOf(d); if (di > 0 && !gap(t, ws[di - 1], d) && /^(of|in|on|for|with|by|from|to|about|among|between|through|at|under|over|without|within|like|unlike|than|as|and|or)$|ing$/.test(ws[di - 1].l)) d = { l: '' };
         if (DETS.test(d.l)) { const fix = { was: 'were', has: 'have', is: 'are', does: 'do' }[a.l]; push(out, a.s, a.e, a.w, fix, 'A plural subject takes a plural verb: “' + d.l + ' … ' + ws[i - 1].l + ' ' + fix + '”', 'agree'); continue; }
+      }
+      /* 7.52: "my friends likes football", "their results shows": a determiner, a plural noun, then a verb with -s */
+      if (/^[a-z]+(?:s|es)$/.test(a.l) && !/^(is|was|has|does)$/.test(a.l) && !SING_S.has(a.l) && i >= 2 && !gap(t, ws[i - 1], a) && !gap(t, ws[i - 2], ws[i - 1]) && /^[a-z]+s$/.test(ws[i - 1].w) && !SING_S.has(ws[i - 1].l) && !MASS.has(ws[i - 1].l) && pluralOf(ws[i - 1].l.replace(/ies$/, 'y').replace(/(s|x|z|ch|sh)es$/, '$1').replace(/s$/, ''))) {
+        const base = a.l.replace(/ies$/, 'y').replace(/(s|x|z|ch|sh)es$/, '$1').replace(/s$/, ''), d = ws[i - 2], n = ws[i + 1];
+        const DETS2 = /^(my|our|your|their|his|her|its|these|those|many|several|both|all|some|few|various)$/;
+        if (BASE_VERBS.has(base) && DETS2.test(d.l) && (!n || gap(t, a, n) || !/^(is|are|was|were|has|have|had|do|does|did|will|would|can|could|should|may|might|must|and|or|that|which|who|of)$/.test(n.l)) && !(i >= 3 && !gap(t, ws[i - 3], d) && /^(of|in|on|for|with|by|from|to|about|among|between|through|at|under|over|without|within|like|unlike|than|as|and|or)$|ing$/.test(ws[i - 3].l))) {
+          push(out, a.s, a.e, a.w, caseLike(a.w, base), 'A plural subject takes the plain verb: \u201c' + d.l + ' ' + ws[i - 1].l + ' ' + base + '\u201d', 'agree'); continue;
+        }
       }
       /* "the government let each", "every Indian always follow", "it still control": a singular subject, then a base verb */
       if (/^(the|a|an|this|every|each|one|my|our|your|his|her|its)$/.test(a.l) && i + 2 < ws.length && !gap(t, a, ws[i + 1]) && plainClause(t, ws, i)) {
@@ -11287,7 +11370,7 @@ const BUILD='7.51 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='64f5fac10cff5851c94e43a4ebb29b629b211ea9813820870b1eff5f33332eb0';
+const PAGE_SHA='8d65e218b976243d474952b0febdf0225f251b758fbeabf915728a360d0fd83a';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -18498,7 +18581,11 @@ function ruleEdits(t){
    and style notes on the same words ("In my opinion big stars": the comma,
    not only the wordiness note); it yields to another correctness note */
 function inkYield(out,e){const ov=[];for(let i=0;i<out.length;i++){const o=out[i];if((e.start<o.end&&e.end>o.start)||(e.start===e.end&&o.start<=e.start&&o.end>=e.start))ov.push(i);}
- if(!ov.length)return true;if(ov.some(i=>out[i].cat==='g'))return false;
+ if(!ov.length)return true;
+ /* an insertion at the head of another note that keeps its first word ("a" before "student", beside "student,"): both stand */
+ const heads=o=>e.start===e.end&&o.start===e.start&&typeof o.fix==='string'&&o.orig&&o.fix.indexOf(String(o.orig).split(/\s/)[0])===0;
+ if(ov.some(i=>out[i].cat==='g'&&!heads(out[i])))return false;
+ if(ov.every(i=>heads(out[i])))return true;
  for(let k=ov.length-1;k>=0;k--)out.splice(ov[k],1);return true;}
 function learnerCheck(t,ms,out){
  if(typeof INKLRN==='undefined')return;
@@ -18852,6 +18939,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  const wasFirst=(Object.values(S.stats).reduce((a,b)=>a+b,0)===0);
  const orig=(typeof e.orig==='string'&&e.end>e.start)?e.orig:ed.value.slice(e.start,e.end);
  const ex=statExample(ed.value,e);
+ e._L=lessonForEdit(e,ed.value);   /* 7.52: the lesson is read before the page changes */
  const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
  if(!r){scan();return;}
  bumpStat(e.pat||e.why||'',ex);
@@ -18862,7 +18950,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
    change itself; nothing to open. Where no lesson fits, the plain receipt. */
 function inkRuleToast(e){
  if(!inkWayOn('rule'))return toast('Accepted ✔');
- let r='';try{const L=lessonForEdit(e);r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
+ let r='';try{const L=e._L||lessonForEdit(e);r=String(L&&L[0]||'');if(r===e.why)r='';}catch(x){r='';}
  r=inkRuleLine(r);
  if(!r)return toast('Accepted ✔');
  const chg=(typeof e.orig==='string'&&e.orig.trim()&&typeof e.fix==='string'&&e.fix.trim()&&e.orig.length<40&&e.fix.length<40)?'“'+e.orig.trim()+'” → “'+e.fix.trim()+'”  ·  ':'';
@@ -18926,7 +19014,8 @@ function wbUnmute(i){S.muteWords.splice(i,1);SV('muteWords',S.muteWords);WB=null
 function acceptAll(){const es=EDITS.filter(e=>typeof e.fix==='string');if(!es.length)return toast('Nothing to fix');inkAuthMark('f');
  if(es.length>=4)snap('Before Fix all');
  pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.pat||e.why||'',statExample(t0,e)));}let t=ed.value;
- es.slice().sort((a,b)=>b.start-a.start).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
+ /* 7.52: at one place, the longer fix first, then the insertion at its head ("a" before "student,") */
+ es.slice().sort((a,b)=>b.start-a.start||(b.end-b.start)-(a.end-a.start)).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
  ed.value=t;afterChange();SND.fixall();showUndoChip();clearSel();
  const r=+document.getElementById('rhCount').textContent;
  toast(es.length+' fixes applied ✔'+(r>0?' · '+r+' advisory flags remain; Clear dismisses them':''));}
@@ -18959,7 +19048,10 @@ function hideBubble(){bub.style.display='none';document.getElementById('bubTones
 /* 7.52: a spelling card teaches the word itself (INKSPELL.lesson: the
    classic words' lines, else the tricky part read off the slip); every
    other card its rule */
-function lessonForEdit(e){try{if(e&&/^Spelling/.test(String(e.why||''))&&typeof e.fix==='string'&&e.fix&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(e.orig,e.fix);if(L)return L;}}catch(x){}return lessonFor(e&&e.why||'');}
+function lessonForEdit(e,t){try{if(e&&/^Spelling/.test(String(e.why||''))&&typeof e.fix==='string'&&e.fix&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(e.orig,e.fix);if(L)return L;}}catch(x){}
+ /* 7.52: agreement, number and the article teach from the sentence itself (refine_core.js sentenceLesson) */
+ try{if(e&&typeof INKREF!=='undefined'&&INKREF.sentenceLesson){const L=INKREF.sentenceLesson(e,t!=null?t:(typeof ed!=='undefined'?ed.value:''));if(L)return L;}}catch(x){}
+ return lessonFor(e&&e.why||'');}
 function cardHTML(e,i,solo){
  const L=lessonForEdit(e);
  return '<div class="card'+(solo?' solo':'')+'" style="animation-delay:'+Math.min(i*40,300)+'ms">'+
@@ -24467,7 +24559,8 @@ function patCheck(i){if(!PATP)return;const x=PATP.ex[i],inp=document.getElementB
  const n=v=>String(v).replace(/\s+/g,' ').trim(),got=n(inp.value),want=n(x.fix);
  if(!got){inp.focus();return;}
  /* 7.52: a spelling practice says the word's own lesson with the answer */
- const spl=(function(){try{if(/^Spelling/.test(PATP.why)&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(x.ctx.slice(x.at,x.at+x.len),want);return L?' '+esc(L[0]):'';}}catch(e){}return '';})();
+ const spl=(function(){try{if(/^Spelling/.test(PATP.why)&&typeof INKSPELL!=='undefined'&&INKSPELL.lesson){const L=INKSPELL.lesson(x.ctx.slice(x.at,x.at+x.len),want);return L?' '+esc(L[0]):'';}
+  if(typeof INKREF!=='undefined'&&INKREF.sentenceLesson){const L=INKREF.sentenceLesson({why:PATP.why,pat:PATP.why,orig:x.ctx.slice(x.at,x.at+x.len),fix:want,start:x.at,end:x.at+x.len},x.ctx);return L?' '+esc(L[0]):'';}}catch(e){}return '';})();
  if(got===want||(x.alt||[]).some(a=>n(a)===got)){out.innerHTML='<span style="color:#2e7d4f">\u2714 Yes: \u201c'+esc(want)+'\u201d.</span>'+spl;
   if(!x.done){x.done=true;PATP.ok++;
    /* each sentence mended here counts one off the pattern: the number going to zero is the mastery */
