@@ -63,7 +63,7 @@ documents.
    everything inside the new folder, Commit. The old files are replaced.
 2. Open Inkwell once while online. The new version shows at the first
    opening (an update from 7.37 or older may need a second opening).
-Look for "v7.51" beside the date at the top.
+Look for "v7.52" beside the date at the top.
 
 
 YOUR OWN ADDRESS (A DOMAIN NAME), IF YOU WANT ONE
@@ -117,6 +117,30 @@ YOUR DOCUMENTS
 - A browser may clear a web app's storage when the device is very short of
   space. For long work, keep a copy on another device the same way.
 
+
+NEW IN 7.52
+-----------
+- The spelling fix, measured: a common word now stands clear of a rare one
+  ("through", not "throng"), a long word two slips from its only common
+  candidate gets its fix ("lenguaje" to "language"), three slips in a row
+  are no longer taken for a phrase of another language, and every
+  spelling card teaches the word itself ("Necessary: one c, two s, as a
+  shirt has one collar and two sleeves").
+- More fixes that need no model: the comma after "In my opinion" whatever
+  follows, before an instruction ("If you have time, read it") and before
+  "but" with a noun phrase; the space after a sentence's stop; the
+  paragraph's missing full stop; "into" after a verb of motion; a role
+  noun's article ("when I was a student"); "congratulations on".
+- Lessons from the sentence itself: "Results means more than one, so the
+  verb is were", on the card, in the line at the foot and in practice.
+  Your patterns counts fixes under nine families, each with its lesson.
+- "My friends likes" takes the plain verb; a correctness note takes the
+  place of a style note on the same words ("cannot", "a lot of").
+- Forty published articles read again: abstract nouns, titles, identity
+  capitals, the noun "will", "(i)", plural objects and transcript codes
+  no longer draw wrong fixes. A term you use twice is yours.
+- The guided tour shows the teaching; Undo rides the message at the foot.
+  See INKWELL_HANDOFF_v7p52.txt.
 
 NEW IN 7.51
 -----------

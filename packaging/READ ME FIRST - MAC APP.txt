@@ -1,4 +1,4 @@
-INKWELL 7.51 FOR MAC: THE READY-MADE APP
+INKWELL 7.52 FOR MAC: THE READY-MADE APP
 ========================================
 
 This zip holds Inkwell.app, ready to use. There is nothing to build, no
@@ -20,7 +20,7 @@ INSTALL OR UPDATE
    documents are not inside the app, so they stay where they are
    (~/Library/Application Support/Inkwell).
 4. Open Inkwell from Applications, not from the Downloads folder.
-5. Look for "v7.51" beside the date at the top.
+5. Look for "v7.52" beside the date at the top.
 
 THE FIRST OPENING
 -----------------
@@ -52,6 +52,30 @@ On the Fire tablet: Engine, "Your computer's model".
 Enter the address and the code. The pill at the top then names the Mac
 mini's model. If it says "computer linked, no model loaded", load a model on
 the Mac mini first (Engine there).
+
+NEW IN 7.52
+-----------
+- The spelling fix, measured: a common word now stands clear of a rare one
+  ("through", not "throng"), a long word two slips from its only common
+  candidate gets its fix ("lenguaje" to "language"), three slips in a row
+  are no longer taken for a phrase of another language, and every
+  spelling card teaches the word itself ("Necessary: one c, two s, as a
+  shirt has one collar and two sleeves").
+- More fixes that need no model: the comma after "In my opinion" whatever
+  follows, before an instruction ("If you have time, read it") and before
+  "but" with a noun phrase; the space after a sentence's stop; the
+  paragraph's missing full stop; "into" after a verb of motion; a role
+  noun's article ("when I was a student"); "congratulations on".
+- Lessons from the sentence itself: "Results means more than one, so the
+  verb is were", on the card, in the line at the foot and in practice.
+  Your patterns counts fixes under nine families, each with its lesson.
+- "My friends likes" takes the plain verb; a correctness note takes the
+  place of a style note on the same words ("cannot", "a lot of").
+- Forty published articles read again: abstract nouns, titles, identity
+  capitals, the noun "will", "(i)", plural objects and transcript codes
+  no longer draw wrong fixes. A term you use twice is yours.
+- The guided tour shows the teaching; Undo rides the message at the foot.
+  See INKWELL_HANDOFF_v7p52.txt.
 
 NEW IN 7.51
 -----------

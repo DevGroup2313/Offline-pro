@@ -1,4 +1,4 @@
-INKWELL 7.51 FOR IPHONE AND IPAD
+INKWELL 7.52 FOR IPHONE AND IPAD
 ================================
 
 TWO WAYS TO HAVE INKWELL ON AN IPHONE OR IPAD
@@ -19,7 +19,7 @@ TODAY: THE WEB APP ON THE HOME SCREEN
 2. On the iPhone or iPad, open that address in Safari.
 3. Share, "Add to Home Screen", Add.
 4. Open Inkwell from the Home Screen once while online, so it keeps its
-   files for offline use. Look for "v7.51" beside the date.
+   files for offline use. Look for "v7.52" beside the date.
 - Updating later: when the site is updated on Netlify, open Inkwell from the
   Home Screen while online; the new version shows at the first or second
   opening.
@@ -29,6 +29,30 @@ TODAY: THE WEB APP ON THE HOME SCREEN
   copy on another device is wise for long work: File, Move the library to
   another device.
 
+
+NEW IN 7.52
+-----------
+- The spelling fix, measured: a common word now stands clear of a rare one
+  ("through", not "throng"), a long word two slips from its only common
+  candidate gets its fix ("lenguaje" to "language"), three slips in a row
+  are no longer taken for a phrase of another language, and every
+  spelling card teaches the word itself ("Necessary: one c, two s, as a
+  shirt has one collar and two sleeves").
+- More fixes that need no model: the comma after "In my opinion" whatever
+  follows, before an instruction ("If you have time, read it") and before
+  "but" with a noun phrase; the space after a sentence's stop; the
+  paragraph's missing full stop; "into" after a verb of motion; a role
+  noun's article ("when I was a student"); "congratulations on".
+- Lessons from the sentence itself: "Results means more than one, so the
+  verb is were", on the card, in the line at the foot and in practice.
+  Your patterns counts fixes under nine families, each with its lesson.
+- "My friends likes" takes the plain verb; a correctness note takes the
+  place of a style note on the same words ("cannot", "a lot of").
+- Forty published articles read again: abstract nouns, titles, identity
+  capitals, the noun "will", "(i)", plural objects and transcript codes
+  no longer draw wrong fixes. A term you use twice is yours.
+- The guided tour shows the teaching; Undo rides the message at the foot.
+  See INKWELL_HANDOFF_v7p52.txt.
 
 NEW IN 7.51
 -----------

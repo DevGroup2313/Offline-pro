@@ -1,5 +1,5 @@
-INKWELL v7.52: HANDOFF NOTES (the work after 7.51; the release follows on the writer's word)
-=======================================================================================
+INKWELL v7.52: HANDOFF NOTES
+============================
 Date: 24 October 2026. Read INKWELL_HANDOFF_v7p51.txt and the earlier notes
 for everything before.
 
@@ -95,8 +95,8 @@ learner_test.js 215, gaps_test.js 153, spell_test.js 182, refine_test.js
 100, mark_test.js 26, rewrite run.js 328, explain_test.js 45,
 coach_test.js 38, para_test.js 44, sentence_test.mjs 24.
 
-HOW 7.52 IS BUILT AND RELEASED (when the writer asks)
-----------------------------------------------------
+HOW 7.52 WAS BUILT AND RELEASED
+-------------------------------
 As 7.51 (INKWELL_HANDOFF_v7p51.txt): versions in the seven files, the page
 built with tools/build_inkwell.py, the kits with make_packages.py --kits
 --no-key (checked for key files), the APK built here with the author's
@@ -108,8 +108,6 @@ goes to yabban-maker/inkwell-fire.
 
 NOT DONE YET
 ------------
-- The 7.52 release itself: this file describes the work; the version
-  numbers still read 7.51 until the release is assembled.
 - The corrector's remaining silences are contextual: a preposition both
   forms of which are acceptable, tense across a sentence, articles by
   meaning, word choice, spellings two words could explain ("thay"). Rule
