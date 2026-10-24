@@ -13,8 +13,13 @@
    sentence; and a term the writer uses three times or more.
    Pure functions; shared by the app and its test harness. */
 (function (root) {
-  const LEVEL_COST = { 10: 0, 20: 0.04, 35: 0.08, 40: 0.12, 50: 0.2, 55: 0.26, 60: 0.38, 70: 0.7 };
-  const lc = lv => { for (const k of [10, 20, 35, 40, 50, 55, 60, 70]) if (lv <= k) return LEVEL_COST[k]; return 0.9; };
+  /* 7.52: the cost of a candidate's rarity, by its SCOWL level. Measured on
+     the Write & Improve halves: with the earlier, flatter costs (0 to 0.7)
+     a common word one slip away stood too close to a rare one at the
+     same distance ("through" and "throng", "going" and "gringo",
+     "knees" and "kines"), so no fix was offered. */
+  const LEVEL_COST = { 10: 0, 20: 0.08, 35: 0.25, 40: 0.35, 50: 0.6, 55: 0.7, 60: 0.85, 70: 1.0 };
+  const lc = lv => { for (const k of [10, 20, 35, 40, 50, 55, 60, 70]) if (lv <= k) return LEVEL_COST[k]; return 1.2; };
   const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
   const POS = {}; ROWS.forEach((r, y) => [...r].forEach((c, x) => { POS[c] = [x + y * 0.5, y]; }));
   const near = (a, b) => { const p = POS[a], q = POS[b]; return p && q && Math.abs(p[0] - q[0]) <= 1.01 && Math.abs(p[1] - q[1]) <= 1; };
@@ -29,6 +34,11 @@
   /* the particles of Arabic names ("Muhammad ibn Tarhan"); "al-" names are
      names */
   const NAME_PART = new Set('ibn bin bint abu abd abdul al el ul ud'.split(' '));
+  /* 7.52: the small words of other languages inside names and phrases
+     ("Ca los Cans", "Tignes les Boisses", "los Picarones") */
+  const FOREIGN_SMALL = new Set('los las les des der das del della delle degli dei du aux gli nel dal dalla sur chez vom zum zur und och og och ved af'.split(' '));
+  /* 7.52: loanwords written without their accents ("cafes", "cliche", "jalapeno") */
+  const UNACCENTED = new Set('cafe cafes cliche cliches cliched facade facades fiance fiancee fiances fiancees decor matinee matinees puree pureed saute sauteed touche attache attaches communique communiques protege protegee proteges risque soiree soirees entree entrees melee melees blase passe emigre emigres creme crepe crepes flambe frappe canape canapes applique eclair eclairs consomme habitue habitues naivete negligee precis deja jalapeno jalapenos pinata pinatas senor senora senorita manana doppelganger uber kung'.split(' '));
   /* 7.47: bases whose plural or past is irregular: "childs" and "teached"
      stay marked though "child" and "teach" are words */
   const IRREG = new Set('child woman foot tooth mouse goose criterion phenomenon teach catch bring think write speak break choose drive begin build drink fight forget forgive freeze sleep steal sweep swing swear throw understand stand spend send lend shake shine shoot sling sting stink strike strive swim wake ride arise bleed breed cling creep dwell flee fling grind kneel leave light mislead seek sell shrink slide speed split spread spring stride swell tear thrust tread upset weep wind withdraw undertake overtake mistake forbid forsake'.split(' '));
@@ -63,6 +73,7 @@
   }
   function known(D, w) {
     if (level(D, w) >= 0) return true;
+    if (UNACCENTED.has(w.toLowerCase())) return true;
     const m = /^(.+?)(?:'s|’s|s'|’)$/.exec(w); if (m && level(D, m[1]) >= 0) return true;
     const lw = w.toLowerCase();
     if (w.indexOf('-') > 0) {
@@ -172,15 +183,21 @@
   function edits1(w) {
     const out = [];
     for (let i = 0; i <= w.length; i++) {
-      const L = w.slice(0, i), R = w.slice(i);
-      if (R) out.push([L + R.slice(1), R[0] === L.slice(-1) || R[0] === R[1] ? 0.45 : 0.95]); // the writer added a letter (a doubled one is likelier)
+      const L = w.slice(0, i), R = w.slice(i), p0 = i === 0 ? 0.2 : 0; // 7.52: a slip at the first letter is rarer ("nopal" is not "opal", "susage" is not "usage")
+      if (R) out.push([L + R.slice(1), R[0] === L.slice(-1) || R[0] === R[1] ? 0.45 : 0.95 + p0]); // the writer added a letter (a doubled one is likelier)
       if (R.length > 1 && R[0] !== R[1]) out.push([L + R[1] + R[0] + R.slice(2), 0.6]); // two letters swapped
       for (const c of ABC) {
-        if (R && c !== R[0]) out.push([L + c + R.slice(1), near(c, R[0]) ? 0.75 : (VOW.has(c) && VOW.has(R[0]) ? 0.8 : 1)]); // a letter changed
-        out.push([L + c + R, c === L.slice(-1) || c === R[0] ? 0.5 : 0.95]); // the writer left a letter out (often a doubled one)
+        if (R && c !== R[0]) out.push([L + c + R.slice(1), (near(c, R[0]) ? 0.9 : (VOW.has(c) && VOW.has(R[0]) ? 0.8 : 1)) + p0]); // a letter changed (7.52: a neighbouring key was 0.75, and beat a letter left out: "healty" went to "health", not "healthy")
+        out.push([L + c + R, c === L.slice(-1) || c === R[0] ? 0.5 : 0.95 + p0]); // the writer left a letter out (often a doubled one)
       }
     }
     return out;
+  }
+  /* 7.52: two known words run together ("callsign", "wheelset", "crewmembers"): a term, not a slip two letters from a common word */
+  function compound(D, w) {
+    for (let i = 3; i <= w.length - 3; i++) { const a = D.lower.get(w.slice(0, i)), b = w.slice(i), eb = D.lower.get(b);
+      if (a && a.plain && a.lv <= 50 && ((eb && eb.plain && eb.lv <= 50) || inflected(D, b))) return true; }
+    return false;
   }
   function suggest(D, word, max, names) {
     /* the same word is looked up once per session */
@@ -236,7 +253,7 @@
        ("al-madīna al-fāḍila"), or one of a run of unknown words, is
        another language ("Il buio e il miele", "substantia individua") */
     const FOREIGN = /[\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u1E00-\u1EFF]/;
-    const hold = [];
+    const hold = [], cheap = new Set();
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
@@ -244,7 +261,12 @@
          plural of capitals ("MRIs"), the parts of Arabic names */
       if (m[0].length > w.length && /in$/.test(w)) continue;
       if (/^[A-Z]{2,}s$/.test(w)) continue;
-      if (NAME_PART.has(w.toLowerCase()) || /^(?:al|el|ul|an|ad|as|at|ar)-/i.test(w)) continue;
+      /* 7.52: a prefix standing apart from its word ("pre - intermediate", "pre historic") */
+      if (PREFIX.has(w.toLowerCase()) && /^\s*(?:-\s*)?[A-Za-z]/.test(text.slice(e, e + 4))) continue;
+      /* 7.52: a term glossed in brackets ("a manica (a heavy linen wrapping)"), or defined by its sentence ("The falx was a curved blade") */
+      if (/^\s*\(\s*(?:a|an|the|or|i\.e\.|that is|also|see)\b/i.test(text.slice(e, e + 14))) continue;
+      if (/(?:^|[.!?]\s+)(?:The|A|An)\s+$/.test(text.slice(Math.max(0, s - 6), s)) && /^\s+(?:is|was|are|were)\s+(?:a|an|the)\b/.test(text.slice(e, e + 10))) continue;
+      if (NAME_PART.has(w.toLowerCase()) || FOREIGN_SMALL.has(w.toLowerCase()) || /^(?:al|el|ul|an|ad|as|at|ar)-/i.test(w)) continue;
       /* 7.47: a capital changed in a quotation ("[c]riteria", "[b]lindness")
          is read with its bracketed letter; a word the writer introduces
          ("the local name berdi", "called asuras"), one alone in quotation
@@ -291,12 +313,23 @@
       /* a capital at the start of a sentence may be a name the dictionary
          lacks ("Fincher"): a fix only for one cheap slip to a common word */
       const capStart = /^[A-Z]/.test(w);
-      const o = { start: s, end: e, orig: w, fix: null, alts: sug.map(x => matchCase(w, x.word)), why: 'Spelling', cat: 'g', spell: true };
+      const o = { start: s, end: e, orig: w, fix: null, alts: sug.filter(x => x.score <= sug[0].score + 0.9).map(x => matchCase(w, x.word)), why: 'Spelling', cat: 'g', spell: true };
       /* the first suggestion is offered as the fix only when it stands clear of the second */
-      const short = w.length <= 3, mx = short ? 0.6 : (opt.maxScore ?? 1.35), mg = short ? 0.3 : (opt.margin ?? 0.12);
-      const ok0 = sug.length && sug[0].score <= mx && (sug.length < 2 || sug[1].score - sug[0].score >= mg);
-      const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35);
-      if (ok0 && capOk) o.fix = matchCase(w, sug[0].word);
+      const short = w.length <= 3, mx = short ? 0.6 : w.length === 4 ? Math.min(1.0, opt.maxScore ?? 1.35) : (opt.maxScore ?? 1.35), mg = short ? 0.3 : (opt.margin ?? 0.12);
+      const ok0 = sug.length && sug[0].score <= mx && (sug.length < 2 || sug[1].score - sug[0].score >= mg - 1e-9) &&
+        ((D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35 || sug[0].score <= 1.1); /* 7.52: a rare word only for one cheap slip */
+      /* 7.52: a long word two slips from a common word, with nothing else
+         near ("lenguaje", "nesesary", "prfesional", "atencion"): the
+         fix is offered when the candidate is common, of much the same
+         length, and stands clear of the next */
+      const lone = !ok0 && !capStart && w.length >= 7 && sug.length && sug[0].score <= 2.0 && Math.abs(sug[0].word.length - w.length) <= 2 &&
+        (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 10 && (sug.length < 2 || sug[1].score - sug[0].score >= 0.2 - 1e-9) && !compound(D, w.toLowerCase());
+      const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && w.length >= 5 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35); /* 7.52: four letters at a sentence's start are a name ("Maon") */
+      if ((ok0 || lone) && capOk) o.fix = matchCase(w, sug[0].word);
+      /* 7.52: a word of four letters or more, one cheap slip from a common
+         word, is likelier a slip than a word of another language (the run
+         rule below) */
+      if (o.fix && sug[0].score <= 1.0 && w.length >= 4) cheap.add(o);
       /* 7.47: a fix that only swaps a last letter of -s, -d, -r is a guess at
          a form, not a spelling ("brainwasher" to "brainwashed"): marked,
          with no fix */
@@ -312,13 +345,19 @@
        each, or two inside brackets or quotation marks, are a phrase of
        another language: none is marked. (Two side by side are left marked:
        learners often slip twice running, "mor convient".) */
+    /* 7.52: measured on the Write & Improve tuning half, the run swallowed
+       "the ablity of travalling has easened": three slips in a row. A run
+       in which two words or more are each one cheap slip from a common
+       word is a run of slips, and every word in it stays marked; "il buio
+       e il miele" has one such word at most, and stays a phrase. */
     const run = new Set();
     for (let i = 0; i < hold.length;) {
       let j = i;
       while (j + 1 < hold.length && /^\s+(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(hold[j].end, hold[j + 1].start))) j++;
       const n = j - i + 1;
       const quoted = n >= 2 && /[(\[“"«]\s*(?:[A-Za-z]{1,3}\s+)?$/.test(text.slice(Math.max(0, hold[i].start - 6), hold[i].start)) && /^\s*(?:\s[A-Za-z]{1,3})?[)\]”"»]/.test(text.slice(hold[j].end, hold[j].end + 6));
-      if (n >= 3 || quoted) for (let k = i; k <= j; k++) run.add(k);
+      const slips = hold.slice(i, j + 1).filter(o => cheap.has(o)).length;
+      if ((n >= 3 || quoted) && slips < 2) for (let k = i; k <= j; k++) run.add(k);
       i = j + 1;
     }
     hold.forEach((o, i) => { if (!run.has(i)) out.push(o); });
@@ -351,6 +390,78 @@
     }
     if (D.memo) D.memo.clear();
   }
-  const api = { load, known, suggest, check, level, addWords, dropWord };
+  /* 7.52: the lesson of a spelling fix is the word itself: for the classic
+     words a line to remember them by, for the rest the tricky part, read
+     off the slip (a letter missing, an extra one, a doubled one, two
+     swapped, a vowel for another). [rule, example] or null. */
+  const MNEMO = {
+    necessary: 'Necessary: one c, two s, as a shirt has one collar and two sleeves.', necessarily: 'Necessarily: one c, two s, as in necessary.',
+    separate: 'Separate: there is “a rat” in sep-a-rat-e.', separately: 'Separately: there is “a rat” in sep-a-rat-ely.',
+    definitely: 'Definitely has “finite” inside it, and no a.', definite: 'Definite has “finite” inside it, and no a.',
+    receive: 'i before e, except after c: receive.', received: 'i before e, except after c: received.', receiving: 'i before e, except after c: receiving.', receipt: 'i before e, except after c: receipt.',
+    deceive: 'i before e, except after c: deceive.', perceive: 'i before e, except after c: perceive.', conceive: 'i before e, except after c: conceive.', ceiling: 'i before e, except after c: ceiling.',
+    believe: 'i before e: believe, with “a lie” inside it.', believed: 'i before e: believed, with “a lie” inside it.', achieve: 'i before e: achieve.', achieved: 'i before e: achieved.', achievement: 'i before e: achievement.',
+    friend: 'i before e: friend, a friend to the end.', friends: 'i before e: friends, friends to the end.', piece: 'i before e: a piece of pie.', field: 'i before e: field.', niece: 'i before e: niece.', chief: 'i before e: chief.', brief: 'i before e: brief.', relief: 'i before e: relief.',
+    weird: 'Weird is weird: e before i.', seize: 'Seize breaks the rule: e before i.', foreign: 'Foreign breaks the rule: e before i.', height: 'Height: e before i, as in “eight”.', weight: 'Weight: e before i, as in “eight”.', neighbour: 'Neighbour: e before i, as in “weigh”.', neighbor: 'Neighbor: e before i, as in “weigh”.', their: 'Their: e before i, the one that owns.', leisure: 'Leisure: e before i.',
+    accommodate: 'Accommodate has room for two c and two m.', accommodation: 'Accommodation has room for two c and two m.',
+    occurred: 'Occurred doubles the r: oc-cur-red.', occurring: 'Occurring doubles the r: oc-cur-ring.', occurrence: 'Occurrence: two c, two r, then -ence.', occur: 'Occur: two c, one r.',
+    embarrass: 'Embarrass: two r, two s.', embarrassed: 'Embarrassed: two r, two s.', embarrassing: 'Embarrassing: two r, two s.', embarrassment: 'Embarrassment: two r, two s.',
+    rhythm: 'Rhythm helps your two hips move: r-h-y-t-h-m.', beginning: 'Beginning doubles the n: begin-ning.',
+    government: 'Govern-ment keeps the n of govern.', environment: 'Environ-ment keeps the n of environ.', environmental: 'Environ-mental keeps the n of environ.',
+    independent: 'Independent ends in -ent.', independence: 'Independence ends in -ence.', argument: 'Argument drops the e of argue.', truly: 'Truly drops the e of true.', until: 'Until has one l; “till” has two.',
+    'a lot': '“A lot” is two words, like “a little”.', which: 'Which: w-h-i-c-h, with no t.', tomorrow: 'Tomorrow: one m, two r.', because: 'Because: big elephants can always understand small elephants.',
+    beautiful: 'Beautiful: b-e-a-u, then -tiful.', business: 'Busi-ness: the bus, then the i.', calendar: 'Calendar ends in -ar.', grammar: 'Grammar ends in -ar: gram-mar.',
+    privilege: 'Privilege: no d, and -ege at the end.', maintenance: 'Maintenance: main-ten-ance.', conscious: 'Con-sci-ous keeps the sc of science.', conscience: 'Con-science: the science of right and wrong.',
+    knowledge: 'Know-ledge keeps the d of know.', library: 'Li-brar-y: two r.', february: 'Feb-ru-ary: the r of “brr”.', wednesday: 'Wed-nes-day.', restaurant: 'Rest-au-rant.', people: 'Pe-o-ple: the o before the p.',
+    professional: 'Professional: one f, two s.', professor: 'Professor: one f, two s.', recommend: 'Recommend: one c, two m, as in re-commend.', recommended: 'Recommended: one c, two m, as in re-commend.',
+    committee: 'Committee: two m, two t, two e.', success: 'Success: two c, two s.', successful: 'Successful: two c, two s, one l.', address: 'Address: two d, two s.', possession: 'Possession: four s, two by two.',
+    language: 'Language: l-a-n-g-u-a-g-e, the u after the g.', writing: 'Writing has one t; written has two.', written: 'Written has two t; writing has one.', college: 'College ends in -ege.', immediately: 'Immediately: two m.',
+    different: 'Different: two f, then -ent.', difference: 'Difference: two f, then -ence.', interesting: 'In-ter-est-ing.', interested: 'In-ter-est-ed.', experience: 'Experience ends in -ence.', existence: 'Existence ends in -ence.',
+    through: 'Through ends in -ough: th-r-ough.', thought: 'Thought: th-ough-t.', enough: 'Enough ends in -ough.', although: 'Although: al-, then though.',
+    excellent: 'Excellent: two l, then -ent.', sincerely: 'Sincerely keeps the e of sincere.', completely: 'Completely keeps the e of complete.', finally: 'Finally: final, then -ly: two l.', really: 'Really: real, then -ly: two l.', usually: 'Usually: usual, then -ly: two l.',
+    basically: 'Basically: basic, then -ally.', publicly: 'Publicly: public, then -ly, with no al.', accidentally: 'Accidentally: accidental, then -ly.',
+    opportunity: 'Opportunity: two p.', opportunities: 'Opportunities: two p.', disappear: 'Disappear: one s, two p.', disappoint: 'Disappoint: one s, two p.', disappointed: 'Disappointed: one s, two p.',
+    misspell: 'Misspell: mis-, then spell: two s.', noticeable: 'Noticeable keeps the e of notice.', changeable: 'Changeable keeps the e of change.', manageable: 'Manageable keeps the e of manage.',
+    forty: 'Forty has no u, though four does.', ninth: 'Ninth drops the e of nine.', twelfth: 'Twelfth keeps the f of twelve.', acquire: 'Acquire: ac-, then quire.', apparent: 'Apparent: two p, then -ent.',
+    category: 'Category: cat-e-gory, with an e.', cemetery: 'Cemetery: three e, no a.', colleague: 'Colleague: two l, then -eague.', column: 'Column ends in a silent n.', convenient: 'Convenient: con-ven-ient.',
+    describe: 'Describe: de-, not di-.', description: 'Description: de-, not di-.', desperate: 'Desperate: des-per-ate, with an e.', develop: 'Develop has no e at the end.', development: 'Develop-ment: no e before -ment.',
+    exaggerate: 'Exaggerate: two g.', familiar: 'Familiar ends in -iar.', similar: 'Similar ends in -ar.', guarantee: 'Guarantee: gua-, then -rantee.', harass: 'Harass: one r, two s.', hierarchy: 'Hierarchy: hier-, as in “hi, er”.',
+    humorous: 'Humorous drops the u of humour.', hypocrisy: 'Hypocrisy ends in -isy.', liaison: 'Liaison: two i, one on each side of the a.', millennium: 'Millennium: two l, two n.', minuscule: 'Minuscule has “minus” in it, not “mini”.',
+    parallel: 'Parallel: the two l in the middle run parallel.', pastime: 'Pastime: one s, one t.', perseverance: 'Perseverance: per-sever-ance.', pronunciation: 'Pronunciation: pro-nun-, not pro-noun-.', questionnaire: 'Questionnaire: two n.',
+    relevant: 'Relevant ends in -ant.', secretary: 'Secretary: a secretary keeps a secret.', strength: 'Strength keeps the g of strong.', length: 'Length keeps the g of long.', supersede: 'Supersede: the one -sede word in English.',
+    surprise: 'Surprise: sur-, then prise; the first r stays.', threshold: 'Threshold: one h in the middle.', vacuum: 'Vacuum: one c, two u.', precede: 'Precede ends in -cede.', proceed: 'Proceed ends in -ceed.', exceed: 'Exceed ends in -ceed.', succeed: 'Succeed ends in -ceed, one of three.',
+    occasion: 'Occasion: two c, one s.', occasionally: 'Occasionally: two c, one s, two l.', referred: 'Referred doubles the r: re-fer-red.', preferred: 'Preferred doubles the r: pre-fer-red.', benefited: 'Benefited: one t.',
+    travelling: 'Travelling: two l in British spelling, one in American.', travelled: 'Travelled: two l in British spelling, one in American.', university: 'Uni-ver-sity: one universe.', attention: 'Attention: two t, then -tion.',
+    children: 'Children: child, then -ren.', anxious: 'Anxious: anx-, then -ious.', ability: 'Ability: a-bil-ity, one b.', probably: 'Probably: prob-ab-ly.', coming: 'Coming has one m: come, drop the e.', nowadays: 'Nowadays: now-a-days, one word.',
+  };
+  function lesson(orig, fix) {
+    const o = String(orig || '').trim(), f = String(fix || '').trim();
+    if (!o || !f) return null;
+    const ol = o.toLowerCase(), fl = f.toLowerCase();
+    if (ol === fl) return null;
+    const ex = o + ' → ' + f, q = x => '“' + x + '”';
+    const mn = MNEMO[fl] || MNEMO[fl.replace(/^(.{4,}?)(?:s|es|ed|d|ing|ly)$/, '$1')];
+    if (mn) return [mn, ex];
+    let i = 0; while (i < ol.length && i < fl.length && ol[i] === fl[i]) i++;
+    let j = 0; while (j < ol.length - i && j < fl.length - i && ol[ol.length - 1 - j] === fl[fl.length - 1 - j]) j++;
+    const om = ol.slice(i, ol.length - j), fm = fl.slice(i, fl.length - j);
+    let rule;
+    if (/\s/.test(fm) && !om.replace(/\s/g, '')) rule = 'Two words, not one: ' + f + '.';
+    else if (om === '' && fm.length === 1 && (fl[i - 1] === fm || fl[i + 1] === fm)) rule = 'Double ' + q(fm) + ': ' + f + '.';
+    else if (fm === '' && om.length === 1 && (ol[i - 1] === om || ol[i + 1] === om)) rule = 'One ' + q(om) + ', not two: ' + f + '.';
+    else if (om === '') rule = (fm.length === 1 ? 'The ' + q(fm) + ' was missing: ' : 'The letters ' + q(fm) + ' were missing: ') + f + '.';
+    else if (fm === '') rule = (om.length === 1 ? 'An extra ' + q(om) : 'The extra letters ' + q(om)) + ': ' + f + ', not ' + ol + '.';
+    else if (fm === om + om || (om.length === 1 && fm === om + om)) rule = 'Double ' + q(om) + ': ' + f + '.';
+    else if (om === fm + fm || (fm.length === 1 && om === fm + fm)) rule = 'One ' + q(fm) + ', not two: ' + f + '.';
+    else if (om.length === 2 && fm.length === 2 && om[0] === fm[1] && om[1] === fm[0]) {
+      if (fm === 'ie') rule = 'i before e: ' + f + '.';
+      else if (fm === 'ei') rule = /cei/.test(fl) ? 'i before e, except after c: ' + f + '.' : f.charAt(0).toUpperCase() + f.slice(1) + ' breaks the rule: e before i.';
+      else rule = 'Two letters swapped, ' + q(om) + ' for ' + q(fm) + ': ' + f + '.';
+    }
+    else if (om.length === 1 && fm.length === 1) rule = (VOW.has(om) && VOW.has(fm) ? 'The vowel is ' : 'The letter is ') + q(fm) + ', not ' + q(om) + ': ' + f + '.';
+    else rule = 'The tricky part is ' + q(fm) + ', where you wrote ' + q(om) + ': ' + f + '.';
+    return [rule, ex];
+  }
+  const api = { load, known, suggest, check, level, addWords, dropWord, lesson };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.INKSPELL = api;
 })(typeof self !== 'undefined' ? self : this);

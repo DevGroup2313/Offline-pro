@@ -493,3 +493,84 @@ rest were wrong, and each got its guard and a test:
 One real fix is given up: "the federal government let each state" keeps
 its note and loses its fix. learner_test.js 188, gaps_test.js 130.
 
+## After 7.51: the spelling fix (stage G6, third part)
+
+The 7.50 audit put spelling (R:SPELL) among the larger silences: on the
+Write & Improve tuning half the corrector made the annotator's own fix for
+68 of 129 misspellings, offered a different word 16 times, and offered no
+fix at all 45 times. Every silence and every wrong word was read with the
+suggester's own scores (scratchpad spellgap.py and spellprobe.js). Three
+causes stood out, and each was corrected in src/lib/spell_core.js:
+
+- the cost of a candidate's rarity was too flat (0 to 0.7 across the
+  SCOWL levels), so a common word one slip away did not stand clear of a
+  rare one at the same distance, and the margin rule withheld the fix:
+  "throug" (through, throng), "goingo" (going, gringo), "knies" (knees,
+  kines), "privte" (private, privet). The costs are now 0, 0.08, 0.25,
+  0.35, 0.6, 0.7, 0.85, 1.0 and 1.2 by level, and the margin is read
+  without floating-point noise;
+- a long word two slips from a very common word, with nothing else near,
+  had no fix: "lenguaje", "nesesary", "prfesional", "atencion",
+  "chilfen". It gets the fix when it has seven letters or more, the
+  candidate is of the first level, of much the same length, stands 0.2
+  clear of the next, and the word is not two known words run together
+  ("callsign", "wheelset", "crewmembers");
+- three unknown words with at most one short word between them were
+  taken for a phrase of another language and left alone, which swallowed
+  "the ablity of travalling has easened". A run in which two words or
+  more are each one cheap slip from a common word is a run of slips, and
+  stays marked; "il buio e il miele" has one such word at most and stays
+  a phrase.
+
+Two costs were recalibrated against the same sets. A neighbouring key
+cost 0.75 and beat a letter left out (0.95): "healty" went to "health",
+not "healthy"; "amoung" to "amount"; "eaily" to "daily"; "creats" to
+"create". It now costs 0.9, so such pairs stay a question (both words
+are offered, neither applied). A slip at the first letter costs 0.2 more
+than one inside the word: "susage" is not "usage", "nopal" is not "opal",
+"jhum" is not "hum".
+
+The new fixes on the two correct sets were read in the same way, and
+each misfire got its guard and a test: a prefix standing apart from its
+word ("pre - intermediate", "pre historic"); a term glossed in brackets
+("a manica (a heavy linen wrapping)") or defined by its sentence ("The
+falx was a curved blade"); loanwords written without their accents
+("cafes", "cliche", "jalapeno"); the small words of other languages
+inside names ("Ca los Cans", "Tignes les Boisses"); a word of four
+letters only for a slip within 1.0; a rare word (above level 35) only for
+one cheap slip; a capital of four letters at a sentence's start is a name
+("Maon"). The alternatives on a card keep to the candidates within 0.9 of
+the best, so "necessary" is no longer offered beside "pessary".
+
+| set | before P / R / F0.5 | after |
+|---|---|---|
+| W&I tuning half | 66.4 / 9.0 / 0.291 | 67.0 / 9.4 / 0.300 |
+| W&I report half | 62.3 / 7.9 / 0.262 | 62.3 / 8.0 / 0.265 |
+| CoNLL-2014 | 74.3 / 7.7 / 0.272 | 75.0 / 7.8 / 0.276 |
+| correct Wikipedia, tuning | 68 (4.5%) | 60 (4.0%) |
+| correct Wikipedia, report | 72 (4.8%) | 67 (4.5%) |
+
+Spelling alone (the annotator's R:SPELL edits: the same word, a
+different word, no fix):
+
+| set | before | after |
+|---|---|---|
+| W&I tuning half (129) | 68 / 16 / 45 | 82 / 17 / 30 |
+| W&I report half (140) | 64 / 22 / 54 | 66 / 25 / 49 |
+| CoNLL-2014 (197) | 94 / 14 / 89 | 97 / 15 / 85 |
+
+What remains is context: "thay" (that or they), "messagen" (message or
+messages), "susage" (sausage, in a sentence about appetisers), "kneck"
+(neck), and the words three slips away ("enoff", "ansiouns"). An
+intermediate round that withheld every fix to a word above level 20
+unless the slip was cheap lost right fixes on every set ("burgers",
+"diabetes", "perspectives", "decorate") and was not kept.
+
+The lesson of a spelling fix is now the word itself (INKSPELL.lesson):
+for the classic words a line to remember them by ("Necessary: one c, two
+s, as a shirt has one collar and two sleeves", "i before e, except after
+c: receive"), for the rest the tricky part read off the slip ("The “h”
+was missing: through", "Double “m”: committed", "The vowel is “e”, not
+“a”: depends", "Two words, not one: every site"). The card, the line at
+the foot after an accepted fix, and the practice's answer carry it.
+spell_test.js 181.
