@@ -71,6 +71,19 @@ WHAT CHANGED
    lesson (refine_core.js LESSON). The counts kept under each wording of a
    rule fold into their families once (inkFoldStats). One sentence from
    last time names the family.
+7. The corrector read against 40 published articles (247,426 words, the
+   7.47 set) in the scholarly register: 554 correctness notes, 408 with a
+   fix, became 409 and 268, each misfiring shape guarded with a test
+   (tools/grammar/README.md, "under scrutiny on published prose, again"):
+   abstract nouns given an article ("about epistemic agency"); "only",
+   "first" and "best" used as adverbs given "the"; a title's capital
+   ("Scent of a Woman", "Leech and Short"); identity capitals ("Black
+   patients"); the noun "will"; a list's "(i)"; "the The Sanitary…";
+   plural objects taken for subjects ("preferences and values is");
+   transcript codes and bracketed sources at a paragraph's end; a species
+   after its genus initial; learned terms ("analepsis"); -er nouns from
+   verbs ("funders"); two words run together split ("empiricalevidence").
+   The learner sets did not move; the right fixes stayed.
 
 Whole page, ERRANT F0.5, from 7.51: W&I tuning half 0.291 to 0.311,
 report half 0.262 to 0.274, CoNLL-2014 0.272 to 0.278; correct prose

@@ -6681,7 +6681,7 @@ const SVAGREE=[
  /* plural pronoun or demonstrative, singular verb */
  {re:/\b(we|you|they) was\b/gi,to:'$1 were',cat:'g',label:'Agreement: a plural subject takes "were"'},
  {re:/\b(these|those) was\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$/i,to:'$1 were',cat:'g',label:'Agreement: a plural subject takes "were"'},
- {re:/\b(we|they|these|those) is\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$/i,to:'$1 are',cat:'g',label:'Agreement: a plural subject takes "are"'},
+ {re:/\b(we|they|these|those) is\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$|\b(?:among|amongst|between|of|in|from|with|for|to|at|on|by|like)\s+$/i,to:'$1 are',cat:'g',label:'Agreement: a plural subject takes "are"'},
  {re:/\b(we|you|they) has\b/gi,to:'$1 have',cat:'g',label:'Agreement: a plural subject takes "have"'},
  {re:/\b(we|you|they) doesn'?t\b/gi,to:"$1 don't",cat:'g',label:'Agreement: a plural subject takes "don\u2019t"'},
  /* singular pronoun, plural verb (only forms that are never correct) */
@@ -6691,8 +6691,8 @@ const SVAGREE=[
  /* 7.38: not when the plural noun sits inside a phrase that belongs to an
     earlier subject ("the quality of the results was", "the number of
     participants is") or after "what" ("What Inkwell measures is") */
- {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) was\b/gi,npre:/\b(?:of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 were',cat:'g',label:'Agreement: a plural noun takes "were"'},
- {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) is\b/gi,npre:/\b(?:of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 are',cat:'g',label:'Agreement: a plural noun takes "are"'}
+ {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) was\b/gi,npre:/\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:[a-z]+\s+){0,3}$|\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|older|younger|older|other|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 were',cat:'g',label:'Agreement: a plural noun takes "were"'},
+ {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) is\b/gi,npre:/\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:[a-z]+\s+){0,3}$|\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|older|younger|older|other|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 are',cat:'g',label:'Agreement: a plural noun takes "are"'}
 ];
 /* ================= FURTHER GRAMMAR: double comparison, pronoun case, faulty predication ================= */
 /* All four are forms that standard writing does not use, so each correction is safe.
@@ -6808,7 +6808,7 @@ const GRAM5=[
    spacing pass. */
 const GRAM6=[
  /* the bare lowercase pronoun and the calendar */
- {re:/\bi\b(?=[\s'’.,!?;:\)]|$)/g,cs:true,to:'I',cat:'g',label:'Capital I'},
+ {re:/\bi\b(?=[\s'’.,!?;:]|$)/g,cs:true,to:'I',cat:'g',label:'Capital I',npre:/[(\[]\s*$/},   /* 7.52: not a list's "(i)" */
  /* 7.49: each with its capital as the fix; "march", "may" and "august"
     are ordinary words too, so only where they stand as a date */
  {re:/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\b/g,cs:true,to:m=>m[0].toUpperCase()+m.slice(1),cat:'g',label:'Days of the week carry a capital'},
@@ -9888,6 +9888,7 @@ function inkRuleGate(t,out){
   for(const k in INK_DEMOTE)if(why.indexOf(k)===0)e.cat=INK_DEMOTE[k];
   if(why.indexOf('Sentence begins lowercase')===0){
    const pre=t.slice(Math.max(0,e.start-12),e.start);
+   if(/^[.!?]\s+et\s+al\b/.test(t.slice(e.start,e.start+10)))continue;   /* 7.52: "Parsa. et al." */
    if(INK_ABBR.test(pre)||/\d$/.test(pre)||/\.\.$/.test(pre)||/^\.\s+[a-z]\.[a-z]\./i.test(t.slice(e.start,e.start+8)))continue;  /* i.e. not, A.E.C.C. in, 17. b3 */
    /* 7.47: a genus shortened to its capital ("species-P. vivax", "E. coli"),
       and a name that begins in lower case ("al-Kīt Kāt", "de Beauvoir",
@@ -9895,6 +9896,7 @@ function inkRuleGate(t,out){
    if(/(?:^|[^A-Za-z])[A-Z]$/.test(pre)||/^[.!?]\s+(?:al-|el-|ad-|ibn |de |du |da |di |van |von |le |la |bell hooks)/.test(t.slice(e.start,e.start+14)))continue;}
   if(/^Capital(ise the pronoun)? I/.test(why)){
    const i=t.indexOf('i',e.start);if(i<0)continue;
+   if(/[^\x00-\x7F]/.test(t.slice(Math.max(0,i-14),i+14)))continue;   /* 7.52: a word of another language beside it ("nišan saman i bithe") */
    /* 7.52: an apostrophe after the i is its contraction ("i'm", "i've"), not a word around it */
    if(L(t[i-1])||(L(t[i+1])&&!/^['’](?:m|ve|ll|d)\b/.test(t.slice(i+1,i+4)))||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
   if(why.indexOf('“an” belongs before vowel sounds only')===0){
@@ -9913,7 +9915,7 @@ function inkRuleGate(t,out){
   if(why.indexOf('Space after a period before the next sentence')===0){
    if(!/^\.[A-Z][a-z]/.test(o)||t[e.start-1]==='.'||/(?:^|[\s(])[A-Z]$/.test(t.slice(Math.max(0,e.start-2),e.start))||/(www|https?:|\/)\S*$/.test(before))continue;}
   if(why.indexOf('Hyphenate a compound modifier')===0&&(!INK_DET.test(before)||INK_FUNC_NEXT.test(after)))continue;
-  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&/^[A-Z]/.test(o))continue;
+  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&(/^[A-Z]/.test(o)||/^[a-z]+\s+[A-Z]/.test(o)))continue;   /* 7.52: "in the The Sanitary…": a title's The */
   /* 7.47: a clause that says what the noun is ("the NHS’s ethos, that each
      life is of equal value") takes its comma; "that’s" is the pronoun */
   if(why.indexOf('“Which” carries the comma')===0&&(/^[’']s\b/.test(after)||/\b(?:ethos|idea|ideas|view|views|belief|beliefs|notion|claim|fact|principle|principles|assumption|hypothesis|argument|conviction|premise|thesis|proposition|assertion|doctrine|axiom|maxim|motto|sense|hope|fear|concern|possibility|insight|conclusion|suggestion|rule|condition|requirement|expectation|proviso|caveat|reminder|lesson|message|point|observation|thought|feeling|impression|understanding|recognition|realisation|realization|intuition|awareness|evidence|news|report|theory|position|stance|commitment|promise|warning|question|problem|paradox|dilemma|implication|presumption|presupposition|tenet|creed|dictum|view)\s*,\s*that$/i.test(o)))continue;

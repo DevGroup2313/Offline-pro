@@ -671,3 +671,58 @@ by the refiner; both now stand, and Fix all applies the longer fix first.
 | correct Wikipedia, report | 67 (4.5%) | 67 (4.5%) |
 
 refine_test.js 100, gaps_test.js 153.
+
+## After 7.51: under scrutiny on published prose, again (stage G3e)
+
+The correct sets so far were encyclopaedic. The 40 published articles of
+the 7.47 audit (247,426 words) were read again, in the scholarly register,
+every correctness note by reason (scratchpad runprose.mjs): 554 notes, 408
+with a fix. Scholarly prose misfires differently from an encyclopaedia,
+and each shape got its guard and a test:
+
+- abstract nouns given an article after a preposition and an adjective
+  ("about epistemic agency", "on subjective experience", "at personal
+  cost", "in great part"): a list of nouns as often uncountable as
+  countable (DUAL) takes no article there; quantifiers and prepositions
+  the lexicon calls adjectives ("no", "little", "through", "second") open
+  no article either;
+- "only", "first" and "best" used as adverbs ("is only really successful",
+  "was first translated", "what is best for the body", "can be best
+  understood"): the superlative or ordinal takes "the" only before its
+  noun, never before a function word, a participle, an adverb or another
+  adjective; an award's capital ("Best Director") is left alone;
+- a title's capital ("Scent of a Woman", "The Sanitary and Social
+  Geography"), two names joined ("Leech and Short"), a title at a
+  sentence's head, and identity capitals a journal may keep ("Black
+  patients", "Deaf culture");
+- the noun "will" ("the will is the rational soul's faculty", "at will"),
+  not the modal;
+- a list's "(i)", and the pronoun I beside a word of another language
+  ("nišan saman i bithe");
+- "the The Sanitary and Social Geography": a title's "The" after "the" is
+  no doubled word;
+- plural objects taken for subjects ("his preferences and values is",
+  "denying IVF to older women is", "reducing these effects is", "chief
+  among these is"): a preposition, "and", "or" or an -ing word within the
+  four words before leaves the verb alone;
+- a transcript's code ("… P08") or a bracketed source ("(Gemini)") at a
+  paragraph's end takes no full stop;
+- a species after its genus initial ("P. malariae", "V. sativa"), and a
+  learned term by its ending ("analepsis") is only marked, never two slips
+  from a common word; -er nouns from verbs are words ("funders"); two
+  words run together are split ("empiricalevidence", "governmentshould").
+
+After the round, the articles carry 409 notes, 268 with a fix; what
+remains is mostly what the texts carry (consistency of -ise and -ize,
+missing spaces, comma splices, "e.g."), and 112 words the dictionary
+lacks, marked without a fix.
+
+| set | before P / R / F0.5 | after |
+|---|---|---|
+| W&I tuning half | 66.5 / 9.9 / 0.311 | 66.5 / 9.9 / 0.311 |
+| W&I report half | 62.6 / 8.4 / 0.274 | 62.6 / 8.4 / 0.274 |
+| CoNLL-2014 | 74.6 / 7.9 / 0.278 | 75.0 / 8.0 / 0.279 |
+| correct Wikipedia, tuning | 62 (4.1%) | 62 (4.1%) |
+| correct Wikipedia, report | 67 (4.5%) | 66 (4.4%) |
+
+gaps_test.js 177, learner_test.js 217, spell_test.js 188.

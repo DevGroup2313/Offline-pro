@@ -243,6 +243,8 @@ same('a decimal and an initial', 'It rose 3.5 points, said J.Smith.', 'orth');
 to('a paragraph without its stop', 'The first paragraph of the essay says a great deal about the method\n\nThe second paragraph follows.', 'The first paragraph of the essay says a great deal about the method.\n\nThe second paragraph follows.', 'orth');
 same('the last paragraph is still being written', 'The first paragraph is here.\n\nThe second paragraph is still being written and has many words in it', 'orth');
 same('a heading takes no stop', '# A heading without a stop that is long enough to be a sentence\n\nText follows.', 'orth');
+same('a transcript code at a paragraph end takes no stop', 'As much as time allows, I try to listen to them carefully and that way they are more satisfied\u2026 P08\n\nThe next paragraph follows here.', 'orth');
+same('a bracketed source at a paragraph end takes no stop', 'Cadaver-based education remains the strongest contribution to science and education. (Gemini)\n\nThe next paragraph follows here.', 'orth');
 same('a list item takes no stop', '- an item in a list that runs on for more than eight words here\n\nText follows.', 'orth');
 
 /* the whole check never overlaps and keeps order */

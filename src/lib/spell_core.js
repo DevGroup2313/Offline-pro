@@ -38,7 +38,7 @@
      ("Ca los Cans", "Tignes les Boisses", "los Picarones") */
   const FOREIGN_SMALL = new Set('los las les des der das del della delle degli dei du aux gli nel dal dalla sur chez vom zum zur und och og och ved af'.split(' '));
   /* 7.52: loanwords written without their accents ("cafes", "cliche", "jalapeno") */
-  const UNACCENTED = new Set('cafe cafes cliche cliches cliched facade facades fiance fiancee fiances fiancees decor matinee matinees puree pureed saute sauteed touche attache attaches communique communiques protege protegee proteges risque soiree soirees entree entrees melee melees blase passe emigre emigres creme crepe crepes flambe frappe canape canapes applique eclair eclairs consomme habitue habitues naivete negligee precis deja jalapeno jalapenos pinata pinatas senor senora senorita manana doppelganger uber kung'.split(' '));
+  const UNACCENTED = new Set('cafe cafes cliche cliches cliched facade facades fiance fiancee fiances fiancees decor matinee matinees puree pureed saute sauteed touche attache attaches communique communiques protege protegee proteges risque soiree soirees entree entrees melee melees blase passe emigre emigres creme crepe crepes flambe frappe canape canapes applique eclair eclairs consomme habitue habitues naivete negligee precis deja jalapeno jalapenos pinata pinatas senor senora senorita manana doppelganger uber kung eg ie'.split(' '));
   /* 7.47: bases whose plural or past is irregular: "childs" and "teached"
      stay marked though "child" and "teach" are words */
   const IRREG = new Set('child woman foot tooth mouse goose criterion phenomenon teach catch bring think write speak break choose drive begin build drink fight forget forgive freeze sleep steal sweep swing swear throw understand stand spend send lend shake shine shoot sling sting stink strike strive swim wake ride arise bleed breed cling creep dwell flee fling grind kneel leave light mislead seek sell shrink slide speed split spread spring stride swell tear thrust tread upset weep wind withdraw undertake overtake mistake forbid forsake'.split(' '));
@@ -125,7 +125,7 @@
   const STOPW = new Set('again until which there their where about above after along among around before behind below beside between beyond during except inside outside since through toward towards under unless while within without whose other these those'.split(' '));
   const INFL = [['es', ''], ['s', ''], ['ies', 'y'], ['ied', 'y'], ['ed', ''], ['d', ''], ['ing', ''], ['ing', 'e'],
     ['ion', ''], ['ion', 'e'], ['ions', ''], ['ions', 'e'], ['ity', ''], ['ities', ''], ['ist', ''], ['ist', 'e'], ['ists', ''], ['ists', 'e'],
-    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e']];
+    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e'], ['er', ''], ['ers', ''], ['er', 'e'], ['ers', 'e']];   /* 7.52: funders, coders, makers */
   const plainBase = (D, b) => b.length >= 5 && !!D.lower.get(b) && D.lower.get(b).plain;
   function inflected(D, w) {
     if (!/^[a-z]{6,}$/.test(w)) return false;
@@ -134,7 +134,9 @@
       const cut = w.slice(0, w.length - suf.length), b = cut + add;
       /* the British doubled consonant: "focussed", "travelled" */
       const dbl = /(ed|ing|es)$/.test(suf) && !add && /([lst])\1$/.test(cut) && plainBase(D, cut.slice(0, -1)) ? cut.slice(0, -1) : '';
-      const base = plainBase(D, b) ? b : dbl;
+      /* 7.52: -er and -ers from a common verb of four letters ("funders", "coders", "makers") */
+      const erBase = /^ers?$/.test(suf) && b.length >= 4 && D.lower.get(b) && D.lower.get(b).plain && D.lower.get(b).lv <= 35;
+      const base = (plainBase(D, b) || erBase) ? b : dbl;
       if (!base || IRREG.has(base) || STOPW.has(base)) continue;
       /* -ion after a verb's own ending only ("enaction", "intubation"; not
          "guestion"), and a dropped e only after a common or -ate base (not
@@ -199,6 +201,11 @@
       if (a && a.plain && a.lv <= 50 && ((eb && eb.plain && eb.lv <= 50) || inflected(D, b))) return true; }
     return false;
   }
+  function splitTwo(D, w) {
+    const okPart = x => { const e = D.lower.get(x); return (e && e.plain && e.lv <= 35) || inflected(D, x); };
+    for (let i = 5; i <= w.length - 5; i++) { const a = w.slice(0, i), b = w.slice(i); if (okPart(a) && okPart(b) && !FORM_PRE.includes(a)) return a + ' ' + b; }
+    return null;
+  }
   function suggest(D, word, max, names) {
     /* the same word is looked up once per session */
     const key = word + '|' + (max || 5) + '|' + (names ? 1 : 0);
@@ -258,6 +265,7 @@
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
       if (/^i['’](?:m|ve|ll|d)$/i.test(w)) continue;   /* 7.52: "i'm" is the page's capital rule, not a spelling */
+      if (/(?:^|\s)[A-Z]\.\s$/.test(text.slice(Math.max(0, s - 3), s))) continue;   /* 7.52: a species after its genus's initial ("P. malariae", "E. coli") */
       /* 7.47: speech written as spoken ("buildin’", "preparin’"), the
          plural of capitals ("MRIs"), the parts of Arabic names */
       if (m[0].length > w.length && /in$/.test(w)) continue;
@@ -310,6 +318,8 @@
         if (/['’]s$/.test(w) || (uses.get(w.toLowerCase()) || 0) >= 2) continue;
         if (/^['’]s\b/.test(text.slice(e, e + 3)) || /^\s+[A-Z][a-z]/.test(after) || /^\s*(?:et al|and [A-Z][\w'’-]+\s*\(|\(\s*\[?\d|\[\d|,?\s*\(\d{4})/.test(after)) continue;
       }
+      /* 7.52: two words run together ("empiricalevidence", "risksreproducing"): the split is the fix */
+      if (w.length >= 12 && /^[a-z]+$/.test(w)) { const sp = splitTwo(D, w); if (sp) { out.push({ start: s, end: e, orig: w, fix: sp, alts: [sp], why: 'Spelling', cat: 'g', spell: true }); continue; } }
       const sug = suggest(D, w, 5);
       /* a capital at the start of a sentence may be a name the dictionary
          lacks ("Fincher"): a fix only for one cheap slip to a common word */
@@ -323,7 +333,9 @@
          near ("lenguaje", "nesesary", "prfesional", "atencion"): the
          fix is offered when the candidate is common, of much the same
          length, and stands clear of the next */
-      const lone = !ok0 && !capStart && w.length >= 7 && sug.length && sug[0].score <= 2.0 && Math.abs(sug[0].word.length - w.length) <= 2 &&
+      /* a learned term by its Greek or Latin ending ("analepsis", "anamnesis") is never two slips from a common word */
+      const learned = /(?:sis|osis|itis|ism|ology|logy|graphy|metry|nomy|pathy|phobia|philia|mania|genesis|lepsis|tropic|phoric|morphic|lexia|oid|ase|ene|ol|ide)$/.test(w.toLowerCase()) && w.length >= 8;
+      const lone = !ok0 && !capStart && !learned && w.length >= 7 && sug.length && sug[0].score <= 2.0 && Math.abs(sug[0].word.length - w.length) <= 2 &&
         (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 10 && (sug.length < 2 || sug[1].score - sug[0].score >= 0.2 - 1e-9) && !compound(D, w.toLowerCase());
       const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && w.length >= 5 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35); /* 7.52: four letters at a sentence's start are a name ("Maon") */
       if ((ok0 || lone) && capOk) o.fix = matchCase(w, sug[0].word);

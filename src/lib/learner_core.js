@@ -625,10 +625,11 @@
       if (!/\n[\s\S]*\S/.test(t.slice(end))) break;
       const trimmed = para.replace(/\s+$/, ''); if (!trimmed) continue;
       if (/^\s*(?:#|[-*\u2022>|]|\d+[.)]\s|\[|!\[)/.test(para)) continue;
-      if (!/[A-Za-z0-9)\u201d"\u2019']$/.test(trimmed) || /[.!?:;,]+["\u201d\u2019')]*$/.test(trimmed)) continue;
+      if (!/[A-Za-z0-9)\u201d"\u2019']$/.test(trimmed) || /[.!?:;,]+[\s"\u201d\u2019')]*$/.test(trimmed) || /[.!?]\s*\([^()]{1,40}\)$/.test(trimmed)) continue;   /* "…? )", "…. (Gemini)" */
       const wsP = trimmed.split(/\s+/); if (wsP.length < 8) continue;
       if (!/^[A-Z\u201c"]/.test(trimmed)) continue;
       if (wsP.filter(x => /^[A-Z]/.test(x)).length / wsP.length > 0.6) continue;
+      const lastW = wsP[wsP.length - 1]; if (/\d/.test(lastW) || /^[A-Z]{2,5}$/.test(lastW) || /\u2026/.test(trimmed.slice(-14))) continue;   /* 7.52: a transcript's code ("… P08"), a figure */
       if (/^(?:dear|hi|hello|yours|regards|sincerely|best)\b/i.test(trimmed)) continue;
       const at = pm.index + trimmed.length;
       out.push({ start: at, end: at, orig: '', fix: '.', why: 'A full stop closes the paragraph\u2019s last sentence', cat: 'g', fam: 'orth' });

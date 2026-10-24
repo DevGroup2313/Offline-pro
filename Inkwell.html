@@ -2654,7 +2654,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
      ("Ca los Cans", "Tignes les Boisses", "los Picarones") */
   const FOREIGN_SMALL = new Set('los las les des der das del della delle degli dei du aux gli nel dal dalla sur chez vom zum zur und och og och ved af'.split(' '));
   /* 7.52: loanwords written without their accents ("cafes", "cliche", "jalapeno") */
-  const UNACCENTED = new Set('cafe cafes cliche cliches cliched facade facades fiance fiancee fiances fiancees decor matinee matinees puree pureed saute sauteed touche attache attaches communique communiques protege protegee proteges risque soiree soirees entree entrees melee melees blase passe emigre emigres creme crepe crepes flambe frappe canape canapes applique eclair eclairs consomme habitue habitues naivete negligee precis deja jalapeno jalapenos pinata pinatas senor senora senorita manana doppelganger uber kung'.split(' '));
+  const UNACCENTED = new Set('cafe cafes cliche cliches cliched facade facades fiance fiancee fiances fiancees decor matinee matinees puree pureed saute sauteed touche attache attaches communique communiques protege protegee proteges risque soiree soirees entree entrees melee melees blase passe emigre emigres creme crepe crepes flambe frappe canape canapes applique eclair eclairs consomme habitue habitues naivete negligee precis deja jalapeno jalapenos pinata pinatas senor senora senorita manana doppelganger uber kung eg ie'.split(' '));
   /* 7.47: bases whose plural or past is irregular: "childs" and "teached"
      stay marked though "child" and "teach" are words */
   const IRREG = new Set('child woman foot tooth mouse goose criterion phenomenon teach catch bring think write speak break choose drive begin build drink fight forget forgive freeze sleep steal sweep swing swear throw understand stand spend send lend shake shine shoot sling sting stink strike strive swim wake ride arise bleed breed cling creep dwell flee fling grind kneel leave light mislead seek sell shrink slide speed split spread spring stride swell tear thrust tread upset weep wind withdraw undertake overtake mistake forbid forsake'.split(' '));
@@ -2741,7 +2741,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
   const STOPW = new Set('again until which there their where about above after along among around before behind below beside between beyond during except inside outside since through toward towards under unless while within without whose other these those'.split(' '));
   const INFL = [['es', ''], ['s', ''], ['ies', 'y'], ['ied', 'y'], ['ed', ''], ['d', ''], ['ing', ''], ['ing', 'e'],
     ['ion', ''], ['ion', 'e'], ['ions', ''], ['ions', 'e'], ['ity', ''], ['ities', ''], ['ist', ''], ['ist', 'e'], ['ists', ''], ['ists', 'e'],
-    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e']];
+    ['ism', 'e'], ['isms', 'e'], ['ly', ''], ['able', 'e'], ['er', ''], ['ers', ''], ['er', 'e'], ['ers', 'e']];   /* 7.52: funders, coders, makers */
   const plainBase = (D, b) => b.length >= 5 && !!D.lower.get(b) && D.lower.get(b).plain;
   function inflected(D, w) {
     if (!/^[a-z]{6,}$/.test(w)) return false;
@@ -2750,7 +2750,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       const cut = w.slice(0, w.length - suf.length), b = cut + add;
       /* the British doubled consonant: "focussed", "travelled" */
       const dbl = /(ed|ing|es)$/.test(suf) && !add && /([lst])\1$/.test(cut) && plainBase(D, cut.slice(0, -1)) ? cut.slice(0, -1) : '';
-      const base = plainBase(D, b) ? b : dbl;
+      /* 7.52: -er and -ers from a common verb of four letters ("funders", "coders", "makers") */
+      const erBase = /^ers?$/.test(suf) && b.length >= 4 && D.lower.get(b) && D.lower.get(b).plain && D.lower.get(b).lv <= 35;
+      const base = (plainBase(D, b) || erBase) ? b : dbl;
       if (!base || IRREG.has(base) || STOPW.has(base)) continue;
       /* -ion after a verb's own ending only ("enaction", "intubation"; not
          "guestion"), and a dropped e only after a common or -ate base (not
@@ -2815,6 +2817,11 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       if (a && a.plain && a.lv <= 50 && ((eb && eb.plain && eb.lv <= 50) || inflected(D, b))) return true; }
     return false;
   }
+  function splitTwo(D, w) {
+    const okPart = x => { const e = D.lower.get(x); return (e && e.plain && e.lv <= 35) || inflected(D, x); };
+    for (let i = 5; i <= w.length - 5; i++) { const a = w.slice(0, i), b = w.slice(i); if (okPart(a) && okPart(b) && !FORM_PRE.includes(a)) return a + ' ' + b; }
+    return null;
+  }
   function suggest(D, word, max, names) {
     /* the same word is looked up once per session */
     const key = word + '|' + (max || 5) + '|' + (names ? 1 : 0);
@@ -2874,6 +2881,7 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
       if (/^i['’](?:m|ve|ll|d)$/i.test(w)) continue;   /* 7.52: "i'm" is the page's capital rule, not a spelling */
+      if (/(?:^|\s)[A-Z]\.\s$/.test(text.slice(Math.max(0, s - 3), s))) continue;   /* 7.52: a species after its genus's initial ("P. malariae", "E. coli") */
       /* 7.47: speech written as spoken ("buildin’", "preparin’"), the
          plural of capitals ("MRIs"), the parts of Arabic names */
       if (m[0].length > w.length && /in$/.test(w)) continue;
@@ -2926,6 +2934,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
         if (/['’]s$/.test(w) || (uses.get(w.toLowerCase()) || 0) >= 2) continue;
         if (/^['’]s\b/.test(text.slice(e, e + 3)) || /^\s+[A-Z][a-z]/.test(after) || /^\s*(?:et al|and [A-Z][\w'’-]+\s*\(|\(\s*\[?\d|\[\d|,?\s*\(\d{4})/.test(after)) continue;
       }
+      /* 7.52: two words run together ("empiricalevidence", "risksreproducing"): the split is the fix */
+      if (w.length >= 12 && /^[a-z]+$/.test(w)) { const sp = splitTwo(D, w); if (sp) { out.push({ start: s, end: e, orig: w, fix: sp, alts: [sp], why: 'Spelling', cat: 'g', spell: true }); continue; } }
       const sug = suggest(D, w, 5);
       /* a capital at the start of a sentence may be a name the dictionary
          lacks ("Fincher"): a fix only for one cheap slip to a common word */
@@ -2939,7 +2949,9 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
          near ("lenguaje", "nesesary", "prfesional", "atencion"): the
          fix is offered when the candidate is common, of much the same
          length, and stands clear of the next */
-      const lone = !ok0 && !capStart && w.length >= 7 && sug.length && sug[0].score <= 2.0 && Math.abs(sug[0].word.length - w.length) <= 2 &&
+      /* a learned term by its Greek or Latin ending ("analepsis", "anamnesis") is never two slips from a common word */
+      const learned = /(?:sis|osis|itis|ism|ology|logy|graphy|metry|nomy|pathy|phobia|philia|mania|genesis|lepsis|tropic|phoric|morphic|lexia|oid|ase|ene|ol|ide)$/.test(w.toLowerCase()) && w.length >= 8;
+      const lone = !ok0 && !capStart && !learned && w.length >= 7 && sug.length && sug[0].score <= 2.0 && Math.abs(sug[0].word.length - w.length) <= 2 &&
         (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 10 && (sug.length < 2 || sug[1].score - sug[0].score >= 0.2 - 1e-9) && !compound(D, w.toLowerCase());
       const capOk = !capStart || (sug.length && sug[0].score <= 0.8 && w.length >= 5 && (D.lower.get(sug[0].word.toLowerCase()) || { lv: 99 }).lv <= 35); /* 7.52: four letters at a sentence's start are a name ("Maon") */
       if ((ok0 || lone) && capOk) o.fix = matchCase(w, sug[0].word);
@@ -8160,10 +8172,11 @@ such as = x: like, including`
       if (!/\n[\s\S]*\S/.test(t.slice(end))) break;
       const trimmed = para.replace(/\s+$/, ''); if (!trimmed) continue;
       if (/^\s*(?:#|[-*\u2022>|]|\d+[.)]\s|\[|!\[)/.test(para)) continue;
-      if (!/[A-Za-z0-9)\u201d"\u2019']$/.test(trimmed) || /[.!?:;,]+["\u201d\u2019')]*$/.test(trimmed)) continue;
+      if (!/[A-Za-z0-9)\u201d"\u2019']$/.test(trimmed) || /[.!?:;,]+[\s"\u201d\u2019')]*$/.test(trimmed) || /[.!?]\s*\([^()]{1,40}\)$/.test(trimmed)) continue;   /* "…? )", "…. (Gemini)" */
       const wsP = trimmed.split(/\s+/); if (wsP.length < 8) continue;
       if (!/^[A-Z\u201c"]/.test(trimmed)) continue;
       if (wsP.filter(x => /^[A-Z]/.test(x)).length / wsP.length > 0.6) continue;
+      const lastW = wsP[wsP.length - 1]; if (/\d/.test(lastW) || /^[A-Z]{2,5}$/.test(lastW) || /\u2026/.test(trimmed.slice(-14))) continue;   /* 7.52: a transcript's code ("… P08"), a figure */
       if (/^(?:dear|hi|hello|yours|regards|sincerely|best)\b/i.test(trimmed)) continue;
       const at = pm.index + trimmed.length;
       out.push({ start: at, end: at, orig: '', fix: '.', why: 'A full stop closes the paragraph\u2019s last sentence', cat: 'g', fam: 'orth' });
@@ -8363,6 +8376,10 @@ such as = x: like, including`
   /* 7.52: roles and relations one person holds, which take an article ("a student", "a teacher"); not the offices
      held by one at a time ("became president", "as chairman") */
   const ROLE = new Set(('student child kid teenager teacher boy girl baby member volunteer nurse doctor waiter waitress worker employee employer candidate beginner professional freelancer journalist lawyer engineer scientist writer researcher professor lecturer tutor trainer assistant intern trainee apprentice graduate undergraduate postgraduate foreigner tourist visitor guest customer client patient citizen resident immigrant refugee soldier officer pilot driver farmer fisherman shopkeeper chef cook cleaner guard clerk receptionist cashier mother father parent husband wife adult pupil schoolboy schoolgirl freshman musician singer actor actress artist painter dancer player athlete swimmer runner fan supporter reader listener viewer user buyer seller owner tenant landlord neighbour neighbor friend colleague partner stranger hero villain genius fool liar thief victim witness suspect prisoner servant nanny babysitter gardener builder carpenter plumber electrician mechanic salesman saleswoman businessman businesswoman politician diplomat translator interpreter programmer developer designer architect consultant accountant banker economist historian philosopher psychologist sociologist linguist biologist chemist physicist mathematician nutritionist therapist counsellor counselor pharmacist dentist surgeon vet veterinarian midwife paramedic firefighter policeman policewoman detective leader boyfriend girlfriend bachelor widow widower orphan newcomer learner speaker participant applicant housewife housekeeper librarian photographer blogger gamer poet novelist playwright composer conductor pianist guitarist drummer violinist comedian clown magician priest monk nun pilgrim believer atheist vegetarian vegan smoker gambler survivor hostage captive migrant expatriate toddler grandmother grandfather grandparent uncle aunt cousin nephew niece brother sister son daughter twin educator instructor mentor supervisor coordinator administrator technician specialist analyst advisor adviser helper').split(' '));
+  /* 7.52, from 40 published articles: words the lexicon calls adjectives that are quantifiers or prepositions here ("there was no difference", "it is through language", "there is little value") */
+  const ADJ_NOT = /^(no|little|much|more|most|less|few|several|enough|other|another|all|any|some|each|every|this|that|these|those|what|which|whose|through|such|same|own|only|very|quite|rather|so|too|first|second|third|fourth|fifth|last|next|past|many|one|two|three|like|near|past|due|worth|able|likely|unlikely|sure|certain|clear|true|false|possible|impossible|necessary|available|present|absent|responsible|aware|afraid|alone|alike|asleep|awake)$/;
+  /* nouns as often uncountable as countable, which take no article after a preposition and an adjective in scholarly prose ("about epistemic agency", "on subjective experience", "at personal cost") */
+  const DUAL = new Set(('part school college university hospital church prison court bed class office parliament town market sea danger trouble doubt question dispute favour favor charge custody detail practice principle theory agency experience cost value meaning trust power care practice theory control order risk need effort access support change growth behaviour behavior culture society life death truth freedom justice reason thought language space time nature form structure function action work play speech sound light colour color taste pain pleasure fear hope love hate anger joy grief interest attention memory consciousness perception identity authority responsibility capacity ability possibility context scale depth detail focus balance choice debate dialogue discourse analysis criticism interpretation understanding insight judgment judgement intention autonomy dignity harm benefit uncertainty complexity diversity difference similarity distance direction movement motion progress decline failure success conflict cooperation competition exchange trade production consumption labour labor capital wealth poverty inequality injustice oppression resistance violence peace war security safety health illness disease treatment therapy medicine education training teaching learning scholarship policy government law regulation tradition religion faith belief doubt knowledge wisdom skill talent character personality temperament mood emotion feeling sense sensation imagination creativity inspiration influence impact pressure stress tension strain weight strength weakness energy force matter material substance content quality quantity degree extent level rate speed frequency duration length width height size shape texture surface ground territory land water air fire earth environment climate weather temperature heat cold warmth moisture humidity reality existence being purpose principle method methodology design evidence data research information literature history theory philosophy science technology industry agriculture business finance marketing management leadership governance democracy politics economy ethics morality virtue vice sin grace mercy charity hospitality dignity integrity honesty loyalty courage patience humility pride shame guilt regret relief comfort distress suffering mortality fertility sexuality gender race class status rank privilege prestige reputation fame fortune luck chance fate destiny spirit soul mind body flesh blood breath voice silence noise music poetry prose fiction narrative rhetoric grammar syntax semantics logic mathematics physics chemistry biology medicine surgery nursing law justice crime punishment prison exile migration citizenship nationality ethnicity heritage ancestry kinship marriage divorce childhood youth adulthood age aging ageing retirement leisure labour employment unemployment productivity efficiency effectiveness sustainability resilience vulnerability fragility stability instability equilibrium harmony chaos disorder').split(' '));
   const ADJ_SURE = new Set(('experienced good bad big small large great new old young long short high low hot cold warm cool easy hard difficult simple important serious major minor real true false nice beautiful ugly rich poor happy sad strong weak busy free full empty open closed clean dirty safe dangerous quiet loud bright dark fast slow quick early late modern ancient traditional popular famous common rare special different similar strange funny fun interesting boring exciting amazing wonderful terrible horrible awful perfect excellent fine wrong right correct main first second last next final previous whole complete single double huge tiny enormous little wide narrow deep shallow thick thin heavy light soft tough gentle kind cruel polite rude friendly lonely private public local national international foreign native natural normal usual typical general particular certain possible impossible necessary useful useless valuable expensive cheap professional personal social political economic cultural historical scientific medical legal financial physical mental emotional practical theoretical technical digital electronic formal informal official healthy sick tired hungry thirsty angry proud brave clever stupid wise crazy calm nervous curious careful careless honest lucky successful effective efficient reliable responsible independent creative active positive negative black white red green blue yellow brown grey gray pink purple orange').split(' '));
   const SUBJ_PRON = /^(i|you|we|they|he|she|it|there|this|that|these|those)$/i;
   const DET = /^(the|a|an|this|that|these|those|my|our|your|their|his|her|its|some|many|most|every|each|all|one|another|such|no|any)$/i;
@@ -8545,7 +8562,11 @@ such as = x: like, including`
       if (gap(t, a, b)) continue;
       /* "one of best", "is same", "is best way" */
       if (/^(is|are|was|were|be|been|being|become|became|becomes|of)$/.test(a.l) && /^(best|worst|biggest|largest|smallest|greatest|highest|lowest|same|main|most important|first|last|only|next|following)$/.test(b.l) && (a.l !== 'of' || (i > 0 && /^(one|some|many|most|all|none|each|part|two|three|four|five)$/.test(ws[i - 1].l)))) {
-        if (/^(first|last|only|next|following)$/.test(b.l)) { const c = ws[i + 2]; if (!c || gap(t, b, c) || !/^[a-z]/.test(c.w) || /^(to|of|in|on|at|for|and|or|but|time|one|place)$/.test(c.l)) continue; }
+        /* 7.52: the next word must be the noun ("is the best way"); not "is only really successful", "was first translated", "what is best for" */
+        { const c = ws[i + 2], ord = /^(first|last|only|next|following)$/.test(b.l);
+          if (ord && (!c || gap(t, b, c) || !/^[a-z]/.test(c.w))) continue;
+          if (/^[A-Z]/.test(b.w) && !sentStart(t, b.s)) continue;   /* "Best Director": an award's name */
+          if (c && !gap(t, b, c) && (/^(a|an|the|to|of|in|on|at|for|and|or|but|time|one|place|when|if|that|which|possible|known|suited|placed|served|understood|seen|done|made|taken|given|described|explained|achieved|as|than|because|so|yet|also|still|just|not|ever|really|truly|very|too|about|among|between|with|by|from|into|like)$/.test(c.l) || /(?:[a-z]{3,}ing|[a-z]{2,}ed|ly)$/.test(c.l) || (ord && isAdj(c.l)))) continue; }
         push(out, b.s, b.s, '', 'the ', 'A superlative or an ordinal takes “the”: “the best way”, “one of the first”', 'det'); continue;
       }
       /* 7.52: a role noun alone after "is", "was", "become" or "as": "when I was student", "worked as educator", "she is teacher" */
@@ -8560,7 +8581,7 @@ such as = x: like, including`
         /* "is a very beautiful place": an adverb may stand before the adjective */
         let o = 0; if (/^(very|really|quite|rather|so|extremely|highly|truly|pretty|fairly|particularly|especially|incredibly|remarkably)$/.test(b.l) && ws[i + 2] && !gap(t, b, ws[i + 2]) && /^[a-z]/.test(ws[i + 2].w)) o = 1;
         const b2 = ws[i + 1 + o], c = ws[i + 2 + o];
-        if (/^[a-z]/.test(b2.w) && isAdj(b2.l) && c && !gap(t, b2, c) && /^[a-z]/.test(c.w) && isSingCount(c.l)) {
+        if (/^[a-z]/.test(b2.w) && isAdj(b2.l) && !ADJ_NOT.test(b2.l) && c && !gap(t, b2, c) && /^[a-z]/.test(c.w) && isSingCount(c.l) && !DUAL.has(c.l)) {
           const d = ws[i + 3 + o];
           if (d && !gap(t, c, d) && /^(of|who|that|which|in|for|with|on|at|from|to)$/.test(d.l) || !d || gap(t, c, d) || /^(and|or|but|who|that|which|because|so|with|for|in|at|on|to|from|of|as|than|like)$/.test(d.l)) {
             if (/^(such|as)$/.test(a.l) && !/^(such)$/.test(a.l)) continue;
@@ -8571,7 +8592,7 @@ such as = x: like, including`
       /* "by Black person", "in business setting": preposition + adjective + count noun */
       if (/^(by|with|for|in|at|on|into|as|like|through|without|about|from)$/.test(a.l)) {
         const c = ws[i + 2];
-        if (/^[a-z]/.test(b.w) && isAdj(b.l) && !/^(such|other|own|more|less|most|least|many|few|several|various|different|same|next|last|first|second|third|whole|half|all|every|each|any|some|no)$/.test(b.l) && c && !gap(t, b, c) && /^[a-z]/.test(c.w) && isSingCount(c.l)) {
+        if (/^[a-z]/.test(b.w) && isAdj(b.l) && !ADJ_NOT.test(b.l) && !/^(such|other|own|more|less|most|least|many|few|several|various|different|same|next|last|first|second|third|whole|half|all|every|each|any|some|no)$/.test(b.l) && c && !gap(t, b, c) && /^[a-z]/.test(c.w) && isSingCount(c.l) && !DUAL.has(c.l)) {
           const d = ws[i + 3];
           if (!d || gap(t, c, d) || /^(of|who|that|which|in|for|with|on|at|from|to|and|or|but|because|so|as|than|like|where|when)$/.test(d.l)) {
             push(out, b.s, b.s, '', art(b.l) + ' ', 'A singular count noun takes an article: “by a black person”, “in a business setting”', 'det');
@@ -8641,6 +8662,8 @@ such as = x: like, including`
       if (gap(t, a, b)) continue;
       /* "will delighted", "can went", "should not went" */
       let k = i, m = a.l;
+      /* 7.52: "the will is the rational soul's faculty": a noun, not the modal */
+      if (m === 'will' && i > 0 && !gap(t, ws[i - 1], a) && /^(the|a|an|his|her|their|my|our|your|its|at|free|human|divine|general|political|living|last|good|ill|strong|weak|own|whose|god's|one's)$/.test(ws[i - 1].l)) continue;
       if ((MODAL.test(m) && !(/^[A-Z]/.test(a.w) && !sentStart(t, a.s))) || (/^(not|n't|also|never|always|still|just|even|really|probably|only)$/.test(m) && i > 0 && MODAL.test(ws[i - 1].l) && !gap(t, ws[i - 1], a))) {
         if (/^[a-z]/.test(b.w) && !/^(be|have|been|not|also|never|always|still|just|even|really|probably|only|need|used|get|got|become)$/.test(b.l)) {
           const base = baseOfPast(b.l);
@@ -8810,6 +8833,12 @@ such as = x: like, including`
       /* a title's small words: "Science and Technology", "House of Representatives", "Money in the Bank" */
       const SMALL = /^(and|or|of|for|in|on|at|to|the|a|an|by|with|from|de|del|der|von|van|et|&)$/;
       if (SMALL.test(p.l) && i >= 2 && !gap(t, ws[i - 2], p) && /^[A-Z]/.test(ws[i - 2].w) && !sentStart(t, ws[i - 2].s)) continue;
+      /* 7.52: a capitalised word within the four before is a title's ("Scent of a Woman"); two names joined ("Leech and Short"); a title at a sentence's head ("Scent of a Woman received") */
+      if (ws.slice(Math.max(0, i - 4), i - 1).some(w => /^[A-Z]/.test(w.w) && w.w !== 'I' && !sentStart(t, w.s))) continue;
+      if (/^(and|or|&)$/.test(p.l) && i >= 2 && /^[A-Z]/.test(ws[i - 2].w) && ws[i - 2].w !== 'I') continue;
+      if (SMALL.test(p.l) && i >= 3 && SMALL.test(ws[i - 2].l) && /^[A-Z]/.test(ws[i - 3].w)) continue;
+      /* identity capitals a journal may keep ("Black patients", "Deaf culture") */
+      if (/^(Black|White|Brown|Indigenous|Native|Deaf|Aboriginal)$/.test(a.w)) continue;
       let titled = false; for (let k = i + 1; k < Math.min(ws.length, i + 4); k++) { if (gap(t, ws[k - 1], ws[k])) break; if (SMALL.test(ws[k].l)) continue; if (/^[A-Z]/.test(ws[k].w) && ws[k].w !== 'I') titled = true; break; }
       if (titled) continue;
       if (/^(Black|White|Red|Green|Blue|Yellow|Brown|Grey|Gray)$/.test(a.w) && n && !gap(t, a, n) && /^(Sea|House|Death|Panther|Friday|Monday|Lives|Hat|Cross|Party|Paper|Book|Belt)$/.test(n.w)) continue;
@@ -11375,7 +11404,7 @@ const BUILD='7.51 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='2ce9baaac66bdb3fa3c218ba80e9eadbab20af826ed892400b6c25abc5252803';
+const PAGE_SHA='ffaf8174b75f87a36fd0cf21dc9d3ff958ccf8d512c37b7dcf5c6d476fce84c0';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');
@@ -15927,7 +15956,7 @@ const SVAGREE=[
  /* plural pronoun or demonstrative, singular verb */
  {re:/\b(we|you|they) was\b/gi,to:'$1 were',cat:'g',label:'Agreement: a plural subject takes "were"'},
  {re:/\b(these|those) was\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$/i,to:'$1 were',cat:'g',label:'Agreement: a plural subject takes "were"'},
- {re:/\b(we|they|these|those) is\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$/i,to:'$1 are',cat:'g',label:'Agreement: a plural subject takes "are"'},
+ {re:/\b(we|they|these|those) is\b/gi,npre:/\b(?:one|each|none|any|either|neither|every one|which|some|all|most|many|few|several|both|part|much)\s+of\s+$|\b(?:among|amongst|between|of|in|from|with|for|to|at|on|by|like)\s+$/i,to:'$1 are',cat:'g',label:'Agreement: a plural subject takes "are"'},
  {re:/\b(we|you|they) has\b/gi,to:'$1 have',cat:'g',label:'Agreement: a plural subject takes "have"'},
  {re:/\b(we|you|they) doesn'?t\b/gi,to:"$1 don't",cat:'g',label:'Agreement: a plural subject takes "don\u2019t"'},
  /* singular pronoun, plural verb (only forms that are never correct) */
@@ -15937,8 +15966,8 @@ const SVAGREE=[
  /* 7.38: not when the plural noun sits inside a phrase that belongs to an
     earlier subject ("the quality of the results was", "the number of
     participants is") or after "what" ("What Inkwell measures is") */
- {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) was\b/gi,npre:/\b(?:of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 were',cat:'g',label:'Agreement: a plural noun takes "were"'},
- {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) is\b/gi,npre:/\b(?:of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 are',cat:'g',label:'Agreement: a plural noun takes "are"'}
+ {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) was\b/gi,npre:/\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:[a-z]+\s+){0,3}$|\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|older|younger|older|other|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 were',cat:'g',label:'Agreement: a plural noun takes "were"'},
+ {re:/\b(results|findings|participants|respondents|samples|numbers|figures|scores|values|effects|differences|variables|outcomes|measures|children|men|women) is\b/gi,npre:/\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:[a-z]+\s+){0,3}$|\b(?:[a-z]+ing|to|and|or|of|in|on|for|with|from|about|among|between|by|at|like|than|across|behind|beyond|within|without|under|over|after|before)\s+(?:(?:the|these|those|our|their|its|his|her|my|your|all|some|many|such|both|several|other|any|no|most|older|younger|older|other|all\s+the)\s+)?(?:[a-z][\w-]*\s+)?$|\bwhat\s+(?:[\w’']+\s+){0,3}$/i,to:'$1 are',cat:'g',label:'Agreement: a plural noun takes "are"'}
 ];
 /* ================= FURTHER GRAMMAR: double comparison, pronoun case, faulty predication ================= */
 /* All four are forms that standard writing does not use, so each correction is safe.
@@ -16054,7 +16083,7 @@ const GRAM5=[
    spacing pass. */
 const GRAM6=[
  /* the bare lowercase pronoun and the calendar */
- {re:/\bi\b(?=[\s'’.,!?;:\)]|$)/g,cs:true,to:'I',cat:'g',label:'Capital I'},
+ {re:/\bi\b(?=[\s'’.,!?;:]|$)/g,cs:true,to:'I',cat:'g',label:'Capital I',npre:/[(\[]\s*$/},   /* 7.52: not a list's "(i)" */
  /* 7.49: each with its capital as the fix; "march", "may" and "august"
     are ordinary words too, so only where they stand as a date */
  {re:/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\b/g,cs:true,to:m=>m[0].toUpperCase()+m.slice(1),cat:'g',label:'Days of the week carry a capital'},
@@ -19134,6 +19163,7 @@ function inkRuleGate(t,out){
   for(const k in INK_DEMOTE)if(why.indexOf(k)===0)e.cat=INK_DEMOTE[k];
   if(why.indexOf('Sentence begins lowercase')===0){
    const pre=t.slice(Math.max(0,e.start-12),e.start);
+   if(/^[.!?]\s+et\s+al\b/.test(t.slice(e.start,e.start+10)))continue;   /* 7.52: "Parsa. et al." */
    if(INK_ABBR.test(pre)||/\d$/.test(pre)||/\.\.$/.test(pre)||/^\.\s+[a-z]\.[a-z]\./i.test(t.slice(e.start,e.start+8)))continue;  /* i.e. not, A.E.C.C. in, 17. b3 */
    /* 7.47: a genus shortened to its capital ("species-P. vivax", "E. coli"),
       and a name that begins in lower case ("al-Kīt Kāt", "de Beauvoir",
@@ -19141,6 +19171,7 @@ function inkRuleGate(t,out){
    if(/(?:^|[^A-Za-z])[A-Z]$/.test(pre)||/^[.!?]\s+(?:al-|el-|ad-|ibn |de |du |da |di |van |von |le |la |bell hooks)/.test(t.slice(e.start,e.start+14)))continue;}
   if(/^Capital(ise the pronoun)? I/.test(why)){
    const i=t.indexOf('i',e.start);if(i<0)continue;
+   if(/[^\x00-\x7F]/.test(t.slice(Math.max(0,i-14),i+14)))continue;   /* 7.52: a word of another language beside it ("nišan saman i bithe") */
    /* 7.52: an apostrophe after the i is its contraction ("i'm", "i've"), not a word around it */
    if(L(t[i-1])||(L(t[i+1])&&!/^['’](?:m|ve|ll|d)\b/.test(t.slice(i+1,i+4)))||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
   if(why.indexOf('“an” belongs before vowel sounds only')===0){
@@ -19159,7 +19190,7 @@ function inkRuleGate(t,out){
   if(why.indexOf('Space after a period before the next sentence')===0){
    if(!/^\.[A-Z][a-z]/.test(o)||t[e.start-1]==='.'||/(?:^|[\s(])[A-Z]$/.test(t.slice(Math.max(0,e.start-2),e.start))||/(www|https?:|\/)\S*$/.test(before))continue;}
   if(why.indexOf('Hyphenate a compound modifier')===0&&(!INK_DET.test(before)||INK_FUNC_NEXT.test(after)))continue;
-  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&/^[A-Z]/.test(o))continue;
+  if((why.indexOf('Doubled word')===0||why.indexOf('Repeated word')===0)&&(/^[A-Z]/.test(o)||/^[a-z]+\s+[A-Z]/.test(o)))continue;   /* 7.52: "in the The Sanitary…": a title's The */
   /* 7.47: a clause that says what the noun is ("the NHS’s ethos, that each
      life is of equal value") takes its comma; "that’s" is the pronoun */
   if(why.indexOf('“Which” carries the comma')===0&&(/^[’']s\b/.test(after)||/\b(?:ethos|idea|ideas|view|views|belief|beliefs|notion|claim|fact|principle|principles|assumption|hypothesis|argument|conviction|premise|thesis|proposition|assertion|doctrine|axiom|maxim|motto|sense|hope|fear|concern|possibility|insight|conclusion|suggestion|rule|condition|requirement|expectation|proviso|caveat|reminder|lesson|message|point|observation|thought|feeling|impression|understanding|recognition|realisation|realization|intuition|awareness|evidence|news|report|theory|position|stance|commitment|promise|warning|question|problem|paradox|dilemma|implication|presumption|presupposition|tenet|creed|dictum|view)\s*,\s*that$/i.test(o)))continue;

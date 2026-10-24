@@ -95,6 +95,12 @@ ok('7.52 a slip at the first letter is rarer: nopal, susage', fixOf('I ate nopal
 ok('7.52 a word of the middle level is still reached: burguers, diabete', fixOf('I ate burguers there.') === 'burgers' && fixOf('He has diabete now.') === 'diabetes', [flags('I ate burguers there.'), flags('He has diabete now.')]);
 ok('7.52 a short capital at a sentence start is a name: Maon', flags('Maon, according to Joshua, was a town.').every(e => e.fix == null));
 ok('7.52 "i\'m" is left to the capital rule', flags("and i'm here now.").length === 0, flags("and i'm here now."));
+ok('7.52 two words run together are split', fixOf('The field lacks empiricalevidence here.') === 'empirical evidence' && fixOf('It risksreproducing the hierarchy.') === 'risks reproducing', [flags('The field lacks empiricalevidence here.'), flags('It risksreproducing the hierarchy.')]);
+ok('7.52 a long unknown term is not split into two words: heteronormativity', (flags('Theories of heteronormativity abound.')[0] || {}).fix == null, flags('Theories of heteronormativity abound.'));
+ok('7.52 -er from a verb is a word: funders', SP.known(D, 'funders') && SP.known(D, 'coders'));
+ok('7.52 a learned term is only marked: analepsis', (flags('Cases of analepsis and prolepsis abound.')[0] || {}).fix == null, flags('Cases of analepsis and prolepsis abound.'));
+ok('7.52 a species after its genus initial is left alone: P. malariae', flags('Plasmodium species: P. malariae and P. vivax.').length === 0, flags('Plasmodium species: P. malariae and P. vivax.'));
+ok('7.52 "eg" and "ie" are left to the page', flags('Consider equity (eg special funding).').length === 0);
 ok('7.52 loanwords without their accents are words', flags('They met in cafes and ate jalapenos with a certain naivete.').length === 0);
 ok('7.52 a short word keeps its caution: thay', fixOf('I think thay is here.') == null);
 /* three slips in a row are slips, not a phrase of another language */
