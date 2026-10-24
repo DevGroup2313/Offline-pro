@@ -670,7 +670,8 @@ by the refiner; both now stand, and Fix all applies the longer fix first.
 | correct Wikipedia, tuning | 62 (4.1%) | 62 (4.1%) |
 | correct Wikipedia, report | 67 (4.5%) | 67 (4.5%) |
 
-refine_test.js 100, gaps_test.js 153.
+refine_test.js 100, gaps_test.js 153 at this stage; after stage G3e below,
+refine_test.js 108, gaps_test.js 177, learner_test.js 217, spell_test.js 190.
 
 ## After 7.51: under scrutiny on published prose, again (stage G3e)
 

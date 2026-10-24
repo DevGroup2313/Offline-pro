@@ -91,8 +91,8 @@ changed 4.5% to 4.1% (tuning) and 4.8% to 4.5% (report).
 
 TESTS
 -----
-learner_test.js 215, gaps_test.js 153, spell_test.js 182, refine_test.js
-100, mark_test.js 26, rewrite run.js 328, explain_test.js 45,
+learner_test.js 217, gaps_test.js 177, spell_test.js 190, refine_test.js
+108, mark_test.js 26, rewrite run.js 328, explain_test.js 45,
 coach_test.js 38, para_test.js 44, sentence_test.mjs 24.
 
 HOW 7.52 WAS BUILT AND RELEASED
