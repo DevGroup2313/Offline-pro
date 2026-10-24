@@ -216,6 +216,35 @@ to('suffering of → from (a verb)', 'He is suffering of a cold.', 'He is suffer
 to('in the age of 10', 'He left school in the age of 10.', 'He left school at the age of 10.', 'prep');
 to('in future, alone', 'I will do better in future.', 'I will do better in the future.', 'art');
 
+/* 7.52: connectives, the instruction after an opening clause, "but the", the space after a stop, the paragraph's last stop */
+to('a comma after "In my opinion" whatever follows', 'In my opinion big stars should be left alone.', 'In my opinion, big stars should be left alone.', 'comma');
+to('"On the one hand travel by car"', 'On the one hand travel by car is convenient.', 'On the one hand, travel by car is convenient.', 'comma');
+to('"To sum it up I"', 'To sum it up I still consider it a good idea.', 'To sum it up, I still consider it a good idea.', 'comma');
+to('"Moreover big"', 'Moreover big stars have a right to privacy.', 'Moreover, big stars have a right to privacy.', 'comma');
+same('"Of course not"', 'Of course not.', 'comma');
+same('"In general terms"', 'In general terms the plan works.', 'comma');
+same('"However much" opens no clause of its own', 'However much I try I fail.', 'comma');
+to('a comma before the instruction after an "If" clause', 'If you have the chance of learning a new language do it.', 'If you have the chance of learning a new language, do it.', 'comma');
+to('"If you have time read the book"', 'If you have time read the book.', 'If you have time, read the book.', 'comma');
+same('"people say" is no instruction', 'When I come home people say hello.', 'comma');
+to('"to go" is no instruction; the clause\'s own comma stands', 'If you want to go there you need a car.', 'If you want to go there, you need a car.', 'comma');
+to('a comma before "but" with a noun subject', 'Rich people will buy a car but the poor people will not.', 'Rich people will buy a car, but the poor people will not.', 'comma');
+to('"but the food was"', 'The service was quick but the food was cold.', 'The service was quick, but the food was cold.', 'comma');
+same('"not the car but the bus"', 'It was not the car but the bus that was late.', 'comma');
+to('a space after the full stop', 'It was cold.but we went out.', 'It was cold. But we went out.', 'orth');
+to('a space after the question mark', 'Did you see it?she asked.', 'Did you see it? She asked.', 'orth');
+to('a space after the stop before a short word', 'It was late.We left.', 'It was late. We left.', 'orth');
+same('a web address with a country ending', 'Read it on bbc.co.uk tonight.', 'orth');
+same('"As I mentioned in the beginning" goes on', 'As I mentioned in the beginning there is a problem.', 'comma');
+to('a space after an abbreviation\'s stop', 'We live in St.Louis now.', 'We live in St. Louis now.', 'orth');
+same('an address is not a sentence end', 'See www.example.com today.', 'orth');
+same('a file name is not a sentence end', 'Open the readme.txt file.', 'orth');
+same('a decimal and an initial', 'It rose 3.5 points, said J.Smith.', 'orth');
+to('a paragraph without its stop', 'The first paragraph of the essay says a great deal about the method\n\nThe second paragraph follows.', 'The first paragraph of the essay says a great deal about the method.\n\nThe second paragraph follows.', 'orth');
+same('the last paragraph is still being written', 'The first paragraph is here.\n\nThe second paragraph is still being written and has many words in it', 'orth');
+same('a heading takes no stop', '# A heading without a stop that is long enough to be a sentence\n\nText follows.', 'orth');
+same('a list item takes no stop', '- an item in a list that runs on for more than eight words here\n\nText follows.', 'orth');
+
 /* the whole check never overlaps and keeps order */
 const E = L.check('Yesterday he go to school and they was happy, so they plays.');
 ok('edits in order, none overlapping', E.every((e, i) => i === 0 || e.start >= E[i - 1].end), E);

@@ -606,12 +606,45 @@
         out.push({ start: m.index, end: m.index + m[0].length, fix: caseLike(m[0], fix), why: '"' + fix + '" is one word', cat: 'g', fam: 'orth' });
       }
     }
+    /* 7.52: a sentence's end with no space after it ("cold.but we went", "St.Louis"): the space, and a
+       capital where the stop ends a sentence; not an address, a file name or an abbreviation's stop */
+    const ABBR = /^(etc|vs|approx|dept|govt|inc|ltd|co|corp|fig|figs|eq|ch|sec|vol|vols|no|nos|pp|ed|eds|trans|cf|al|dr|mr|mrs|ms|prof|st|jr|sr|mt|ft|oz|lb|lbs|kg|km|cm|mm|hrs|min|mins|secs|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec|www|http|https)$/i;
+    const EXT = /^(txt|pdf|doc|docx|jpg|jpeg|png|gif|svg|html|htm|css|js|py|exe|zip|csv|xml|json|md|mp3|mp4|mov|avi|com|org|net|edu|gov|info|biz|ac|io|xlsx|pptx|rtf|odt|epub|mobi|wav|tar|gz|app|dmg|apk|ipa|php|asp|aspx|jsp|cgi|dll|bat|sh|ini|cfg|log|bak|tmp|dat|bin|iso|img|tif|tiff|bmp|webp|ico|ttf|otf|woff|woff2|eot|mkv|flac|aac|ogg|wma|wmv|m4a|m4v|key|numbers|pages|msi|uk|de|fr|co|ly|me|tv|us|ca|au|nz|jp|cn|ru|it|es|nl|eu|ch|at|be|se|no|fm|ai|dev|xyz|cc|ie|pt|pl|gr|tr|in|br|mx|ar|za|kr|hk|sg|tw|ir|il|ae|sa|eg|ng|ke|id|th|vn|ph|my|pk|bd|lk|np|ua|cz|sk|hu|ro|bg|hr|rs|si|lt|lv|ee|fi|dk|is|lu|li|mt|cy|wiki|blog|shop|store|online|site|tech|news|cloud|email|htm)$/i;
+    const SP = /([A-Za-z]{2,})([.!?])([A-Za-z][a-z]+)(?![A-Za-z./@:\-])/g; let sm;
+    while ((sm = SP.exec(t))) {
+      if (sm.index > 0 && !/[\s"“‘(\[]/.test(t[sm.index - 1])) continue;
+      if (EXT.test(sm[3]) || /^(com|org|net|www)$/i.test(sm[1])) continue;
+      const abbr = ABBR.test(sm[1]) && sm[2] === '.';
+      const right = abbr ? sm[3] : sm[3].charAt(0).toUpperCase() + sm[3].slice(1);
+      out.push({ start: sm.index + sm[1].length + 1, end: sm.index + sm[0].length, orig: sm[3], fix: ' ' + right, why: abbr ? 'A space follows the abbreviation\u2019s full stop' : (sm[2] === '.' ? 'A space follows the full stop, and the next sentence opens with a capital' : 'A space follows the ' + (sm[2] === '!' ? 'exclamation mark' : 'question mark') + ', and the next sentence opens with a capital'), cat: 'g', fam: 'orth' });
+    }
+    /* 7.52: a paragraph that ends without its stop, with another paragraph after it (the last one is still being written) */
+    const PARA = /[^\n]+/g; let pm;
+    while ((pm = PARA.exec(t))) {
+      const para = pm[0], end = pm.index + para.length;
+      if (!/\n[\s\S]*\S/.test(t.slice(end))) break;
+      const trimmed = para.replace(/\s+$/, ''); if (!trimmed) continue;
+      if (/^\s*(?:#|[-*\u2022>|]|\d+[.)]\s|\[|!\[)/.test(para)) continue;
+      if (!/[A-Za-z0-9)\u201d"\u2019']$/.test(trimmed) || /[.!?:;,]+["\u201d\u2019')]*$/.test(trimmed)) continue;
+      const wsP = trimmed.split(/\s+/); if (wsP.length < 8) continue;
+      if (!/^[A-Z\u201c"]/.test(trimmed)) continue;
+      if (wsP.filter(x => /^[A-Z]/.test(x)).length / wsP.length > 0.6) continue;
+      if (/^(?:dear|hi|hello|yours|regards|sincerely|best)\b/i.test(trimmed)) continue;
+      const at = pm.index + trimmed.length;
+      out.push({ start: at, end: at, orig: '', fix: '.', why: 'A full stop closes the paragraph\u2019s last sentence', cat: 'g', fam: 'orth' });
+    }
   }
 
   /* commas */
   const SUBORD = /^(if|when|although|though|because|since|while|after|before|unless|until|once|whenever|whereas|wherever|as long as|as soon as|even if|even though|in case|as)$/i;
-  const OPENERS = ['before that', 'this way', 'in this way', 'in the same way', 'at the same time', 'in this case', 'in that case', 'in the meantime', 'in the long run', 'in the future', 'in the past', 'at the moment', 'at that time', 'at the time', 'on the contrary', 'in general', 'in brief', 'in summary', 'to be honest', 'needless to say', 'as far as i am concerned', 'as far as i know', 'from my point of view', 'in my view', 'to my mind', 'for one thing', 'in theory', 'in practice', 'in reality', 'in effect', 'on balance', 'all things considered', 'on the whole', 'by the way', 'by contrast', 'by comparison', 'in comparison', 'in contrast', 'likewise', 'similarly', 'ultimately', 'eventually', 'finally', 'meanwhile', 'suddenly', 'even so', 'also', 'first', 'second', 'third', 'in my opinion', 'first of all', 'on the one hand', 'on the other hand', 'in addition', 'at first', 'after that', 'after all', 'in the end', 'to sum up', 'all in all', 'of course', 'in fact', 'as a result', 'nowadays', 'unfortunately', 'fortunately', 'luckily', 'personally', 'besides', 'furthermore', 'moreover', 'secondly', 'thirdly', 'lastly', 'firstly', 'afterwards', 'actually', 'honestly', 'frankly', 'obviously', 'clearly', 'surprisingly', 'hopefully', 'sadly', 'anyway', 'otherwise', 'however', 'therefore', 'thus', 'hence', 'nevertheless', 'nonetheless', 'consequently', 'for example', 'for instance', 'in conclusion', 'to conclude', 'last but not least', 'in other words', 'for this reason', 'because of this', 'because of that', 'despite this', 'as a consequence', 'in short', 'in particular', 'above all', 'what is more', 'apart from that', 'besides that', 'on top of that', 'by the way', 'as for me', 'in my view', 'in this case', 'in that case', 'in general', 'generally speaking', 'to be honest', 'in contrast', 'by contrast', 'on the contrary', 'at the same time', 'at the end of the day', 'as a matter of fact', 'as far as i am concerned', 'as far as i know', 'to begin with', 'to start with', 'in the first place', 'in the second place', 'at last', 'finally', 'meanwhile', 'eventually', 'indeed', 'similarly', 'likewise', 'instead', 'in the meantime', 'in a word', 'in brief', 'to summarise', 'to summarize', 'in summary'];
+  const OPENERS = ['to sum it up', 'once upon a time', 'in addition to this', 'in addition to that', 'in recent years', 'in the last few years', 'in recent times', 'as i said', 'as i mentioned', 'as mentioned above', 'for the most part', 'more importantly', 'most importantly', 'in some cases', 'in many cases', 'in most cases', 'in some ways', 'in many ways', 'in a way', 'in a sense', 'in any case', 'at any rate', 'at present', 'in the beginning', 'at the beginning', 'as usual', 'as always', 'as expected', 'in turn', 'for now', 'until now', 'up to now', 'so far', 'to date', 'to this day', 'in retrospect', 'on reflection', 'that said', 'having said that', 'in that sense', 'to this end', 'with this in mind', 'put simply', 'simply put', 'in essence', 'in sum', 'interestingly', 'admittedly', 'before that', 'this way', 'in this way', 'in the same way', 'at the same time', 'in this case', 'in that case', 'in the meantime', 'in the long run', 'in the future', 'in the past', 'at the moment', 'at that time', 'at the time', 'on the contrary', 'in general', 'in brief', 'in summary', 'to be honest', 'needless to say', 'as far as i am concerned', 'as far as i know', 'from my point of view', 'in my view', 'to my mind', 'for one thing', 'in theory', 'in practice', 'in reality', 'in effect', 'on balance', 'all things considered', 'on the whole', 'by the way', 'by contrast', 'by comparison', 'in comparison', 'in contrast', 'likewise', 'similarly', 'ultimately', 'eventually', 'finally', 'meanwhile', 'suddenly', 'even so', 'also', 'first', 'second', 'third', 'in my opinion', 'first of all', 'on the one hand', 'on the other hand', 'in addition', 'at first', 'after that', 'after all', 'in the end', 'to sum up', 'all in all', 'of course', 'in fact', 'as a result', 'nowadays', 'unfortunately', 'fortunately', 'luckily', 'personally', 'besides', 'furthermore', 'moreover', 'secondly', 'thirdly', 'lastly', 'firstly', 'afterwards', 'actually', 'honestly', 'frankly', 'obviously', 'clearly', 'surprisingly', 'hopefully', 'sadly', 'anyway', 'otherwise', 'however', 'therefore', 'thus', 'hence', 'nevertheless', 'nonetheless', 'consequently', 'for example', 'for instance', 'in conclusion', 'to conclude', 'last but not least', 'in other words', 'for this reason', 'because of this', 'because of that', 'despite this', 'as a consequence', 'in short', 'in particular', 'above all', 'what is more', 'apart from that', 'besides that', 'on top of that', 'by the way', 'as for me', 'in my view', 'in this case', 'in that case', 'in general', 'generally speaking', 'to be honest', 'in contrast', 'by contrast', 'on the contrary', 'at the same time', 'at the end of the day', 'as a matter of fact', 'as far as i am concerned', 'as far as i know', 'to begin with', 'to start with', 'in the first place', 'in the second place', 'at last', 'finally', 'meanwhile', 'eventually', 'indeed', 'similarly', 'likewise', 'instead', 'in the meantime', 'in a word', 'in brief', 'to summarise', 'to summarize', 'in summary'];
   const OPENER_RE = new RegExp('^(' + OPENERS.slice().sort((a, b) => b.length - a.length).map(o => o.replace(/ /g, '\\s+')).join('|') + ')(\\s+)(?=[A-Za-z])', 'i');
+  /* 7.52: connectives that take their comma whatever follows ("In my opinion big stars should", "On the one hand travel by car") */
+  const CONNECT = new Set(['in my opinion', 'on the one hand', 'on the other hand', 'to sum up', 'to sum it up', 'in conclusion', 'to conclude', 'first of all', 'in other words', 'for example', 'for instance', 'in fact', 'of course', 'as a result', 'in short', 'in summary', 'in brief', 'last but not least', 'all in all', 'as a matter of fact', 'in general', 'generally speaking', 'to be honest', 'needless to say', 'from my point of view', 'in my view', 'to my mind', 'as far as i am concerned', 'as far as i know', 'once upon a time', 'above all', 'for this reason', 'because of this', 'because of that', 'in the end', 'at the end of the day', 'on the contrary', 'what is more', 'on top of that', 'apart from that', 'besides that', 'in the first place', 'in the second place', 'to begin with', 'to start with', 'in a word', 'in essence', 'in sum', 'that said', 'having said that', 'to summarise', 'to summarize', 'however', 'moreover', 'furthermore', 'nevertheless', 'nonetheless', 'consequently', 'firstly', 'secondly', 'thirdly', 'lastly', 'unfortunately', 'fortunately', 'luckily', 'personally', 'honestly', 'frankly', 'interestingly', 'surprisingly', 'sadly', 'hopefully', 'admittedly', 'similarly', 'likewise', 'more importantly', 'most importantly', 'for the most part', 'as i said', 'as i mentioned', 'as mentioned above', 'put simply', 'simply put', 'in retrospect', 'on reflection']);
+  /* 7.52: the main clause as an instruction after an opening clause ("If you have the chance of learning a new language do it") */
+  const IMPER = new Set('do try remember forget make take go be keep use choose start stop avoid visit read write ask call let look listen check bring buy get put give learn practise practice enjoy wait join follow pick find imagine note see watch turn leave stay move think consider feel add pour mix cook press click select open close save print send tell show pay book order prepare plan contact apply relax breathe focus'.split(' '));
+  const IMPER_NEXT = /^(it|them|him|her|us|me|this|that|these|those|the|a|an|your|my|our|his|their|so|not|sure|care|up|out|on|off|in|away|now|again|more|some|every|each|all|everything|nothing|something|anything|one|about|at|for|with|of|to|yourself|yourselves|careful|calm|patient|honest|kind|quiet|ready|there|here|home|back|forward|ahead|well|hard|carefully|slowly|quickly|early|first|time|note|attention|part|advantage|place)$/i;
+  const IMPER_NOT_BEFORE = /^(to|and|or|but|not|never|always|please|just|will|would|can|could|should|must|may|might|do|does|did|don't|doesn't|didn't|'ll|'d|i|you|we|they|he|she|it|who|that|which|people|children|students|parents|teachers|friends|others|men|women|kids|adults|there|also|still|often|sometimes|usually|then|so|if|when|because|while|as|than)$/i;
   const MAIN_START = /^(will|would|can|could|should|must|may|might|am|is|are|was|were|have|has|had|do|does|did|need|want|think|believe|feel|like|prefer|'ll|'d|'m|'re|'ve|ll|d|m|re|ve|cannot|can't|won't|wouldn't|couldn't|shouldn't|don't|doesn't|didn't|haven't|hasn't|isn't|aren't|wasn't|weren't)$/i;
   function comma(t, ws, out) {
     /* sentences */
@@ -630,9 +663,12 @@
         const rest = body.slice(om[1].length + om[2].length);
         /* "However good it is", "Finally home": the opener must be followed by a clause */
         const subjStart = /^(the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one)\b/i.test(rest);
-        if (/^(of|the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one|in|on|at|for|with|by|from|to|if|when|because|although|as|since|while|after|before|not|only|even|also|still|just|now|today|nowadays|during|despite|without|what|how|why|where|who|which|whether|being|having|doing|going|getting|making|taking|using|learning|working|studying|living)\b/i.test(rest) && (subjStart || !/^(also|first|second|third)$/i.test(om[1])) || /^[A-Z][a-z]/.test(rest)) {
-          if (!(/^(however|thus|hence|finally|instead|indeed|clearly|obviously|generally)$/i.test(om[1]) && /^(good|bad|much|many|hard|long|far|small|big|little|great|difficult|important|strong|well|fast|slow|the)\b/i.test(rest)) && !(/^(in fact|of course|at first|at last|finally|eventually|meanwhile)$/i.test(om[1]) && false))
-            out.push({ start: at, end: at, orig: '', fix: ',', why: 'A comma after an opening phrase such as "' + cap(om[1].toLowerCase()) + ',"', cat: 'g', fam: 'comma' });
+        const oKey = om[1].toLowerCase().replace(/\s+/g, ' ');
+        const goesOn = /^as i (?:said|mentioned)$/.test(oKey) && /^(?:in|at|on|before|earlier|above|previously|to|already|last|many|several)\b/i.test(rest);   /* "As I mentioned in the beginning": the opener goes on */
+        const strong = !goesOn && CONNECT.has(oKey) && /^[A-Za-z]/.test(rest) && !/^speaking\b/i.test(rest) && !(oKey === 'of course' && /^not\b/i.test(rest)) && !(oKey === 'in general' && /^(terms|elections?)\b/i.test(rest)) && !(oKey === 'in short' && /^supply\b/i.test(rest)) && !(oKey === 'above all' && /^else\b/i.test(rest));
+        if (!goesOn && (strong || /^(of|the|a|an|i|you|we|they|he|she|it|there|this|that|these|those|my|our|your|their|his|her|its|people|students|children|parents|teachers|everyone|everybody|someone|nobody|many|most|some|all|no|one|in|on|at|for|with|by|from|to|if|when|because|although|as|since|while|after|before|not|only|even|also|still|just|now|today|nowadays|during|despite|without|what|how|why|where|who|which|whether|being|having|doing|going|getting|making|taking|using|learning|working|studying|living)\b/i.test(rest) && (subjStart || !/^(also|first|second|third)$/i.test(om[1])) || /^[A-Z][a-z]/.test(rest))) {
+          if (!(/^(however|thus|hence|finally|instead|indeed|clearly|obviously|generally)$/i.test(om[1]) && /^(good|bad|much|many|hard|long|far|small|big|little|great|difficult|important|strong|well|fast|slow|the)\b/i.test(rest)) && !(/^of course$/i.test(om[1]) && /^not\b/i.test(rest)))
+            out.push({ start: at, end: at, orig: '', fix: ',', why: 'A comma after an opening phrase such as "' + cap(om[1].toLowerCase()).replace(/\bi\b/g, 'I') + ',"', cat: 'g', fam: 'comma' });
         }
       }
       /* a fronted time phrase before a pronoun subject: "Two years ago I" */
@@ -647,6 +683,10 @@
         let hasVerb = false;
         for (let i = 1; i < Math.min(sw.length, 16); i++) {
           const w = sw[i], l = lc(w.w);
+          if (i >= 4 && hasVerb && IMPER.has(l) && /^[a-z]/.test(w.w) && i + 1 < sw.length && !gap(t, w, sw[i + 1]) && !gap(t, sw[i - 1], w) && IMPER_NEXT.test(sw[i + 1].w) && !IMPER_NOT_BEFORE.test(sw[i - 1].w) && !/s$/i.test(sw[i - 1].w)) {
+            out.push({ start: sw[i - 1].e, end: w.s, orig: t.slice(sw[i - 1].e, w.s), fix: ', ', why: 'A comma closes the opening "' + sw[0].w + '" clause before the instruction', cat: 'g', fam: 'comma' });
+            break;
+          }
           if (i >= 3 && hasVerb && SUBJ_PRON.test(w.w) && i + 1 < sw.length && !gap(t, w, sw[i + 1]) && MAIN_START.test(sw[i + 1].w) && !/^(that|because|if|when|whether|what|how|why|where|which|who|and|or|but|than|as|so|since|although|while|unless|until|after|before|once|for|to|of|in|on|at|with|by|from|about|like|whom|whose)$/i.test(sw[i - 1].w)) {
             out.push({ start: w.s, end: w.s, orig: '', fix: ', ', why: 'A comma closes the opening "' + sw[0].w + '" clause before the main one', cat: 'g', fam: 'comma', cut0: true });
             /* the space before is absorbed */
@@ -703,7 +743,17 @@
         const w = sw[i];
         if (!/^(but|so)$/i.test(w.w)) continue;
         if (gap(t, sw[i - 1], w) || gap(t, w, sw[i + 1])) continue;
-        if (!SUBJ_PRON.test(sw[i + 1].w) || !(i + 2 < sw.length && !gap(t, sw[i + 1], sw[i + 2]) && (MAIN_START.test(sw[i + 2].w) || FORM.has(lc(sw[i + 2].w))))) continue;
+        const n1 = sw[i + 1], n2 = sw[i + 2], n3 = sw[i + 3], n4 = sw[i + 4];
+        const vb = x => !!x && (MAIN_START.test(x.w) || FORM.has(lc(x.w)) || AUX_BE.test(x.w) || MODAL.test(x.w));
+        let clause = SUBJ_PRON.test(n1.w) && !!n2 && !gap(t, n1, n2) && vb(n2);
+        /* 7.52: "but the poor people will not": a determiner, its noun (one adjective allowed) and the verb */
+        const REL = /^(that|which|who|whom|whose|where|when|of|in|on|at|for|with|to|from|and|or)$/i;
+        if (!clause && lc(w.w) === 'but' && n2 && n3 && !gap(t, n1, n2) && !gap(t, n2, n3) && /^(the|a|an|my|our|your|their|his|her|its|these|those|some|many|most|all|no|this|that)$/i.test(n1.w)) {
+          if (/^(this|that)$/i.test(n1.w) && vb(n2)) clause = true;
+          else if (/^[a-z]+$/.test(n2.w) && !vb(n2) && !REL.test(n2.w) && (vb(n3) || (!!n4 && !gap(t, n3, n4) && /^[a-z]+$/.test(n3.w) && !vb(n3) && !REL.test(n3.w) && vb(n4)))) clause = true;
+          if (clause && sw.slice(Math.max(0, i - 6), i).some(x => /^(not|n't|neither|only)$/i.test(x.w))) clause = false;   /* "not the car but the bus" */
+        }
+        if (!clause) continue;
         if (/^(not|only|also|and|even|nothing|anything|everything|all|none|no|or|,)$/i.test(sw[i - 1].w)) continue;
         if (lc(w.w) === 'so' && /^(that|much|many|far|long)$/i.test(sw[i + 1].w)) continue;
         const left = sw.slice(0, i);

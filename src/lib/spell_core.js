@@ -257,6 +257,7 @@
     while ((m = re.exec(text))) {
       let w = m[0].replace(/['’]+$/, ''); const s = m.index, e = s + w.length;
       if (w.length < 2 || ignore.has(w.toLowerCase())) continue;
+      if (/^i['’](?:m|ve|ll|d)$/i.test(w)) continue;   /* 7.52: "i'm" is the page's capital rule, not a spelling */
       /* 7.47: speech written as spoken ("buildin’", "preparin’"), the
          plural of capitals ("MRIs"), the parts of Arabic names */
       if (m[0].length > w.length && /in$/.test(w)) continue;

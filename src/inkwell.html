@@ -8514,7 +8514,7 @@ const GRAM38=[
  /* punctuation spacing: space before punctuation */
  {re:/\s+([,.;:!?])/g,to:'$1',cat:'g',label:'No space before punctuation'},
  {re:/([,;:])(?=[A-Za-z])/g,to:'$1 ',cat:'g',label:'Space after comma or semicolon'},
- {re:/([.])([A-Z][a-z])/g,to:'$1 $2',cat:'g',label:'Space after a period before the next sentence'},
+ /* 7.52: the space after a sentence's stop is the learner library's rule now (learner_core.js, orth): it knows abbreviations, addresses and file names, and gives the capital */
  /* double punctuation cleanup */
  {re:/([.!?])\1{1,}/g,to:'$1',cat:'g',label:'One terminal mark is enough'},
  {re:/,,+/g,to:',',cat:'g',label:'One comma is enough'},
@@ -9336,12 +9336,18 @@ function ruleEdits(t){
    forms, a missing "is", a noun's number, articles and prepositions in fixed
    phrases, words run together, the commas learners leave out. Measured on
    learner essays and on correct text (tools/grammar/README.md). */
+/* 7.52: a correctness note from the libraries takes the place of the clarity
+   and style notes on the same words ("In my opinion big stars": the comma,
+   not only the wordiness note); it yields to another correctness note */
+function inkYield(out,e){const ov=[];for(let i=0;i<out.length;i++){const o=out[i];if((e.start<o.end&&e.end>o.start)||(e.start===e.end&&o.start<=e.start&&o.end>=e.start))ov.push(i);}
+ if(!ov.length)return true;if(ov.some(i=>out[i].cat==='g'))return false;
+ for(let k=ov.length-1;k>=0;k--)out.splice(ov[k],1);return true;}
 function learnerCheck(t,ms,out){
  if(typeof INKLRN==='undefined')return;
  let es=[];try{es=INKLRN.check(t);}catch(e){return;}
  for(const e of es){
   if(inMask(e.start,ms))continue;
-  if(out.some(o=>e.start<o.end&&e.end>o.start))continue;
+  if(!inkYield(out,e))continue;
   out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam});}}
 /* 7.50: the gaps (INKGAPS): prepositions, articles, number, verb forms,
    agreement, capitals and morphology the audit found the rules silent on.
@@ -9353,7 +9359,7 @@ function gapsCheck(t,ms,out){
  let es=[];try{es=INKGAPS.check(t);}catch(e){return;}
  for(const e of es){
   if(inMask(e.start,ms))continue;
-  if(out.some(o=>e.start<o.end&&e.end>o.start||(e.start===e.end&&o.start<=e.start&&o.end>=e.start)))continue;
+  if(!inkYield(out,e))continue;
   /* the family's name (pat) is what Your patterns counts; the note's own why teaches the particular */
   out.push({start:e.start,end:e.end,orig:e.orig,fix:e.fix,why:e.why,cat:'g',fam:e.fam,pat:GAPS_PAT[e.fam]});}}
 /* ===== restored card + bubble + accept + undo cluster (regressed away in 6.58) ===== */
@@ -9859,7 +9865,8 @@ function inkRuleGate(t,out){
    if(/(?:^|[^A-Za-z])[A-Z]$/.test(pre)||/^[.!?]\s+(?:al-|el-|ad-|ibn |de |du |da |di |van |von |le |la |bell hooks)/.test(t.slice(e.start,e.start+14)))continue;}
   if(/^Capital(ise the pronoun)? I/.test(why)){
    const i=t.indexOf('i',e.start);if(i<0)continue;
-   if(L(t[i-1])||L(t[i+1])||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
+   /* 7.52: an apostrophe after the i is its contraction ("i'm", "i've"), not a word around it */
+   if(L(t[i-1])||(L(t[i+1])&&!/^['’](?:m|ve|ll|d)\b/.test(t.slice(i+1,i+4)))||/^\.e\./i.test(t.slice(i+1,i+4))||/^\.$/.test(t[i+1]||'')&&/[a-z]/i.test(t[i+2]||''))continue;}
   if(why.indexOf('“an” belongs before vowel sounds only')===0){
    const w=(o.split(/\s+/)[1]||'');
    if(INK_VOWEL_LETTER.test(w)||INK_SILENT_H.test(w)||L(t[e.start-1]))continue;}

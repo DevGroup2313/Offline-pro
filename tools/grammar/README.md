@@ -574,3 +574,62 @@ was missing: through", "Double “m”: committed", "The vowel is “e”, not
 “a”: depends", "Two words, not one: every site"). The card, the line at
 the foot after an accepted fix, and the practice's answer carry it.
 spell_test.js 181.
+
+## After 7.51: the small deterministic fixes (stage G6, fourth part)
+
+The audit after the spelling stage listed the remaining silences by type.
+The large ones are contextual (a preposition both forms of which are
+acceptable, a tense across a sentence, an article by meaning, word
+choice). What was deterministic was gathered into one stage, each item
+with its guards and tests (learner_test.js 215, gaps_test.js 147,
+spell_test.js 182):
+
+- the comma after a connective, whatever follows it ("In my opinion big
+  stars should", "On the one hand travel by car", "To sum it up I");
+  "Of course not", "In general terms", "However much I try" and "As I
+  mentioned in the beginning" take none;
+- the comma before an instruction that follows an opening clause ("If
+  you have the chance of learning a new language, do it"); not before a
+  plural subject or an infinitive ("people say", "to go");
+- the comma before "but" when a noun phrase follows ("buy a car, but the
+  poor people will not"); not in "not the car but the bus";
+- the space after a sentence's stop ("cold.but we went" to "cold. But we
+  went"), with the capital; not inside an address, a file name, a
+  decimal or an initial; after an abbreviation's stop the space alone;
+- the full stop a paragraph lacks when another paragraph follows it (the
+  last paragraph is still being written; headings, lists and titles are
+  left alone);
+- "in to" before a place or a result after a verb of motion or change
+  ("get into the room", "divided into pieces"); not "log in to";
+- a role noun's article after "is", "was", "become" or "as" ("when I was
+  a student", "worked as an educator"); not the offices one person holds
+  ("became president");
+- "congratulations on", "a beginner at", "smile at" someone, "pray to"
+  God.
+
+Two faults in the page itself were found by the measurement, since the
+library made the fixes and the page did not: the gate dropped the capital
+of "i'm" because an apostrophe followed the i, and an older page rule
+for the missing space claimed the span and then died in the gate, taking
+the library's fix with it. And a correctness note from the libraries was
+dropped whenever a clarity or style note stood on the same words ("In my
+opinion" is also a wordiness note), so the comma never appeared; a
+correctness note now takes the place of the style notes on its words.
+That last change also let through fixes the page had always known but
+never shown: "can not" to "cannot" (35 times on CoNLL-2014), "is very
+beautiful place" to "is a very beautiful place", "a lots of" to "a lot
+of", "one of the reason" to "reasons".
+
+| set | before P / R / F0.5 | after |
+|---|---|---|
+| W&I tuning half | 67.0 / 9.4 / 0.300 | 66.5 / 9.9 / 0.311 |
+| W&I report half | 62.3 / 8.0 / 0.265 | 62.5 / 8.4 / 0.273 |
+| CoNLL-2014 | 75.0 / 7.8 / 0.276 | 74.1 / 7.9 / 0.276 |
+| correct Wikipedia, tuning | 60 (4.0%) | 62 (4.1%) |
+| correct Wikipedia, report | 67 (4.5%) | 67 (4.5%) |
+
+The two new changes on correct prose are commas before "but" between
+two complete clauses ("his work with taxonomy, but his ideas", "have
+disappeared, but an adit can still be seen"), which the rule places and
+the encyclopaedia's editors did not; both are standard, and the rule is
+kept.

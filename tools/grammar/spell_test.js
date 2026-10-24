@@ -94,6 +94,7 @@ ok('7.52 the small words of other languages inside names are left alone', flags(
 ok('7.52 a slip at the first letter is rarer: nopal, susage', fixOf('I ate nopal there.') == null && fixOf('I ate susage there.') == null, [flags('I ate nopal there.'), flags('I ate susage there.')]);
 ok('7.52 a word of the middle level is still reached: burguers, diabete', fixOf('I ate burguers there.') === 'burgers' && fixOf('He has diabete now.') === 'diabetes', [flags('I ate burguers there.'), flags('He has diabete now.')]);
 ok('7.52 a short capital at a sentence start is a name: Maon', flags('Maon, according to Joshua, was a town.').every(e => e.fix == null));
+ok('7.52 "i\'m" is left to the capital rule', flags("and i'm here now.").length === 0, flags("and i'm here now."));
 ok('7.52 loanwords without their accents are words', flags('They met in cafes and ate jalapenos with a certain naivete.').length === 0);
 ok('7.52 a short word keeps its caution: thay', fixOf('I think thay is here.') == null);
 /* three slips in a row are slips, not a phrase of another language */
