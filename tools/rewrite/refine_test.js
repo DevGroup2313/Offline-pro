@@ -261,6 +261,7 @@ ok('lesson: idiom', /Fixed expressions/.test(L('Nip it in the bud')));
 ok('lesson: confusable', /sound alike/.test(L('"Lose" is the verb; "loose" means not tight')));
 ok('lesson: agreement', /match its subject/.test(L('"Neither" takes a singular verb')));
 ok('lesson: none for an unknown kind', R.lesson('Zzz unknown') === null);
+for (const f of ['A comma after an opener or between clauses', 'Capitals', 'The article: “a” or “an”', 'One word or two, and the spaces', 'The verb agrees with its subject', 'A word and its preposition', 'A missing article', 'Singular or plural after a quantity']) ok('lesson for the family: ' + f, !!R.lesson(f) && R.lesson(f).length === 2, R.lesson(f));
 
 /* 7.52: the lesson built from the sentence itself */
 const SL = (e, t) => (R.sentenceLesson(e, t) || [''])[0];

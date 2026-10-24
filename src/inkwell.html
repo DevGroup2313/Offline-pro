@@ -9674,7 +9674,28 @@ const CITE_UNDO=new Map();
 function citeUndoPoint(){pushUndo();const d=inkDoc();if(!d)return;
  CITE_UNDO.set(ed.value,JSON.stringify(d.citeRec||[]));if(CITE_UNDO.size>60)CITE_UNDO.delete(CITE_UNDO.keys().next().value);}
 /* a pattern's name: a long explanation is named by its head ("Comma splice") */
-function statKey(why){why=String(why||'');return why.length>48?why.split(/[:.]/)[0].trim():why;}
+/* 7.52: the pattern a fix is counted under: the gaps' family (pat), or the
+   family the page's and the learner library's own reasons belong to, so Your
+   patterns and One sentence from last time speak of a few families, not of
+   every wording of a rule */
+const PAT_FAMILIES=[
+ ['The verb agrees with its subject',/^Agreement|agrees with its subject|^A plural subject takes|^A singular subject takes|^“He has”|^Verb form$|^“There is” before a singular|^An -ing subject is singular|^A country is singular|^Two subjects joined/],
+ ['Singular or plural after a quantity',/^After “|^After "|^“A lot of”|the plural noun|^“Many” before|^“Much” before|^Singular or plural/],
+ ['A missing article',/^A singular countable noun takes|^A singular count noun takes|^A superlative or an ordinal takes|^A role takes its article|^A missing article/],
+ ['The article: “a” or “an”',/^Article "a" vs "an"|^“an” belongs before|^“a” before a vowel|^These begin with a vowel sound|^Some speakers aspirate/],
+ ['A comma after an opener or between clauses',/^A comma (?:after|before|closes|follows)|^An opening transition takes a comma|^The introductory marker takes its comma|^Comma splice/],
+ ['Capitals',/^Capital|^Capitalise|^A sentence begins with a capital|^Sentence begins lowercase/],
+ ['A word and its preposition',/^[“"][A-Za-z’' ]+ (?:in|on|at|of|for|to|with|from|by|about|into|against|upon)[”"]|^It is "(?:at|in|on) |takes “(?:to|of|on|for|in|at|with|from|by|about)”|^A word and its preposition|^“Into” is one word|^“On the internet”|^“At night”|^“In my opinion”|takes no “about”|takes no preposition/],
+ ['The verb’s form after a modal, “do”, “have” or “to”',/^After “[^”]+” the verb|^Two verbs after|^“Interested in” doing|^“Capable of” doing|^The verb’s form after/],
+ ['One word or two, and the spaces',/^A space follows|is one word$|is written as two words|^"cannot" is one word|^Space after|^Space before|^Missing space|^Two words, not one/]];
+function patFamily(e){if(!e)return '';if(e.pat)return e.pat;const why=String(e.why||'');for(const f of PAT_FAMILIES)if(f[1].test(why))return f[0];return why;}
+/* once: the counts kept under each wording of a rule fold into their families */
+let _statsFolded=false;
+function inkFoldStats(){if(_statsFolded)return;_statsFolded=true;try{if(localStorage.getItem('ink_statsFold')==='752')return;const st=S.stats||{},ex=S.statEx||{},ns={},nx={};
+ for(const k of Object.keys(st)){const f=statKey(patFamily({why:k}));ns[f]=(ns[f]||0)+(st[k]||0);}
+ for(const k of Object.keys(ex)){const f=statKey(patFamily({why:k}));nx[f]=(nx[f]||[]).concat(ex[k]||[]).slice(0,6);}
+ S.stats=ns;S.statEx=nx;SV('stats',ns);SV('statEx',nx);localStorage.setItem('ink_statsFold','752');}catch(e){}}
+function statKey(why){why=String(why||'');return why.length>56?why.split(/[:.]/)[0].trim():why;}
 function bumpStat(why,ex){why=statKey(why);S.stats[why]=(S.stats[why]||0)+1;SV('stats',S.stats);
  /* 7.49: the writer's own slip is kept (six to a pattern) for practice */
  if(ex&&ex.ctx){ex.t=Date.now();const all=S.statEx||{},L=(all[why]||[]).filter(x=>x.ctx!==ex.ctx);L.unshift(ex);all[why]=L.slice(0,6);S.statEx=all;SV('statEx',all);}
@@ -9701,7 +9722,7 @@ function acceptOne(i){const e=EDITS[i];if(!e||typeof e.fix!=='string')return;pus
  e._L=lessonForEdit(e,ed.value);   /* 7.52: the lesson is read before the page changes */
  const r=inkSafeReplace(e.start,e.end,orig,e.fix,ed.value.slice(Math.max(0,e.start-40),e.start));
  if(!r){scan();return;}
- bumpStat(e.pat||e.why||'',ex);
+ bumpStat(patFamily(e),ex);
  ed.setSelectionRange(r.e,r.e);afterChange();SND.accept();showUndoChip();
  if(wasFirst)showTip('learn');inkRuleToast(e);clearSel();}
 /* 7.50: The rule after a fix (My way of working, on from the start): the
@@ -9772,7 +9793,7 @@ function wbMute(i){const e=EDITS[i];if(!e||!e.wb)return;const w=e.wb;
 function wbUnmute(i){S.muteWords.splice(i,1);SV('muteWords',S.muteWords);WB=null;openModal('rules');scan();}
 function acceptAll(){const es=EDITS.filter(e=>typeof e.fix==='string');if(!es.length)return toast('Nothing to fix');inkAuthMark('f');
  if(es.length>=4)snap('Before Fix all');
- pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(e.pat||e.why||'',statExample(t0,e)));}let t=ed.value;
+ pushUndo();{const t0=ed.value;es.forEach(e=>bumpStat(patFamily(e),statExample(t0,e)));}let t=ed.value;
  /* 7.52: at one place, the longer fix first, then the insertion at its head ("a" before "student,") */
  es.slice().sort((a,b)=>b.start-a.start||(b.end-b.start)-(a.end-a.start)).forEach(e=>{t=t.slice(0,e.start)+e.fix+t.slice(e.end)});
  ed.value=t;afterChange();SND.fixall();showUndoChip();clearSel();
@@ -15286,6 +15307,7 @@ ed.addEventListener('select',updateStats);
    behind an unwired door. If anything throws, the console says what, and the
    desk itself is still reachable. */
 function renderPatterns(){
+ inkFoldStats();
  /* the syllabus the app keeps: which lessons your accepted fixes keep asking
     for, with the lesson itself attached so the pattern IS the teaching */
  var el=document.getElementById('patList');if(!el)return;

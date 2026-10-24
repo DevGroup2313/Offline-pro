@@ -61,6 +61,16 @@ WHAT CHANGED
    practice's answer. An insertion at the head of a note that keeps its
    first word stands beside it (dedupe, inkYield), and Fix all applies the
    longer fix first.
+6. Your patterns counts a fix under its family (patFamily): the gaps'
+   families as before, and for the page's and the learner library's own
+   notes the family their reason belongs to (The verb agrees with its
+   subject; Singular or plural after a quantity; A missing article; The
+   article: "a" or "an"; A comma after an opener or between clauses;
+   Capitals; A word and its preposition; The verb's form after a modal,
+   "do", "have" or "to"; One word or two, and the spaces), each with its
+   lesson (refine_core.js LESSON). The counts kept under each wording of a
+   rule fold into their families once (inkFoldStats). One sentence from
+   last time names the family.
 
 Whole page, ERRANT F0.5, from 7.51: W&I tuning half 0.291 to 0.311,
 report half 0.262 to 0.274, CoNLL-2014 0.272 to 0.278; correct prose

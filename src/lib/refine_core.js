@@ -833,6 +833,11 @@
     [/^A missing article/, ['A singular thing that can be counted never stands bare (a person, an idea, the best way): it takes a, an or the.', '"is experienced person" → "is an experienced person"']],
     [/^Singular or plural after a quantity/, ['After many, several, both, a number and "one of", the noun is plural; many goes with things you count, much with what you measure.', '"many problem" → "many problems"']],
     [/^The verb’s form after a modal/, ['After will, can, should, does and "to", the verb stays bare; after have, has and had it is the participle.', '"will delighted" → "will delight"; "have went" → "have gone"']],
+    /* 7.52: the families the page counts its own notes under */
+    [/^A comma after an opener or between clauses/, ['A comma marks where an opening word, phrase or clause ends and the main clause begins, and stands before "but" or "so" when they join two complete clauses. Read the sentence aloud: the comma is where you breathe.', '"In my opinion, the plan works." · "It was late, but we stayed."']],
+    [/^Capitals$/, ['A sentence opens with a capital, and so do the pronoun I and every name. Nothing else in a sentence does.', '"i think" → "I think" · "in london" → "in London"']],
+    [/^The article: “a” or “an”/, ['"An" goes before a vowel sound, "a" before a consonant sound: the sound decides, not the letter.', '"an hour", "a university", "an honest answer"']],
+    [/^One word or two, and the spaces/, ['Some pairs are one word ("cannot", "into", "everyone") and some two ("a lot", "every day" as a time). A space follows every full stop, comma and question mark.', '"alot" → "a lot" · "cold.But" → "cold. But"']],
     [/^The verb agrees with its subject/, ['Find the real subject before choosing the verb: one thing takes the -s form, more than one takes the plain form.', '"the chances of accident is" → "the chances of accident are"']],
     [/^A capital inside a sentence/, ['A capital letter inside a sentence marks a name. An ordinary word keeps its small letter, however important it feels.', '"thinking It would" → "thinking it would"']],
     [/^A fixed form/, ['A few forms are simply fixed: nowadays, every day (two words, when), people, a relationship between people, easier.', '"more easy than" → "easier than"']],
