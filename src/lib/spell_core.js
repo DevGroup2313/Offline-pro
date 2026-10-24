@@ -351,7 +351,8 @@
          ("Kraemer discusses"); a term the writer uses three times or more
          with no clear fix is theirs ("gaslighting") */
       const nearPlain = sug.some(x => x.score < 1.2 && x.word === x.word.toLowerCase());
-      if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 3)) continue;
+      /* 7.52: a term used twice with no fix to offer is the writer's (was three times): 112 such notes on 40 published articles */
+      if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 2)) continue;
       hold.push(o);
     }
     /* 7.47: three unknown words or more with at most one short word between

@@ -2967,7 +2967,8 @@ body[data-motion=minimal] .itCard button,body[data-motion=minimal] .itCard butto
          ("Kraemer discusses"); a term the writer uses three times or more
          with no clear fix is theirs ("gaslighting") */
       const nearPlain = sug.some(x => x.score < 1.2 && x.word === x.word.toLowerCase());
-      if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 3)) continue;
+      /* 7.52: a term used twice with no fix to offer is the writer's (was three times): 112 such notes on 40 published articles */
+      if (!o.fix && ((capStart && !nearPlain) || (uses.get(w.toLowerCase()) || 0) >= 2)) continue;
       hold.push(o);
     }
     /* 7.47: three unknown words or more with at most one short word between
@@ -11404,7 +11405,7 @@ const BUILD='7.51 · XXIII · OCTOBRIS · MMXXVI';
 /* 7.50: the SHA-256 of this page as the author built it (tools/build_inkwell.py
    writes it over the placeholder, hashing the page with the placeholder in
    place); "This copy" in the Guide hashes the page the same way and compares */
-const PAGE_SHA='ffaf8174b75f87a36fd0cf21dc9d3ff958ccf8d512c37b7dcf5c6d476fce84c0';
+const PAGE_SHA='7d77b8acb7705506ed7009687fa2a0a45c028fb49f24ef7bbf183cca5c85bdd6';
 /* ================= THE WRITER'S VOICE — assist, never lead ================= */
 function analyzeVoice(){const docs=S.docs.filter(d=>d.text&&d.text.trim());
  if(!docs.length)return toast('Add documents first; the voice is measured from your own writing');

@@ -48,6 +48,8 @@ ok('a slip at a sentence start is still caught', ((flags('Teh results were clear
 const term = 'Algorithmic glarbing shapes care. By glarbing I mean a structural relation. Glarbing persists; glarbing spreads.';
 ok("the writer's term used often is left alone", flags(term).length === 0, flags(term));
 ok('a term used once is still marked', flags('This glarbing shapes care.').length === 1);
+ok('7.52 a term used twice with no fix is the writer\'s', flags('This glarbing shapes care, and glarbing spreads.').length === 0, flags('This glarbing shapes care, and glarbing spreads.'));
+ok('7.52 a slip used twice with a fix is still caught', flags('I recieve it and you recieve it.').length === 2);
 ok('a repeated slip with a clear fix is still caught', flags('I recieve it, you recieve it, we recieve it.').filter(e => e.fix === 'receive').length === 3);
 ok('rare words are never offered as corrections', flags('The resuls were clear.').every(e => (e.alts || []).every(a => (SP.level(D, a.toLowerCase()) < 80))));
 
