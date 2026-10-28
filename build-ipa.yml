@@ -75,7 +75,7 @@ jobs:
         working-directory: iphone-ipad
     steps:
       - name: Get the project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Find the Xcode project
         working-directory: .
@@ -112,7 +112,7 @@ jobs:
 
       - name: Keep the build log, pass or fail
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-build-log
           path: ${{ runner.temp }}/build-log.txt
@@ -133,7 +133,7 @@ jobs:
       # Kept with the run BEFORE anything else is tried, so the IPA can always
       # be downloaded from the run's page ("Artifacts") once it is built.
       - name: Keep the IPA with this run
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: the-offline-project-ipa
           path: ${{ runner.temp }}/out/TheOfflineProject.ipa
@@ -316,7 +316,7 @@ jobs:
       - name: Keep the photographs with this run
         if: ${{ always() && github.event_name == 'workflow_dispatch' && (inputs.simulator_check || inputs.ipad_photo) }}
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: simulator-photographs
           path: ${{ runner.temp }}/shots
